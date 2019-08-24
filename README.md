@@ -72,6 +72,14 @@ so in the first example above, the nzb would be: /tmp/folderToPost2.nzb
 </pre>
 
 
+
+### Alternatives
+
+A list of Usenet posters from Nyuu github [can be found
+here](https://github.com/animetosho/Nyuu/wiki/Usenet-Uploaders).
+
+
+
 ### Licence
 <pre>
 //========================================================================
