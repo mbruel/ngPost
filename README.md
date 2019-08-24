@@ -1,7 +1,6 @@
 # ngPost
 
-command line usenet poster for binaries developped in C++/QT
-
+command line usenet poster for binaries developped in C++/QT</br>
 it is designed to be as fast as possible and offer all the main features to post data easily and safely.
 
 Here are the main features and advantages of ngPost:
