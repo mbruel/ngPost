@@ -39,7 +39,7 @@
 
 
 const QString NgPost::sAppName = "ngPost";
-const QString NgPost::sVersion = "1.0";
+const QString NgPost::sVersion = "1.0.1";
 
 qint64        NgPost::sArticleSize = sDefaultArticleSize;
 const QString NgPost::sSpace       = sDefaultSpace;
@@ -79,8 +79,9 @@ const QList<QCommandLineOption> NgPost::sCmdOptions = {
     {{"i", sOptionNames[Opt::INPUT]},         tr("input file to upload (single file"), "file"},
     {{"o", sOptionNames[Opt::OUTPUT]},        tr("output file path (nzb)"), "file"},
     {{"t", sOptionNames[Opt::THREAD]},        tr("number of Threads (the connections will be distributed amongs them)"), "nb"},
-
     {{"r", sOptionNames[Opt::REAL_NAME]},     tr("real yEnc name in Article Headers (no obfuscation)")},
+
+    {{"g", sOptionNames[Opt::GROUPS]},        tr("newsgroups where to post the files (coma separated without space)"), "str"},
     {{"m", sOptionNames[Opt::META]},          tr("extra meta data in header (typically \"password=qwerty42\")"), "key=val"},
     {{"f", sOptionNames[Opt::FROM]},          tr("uploader (in nzb file, article one is random)"), "email"},
     {{"a", sOptionNames[Opt::ARTICLE_SIZE]},  tr("article size (default one: %1)").arg(sDefaultArticleSize), "nb"},
@@ -122,7 +123,7 @@ NgPost::NgPost():
     connect(this, &NgPost::scheduleNextArticle, this, &NgPost::onPrepareNextArticle);
 
     // in case we want to generate random uploader (_from not provided)
-    std::srand(static_cast<uint>(QDateTime::currentSecsSinceEpoch()));
+    std::srand(static_cast<uint>(QDateTime::currentMSecsSinceEpoch()));
 }
 
 
@@ -331,6 +332,12 @@ void NgPost::onPrepareNextArticle()
     _prepareNextArticle();
 }
 
+void NgPost::onErrorConnecting(QString err)
+{
+    QTextStream cerr(stderr);
+    cerr << err << "\n" << flush;
+}
+
 #ifdef __DISP_PROGRESS_BAR__
 void NgPost::onArticlePosted(NntpArticle *article)
 {
@@ -386,6 +393,7 @@ int NgPost::_createNntpConnections()
         {
             NntpConnection *nntpCon = new NntpConnection(this, ++nbCon, *srvParams);
             connect(nntpCon, &NntpConnection::log, this, &NgPost::onLog, Qt::QueuedConnection);
+            connect(nntpCon, &NntpConnection::errorConnecting, this, &NgPost::onErrorConnecting, Qt::QueuedConnection);
             connect(nntpCon, &NntpConnection::disconnected, this, &NgPost::onDisconnectedConnection, Qt::QueuedConnection);
 #ifndef __USE_MUTEX__
             connect(nntpCon, &NntpConnection::requestArticle, this, &NgPost::onRequestArticle, Qt::QueuedConnection);
@@ -604,20 +612,20 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         return false;
     }
 
-    if (parser.isSet("h") || parser.isSet("v"))
+    if (parser.isSet(sOptionNames[Opt::HELP]) || parser.isSet(sOptionNames[Opt::VERSION]))
     {
         _syntax(argv[0]);
         return false;
     }
 
-    if (!parser.isSet("i"))
+    if (!parser.isSet(sOptionNames[Opt::INPUT]))
     {
         QTextStream cerr(stderr);
         cerr << "Error syntax: you should provide at least one input file or directory using the option -i\n" << flush;
         return false;
     }
 
-    if (parser.isSet("c"))
+    if (parser.isSet(sOptionNames[Opt::CONF]))
     {
         QString err = _parseConfig(parser.value(sOptionNames[Opt::CONF]));
         if (!err.isEmpty())
@@ -627,15 +635,31 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
             return false;
         }
     }
+    else
+    {
+        QString conf = QString("%1/%2").arg(getenv("HOME")).arg(sDefaultConfig);
+        QFileInfo defaultConf(conf);
+        if (defaultConf.exists() && defaultConf.isFile())
+        {
+            qCritical() << "Using default config file: " << conf;
+            QString err = _parseConfig(conf);
+            if (!err.isEmpty())
+            {
+                QTextStream cerr(stderr);
+                cerr << err << "\n" << flush;
+                return false;
+            }
+        }
+    }
 
-    if (parser.isSet("r"))
+    if (parser.isSet(sOptionNames[Opt::REAL_NAME]))
     {
         QTextStream cout(stdout);
         cout << "Real yEnc name for the subject of the Articles (no obfuscation...)\n" << flush;
         _obfuscation = false;
     }
 
-    if (parser.isSet("t"))
+    if (parser.isSet(sOptionNames[Opt::THREAD]))
     {
         bool ok;
         _nbThreads = parser.value(sOptionNames[Opt::THREAD]).toInt(&ok);
@@ -649,7 +673,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         }
     }
 
-    if (parser.isSet("m"))
+    if (parser.isSet(sOptionNames[Opt::META]))
     {
         for (const QString &meta : parser.values(sOptionNames[Opt::META]))
         {
@@ -659,17 +683,79 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         }
     }
 
-    if (parser.isSet("n"))
+
+    if (parser.isSet(sOptionNames[Opt::GROUPS]))
+        _groups = parser.value(sOptionNames[Opt::GROUPS]).toStdString();
+
+    if (parser.isSet(sOptionNames[Opt::MSG_ID]))
+        _articleIdSignature = escapeXML(sOptionNames[Opt::MSG_ID]).toStdString();
+
+    if (parser.isSet(sOptionNames[Opt::ARTICLE_SIZE]))
     {
         bool ok;
-        _nbConnections = parser.value(sOptionNames[Opt::CONNECTION]).toInt(&ok);
-        if (!ok)
+        int size = parser.value(sOptionNames[Opt::ARTICLE_SIZE]).toInt(&ok);
+        if (ok)
+            sArticleSize = size;
+        else
         {
             QTextStream cerr(stderr);
-            cerr << tr("You should give an integer for the number of connections (option -n)\n") << flush;
+            cerr << tr("You should give an integer for the article size (option -a)\n") << flush;
             return false;
         }
     }
+
+    // check if the server params are given in the command line
+    if (parser.isSet(sOptionNames[Opt::HOST]))
+    {
+        QString host = parser.value(sOptionNames[Opt::HOST]);
+
+
+        _nntpServers.clear();
+        NntpServerParams *server = new NntpServerParams(host);
+        _nntpServers.append(server);
+
+        if (parser.isSet(sOptionNames[Opt::SSL]))
+            server->useSSL = true;
+
+        if (parser.isSet(sOptionNames[Opt::PORT]))
+        {
+            bool ok;
+            ushort port = parser.value(sOptionNames[Opt::PORT]).toUShort(&ok);
+            if (ok)
+                server->port = port;
+            else
+            {
+                QTextStream cerr(stderr);
+                cerr << tr("You should give an integer for the port (option -P)\n") << flush;
+                return false;
+            }
+        }
+
+        if (parser.isSet(sOptionNames[Opt::USER]))
+        {
+            server->auth = true;
+            server->user = parser.value(sOptionNames[Opt::USER]).toStdString();
+
+            if (parser.isSet(sOptionNames[Opt::PASS]))
+                server->pass = parser.value(sOptionNames[Opt::PASS]).toStdString();
+
+        }
+
+        if (parser.isSet(sOptionNames[Opt::CONNECTION]))
+        {
+            bool ok;
+            int nbCons = parser.value(sOptionNames[Opt::CONNECTION]).toInt(&ok);
+            if (ok)
+                server->nbCons = nbCons;
+            else
+            {
+                QTextStream cerr(stderr);
+                cerr << tr("You should give an integer for the number of connections (option -n)\n") << flush;
+                return false;
+            }
+        }
+    }
+
 
 
     QList<QFileInfo> filesToUpload;
@@ -740,6 +826,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     _dumpParams();
 #endif
 
+    return false;
     return true;
 }
 
@@ -798,11 +885,7 @@ QString NgPost::_parseConfig(const QString &configPath)
                     }
                     else if (opt == sOptionNames[Opt::MSG_ID])
                     {
-
-                    }
-                    else if (opt == sOptionNames[Opt::META])
-                    {
-
+                        _articleIdSignature = val.toStdString();
                     }
                     else if (opt == sOptionNames[Opt::ARTICLE_SIZE])
                     {
@@ -904,6 +987,7 @@ void NgPost::_dumpParams() const
              << ", nzbPath: " << _nzbPath << ", nzbName" << _nzbName
              << "\nnb Servers: " << _nntpServers.size() << ": " << servers
              << "\nfrom: " << _from.c_str() << ", groups: " << _groups.c_str()
+             << "\narticleSize: " << sArticleSize
              << "\n[NgPost::_dumpParams]<<<<<<<<<<<<<<<<<<\n";
 }
 enum class Opt {HELP = 0, VERSION, CONF,
