@@ -127,6 +127,7 @@ private:
     static constexpr const char *sDefaultSpace   = "  ";
     static constexpr const char *sDefaultNzbPath = "/tmp";
     static constexpr const char *sDefaultMsgIdSignature = "ngPost";
+    static constexpr const char *sDefaultConfig = ".ngPost";
 
 public:
     NgPost();
@@ -153,6 +154,7 @@ private slots:
     void onLog(QString msg);
     void onDisconnectedConnection(NntpConnection *con);
     void onPrepareNextArticle();
+    void onErrorConnecting(QString err);
 
 #ifndef __USE_MUTEX__
     void onRequestArticle(NntpConnection *con);

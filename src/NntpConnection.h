@@ -98,6 +98,7 @@ signals:
     void disconnected(NntpConnection *con);
     void log(QString msg) const;
 
+
 #ifndef __USE_MUTEX__
     void pushArticle(NntpArticle *article);
     void requestArticle(NntpConnection *con);

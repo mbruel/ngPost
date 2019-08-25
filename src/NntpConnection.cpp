@@ -213,7 +213,8 @@ void NntpConnection::onReadyRead()
 #if defined(__DEBUG__) && defined(LOG_CONNECTION_ERRORS_BEFORE_EMIT_SIGNALS)
                 _log(err);
 #endif
-                emit errorConnecting(err);
+                emit errorConnecting(tr("[Connection #%1] Error connecting to server %2:%3").arg(
+                                         _id).arg(_srvParams.host).arg(_srvParams.port));
                 _closeConnection();
             }
             else
@@ -242,7 +243,8 @@ void NntpConnection::onReadyRead()
 #if defined(__DEBUG__) && defined(LOG_CONNECTION_ERRORS_BEFORE_EMIT_SIGNALS)
                 _log(err);
 #endif
-                emit errorConnecting(err);
+                emit errorConnecting(tr("[Connection #%1] Error sending user '%4' to server %2:%3").arg(
+                                         _id).arg(_srvParams.host).arg(_srvParams.port).arg(_srvParams.user.c_str()));
                 _closeConnection();
             }
             else
@@ -270,7 +272,9 @@ void NntpConnection::onReadyRead()
 #if defined(__DEBUG__) && defined(LOG_CONNECTION_ERRORS_BEFORE_EMIT_SIGNALS)
                 _log(err);
 #endif
-                emit errorConnecting(err);
+                emit errorConnecting(tr("[Connection #%1] Error authentication to server %2:%3 with user '%4' and pass '%5'").arg(
+                                         _id).arg(_srvParams.host).arg(_srvParams.port).arg(
+                                         _srvParams.user.c_str()).arg(_srvParams.pass.c_str()));
                 _closeConnection();
             }
             else
