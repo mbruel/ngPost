@@ -826,7 +826,6 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     _dumpParams();
 #endif
 
-    return false;
     return true;
 }
 
