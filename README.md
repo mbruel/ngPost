@@ -38,6 +38,7 @@ RQ: you don't need to obfuscate the file names as they will only be used in the 
 - go to the src folder
 - qmake
 - make
+
 Easy! it should have generate the executable **ngPost**</br>
 you can copy it somewhere in your PATH so it will be accessible from anywhere
 
