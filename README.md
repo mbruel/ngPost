@@ -84,6 +84,7 @@ if you don't want to build it and install the dependencies, you can also the por
 - download the latest release [ngPost_v1.0.1_linux_x86_64.tar.bz2](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v1.0.1_linux_x86_64.tar.bz2)
 - decompress it (tar xjvf ngPost_v1.0.1_linux_x86_64.tar.bz2)
 - use **ngPost.sh** or **postFile.sh** as they will set the required environment variables (LD_LIBRARY_PATH and QT_PLUGIN_PATH)
+
 **ngPost.sh** uses the exact same arguments than ngPost (cf the above section)</br>
 **postFile.sh** is a handy script that can only takes 2 arguments: -c for the config file and -i for a single input file that will be rar and par2 before posting
 
