@@ -74,7 +74,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
 const QList<QCommandLineOption> NgPost::sCmdOptions = {
     { sOptionNames[Opt::HELP],                tr("Help: display syntax")},
     {{"v", sOptionNames[Opt::VERSION]},       tr( "app version")},
-    {{"c", sOptionNames[Opt::CONF]},          tr( "use configuration file"), "file"},
+    {{"c", sOptionNames[Opt::CONF]},          tr( "use configuration file (if not provided, we try to load $HOME/.ngPost)"), "file"},
 
     {{"i", sOptionNames[Opt::INPUT]},         tr("input file to upload (single file"), "file"},
     {{"o", sOptionNames[Opt::OUTPUT]},        tr("output file path (nzb)"), "file"},
