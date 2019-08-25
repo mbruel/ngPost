@@ -27,17 +27,23 @@ What it does not:
 RQ: you don't need to obfuscate the file names as they will only be used in the nzb file as **the obfuscation is done for each Article with a UUID as subject and msg-id**.
 
 
-### How to build and dependencies
-To build it:
-- you just need a C++ compiler, QT (latest the better), libssl-dev (v1.0.2 or v1.1)
+### How to build
+#### Dependencies:
+- build-essential (C++ compiler, libstdc++, make,...)
+- qt5-default (Qt5 libraries and headers)
+- qt5-qmake (to generate the moc files and create the Makefile)
+- libssl (v1.0.2 or v1.1) but it should be already installed on your system
 
-To run it:
-- you need these packages: libssl, libqtcore, libqtnetwork
-- or you can use the portable release where all the libs are included
+#### Build:
+- go to the src folder
+- qmake
+- make
+Easy! it should have generate the executable **ngPost**</br>
+you can copy it somewhere in your PATH so it will be accessible from anywhere
+
  
 As it is made in C++/QT, you can run it on any OS (Linux / Windows / MacOS / Android)
 releases have only been made for Linux x64 and Windows x64 (for 7 and above)
-
 
 
 ### How to use it
@@ -71,6 +77,14 @@ If you don't provide the output file (nzb file), we will create it in the nzbPat
 so in the first example above, the nzb would be: /tmp/folderToPost2.nzb
 </pre>
 
+
+### Portable release (Linux)
+if you don't want to build it and install the dependencies, you can also the portable release that includes everything.<br/>
+- download the latest release [ngPost_v1.0.1_linux_x86_64.tar.bz2](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v1.0.1_linux_x86_64.tar.bz2)
+- decompress it (tar xjvf ngPost_v1.0.1_linux_x86_64.tar.bz2)
+- use **ngPost.sh** or **postFile.sh** as they will set the required environment variables (LD_LIBRARY_PATH and QT_PLUGIN_PATH)
+**ngPost.sh** uses the exact same arguments than ngPost (cf the above section)</br>
+**postFile.sh** is a handy script that can only takes 2 arguments: -c for the config file and -i for a single input file that will be rar and par2 before posting
 
 
 ### Alternatives
