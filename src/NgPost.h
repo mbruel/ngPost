@@ -125,9 +125,18 @@ private:
     static const int sDefaultArticleSize         = 716800;
     static constexpr const char *sDefaultGroups  = "alt.binaries.test,alt.binaries.misc";
     static constexpr const char *sDefaultSpace   = "  ";
-    static constexpr const char *sDefaultNzbPath = "/tmp";
     static constexpr const char *sDefaultMsgIdSignature = "ngPost";
+#ifdef __MINGW64__
+    static constexpr const char *sDefaultNzbPath = ""; //!< local folder
+    static constexpr const char *sDefaultConfig = "ngPost.conf";
+#else
+    static constexpr const char *sDefaultNzbPath = "/tmp";
     static constexpr const char *sDefaultConfig = ".ngPost";
+#endif
+
+#ifdef __DISP_PROGRESS_BAR__
+    static const int sProgressBarWidth = 50;
+#endif
 
 public:
     NgPost();
@@ -143,7 +152,7 @@ public:
 
     inline int nbThreads() const;
     inline int getSocketTimeout() const;
-    inline const QString &nzbPath() const;
+    inline QString nzbPath() const;
 
 signals:
     void scheduleNextArticle();
@@ -215,7 +224,17 @@ const std::string &NgPost::aticleSignature() const { return _articleIdSignature;
 
 int NgPost::nbThreads() const { return _nbThreads; }
 int NgPost::getSocketTimeout() const { return _socketTimeOut; }
-const QString &NgPost::nzbPath() const { return _nzbPath; }
+QString NgPost::nzbPath() const
+{
+#ifdef __MINGW64__
+    if (_nzbPath.isEmpty())
+        return QString("%1.nzb").arg(_nzbName);
+    else
+        return QString("%1\\%2.nzb").arg(_nzbPath).arg(_nzbName);
+#else
+    return QString("%1/%2.nzb").arg(_nzbPath).arg(_nzbName);
+#endif
+}
 
 
 qint64 NgPost::articleSize()  { return sArticleSize; }

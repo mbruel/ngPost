@@ -348,21 +348,21 @@ void NgPost::onArticlePosted(NntpArticle *article)
 #include <iostream>
 void NgPost:: onRefreshProgressBar()
 {
-    int barWidth = 70;
-    float progress = (float)_nbArticlesUploaded / _nbArticlesTotal;
+    float progress = _nbArticlesUploaded;
+    progress /= _nbArticlesTotal;
 
     qDebug() << "[NgPost::onRefreshProgressBar] uploaded: " << _nbArticlesUploaded
              << " / " << _nbArticlesTotal
              << " => progress: " << progress << "\n";
 
     std::cout << "\r[";
-    int pos = barWidth * progress;
-    for (int i = 0; i < barWidth; ++i) {
+    int pos = static_cast<int>(std::floor(progress * sProgressBarWidth));
+    for (int i = 0; i < sProgressBarWidth; ++i) {
         if (i < pos) std::cout << "=";
         else if (i == pos) std::cout << ">";
         else std::cout << " ";
     }
-    std::cout << "] " << int(progress * 100.0) << " %"
+    std::cout << "] " << int(progress * 100) << " %"
               << " (" << _nbArticlesUploaded << " / " << _nbArticlesTotal << ")";
     std::cout.flush();
     if (_nbArticlesUploaded < _nbArticlesTotal)
@@ -460,7 +460,7 @@ void NgPost::_printStats() const
     QTextStream cout(stdout);
     cout << msgEnd;
     if (_nzb)
-        cout << QString("nzb file: %1/%2.nzb\n").arg(nzbPath()).arg(_nzbName);
+        cout << QString("nzb file: %1\n").arg(nzbPath());
     cout << "\n" << flush;
 }
 
@@ -637,7 +637,11 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     }
     else
     {
+#ifdef __MINGW64__
+        QString conf = sDefaultConfig;
+#else
         QString conf = QString("%1/%2").arg(getenv("HOME")).arg(sDefaultConfig);
+#endif
         QFileInfo defaultConf(conf);
         if (defaultConf.exists() && defaultConf.isFile())
         {
@@ -806,7 +810,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
 
     // initialize buffer and nzb file
     _buffer  = new char[articleSize()+1];
-    _nzb     = new QFile(QString("%1/%2.nzb").arg(nzbPath()).arg(_nzbName));
+    _nzb     = new QFile(nzbPath());
     _nbFiles = filesToUpload.size();
 
     // initialize the NntpFiles (active objects)
