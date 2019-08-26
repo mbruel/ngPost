@@ -43,9 +43,9 @@ Easy! it should have generate the executable **ngPost**</br>
 you can copy it somewhere in your PATH so it will be accessible from anywhere
 
  
-As it is made in C++/QT, you can run it on any OS (Linux / Windows / MacOS / Android)
-releases have only been made for Linux x64 and Windows x64 (for 7 and above)
-
+As it is made in C++/QT, you can build it and run it on any OS (Linux / Windows / MacOS / Android) <br/>
+releases have only been made for Linux x64 and Windows x64 (for 7 and above)<br/>
+in order to build on other OS, the easiest way would be to [install QT](https://www.qt.io/download) and load the project in QtCreator<br/>
 
 ### How to use it
 <pre>
@@ -87,6 +87,17 @@ if you don't want to build it and install the dependencies, you can also the por
 
 **ngPost.sh** uses the exact same arguments than ngPost (cf the above section)</br>
 **postFile.sh** is a handy script that can only takes 2 arguments: -c for the config file and -i for a single input file that will be rar and par2 before posting
+
+
+### Portable release (Windows)
+- unzip [ngPost_v1.0.1_win7_64bit.zip](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v1.0.1_win7_64bit.zip)
+- edit ngPost.conf to add your server settings (you can put several)
+- ngPost.bat -i <your_file>
+
+if you prefer, you can give all the server parameters in the command line (cf the above section)<br/>
+By default:
+- ngPost will load the configuration file 'ngPost.conf' that is in the directory
+- it will write the nzb file inside this directory too
 
 
 ### Alternatives
