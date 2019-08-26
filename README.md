@@ -91,13 +91,13 @@ if you don't want to build it and install the dependencies, you can also the por
 
 ### Portable release (Windows)
 - unzip [ngPost_v1.0.1_win7_64bit.zip](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v1.0.1_win7_64bit.zip)
-- edit ngPost.conf to add your server settings (you can put several)
-- ngPost.bat -i <your_file>
+- edit **ngPost.conf** to add your server settings (you can put several)
+- **ngPost.bat** -i <your file or directory>
 
 if you prefer, you can give all the server parameters in the command line (cf the above section)<br/>
 By default:
 - ngPost will load the configuration file 'ngPost.conf' that is in the directory
-- it will write the nzb file inside this directory too
+- it will write the nzb file inside this directory too. (it's name will be the one of the latest input file in the command line)
 
 
 ### Alternatives
@@ -129,3 +129,13 @@ here](https://github.com/animetosho/Nyuu/wiki/Usenet-Uploaders).
 //
 //========================================================================
 </pre>
+
+
+### Questions / Issues / Requests
+- if you've any troubles to build or run ngPost, feel free to drop me an email
+- if you've some comments on the code, any questions on the implementation or any proposal for improvements, I'll be happy to discuss it with you so idem, feel free to drop me an email
+- if you'd like some other features, same same (but different), drop me an email ;)
+(I may do a small GUI especially for Windows users if I get some requests)
+
+Here is my email: Matthieu.Bruel@gmail.com
+
