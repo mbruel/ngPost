@@ -82,8 +82,8 @@ so in the first example above, the nzb would be: /tmp/folderToPost2.nzb
 
 ### Portable release (Linux)
 if you don't want to build it and install the dependencies, you can also the portable release that includes everything.<br/>
-- download the latest release [ngPost_v1.0.1_linux_x86_64.tar.bz2](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v1.0.1_linux_x86_64.tar.bz2)
-- decompress it (tar xjvf ngPost_v1.0.1_linux_x86_64.tar.bz2)
+- download the latest release [ngPost_v1.1_linux_x86_64.tar.bz2](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v1.1_linux_x86_64.tar.bz2)
+- decompress it (tar xjvf ngPost_v1.1_linux_x86_64.tar.bz2)
 - use **ngPost.sh** or **postFile.sh** as they will set the required environment variables (LD_LIBRARY_PATH and QT_PLUGIN_PATH)
 
 **ngPost.sh** uses the exact same arguments than ngPost (cf the above section)</br>
@@ -91,9 +91,10 @@ if you don't want to build it and install the dependencies, you can also the por
 
 
 ### Portable release (Windows)
-- unzip [ngPost_v1.0.1_win7_64bit.zip](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v1.0.1_win7_64bit.zip)
+- unzip [ngPost_v1.1_win7_64bit.zip](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v1.0.1_win7_64bit.zip)
 - edit **ngPost.conf** to add your server settings (you can put several)
-- **ngPost.bat** -i <your file or directory>
+- launch **ngPost.bat** (GUI version)
+- or you can use it with the command line: **ngPost.bat** -i "your file or directory"
 
 if you prefer, you can give all the server parameters in the command line (cf the above section)<br/>
 By default:
