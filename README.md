@@ -1,16 +1,17 @@
 # ngPost
 
 command line usenet poster for binaries developped in C++/QT</br>
-it is designed to be as fast as possible and offer all the main features to post data easily and safely.
+it is designed to be as fast as possible and offer all the main features to post data easily and safely.</br>
+since v1.1, a minimalist GUI as been added
 
 Here are the main features and advantages of ngPost:
 
 -   it can use **several servers** (using config file) with each **several connections** (supporting ssl)
 -   it is spreading those connection on **several threads**. By default the number of cores of the station but you can set the number if you fancy.
--   it is using **asynchronous sockets** on the upload threads
--   it is **preparing the Articles on the main Thread** (Yenc encoding) so the upload threads are **always ready to write** when they can. (each connections has 2 Articles ready in advance)
--   it is **limiting the disk access** to the minimum by opening the files to post only once in the main Thread and process it sequentially
--   it is doing **full obfuscation of the Article Header** (subject and msg-id)
+-   it is using **asynchronous sockets** in the upload threads
+-   it is **preparing the Articles on the main Thread** (yEnc encoding) so the upload threads are **always ready to write** when they can. (each connections has 2 Articles ready in advance)
+-   it is **limiting the disk access** to the minimum by opening the files to post only once in the main Thread and processing them sequentially one by one (no need to open several files at the same time)
+-   it can do **full obfuscation of the Article Header** (subject and msg-id)
 -   it is generating a **random uploader for each Article Header** (from) but can use a fixed one if desired
 -   it is of course **generating the nzb file**
 -   it can support **multiple files** and **multiple folders**
@@ -49,14 +50,15 @@ in order to build on other OS, the easiest way would be to [install QT](https://
 
 ### How to use it
 <pre>
-Syntax: ngPost (options)? (-i <file or directory to upload>)+
+Syntax: ngPost (options)? (-i "file or directory to upload")+
 	-help              : Help: display syntax
 	-v or -version     : app version
-	-c or -conf        : use configuration file
+	-c or -conf        : use configuration file (if not provided, we try to load $HOME/.ngPost)
 	-i or -input       : input file to upload (single file
 	-o or -output      : output file path (nzb)
 	-t or -thread      : number of Threads (the connections will be distributed amongs them)
-	-r or -real_name   : real yEnc name in Article Headers (no obfuscation)
+	-x or -obfuscate   : obfuscate either the name of each files (-x file) or the subjects of the articles (-x article)
+	-g or -groups      : newsgroups where to post the files (coma separated without space)
 	-m or -meta        : extra meta data in header (typically "password=qwerty42")
 	-f or -from        : uploader (in nzb file, article one is random)
 	-a or -article_size: article size (default one: 716800)
@@ -71,13 +73,12 @@ Syntax: ngPost (options)? (-i <file or directory to upload>)+
 	-n or -connection  : number of NNTP connections
 
 Examples:
-  - with config file: ngPost -c ~/.ngPost -m "password=qwerty42"  -i /tmp/file1 -i /tmp/file2 -i /tmp/folderToPost1 -i /tmp/folderToPost2
-  - with all params:  ngPost  -t 1 -m "password=qwerty42" -m "metaKey=someValue" -h news.newshosting.com -P 443 -s -u user -p pass -n 30 -f ngPost@nowhere.com  -g "alt.binaries.test,alt.binaries.misc" -a 64000 -i /tmp/folderToPost -o /tmp/folderToPost.nzb
+  - with config file: ngPost -c ~/.ngPost -m "password=qwerty42" -f ngPost@nowhere.com -i /tmp/file1 -i /tmp/file2 -i /tmp/folderToPost1 -i /tmp/folderToPost2
+  - with all params:  ngPost -t 1 -m "password=qwerty42" -m "metaKey=someValue" -h news.newshosting.com -P 443 -s -u user -p pass -n 30 -f ngPost@nowhere.com             -g "alt.binaries.test,alt.binaries.test2" -a 64000 -i /tmp/folderToPost -o /tmp/folderToPost.nzb
 
 If you don't provide the output file (nzb file), we will create it in the nzbPath with the name of the last file or folder given in the command line.
 so in the first example above, the nzb would be: /tmp/folderToPost2.nzb
 </pre>
-
 
 ### Portable release (Linux)
 if you don't want to build it and install the dependencies, you can also the portable release that includes everything.<br/>
@@ -98,6 +99,10 @@ if you prefer, you can give all the server parameters in the command line (cf th
 By default:
 - ngPost will load the configuration file 'ngPost.conf' that is in the directory
 - it will write the nzb file inside this directory too. (it's name will be the one of the latest input file in the command line)
+
+
+### Minimalist GUI
+![ngPost_v1.1_HMI](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost_v1.1_HMI.png)
 
 
 ### Alternatives
