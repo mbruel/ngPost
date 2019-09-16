@@ -78,12 +78,16 @@ public:
     inline QString id() const;
     inline NntpFile *nntpFile() const;
 
+    inline qint64 size() const;
+
     inline void genNewId();
 };
 
 std::string NntpArticle::body() const { return _body; }
 QString NntpArticle::id() const { return _id.toString(); }
 NntpFile *NntpArticle::nntpFile() const { return _nntpFile; }
+
+qint64 NntpArticle::size() const { return _fileBytes; }
 void NntpArticle::genNewId() { _id = QUuid::createUuid(); }
 
 #endif // NntpArticle_H

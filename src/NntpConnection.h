@@ -97,6 +97,7 @@ signals:
     void errorConnecting(QString aError);
     void disconnected(NntpConnection *con);
     void log(QString msg) const;
+    void error(QString msg) const;
 
 
 #ifndef __USE_MUTEX__
@@ -127,6 +128,9 @@ private:
     void _log(const QString     &aMsg) const; //!< log function for QString
     void _log(const char        *aMsg) const; //!< log function for char *
     void _log(const std::string &aMsg) const; //!< log function for std::string
+    void _error(const QString     &aMsg) const; //!< log function for QString
+    void _error(const char        *aMsg) const; //!< log function for char *
+    void _error(const std::string &aMsg) const; //!< log function for std::string
 
     void _sendNextArticle();
     void _closeConnection();

@@ -35,6 +35,8 @@ class NntpConnection;
 class NntpServerParams;
 class NntpFile;
 class NntpArticle;
+class QCoreApplication;
+class MainWindow;
 
 #ifdef __DISP_PROGRESS_BAR__
 #include <QTimer>
@@ -57,58 +59,71 @@ class NgPost : public QObject
 {
     Q_OBJECT
 
+    friend class MainWindow; //!< so it can access all parameters
+
     enum class Opt {HELP = 0, VERSION, CONF,
                     INPUT, OUTPUT, NZB_PATH, THREAD,
-                    REAL_NAME, MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS,
+                    MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS,
+                    OBFUSCATE,
                     HOST, PORT, SSL, USER, PASS, CONNECTION
                    };
 
     static const QMap<Opt, QString> sOptionNames;
 
+    enum class AppMode {CMD = 0, HMI = 1}; //!< supposed to be CMD but a simple HMI has been added
+
+
 private:
-    QString               _nzbName;
-    QQueue<NntpFile*>     _filesToUpload;
-    QSet<NntpFile*>       _filesInProgress;
-    int                   _nbFiles;
-    int                   _nbPosted;
+    QCoreApplication     *_app;  //!< Application instance (either a QCoreApplication or a QApplication in HMI mode)
+    const AppMode         _mode; //!< CMD or HMI (for Windowser...)
+    MainWindow           *_hmi;  //!< potential HMI
+
+    QString               _nzbName; //!< name of nzb that we'll write (without the extension)
+    QQueue<NntpFile*>     _filesToUpload;  //!< list of files to upload (that we didn't start)
+    QSet<NntpFile*>       _filesInProgress;//!< files in queue to be uploaded (Articles have been produced)
+    int                   _nbFiles;  //!< number of files to post in this iteration
+    int                   _nbPosted; //!< number of files posted
 
     QVector<QThread*>        _threadPool;      //!< the connections are distributed among several threads
-    QVector<NntpConnection*> _nntpConnections; //!< the connections
+    QVector<NntpConnection*> _nntpConnections; //!< the NNTP connections (owning the TCP sockets)
 
-    QList<NntpServerParams*> _nntpServers;
+    QList<NntpServerParams*> _nntpServers; //!< the servers parameters
 
-    bool                 _obfuscation;
-    std::string          _from;
-    std::string          _groups;
-    std::string          _articleIdSignature;
+    bool                 _obfuscateFileNames; //!< shall we obfuscate the name of the files (To be implemented)
+    bool                 _obfuscateArticles;  //!< shall we obfuscate each Article (subject)
 
-    QFile      *_nzb;
-    QTextStream _nzbStream;
+    std::string          _from;               //!< email of poster (if empty, random one will be used for each file)
+    std::string          _groups;             //!< Newsgroup where to post
+    std::string          _articleIdSignature; //!< signature for Article message id (must be as a email address)
 
-    QMutex       _mutex;
-    NntpFile    *_nntpFile;
-    QFile       *_file;
-    char        *_buffer;
-    int          _part;
+    QFile      *_nzb;       //!< nzb file that will be filled on the fly when a file is fully posted
+    QTextStream _nzbStream; //!< txt stream for the nzb file
 
-    QQueue<NntpArticle*> _articles; //!< all articles that are yenc encoded
+    QMutex       _mutex;    //!< mutex to protect the Article stack (as the NntpConnection will pop from the ThreadPool)
+    NntpFile    *_nntpFile; //!< current file that is getting processed
+    QFile       *_file;     //!< file handler on the file getting processed
+    char        *_buffer;   //!< buffer to read the current file
+    int          _part;     //!< part number (Article) on the current file
 
-    QTime       _timeStart;
-    qint64      _uploadSize;
+    QQueue<NntpArticle*> _articles; //!< prepared articles that are yEnc encoded
 
-    QMap<QString, QString> _meta;
-    QVector<QString>       _grpList;
+    QTime       _timeStart; //!< to get some stats (upload time and avg speed)
+    quint64     _totalSize; //!< total size (in Bytes) to be uploaded
 
-    int     _nbConnections;
-    int     _nbThreads;
-    int     _socketTimeOut;
-    QString _nzbPath;
+    QMap<QString, QString> _meta;    //!< list of meta to add in the nzb header (typically a password)
+    QVector<QString>       _grpList; //!< Newsgroup where we're posting in a list format to write in the nzb file
+
+    int     _nbConnections; //!< available number of NntpConnection (we may loose some)
+    int     _nbThreads;     //!< size of the ThreadPool
+    int     _socketTimeOut; //!< socket timeout
+    QString _nzbPath;       //!< default path where to write the nzb files
 
 #ifdef __DISP_PROGRESS_BAR__
-    int                  _nbArticlesUploaded;
-    int                  _nbArticlesTotal;
-    QTimer               _progressTimer;
-    const int            _refreshRate;
+    int       _nbArticlesUploaded; //!< number of Articles that have been uploaded
+    quint64   _uploadedSize;       //!< bytes posted (to compute the avg speed)
+    int       _nbArticlesTotal;    //!< number of Articles of all the files to post
+    QTimer    _progressTimer;      //!< timer to refresh the upload information (progress bar, avg. speed)
+    const int _refreshRate;        //!< refresh rate
 #endif
 
 
@@ -136,13 +151,23 @@ private:
 
 #ifdef __DISP_PROGRESS_BAR__
     static const int sProgressBarWidth = 50;
+    static const int sDefaultRefreshRate = 500; //!< how often shall we refresh the progress bar?
 #endif
 
 public:
-    NgPost();
+    NgPost(int &argc, char *argv[]);
     ~NgPost();
 
+    int startEventLoop();
+    inline bool useHMI() const;
+
+    int startHMI();
+    QString parseDefaultConfig();
+
+
     bool startPosting();
+
+    inline QString avgSpeed() const;
 
     NntpArticle *getNextArticle();
 
@@ -154,13 +179,17 @@ public:
     inline int getSocketTimeout() const;
     inline QString nzbPath() const;
 
+    inline bool removeNntpServer(NntpServerParams *server);
+
 signals:
     void scheduleNextArticle();
+    void log(QString msg); //!< in case we signal from another thread
 
 
 private slots:
     void onNntpFilePosted(NntpFile *nntpFile);
     void onLog(QString msg);
+    void onError(QString msg);
     void onDisconnectedConnection(NntpConnection *con);
     void onPrepareNextArticle();
     void onErrorConnecting(QString err);
@@ -176,10 +205,16 @@ private slots:
 
 
 private:
+    void _initPosting(const QList<QFileInfo> &filesToUpload);
+    void _cleanInit();
+    void _finishPosting();
+
+
     int  _createNntpConnections();
     void _closeNzb();
     void _printStats() const;
     void _log(const QString &aMsg) const; //!< log function for QString
+    void _error(const QString &error) const;
     void _prepareArticles();
 
 
@@ -220,6 +255,33 @@ NntpFile *NgPost::_getNextFile()
         return nullptr;
 }
 
+bool NgPost::useHMI() const { return _mode == AppMode::HMI; }
+
+QString NgPost::avgSpeed() const
+{
+    QString power = " ";
+    double bandwidth = 0.;
+
+    if (!_timeStart.isNull())
+    {
+        double sec = _timeStart.elapsed()/1000.;
+        bandwidth = _uploadedSize / sec;
+
+        if (bandwidth > 1024)
+        {
+            bandwidth /= 1024;
+            power = "k";
+        }
+        if (bandwidth > 1024)
+        {
+            bandwidth /= 1024;
+            power = "M";
+        }
+    }
+
+    return QString("%1 %2B/s").arg(bandwidth, 6, 'f', 2).arg(power);
+}
+
 const std::string &NgPost::aticleSignature() const { return _articleIdSignature; }
 
 int NgPost::nbThreads() const { return _nbThreads; }
@@ -235,6 +297,8 @@ QString NgPost::nzbPath() const
     return QString("%1/%2.nzb").arg(_nzbPath).arg(_nzbName);
 #endif
 }
+
+bool NgPost::removeNntpServer(NntpServerParams *server){ return _nntpServers.removeOne(server); }
 
 
 qint64 NgPost::articleSize()  { return sArticleSize; }

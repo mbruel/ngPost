@@ -94,7 +94,7 @@ void NntpFile::writeToNZB(QTextStream &stream)
                << " date=\"" << QDateTime::currentMSecsSinceEpoch() << "\""
                << " subject=\""  << "[" << _num << "/" << _nbFiles << "] - &quot;"
                << NgPost::escapeXML(_file.fileName())
-               << "&quot; \">\n";
+               << "&quot; yEnc (1/"<< _nbAticles << ") " << _file.size() << "\">\n";
 
         stream << tab << tab << "<groups>\n";
         for (const QString &grp : _grpList)
