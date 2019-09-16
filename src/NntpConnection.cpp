@@ -134,7 +134,7 @@ void NntpConnection::onDisconnected()
     if (_socket)
     {
 #if defined(__DEBUG__) && defined(LOG_CONNECTION_STEPS)
-        _log("> disconnected");
+        _error("> disconnected");
 #endif
         _isConnected    = false;
 
@@ -211,7 +211,7 @@ void NntpConnection::onReadyRead()
                 QString err("Reading welcome message. Should start with 200... Server message: ");
                 err += line.constData();
 #if defined(__DEBUG__) && defined(LOG_CONNECTION_ERRORS_BEFORE_EMIT_SIGNALS)
-                _log(err);
+                _error(err);
 #endif
                 emit errorConnecting(tr("[Connection #%1] Error connecting to server %2:%3").arg(
                                          _id).arg(_srvParams.host).arg(_srvParams.port));
@@ -241,7 +241,7 @@ void NntpConnection::onReadyRead()
                 err += "' should start with 38... resp: ";
                 err += line.constData();
 #if defined(__DEBUG__) && defined(LOG_CONNECTION_ERRORS_BEFORE_EMIT_SIGNALS)
-                _log(err);
+                _error(err);
 #endif
                 emit errorConnecting(tr("[Connection #%1] Error sending user '%4' to server %2:%3").arg(
                                          _id).arg(_srvParams.host).arg(_srvParams.port).arg(_srvParams.user.c_str()));
@@ -270,7 +270,7 @@ void NntpConnection::onReadyRead()
                 err += "' should start with 28... resp: ";
                 err += line.constData();
 #if defined(__DEBUG__) && defined(LOG_CONNECTION_ERRORS_BEFORE_EMIT_SIGNALS)
-                _log(err);
+                _error(err);
 #endif
                 emit errorConnecting(tr("[Connection #%1] Error authentication to server %2:%3 with user '%4' and pass '%5'").arg(
                                          _id).arg(_srvParams.host).arg(_srvParams.port).arg(
@@ -299,7 +299,7 @@ void NntpConnection::onReadyRead()
             }
             else
             {
-                _log(tr("Error on post command: %1").arg(line.constData()));
+                _error(tr("Error on post command: %1").arg(line.constData()));
             }
         }
         else if (_postingState == PostingState::WAITING_ANSWER)
@@ -313,7 +313,7 @@ void NntpConnection::onReadyRead()
             }
             else
             {
-                _log(tr("Error on posting article %1: %2").arg(_currentArticle->id()).arg(
+                _error(tr("Error on posting article %1: %2").arg(_currentArticle->id()).arg(
                          line.constData()));
             }
             emit _currentArticle->posted(_currentArticle);
@@ -327,15 +327,26 @@ void NntpConnection::_log(const char *aMsg) const
 {
     emit log(QString("[%1][%2] %3").arg(QThread::currentThread()->objectName()).arg(_logPrefix).arg(aMsg));
 }
-
 void NntpConnection::_log(const QString &aMsg) const
 {
     emit log(QString("[%1][%2] %3").arg(QThread::currentThread()->objectName()).arg(_logPrefix).arg(aMsg));
 }
-
 void NntpConnection::_log(const std::string &aMsg) const
 {
     emit log(QString("[%1][%2] %3").arg(QThread::currentThread()->objectName()).arg(_logPrefix).arg(QString::fromStdString(aMsg)));
+}
+
+void NntpConnection::_error(const char *aMsg) const
+{
+    emit error(QString("[%1][%2] %3").arg(QThread::currentThread()->objectName()).arg(_logPrefix).arg(aMsg));
+}
+void NntpConnection::_error(const QString &aMsg) const
+{
+    emit error(QString("[%1][%2] %3").arg(QThread::currentThread()->objectName()).arg(_logPrefix).arg(aMsg));
+}
+void NntpConnection::_error(const std::string &aMsg) const
+{
+    emit error(QString("[%1][%2] %3").arg(QThread::currentThread()->objectName()).arg(_logPrefix).arg(QString::fromStdString(aMsg)));
 }
 
 void NntpConnection::_sendNextArticle()

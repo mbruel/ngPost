@@ -16,8 +16,6 @@ void handleShutdown(int signal)
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication a(argc, argv);
-
     {
         // disable SSL warnings
         QLoggingCategory::setFilterRules("qt.network.ssl.warning=false");
@@ -30,11 +28,17 @@ int main(int argc, char *argv[])
     signal(SIGINT,  &handleShutdown);// shut down on ctrl-c
     signal(SIGTERM, &handleShutdown);// shut down on killall
 
-    NgPost ngPost;
-    if (ngPost.parseCommandLine(argc, argv))
+
+//    qDebug() << "argc: " << argc;
+    NgPost ngPost(argc, argv);
+    if (ngPost.useHMI())
+    {
+        return ngPost.startHMI();
+    }
+    else if (ngPost.parseCommandLine(argc, argv))
     {
         ngPost.startPosting();
-        return a.exec();;
+        return ngPost.startEventLoop();
     }
     else
     {

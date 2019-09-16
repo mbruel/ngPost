@@ -25,7 +25,7 @@
 #include "nntp/NntpArticle.h"
 #include "nntp/NntpServerParams.h"
 #include <cmath>
-#include <QCoreApplication>
+#include <QApplication>
 #include <QThread>
 #include <QTextStream>
 #include <QCommandLineParser>
@@ -34,12 +34,12 @@
 #ifdef __DISP_PROGRESS_BAR__
 #include <iostream>
 #endif
-
+#include "hmi/MainWindow.h"
 
 
 
 const QString NgPost::sAppName = "ngPost";
-const QString NgPost::sVersion = "1.0.1";
+const QString NgPost::sVersion = "1.1";
 
 qint64        NgPost::sArticleSize = sDefaultArticleSize;
 const QString NgPost::sSpace       = sDefaultSpace;
@@ -55,12 +55,14 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::NZB_PATH,     "nzbpath"},
     {Opt::THREAD,       "thread"},
 
-    {Opt::REAL_NAME,    "real_name"},
     {Opt::MSG_ID,       "msg_id"},
     {Opt::META,         "meta"},
     {Opt::ARTICLE_SIZE, "article_size"},
     {Opt::FROM,         "from"},
     {Opt::GROUPS,       "groups"},
+
+    {Opt::OBFUSCATE,    "obfuscate"},
+
 
     {Opt::HOST,         "host"},
     {Opt::PORT,         "port"},
@@ -79,7 +81,7 @@ const QList<QCommandLineOption> NgPost::sCmdOptions = {
     {{"i", sOptionNames[Opt::INPUT]},         tr("input file to upload (single file"), "file"},
     {{"o", sOptionNames[Opt::OUTPUT]},        tr("output file path (nzb)"), "file"},
     {{"t", sOptionNames[Opt::THREAD]},        tr("number of Threads (the connections will be distributed amongs them)"), "nb"},
-    {{"r", sOptionNames[Opt::REAL_NAME]},     tr("real yEnc name in Article Headers (no obfuscation)")},
+    {{"x", sOptionNames[Opt::OBFUSCATE]},     tr("obfuscate either the name of each files (-x file) or the subjects of the articles (-x article)"), "file|article"},
 
     {{"g", sOptionNames[Opt::GROUPS]},        tr("newsgroups where to post the files (coma separated without space)"), "str"},
     {{"m", sOptionNames[Opt::META]},          tr("extra meta data in header (typically \"password=qwerty42\")"), "key=val"},
@@ -99,31 +101,47 @@ const QList<QCommandLineOption> NgPost::sCmdOptions = {
 
 
 
-NgPost::NgPost():
+NgPost::NgPost(int &argc, char *argv[]):
     QObject (),
+    _app(nullptr),
+    _mode(argc > 1 ? AppMode::CMD : AppMode::HMI),
+    _hmi(nullptr),
     _nzbName(),
     _filesToUpload(), _filesInProgress(),
     _nbFiles(0), _nbPosted(0),
     _threadPool(), _nntpConnections(), _nntpServers(),
-    _obfuscation(true), _from(),
+    _obfuscateFileNames(false), _obfuscateArticles(false), _from(),
     _groups(sDefaultGroups),
     _articleIdSignature(sDefaultMsgIdSignature),
     _nzb(nullptr), _nzbStream(),
     _nntpFile(nullptr), _file(nullptr), _buffer(nullptr), _part(0),
     _articles(),
-    _timeStart(), _uploadSize(0),
+    _timeStart(), _totalSize(0),
     _meta(), _grpList(),
     _nbConnections(sDefaultNumberOfConnections), _nbThreads(QThread::idealThreadCount()),
     _socketTimeOut(sDefaultSocketTimeOut), _nzbPath(sDefaultNzbPath)
   #ifdef __DISP_PROGRESS_BAR__
-  , _nbArticlesUploaded(0), _nbArticlesTotal(0), _progressTimer(), _refreshRate(200)
+  , _nbArticlesUploaded(0), _uploadedSize(0), _nbArticlesTotal(0), _progressTimer(), _refreshRate(sDefaultRefreshRate)
   #endif
 {
+    if (_mode == AppMode::CMD)
+        _app =  new QCoreApplication(argc, argv);
+    else
+    {
+        _app = new QApplication(argc, argv);
+        _hmi = new MainWindow(this);
+        _hmi->setWindowTitle(QString("%1_v%2").arg(sAppName).arg(sVersion));
+    }
+
     QThread::currentThread()->setObjectName("NgPost");
     connect(this, &NgPost::scheduleNextArticle, this, &NgPost::onPrepareNextArticle);
 
     // in case we want to generate random uploader (_from not provided)
     std::srand(static_cast<uint>(QDateTime::currentMSecsSinceEpoch()));
+
+#ifdef __DEBUG__
+    connect(this, &NgPost::log, this, &NgPost::onLog, Qt::QueuedConnection);
+#endif
 }
 
 
@@ -131,20 +149,34 @@ NgPost::NgPost():
 
 NgPost::~NgPost()
 {
+    _log("Destuction NgPost...");
+
+    _finishPosting();
+    qDeleteAll(_nntpServers);
+    delete _app;
+}
+
+void NgPost::_finishPosting()
+{
 #ifdef __DISP_PROGRESS_BAR__
     disconnect(&_progressTimer, &QTimer::timeout, this, &NgPost::onRefreshProgressBar);
     if (!_timeStart.isNull())
     {
+        _nbArticlesUploaded = _nbArticlesTotal; // we might not have processed the last onArticlePosted
+        _uploadedSize       = _totalSize;
         onRefreshProgressBar();
         std::cout << std::endl;
     }
 #endif
 
-    _log("Destuction NgPost...");
+#ifdef __DEBUG__
+    _log("Finishing posting...");
+#endif
 
     // 1.: print stats
     if (!_timeStart.isNull())
         _printStats();
+
 
     // 2.: close nzb file
     _closeNzb();
@@ -160,44 +192,60 @@ NgPost::~NgPost()
     // 4.: stop and wait for all threads
     for (QThread *th : _threadPool)
     {
+#ifdef __DEBUG__
         _log(tr("Stopping thread %1").arg(th->objectName()));
+#endif
         th->quit();
         th->wait();
     }
 
-
+#ifdef __DEBUG__
     _log("All connections are closed...");
-
     _log(tr("prepared articles queue size: %1").arg(_articles.size()));
-
+#endif
 
     // 5.: print out the list of files that havn't been posted
     // (in case of disconnection)
     int nbPendingFiles = _filesToUpload.size() + _filesInProgress.size();
     if (nbPendingFiles)
     {
-        QTextStream cerr(stderr);
-        cerr << "ERROR: there were " << nbPendingFiles << " on " << _nbFiles << " that havn't been posted:\n";
+        _error(QString("ERROR: there were %1 on %2 that havn't been posted:").arg(
+                   nbPendingFiles).arg(_nbFiles));
         for (NntpFile *file : _filesInProgress)
-            cerr << "\t- " << file->path() << "\n";
+            _error(QString("  - %1").arg(file->path()));
         for (NntpFile *file : _filesToUpload)
-            cerr << "\t- " << file->path() << "\n";
-        cerr << "you can try to repost only those and concatenate the nzb with the current one ;)\n" << flush;
+            _error(QString("  - %1").arg(file->path()));
+
+        _error(tr("you can try to repost only those and concatenate the nzb with the current one ;)"));
     }
 
     // 6.: free all resources
-    qDeleteAll(_nntpServers);
-    qDeleteAll(_filesInProgress);
-    qDeleteAll(_filesToUpload);
-    qDeleteAll(_nntpConnections);
-    qDeleteAll(_threadPool);
+    qDeleteAll(_filesInProgress); _filesInProgress.clear();
+    qDeleteAll(_filesToUpload);   _filesToUpload.clear();
+    qDeleteAll(_nntpConnections); _nntpConnections.clear();
+    qDeleteAll(_threadPool);      _threadPool.clear();
+    if (_file)
+    {
+        _file->close();
+        delete _file;
+    }
 }
 
 bool NgPost::startPosting()
 {
+    qDebug() << "start posting... nzb: " << nzbPath();
+
+    _nbPosted           = 0;
+    _nbArticlesUploaded = 0;
+    _uploadedSize       = 0;
+    _nntpFile           = nullptr;
+    _file               = nullptr;
+    _articles.clear();
+
+
     if (!_nzb->open(QIODevice::WriteOnly))
     {
-        qCritical() << "Error: Can't create nzb output file: " << QString("%1/%2.nzb").arg(nzbPath()).arg(_nzbName);
+        _error(QString("Error: Can't create nzb output file: %1/%2.nzb").arg(nzbPath()).arg(_nzbName));
         return false;
     }
     else
@@ -262,8 +310,7 @@ bool NgPost::startPosting()
             emit con->startConnection();
         }
         thread->start();
-    }
-
+    }    
 
     // Prepare 2 Articles for each connections
     _prepareArticles();
@@ -274,6 +321,22 @@ bool NgPost::startPosting()
 #endif
 
     return true;
+}
+
+int NgPost::startEventLoop()
+{
+    return _app->exec();
+}
+
+int NgPost::startHMI()
+{
+    parseDefaultConfig();
+#ifdef __DEBUG__
+    _dumpParams();
+#endif
+    _hmi->init();
+    _hmi->show();
+    return _app->exec();
 }
 
 NntpArticle *NgPost::getNextArticle()
@@ -295,36 +358,52 @@ NntpArticle *NgPost::getNextArticle()
 
 void NgPost::onNntpFilePosted(NntpFile *nntpFile)
 {
-    _uploadSize += nntpFile->fileSize();
+    _totalSize += nntpFile->fileSize();
     ++_nbPosted;
+    if (_hmi)
+        _hmi->setFilePosted(nntpFile->path());
+
     nntpFile->writeToNZB(_nzbStream);
     _filesInProgress.remove(nntpFile);
     delete nntpFile;
     if (_nbPosted == _nbFiles)
     {
-        _log("All files have been posted => closing application");
-        qApp->quit();
+#ifdef __DEBUG__
+        _log(QString("All files have been posted => closing application (nb article uploaded: %1)").arg(_nbArticlesUploaded));
+#endif
+        if (_hmi)
+            _finishPosting();
+        else
+            qApp->quit();
     }
 }
 
 void NgPost::onLog(QString msg)
 {
-    qDebug() << msg;
+    _log(msg);
+}
+
+void NgPost::onError(QString msg)
+{
+    _error(msg);
 }
 
 void NgPost::onDisconnectedConnection(NntpConnection *con)
 {
-    QTextStream cerr(stderr);
-    cerr << tr("Error: disconnected connection: #%1\n").arg(con->getId());
+    _error(tr("Error: disconnected connection: #%1\n").arg(con->getId()));
     _nntpConnections.removeOne(con);
     delete con;
     if (_nntpConnections.isEmpty())
     {
-
-        cerr << "we lost all the connections... => closing application\n";
-        qApp->quit();
+        _error(tr("we lost all the connections..."));
+        if (_hmi)
+            _finishPosting();
+        else
+        {
+            _error(tr(" => closing application"));
+            qApp->quit();
+        }
     }
-    cerr << flush;
 }
 
 void NgPost::onPrepareNextArticle()
@@ -334,40 +413,80 @@ void NgPost::onPrepareNextArticle()
 
 void NgPost::onErrorConnecting(QString err)
 {
-    QTextStream cerr(stderr);
-    cerr << err << "\n" << flush;
+    _error(err);
 }
 
 #ifdef __DISP_PROGRESS_BAR__
 void NgPost::onArticlePosted(NntpArticle *article)
 {
-    Q_UNUSED(article)
+    _uploadedSize += static_cast<quint64>(article->size());
     ++_nbArticlesUploaded;
 }
 
 #include <iostream>
 void NgPost:: onRefreshProgressBar()
 {
-    float progress = _nbArticlesUploaded;
-    progress /= _nbArticlesTotal;
+    if (_hmi)
+        _hmi->updateProgressBar();
+    else
+    {
+        float progress = _nbArticlesUploaded;
+        progress /= _nbArticlesTotal;
 
-    qDebug() << "[NgPost::onRefreshProgressBar] uploaded: " << _nbArticlesUploaded
-             << " / " << _nbArticlesTotal
-             << " => progress: " << progress << "\n";
+        qDebug() << "[NgPost::onRefreshProgressBar] uploaded: " << _nbArticlesUploaded
+                 << " / " << _nbArticlesTotal
+                 << " => progress: " << progress << "\n";
 
-    std::cout << "\r[";
-    int pos = static_cast<int>(std::floor(progress * sProgressBarWidth));
-    for (int i = 0; i < sProgressBarWidth; ++i) {
-        if (i < pos) std::cout << "=";
-        else if (i == pos) std::cout << ">";
-        else std::cout << " ";
+        std::cout << "\r[";
+        int pos = static_cast<int>(std::floor(progress * sProgressBarWidth));
+        for (int i = 0; i < sProgressBarWidth; ++i) {
+            if (i < pos) std::cout << "=";
+            else if (i == pos) std::cout << ">";
+            else std::cout << " ";
+        }
+        std::cout << "] " << int(progress * 100) << " %"
+                  << " (" << _nbArticlesUploaded << " / " << _nbArticlesTotal << ")"
+                  << " avg. speed: " << avgSpeed().toStdString();
+        std::cout.flush();
     }
-    std::cout << "] " << int(progress * 100) << " %"
-              << " (" << _nbArticlesUploaded << " / " << _nbArticlesTotal << ")";
-    std::cout.flush();
     if (_nbArticlesUploaded < _nbArticlesTotal)
         _progressTimer.start(_refreshRate);
 }
+
+void NgPost::_initPosting(const QList<QFileInfo> &filesToUpload)
+{
+    // For HMI mode, we might need to clean if the posting failed from the beginning
+    _cleanInit();
+
+    // initialize buffer and nzb file
+    _buffer  = new char[articleSize()+1];
+    _nzb     = new QFile(nzbPath());
+    _nbFiles = filesToUpload.size();
+
+    // initialize the NntpFiles (active objects)
+    _filesToUpload.reserve(filesToUpload.size());
+    int fileNum = 0;
+    for (const QFileInfo &file : filesToUpload)
+    {
+        NntpFile *nntpFile = new NntpFile(file, ++fileNum, _nbFiles, _grpList);
+        connect(nntpFile, &NntpFile::allArticlesArePosted, this, &NgPost::onNntpFilePosted);
+        _filesToUpload.enqueue(nntpFile);
+#ifdef __DISP_PROGRESS_BAR__
+        _nbArticlesTotal += nntpFile->nbArticles();
+#endif
+    }
+}
+
+void NgPost::_cleanInit()
+{
+    if (_buffer)
+        delete _buffer;
+    if (_nzb)
+        delete _nzb;
+    qDeleteAll(_filesToUpload);_filesToUpload.clear();
+}
+
+
 #endif
 
 #ifndef __USE_MUTEX__
@@ -393,6 +512,7 @@ int NgPost::_createNntpConnections()
         {
             NntpConnection *nntpCon = new NntpConnection(this, ++nbCon, *srvParams);
             connect(nntpCon, &NntpConnection::log, this, &NgPost::onLog, Qt::QueuedConnection);
+            connect(nntpCon, &NntpConnection::error, this, &NgPost::onError, Qt::QueuedConnection);
             connect(nntpCon, &NntpConnection::errorConnecting, this, &NgPost::onErrorConnecting, Qt::QueuedConnection);
             connect(nntpCon, &NntpConnection::disconnected, this, &NgPost::onDisconnectedConnection, Qt::QueuedConnection);
 #ifndef __USE_MUTEX__
@@ -417,57 +537,67 @@ void NgPost::_closeNzb()
             _nzb->close();
         }
         delete _nzb;
+        _nzb = nullptr;
     }
 }
 
 void NgPost::_printStats() const
 {
-    QString unitSize = "B";
-    double uploadSize = _uploadSize;
-    if (uploadSize > 1024)
+    QString unit = "B";
+    double size = _totalSize;
+    if (size > 1024)
     {
-        uploadSize /= 1024;
-        unitSize = "kB";
+        size /= 1024;
+        unit = "kB";
     }
-    if (uploadSize > 1024)
+    if (size > 1024)
     {
-        uploadSize /= 1024;
-        unitSize = "MB";
+        size /= 1024;
+        unit = "MB";
     }
 
     int duration = _timeStart.elapsed();
     double sec = duration/1000;
-    double bandwidth = _uploadSize / sec;
-    QString unitSpeed = "B/s";
 
-    if (bandwidth > 1024)
-    {
-        bandwidth /= 1024;
-        unitSpeed = "kB/s";
-    }
-    if (bandwidth > 1024)
-    {
-        bandwidth /= 1024;
-        unitSpeed = "MB/s";
-    }
-
-    QString msgEnd = tr("\nUpload size: %1 %2 in %3 (%4 sec) => average speed: %5 %6 (%7 connections on %8 threads)\n").arg(
-                uploadSize).arg(unitSize).arg(
+    QString msgEnd = tr("\nUpload size: %1 %2 in %3 (%4 sec) \
+=> average speed: %5 (%6 connections on %7 threads)\n").arg(
+                size).arg(unit).arg(
                 QTime::fromMSecsSinceStartOfDay(duration).toString("hh:mm:ss.zzz")).arg(sec).arg(
-                bandwidth).arg(unitSpeed).arg(_nntpConnections.size()).arg(_threadPool.size());
+                avgSpeed()).arg(_nntpConnections.size()).arg(_threadPool.size());
 
 
-    QTextStream cout(stdout);
-    cout << msgEnd;
-    if (_nzb)
-        cout << QString("nzb file: %1\n").arg(nzbPath());
-    cout << "\n" << flush;
+    if (_hmi)
+    {
+        _hmi->log(msgEnd);
+        if (_nzb)
+            _hmi->log(QString("nzb file: %1\n").arg(nzbPath()));
+    }
+    else
+    {
+        QTextStream cout(stdout);
+        cout << msgEnd;
+        if (_nzb)
+            cout << QString("nzb file: %1\n").arg(nzbPath());
+        cout << "\n" << flush;
+    }
 }
 
 void NgPost::_log(const QString &aMsg) const
 {
     qDebug() << QString("[%1] %2").arg(QThread::currentThread()->objectName()).arg(aMsg);
+    if (_hmi)
+        _hmi->log(aMsg);
+}
 
+void NgPost::_error(const QString &error) const
+{
+    if (_hmi)
+        _hmi->logError(error);
+    else
+    {
+        QTextStream cerr(stderr);
+        cerr << error << "\n" << flush;
+    }
 }
 
 void NgPost::_prepareArticles()
@@ -524,7 +654,7 @@ NntpArticle *NgPost::_getNextArticle()
         if (!_nntpFile)
         {
 #ifdef __DEBUG__
-            _log("No more file to post...");
+            emit log("No more file to post...");
 #endif
             return nullptr;
         }
@@ -535,7 +665,9 @@ NntpArticle *NgPost::_getNextArticle()
         _file = new QFile(_nntpFile->path());
         if (_file->open(QIODevice::ReadOnly))
         {
+#ifdef __DEBUG__
             _log(tr("starting processing file %1").arg(_nntpFile->path()));
+#endif
             _part = 0;
         }
         else
@@ -562,7 +694,7 @@ NntpArticle *NgPost::_getNextArticle()
             ++_part;
             NntpArticle *article = new NntpArticle(_nntpFile, _part, _buffer, pos, bytes,
                                                    _from.empty()?_randomFrom():_from,
-                                                   _groups, _obfuscation);
+                                                   _groups, _obfuscateArticles);
 
 #ifdef __DISP_PROGRESS_BAR__
             connect(article, &NntpArticle::posted, this, &NgPost::onArticlePosted, Qt::QueuedConnection);
@@ -575,7 +707,9 @@ NntpArticle *NgPost::_getNextArticle()
         }
         else
         {
+#ifdef __DEBUG__
             _log(tr("finished processing file %1").arg(_nntpFile->path()));
+#endif
             _file->close();
             delete _file;
             _file = nullptr;
@@ -606,8 +740,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
 
     if (!parser.parse(args))
     {
-        QTextStream cerr(stderr);
-        cerr << "Error syntax: " << parser.errorText() << "\n" << flush;
+        _error(QString("Error syntax: %1").arg(parser.errorText()));
         _syntax(argv[0]);
         return false;
     }
@@ -620,8 +753,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
 
     if (!parser.isSet(sOptionNames[Opt::INPUT]))
     {
-        QTextStream cerr(stderr);
-        cerr << "Error syntax: you should provide at least one input file or directory using the option -i\n" << flush;
+        _error("Error syntax: you should provide at least one input file or directory using the option -i");
         return false;
     }
 
@@ -630,37 +762,35 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         QString err = _parseConfig(parser.value(sOptionNames[Opt::CONF]));
         if (!err.isEmpty())
         {
-            QTextStream cerr(stderr);
-            cerr << err << "\n" << flush;
+            _error(err);
             return false;
         }
     }
     else
     {
-#ifdef __MINGW64__
-        QString conf = sDefaultConfig;
-#else
-        QString conf = QString("%1/%2").arg(getenv("HOME")).arg(sDefaultConfig);
-#endif
-        QFileInfo defaultConf(conf);
-        if (defaultConf.exists() && defaultConf.isFile())
+        QString err = parseDefaultConfig();
+        if (!err.isEmpty())
         {
-            qCritical() << "Using default config file: " << conf;
-            QString err = _parseConfig(conf);
-            if (!err.isEmpty())
-            {
-                QTextStream cerr(stderr);
-                cerr << err << "\n" << flush;
-                return false;
-            }
+            _error(err);
+            return false;
         }
     }
 
-    if (parser.isSet(sOptionNames[Opt::REAL_NAME]))
+    if (parser.isSet(sOptionNames[Opt::OBFUSCATE]))
     {
         QTextStream cout(stdout);
-        cout << "Real yEnc name for the subject of the Articles (no obfuscation...)\n" << flush;
-        _obfuscation = false;
+
+        QString type = parser.value(sOptionNames[Opt::OBFUSCATE]).trimmed().toLower();
+        if (type.startsWith("article"))
+        {
+            _obfuscateArticles = true;
+            cout << "Do article obfuscation (the subject of each Article will be a UUID)\n" << flush;
+        }
+        else
+        {
+            _obfuscateFileNames = true;
+            cout << "TODO: obfuscate file names: posting each file with a random name\n" << flush;
+        }
     }
 
     if (parser.isSet(sOptionNames[Opt::THREAD]))
@@ -671,8 +801,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
             _nbThreads = 1;
         if (!ok)
         {
-            QTextStream cerr(stderr);
-            cerr << tr("You should give an integer for the number of threads (option -t)\n") << flush;
+            _error(tr("You should give an integer for the number of threads (option -t)"));
             return false;
         }
     }
@@ -702,8 +831,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
             sArticleSize = size;
         else
         {
-            QTextStream cerr(stderr);
-            cerr << tr("You should give an integer for the article size (option -a)\n") << flush;
+            _error(tr("You should give an integer for the article size (option -a)"));
             return false;
         }
     }
@@ -729,8 +857,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
                 server->port = port;
             else
             {
-                QTextStream cerr(stderr);
-                cerr << tr("You should give an integer for the port (option -P)\n") << flush;
+                _error(tr("You should give an integer for the port (option -P)"));
                 return false;
             }
         }
@@ -753,8 +880,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
                 server->nbCons = nbCons;
             else
             {
-                QTextStream cerr(stderr);
-                cerr << tr("You should give an integer for the number of connections (option -n)\n") << flush;
+                _error(tr("You should give an integer for the number of connections (option -n)"));
                 return false;
             }
         }
@@ -768,8 +894,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         QFileInfo fileInfo(filePath);
         if (!fileInfo.exists() || !fileInfo.isReadable())
         {
-            QTextStream cerr(stderr);
-            cerr << tr("Error: the input file '%1' is not readable...\n").arg(parser.value("input")) << flush;
+            _error(tr("Error: the input file '%1' is not readable...").arg(parser.value("input")));
             return false;
         }
         else
@@ -786,8 +911,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
                         filesToUpload.append(subFile);
                     else
                     {
-                        QTextStream cerr(stderr);
-                        cerr << tr("Error: the input file '%1' is not readable...\n").arg(subFile.absoluteFilePath()) << flush;
+                        _error(tr("Error: the input file '%1' is not readable...").arg(subFile.absoluteFilePath()));
                         return false;
                     }
                 }
@@ -808,23 +932,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     for (const QString &grp : grps)
         _grpList.append(grp);
 
-    // initialize buffer and nzb file
-    _buffer  = new char[articleSize()+1];
-    _nzb     = new QFile(nzbPath());
-    _nbFiles = filesToUpload.size();
-
-    // initialize the NntpFiles (active objects)
-    _filesToUpload.reserve(filesToUpload.size());
-    int fileNum = 0;
-    for (const QFileInfo &file : filesToUpload)
-    {
-        NntpFile *nntpFile = new NntpFile(file, ++fileNum, _nbFiles, _grpList);
-        connect(nntpFile, &NntpFile::allArticlesArePosted, this, &NgPost::onNntpFilePosted);
-        _filesToUpload.enqueue(nntpFile);
-#ifdef __DISP_PROGRESS_BAR__
-        _nbArticlesTotal += nntpFile->nbArticles();
-#endif
-    }
+    _initPosting(filesToUpload);
 
 #ifdef __DEBUG__
     _dumpParams();
@@ -882,9 +990,18 @@ QString NgPost::_parseConfig(const QString &configPath)
                         else
                             err += tr("the nzbPath '%1' is not writable...\n").arg(val);
                     }
-                    else if (opt == sOptionNames[Opt::REAL_NAME])
+                    else if (opt == sOptionNames[Opt::OBFUSCATE])
                     {
-                        _obfuscation = false;
+                        if (val.toLower().startsWith("article"))
+                        {
+                            _obfuscateArticles = true;
+                            qDebug() << "Do article obfuscation (the subject of each Article will be a UUID)\n";
+                        }
+                        else
+                        {
+                            _obfuscateFileNames = true;
+                            qDebug() << "TODO: obfuscate file names: posting each file with a random name\n";
+                        }
                     }
                     else if (opt == sOptionNames[Opt::MSG_ID])
                     {
@@ -979,6 +1096,23 @@ void NgPost::_syntax(char *appName)
          << flush;
 }
 
+QString NgPost::parseDefaultConfig()
+{
+#ifdef __MINGW64__
+    QString conf = sDefaultConfig;
+#else
+    QString conf = QString("%1/%2").arg(getenv("HOME")).arg(sDefaultConfig);
+#endif
+    QString err;
+    QFileInfo defaultConf(conf);
+    if (defaultConf.exists() && defaultConf.isFile())
+    {
+        qCritical() << "Using default config file: " << conf;
+        err = _parseConfig(conf);
+    }
+    return err;
+}
+
 #ifdef __DEBUG__
 void NgPost::_dumpParams() const
 {
@@ -991,6 +1125,8 @@ void NgPost::_dumpParams() const
              << "\nnb Servers: " << _nntpServers.size() << ": " << servers
              << "\nfrom: " << _from.c_str() << ", groups: " << _groups.c_str()
              << "\narticleSize: " << sArticleSize
+             << ", obfuscate files: " << _obfuscateFileNames
+             << ", obfuscate articles: " << _obfuscateArticles
              << "\n[NgPost::_dumpParams]<<<<<<<<<<<<<<<<<<\n";
 }
 enum class Opt {HELP = 0, VERSION, CONF,

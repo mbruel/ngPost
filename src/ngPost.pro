@@ -1,10 +1,10 @@
-QT += network
-QT -= gui
+QT += network gui
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 INCLUDEPATH += $$PWD
 TARGET = ngPost
 TEMPLATE = app
-CONFIG += c++14 console
+CONFIG += c++14
 CONFIG -= app_bundle
 
 
@@ -43,11 +43,14 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         NgPost.cpp \
         NntpConnection.cpp \
+        hmi/CheckBoxCenterWidget.cpp \
         main.cpp \
         nntp/Nntp.cpp \
         nntp/NntpArticle.cpp \
         nntp/NntpFile.cpp \
-        utils/Yenc.cpp
+        utils/Yenc.cpp \
+        hmi/MainWindow.cpp
+
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -57,9 +60,18 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 HEADERS += \
     NgPost.h \
     NntpConnection.h \
+    hmi/CheckBoxCenterWidget.h \
     nntp/Nntp.h \
     nntp/NntpArticle.h \
     nntp/NntpFile.h \
     nntp/NntpServerParams.h \
     utils/PureStaticClass.h \
-    utils/Yenc.h
+    utils/Yenc.h \
+    hmi/MainWindow.h
+
+
+FORMS += \
+    hmi/MainWindow.ui
+
+RESOURCES += \
+    resources/resources.qrc
