@@ -2,7 +2,7 @@
 
 command line usenet poster for binaries developped in C++/QT</br>
 it is designed to be as fast as possible and offer all the main features to post data easily and safely.</br>
-since v1.1, a minimalist GUI has been added
+since v1.1, a minimalist GUI has been added on request
 
 Here are the main features and advantages of ngPost:
 
@@ -141,7 +141,6 @@ here](https://github.com/animetosho/Nyuu/wiki/Usenet-Uploaders).
 - if you've any troubles to build or run ngPost, feel free to drop me an email
 - if you've some comments on the code, any questions on the implementation or any proposal for improvements, I'll be happy to discuss it with you so idem, feel free to drop me an email
 - if you'd like some other features, same same (but different), drop me an email ;)
-(I may do a small GUI especially for Windows users if I get some requests)
 
 Here is my email: Matthieu.Bruel@gmail.com
 
