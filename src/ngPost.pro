@@ -4,13 +4,16 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 INCLUDEPATH += $$PWD
 TARGET = ngPost
 TEMPLATE = app
-CONFIG += console
 CONFIG += c++14
 CONFIG -= app_bundle
 
+win32: {
+    RC_ICONS += ngPost.ico
 
-
-win32:RC_ICONS += ngPost.ico
+# we need the console to be able to print stuff in command line mode...
+# we hide the console if we start in GUI mode
+    CONFIG += console
+}
 
 DEFINES += __USE_MUTEX__
 DEFINES += __DISP_PROGRESS_BAR__
