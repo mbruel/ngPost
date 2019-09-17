@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>icons/clear.png</file>
+        <file>icons/ngPost.png</file>
     </qresource>
 </RCC>

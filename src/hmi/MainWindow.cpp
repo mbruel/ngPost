@@ -28,6 +28,7 @@
 #include "nntp/NntpServerParams.h"
 #include <QProgressBar>
 #include <QLabel>
+#include <QDesktopWidget>
 
 const QStringList  MainWindow::sServerListHeaders = {
     tr("Host (name or IP)"),
@@ -79,6 +80,9 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
     updateProgressBar();
 
     statusBar()->hide();
+
+    resize(QDesktopWidget().availableGeometry(this).size() * 0.8);
+    setWindowIcon(QIcon(":/icons/ngPost.png"));
 }
 
 MainWindow::~MainWindow()
@@ -175,7 +179,7 @@ void MainWindow::_initServerBox()
         _ui->serversTable->setColumnWidth(col++, size);
         width += size;
     }
-    _ui->serversTable->setMaximumWidth(width);
+//    _ui->serversTable->setMaximumWidth(width);
 
     connect(_ui->addServerButton,   &QAbstractButton::clicked, this, &MainWindow::onAddServer);
 
