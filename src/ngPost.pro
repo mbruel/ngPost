@@ -4,9 +4,13 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 INCLUDEPATH += $$PWD
 TARGET = ngPost
 TEMPLATE = app
+CONFIG += console
 CONFIG += c++14
 CONFIG -= app_bundle
 
+
+
+win32:RC_ICONS += ngPost.ico
 
 DEFINES += __USE_MUTEX__
 DEFINES += __DISP_PROGRESS_BAR__
