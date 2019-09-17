@@ -91,10 +91,10 @@ if you don't want to build it and install the dependencies, you can also the por
 
 
 ### Portable release (Windows)
-- unzip [ngPost_v1.1_win7_64bit.zip](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v1.0.1_win7_64bit.zip)
-- edit **ngPost.conf** to add your server settings (you can put several)
-- launch **ngPost.bat** (GUI version)
-- or you can use it with the command line: **ngPost.bat** -i "your file or directory"
+- just use the packager [ngPost_1.1_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_1.1_x64_setup.exe)
+- edit **ngPost.conf** (in the installation folder) to add your server settings (you can put several). 
+- launch **ngPost.exe** (GUI version)
+- or you can use it with the command line: **ngPost.exe** -i "your file or directory"
 
 if you prefer, you can give all the server parameters in the command line (cf the above section)<br/>
 By default:
