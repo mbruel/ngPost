@@ -90,7 +90,7 @@ if you don't want to build it and install the dependencies, you can also the por
 **postFile.sh** is a handy script that can only takes 2 arguments: -c for the config file and -i for a single input file that will be rar and par2 before posting
 
 
-### Portable release (Windows)
+### Windows installer
 - just use the packager [ngPost_1.1_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_1.1_x64_setup.exe)
 - edit **ngPost.conf** (in the installation folder) to add your server settings (you can put several). 
 - launch **ngPost.exe** (GUI version)
