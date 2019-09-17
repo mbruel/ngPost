@@ -5,6 +5,9 @@
 #include <iostream>
 #include "NgPost.h"
 
+#if defined( Q_OS_WIN )
+#include <windows.h>
+#endif
 void handleShutdown(int signal)
 {
     Q_UNUSED(signal);
@@ -28,11 +31,13 @@ int main(int argc, char *argv[])
     signal(SIGINT,  &handleShutdown);// shut down on ctrl-c
     signal(SIGTERM, &handleShutdown);// shut down on killall
 
-
 //    qDebug() << "argc: " << argc;
     NgPost ngPost(argc, argv);
     if (ngPost.useHMI())
     {
+#if defined( Q_OS_WIN )
+    ::ShowWindow( ::GetConsoleWindow(), SW_HIDE ); //hide console window
+#endif
         return ngPost.startHMI();
     }
     else if (ngPost.parseCommandLine(argc, argv))
