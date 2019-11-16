@@ -203,6 +203,9 @@ private slots:
     void onRefreshProgressBar();
 #endif
 
+    QString randomFrom() const;
+    QString randomPass(uint length = 13) const;
+
 
 private:
     void _initPosting(const QList<QFileInfo> &filesToUpload);

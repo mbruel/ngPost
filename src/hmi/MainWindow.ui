@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>766</width>
-    <height>582</height>
+    <height>583</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -85,11 +85,14 @@
         <layout class="QVBoxLayout" name="verticalLayout_4">
          <item>
           <widget class="QCheckBox" name="randomFromCB">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
            <property name="text">
             <string>use random Poster for each file</string>
            </property>
            <property name="checked">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
           </widget>
          </item>
@@ -106,6 +109,26 @@
             <widget class="QLineEdit" name="fromEdit">
              <property name="enabled">
               <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="genPoster">
+             <property name="maximumSize">
+              <size>
+               <width>24</width>
+               <height>24</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>generate random Poster</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="../resources/resources.qrc">
+               <normaloff>:/icons/genKey.png</normaloff>:/icons/genKey.png</iconset>
              </property>
             </widget>
            </item>
@@ -378,6 +401,26 @@
                </property>
               </widget>
              </item>
+             <item>
+              <widget class="QPushButton" name="genPass">
+               <property name="maximumSize">
+                <size>
+                 <width>24</width>
+                 <height>24</height>
+                </size>
+               </property>
+               <property name="toolTip">
+                <string>generate random password</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="../resources/resources.qrc">
+                 <normaloff>:/icons/genKey.png</normaloff>:/icons/genKey.png</iconset>
+               </property>
+              </widget>
+             </item>
             </layout>
            </item>
           </layout>
@@ -495,12 +538,14 @@
      <x>0</x>
      <y>0</y>
      <width>766</width>
-     <height>21</height>
+     <height>20</height>
     </rect>
    </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
- <resources/>
+ <resources>
+  <include location="../resources/resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

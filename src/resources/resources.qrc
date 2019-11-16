@@ -2,5 +2,6 @@
     <qresource prefix="/">
         <file>icons/clear.png</file>
         <file>icons/ngPost.png</file>
+        <file>icons/genKey.png</file>
     </qresource>
 </RCC>

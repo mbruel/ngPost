@@ -70,9 +70,11 @@ public slots:
     void onClearFilesClicked();
 
     void onRandomFromToggled(bool checked);
+    void onGenPoster();
     void onObfuscateFileNameToggled(bool checked);
     void onObfuscateMsgIdToggled(bool checked);
     void onNzbPassToggled(bool checked);
+    void onGenNzbPassword();
 
 protected:
     bool eventFilter(QObject *obj, QEvent *event) override;

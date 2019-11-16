@@ -3,7 +3,7 @@
 # Script to upload a file on Usenet using ngPost (https://github.com/mbruel/ngPost)
 # it's goal it's to do the split and the par2 generation in a temp folder prior to upload it
 #
-QT_VERSION=5.11.3
+QT_VERSION=5.12.6
 SCRIPT=`readlink -f "$0"`
 SCRIPT_PATH=`dirname "$SCRIPT"`
 LIBS="$SCRIPT_PATH/libs"
@@ -21,7 +21,7 @@ TMP_FOLDER=/tmp
 
 syntax()
 {
-	echo "syntax: $0 (-c <ngPost config file>)? -i <input file>"
+	echo "syntax: $0 (-c <ngPost config file>)? (-i <input file>)+"
 }
 
 #1.: parse the options
@@ -29,7 +29,8 @@ while getopts "hc:i:" opt
 do
 	case $opt in
 	"i")
-		FILE="$OPTARG"
+#		FILE="$OPTARG"
+		FILES+=("$OPTARG")
 	;;
 	"c")
 		CONFIG="$OPTARG"
@@ -46,20 +47,24 @@ do
 	esac
 done
 
+MAIN_FILE=$FILES
+echo "Nb files: ${#FILES[@]}, main one: $MAIN_FILE, all files: ${FILES[@]}"
+
+
 #2.: validate the options
 #if [ -z $CONFIG ] || [ ! -f $CONFIG ] ; then
 #	echo "you need to provide ngPost configuration file (-c option)"
 #	exit 1
 #fi
-if [ -z $FILE ] || [ !  -f $FILE ] ; then
-	echo "you need to provide an input file..."
+if [ -z $MAIN_FILE ] || [ !  -f $MAIN_FILE ] ; then
+	echo "you need to provide at least one input file..."
 	exit 1
 fi
 
 
 #3.: create the TMP_FOLDER
-echo "File to upload: $FILE"
-FILENAME=$(basename "${FILE%.*}")
+echo "File to upload: $MAIN_FILE"
+FILENAME=$(basename "${MAIN_FILE%.*}")
 TMP_FOLDER="$TMP_FOLDER/$FILENAME"
 if [ -e $TMP_FOLDER ]; then
 	echo "Folder $TMP_FOLDER already exist..."
@@ -69,10 +74,10 @@ mkdir $TMP_FOLDER
 
 
 #4.: create the archives and par2
-cd $TMP_FOLDER
 PASS=$(pwgen -cBsn 13 1)
 echo "RAR pass: $PASS"
-rar a -v50m -ed -ep1 -m0 -hp"$PASS" "$FILENAME.rar" "$FILE"
+rar a -v50m -ed -ep1 -m0 -hp"$PASS" "$TMP_FOLDER/$FILENAME.rar" "${FILES[@]}"
+cd $TMP_FOLDER
 par2 c -s768000 -r8 *.rar
 
 
