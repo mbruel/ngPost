@@ -91,7 +91,7 @@ if you don't want to build it and install the dependencies, you can also the por
 
 
 ### Windows installer
-- just use the packager [ngPost_1.1_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_1.1_x64_setup.exe)
+- just use the packager [ngPost_1.2_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_1.2_x64_setup.exe) or [ngPost_1.2_x86_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_1.2_x86_setup.exe) for the 32bit version
 - edit **ngPost.conf** (in the installation folder) to add your server settings (you can put several). 
 - launch **ngPost.exe** (GUI version)
 - or you can use it with the command line: **ngPost.exe** -i "your file or directory"
