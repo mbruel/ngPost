@@ -39,7 +39,7 @@
 
 
 const QString NgPost::sAppName = "ngPost";
-const QString NgPost::sVersion = "1.1.1";
+const QString NgPost::sVersion = "1.2";
 
 qint64        NgPost::sArticleSize = sDefaultArticleSize;
 const QString NgPost::sSpace       = sDefaultSpace;
