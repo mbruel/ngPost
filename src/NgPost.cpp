@@ -1126,7 +1126,7 @@ void NgPost::_syntax(char *appName)
 
 QString NgPost::parseDefaultConfig()
 {
-#ifdef __MINGW64__
+#if defined(WIN32) || defined(__MINGW64__)
     QString conf = sDefaultConfig;
 #else
     QString conf = QString("%1/%2").arg(getenv("HOME")).arg(sDefaultConfig);
