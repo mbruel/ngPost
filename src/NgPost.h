@@ -141,7 +141,7 @@ private:
     static constexpr const char *sDefaultGroups  = "alt.binaries.test,alt.binaries.misc";
     static constexpr const char *sDefaultSpace   = "  ";
     static constexpr const char *sDefaultMsgIdSignature = "ngPost";
-#ifdef __MINGW64__
+#if defined(WIN32) || defined(__MINGW64__)
     static constexpr const char *sDefaultNzbPath = ""; //!< local folder
     static constexpr const char *sDefaultConfig = "ngPost.conf";
 #else
@@ -291,7 +291,7 @@ int NgPost::nbThreads() const { return _nbThreads; }
 int NgPost::getSocketTimeout() const { return _socketTimeOut; }
 QString NgPost::nzbPath() const
 {
-#ifdef __MINGW64__
+#if defined(WIN32) || defined(__MINGW64__)
     if (_nzbPath.isEmpty())
         return QString("%1.nzb").arg(_nzbName);
     else
