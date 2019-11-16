@@ -39,7 +39,7 @@
 
 
 const QString NgPost::sAppName = "ngPost";
-const QString NgPost::sVersion = "1.1";
+const QString NgPost::sVersion = "1.1.1";
 
 qint64        NgPost::sArticleSize = sDefaultArticleSize;
 const QString NgPost::sSpace       = sDefaultSpace;
@@ -134,7 +134,7 @@ NgPost::NgPost(int &argc, char *argv[]):
     }
 
     QThread::currentThread()->setObjectName("NgPost");
-    connect(this, &NgPost::scheduleNextArticle, this, &NgPost::onPrepareNextArticle);
+    connect(this, &NgPost::scheduleNextArticle, this, &NgPost::onPrepareNextArticle, Qt::QueuedConnection);
 
     // in case we want to generate random uploader (_from not provided)
     std::srand(static_cast<uint>(QDateTime::currentMSecsSinceEpoch()));
@@ -646,6 +646,27 @@ std::string NgPost::_randomFrom() const
     return randomFrom.toStdString();
 }
 
+QString NgPost::randomFrom() const
+{
+    QString randomFrom, alphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
+    int nb = 8, nbLetters = alphabet.length();
+    for (int i = 0 ; i < nb ; ++i)
+        randomFrom.append(alphabet.at(std::rand()%nbLetters));
+
+    randomFrom += QString("@%1.com").arg(_articleIdSignature.c_str());
+    return randomFrom;
+}
+
+QString NgPost::randomPass(uint length) const
+{
+    QString pass, alphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
+    int nbLetters = alphabet.length();
+    for (uint i = 0 ; i < length ; ++i)
+        pass.append(alphabet.at(std::rand()%nbLetters));
+
+    return pass;
+}
+
 NntpArticle *NgPost::_getNextArticle()
 {
     if (!_nntpFile)
@@ -666,13 +687,13 @@ NntpArticle *NgPost::_getNextArticle()
         if (_file->open(QIODevice::ReadOnly))
         {
 #ifdef __DEBUG__
-            _log(tr("starting processing file %1").arg(_nntpFile->path()));
+            emit log(tr("starting processing file %1").arg(_nntpFile->path()));
 #endif
             _part = 0;
         }
         else
         {
-            _log(tr("Error: couldn't open file %1").arg(_nntpFile->path()));
+            emit log(tr("Error: couldn't open file %1").arg(_nntpFile->path()));
             delete _file;
             _file = nullptr;
             _nntpFile = nullptr;
@@ -689,7 +710,7 @@ NntpArticle *NgPost::_getNextArticle()
         {
             _buffer[bytes] = '\0';
 #ifdef __DEBUG__
-            _log(tr("we've read %1 bytes from %2 (=> new pos: %3)").arg(bytes).arg(pos).arg(_file->pos()));
+            emit log(tr("we've read %1 bytes from %2 (=> new pos: %3)").arg(bytes).arg(pos).arg(_file->pos()));
 #endif
             ++_part;
             NntpArticle *article = new NntpArticle(_nntpFile, _part, _buffer, pos, bytes,
@@ -708,7 +729,7 @@ NntpArticle *NgPost::_getNextArticle()
         else
         {
 #ifdef __DEBUG__
-            _log(tr("finished processing file %1").arg(_nntpFile->path()));
+            emit log(tr("finished processing file %1").arg(_nntpFile->path()));
 #endif
             _file->close();
             delete _file;
@@ -847,7 +868,10 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         _nntpServers.append(server);
 
         if (parser.isSet(sOptionNames[Opt::SSL]))
+        {
             server->useSSL = true;
+            server->port = NntpServerParams::sDefaultSslPort;
+        }
 
         if (parser.isSet(sOptionNames[Opt::PORT]))
         {
@@ -1039,7 +1063,11 @@ QString NgPost::_parseConfig(const QString &configPath)
                     {
                         val = val.trimmed();
                         if (val == "true" || val == "on" || val == "1")
+                        {
                             serverParams->useSSL = true;
+                            if (serverParams->port == NntpServerParams::sDefaultPort)
+                                serverParams->port = NntpServerParams::sDefaultSslPort;
+                        }
                     }
                     else if (opt == sOptionNames[Opt::USER])
                     {

@@ -79,11 +79,12 @@ void NntpArticle::write(NntpConnection *con, const std::string &idSignature)
 
 std::string NntpArticle::header(const std::string &idSignature) const
 {
+    QByteArray msgId = _id.toByteArray(sMsgIdFormat);
     std::stringstream ss;
     ss << "From: "        << _from    << Nntp::ENDLINE
        << "Newsgroups: "  << _groups  << Nntp::ENDLINE
-       << "Subject: "     << (_subject.empty()?_id.toByteArray().constData():_subject) << Nntp::ENDLINE
-       << "Message-ID: <" << _id.toByteArray().constData() << "@" << idSignature << ">" << Nntp::ENDLINE
+       << "Subject: "     << (_subject.empty() ? msgId.constData() : _subject) << Nntp::ENDLINE
+       << "Message-ID: <" << msgId.constData() << "@" << idSignature << ">" << Nntp::ENDLINE
        << Nntp::ENDLINE;
     return ss.str();
 }

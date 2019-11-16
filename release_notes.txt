@@ -1,0 +1,81 @@
+
+                  __________               __
+      ____    ____\______   \____  _______/  |_
+     /    \  / ___\|     ___/  _ \/  ___/\   __\
+    |   |  \/ /_/  >    |  (  <_> )___ \  |  |
+    |___|  /\___  /|____|   \____/____  > |__|
+         \//_____/                    \/
+
+
+- TODO: try reposting Failed Article with another UUID in case of error (with a number max of retry)
+
+- TODO: compression:
+	button to compress or -z option (would use rar and generate par2)
+	with HMI: display rar command, propose generation of password, display par2 cmd
+
+####################################################
+###       Release: ngPost v1.2                   ###
+###       date:    2019/16/11                    ###
+####################################################
+
+- switch Linux release to Qt 12.6 LTS (only 64bit available)
+
+- add Windows 32 bit release (Qt 12.5 LTS)
+
+- fix potential crash (always emit a signal for logging as the writting must be done in the HMI thread)
+
+- msg-id format update (more compact without curly brackets)
+
+- default port to 563 if SSL option is checked (especially for command line with server details)
+
+- HMI: fix automatic nzb filename when adding the first file
+- HMI: add a button to generate a random nzb password (you should then use it for your encryption password!)
+- HMI: add a button to generate a random poster email for the whole post
+
+- update postFiles.sh to manage several files and relative paths
+
+
+####################################################
+###       Release: ngPost v1.1                   ###
+###       date:    2019/09/17                    ###
+####################################################
+
+- Adding minimalist HMI
+=> code modification to be able to handle multiple posts one after each other (instead of closing the app)
+
+- build setup file for windows (using Inno Setup)
+
+
+
+####################################################
+###       Release: ngPost v1.0                   ###
+###       date:    2019/08/24                    ###
+####################################################
+
+First release of the implementation
+cf README:
+
+command line usenet poster for binaries developped in C++/QT
+it is designed to be as fast as possible and offer all the main features to post data easily and safely.
+
+Here are the main features and advantages of ngPost:
+    it can use several servers (using config file) with each several connections (supporting ssl)
+    it is spreading those connection on several threads. By default the number of cores of the station but you can set the number if you fancy.
+    it is using asynchronous sockets in the upload threads
+    it is preparing the Articles on the main Thread (yEnc encoding) so the upload threads are always ready to write when they can. (each connections has 2 Articles ready in advance)
+    it is limiting the disk access to the minimum by opening the files to post only once in the main Thread and processing them sequentially one by one (no need to open several files at the same time)
+    it can do full obfuscation of the Article Header (subject and msg-id)
+    it is generating a random uploader for each Article Header (from) but can use a fixed one if desired
+    it is of course generating the nzb file
+    it can support multiple files and multiple folders
+    there is an handler on interruption which means that if you stop it, you'll close properly and generate the nzb for what has been posted
+    in case of interruption, it will list the files that havn't been uploaded so you can repost only those ones and then manually concatenate the nzb files
+    you can add meta in the header of the nzb (typically for a password)
+    ...
+
+What it does not:
+    compress or generate the par2 for a single files (use a script to do it ;))
+    retry posting articles (not really needed as the msg-id of the articles are generated using UUID (followed by @ that you can configure (by default @ngPost))
+    retry to connect when a connection is lost as they are all created with the KeepAliveOption set. If we loose all the connections, ngPost close properly and write the nzb file
+
+RQ: you don't need to obfuscate the file names as they will only be used in the nzb file as the obfuscation is done for each Article with a UUID as subject and msg-id.

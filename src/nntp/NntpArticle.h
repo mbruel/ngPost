@@ -39,6 +39,8 @@ class NntpArticle : public QObject
 
     friend class NntpFile; //!< to access all members and be able to clear the _body
 
+    static const QUuid::StringFormat sMsgIdFormat = QUuid::StringFormat::Id128;
+
 private:
     NntpFile *_nntpFile; //!< original file
     const int _part;     //!< part of the original file
@@ -84,7 +86,7 @@ public:
 };
 
 std::string NntpArticle::body() const { return _body; }
-QString NntpArticle::id() const { return _id.toString(); }
+QString NntpArticle::id() const { return _id.toString(sMsgIdFormat); }
 NntpFile *NntpArticle::nntpFile() const { return _nntpFile; }
 
 qint64 NntpArticle::size() const { return _fileBytes; }

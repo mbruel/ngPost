@@ -200,15 +200,25 @@ void MainWindow::_initFilesBox()
 void MainWindow::_initPostingBox()
 {
     connect(_ui->randomFromCB,        &QAbstractButton::toggled, this, &MainWindow::onRandomFromToggled);
+    connect(_ui->genPoster,           &QAbstractButton::clicked, this, &MainWindow::onGenPoster);
     connect(_ui->obfuscateFileNameCB, &QAbstractButton::toggled, this, &MainWindow::onObfuscateFileNameToggled);
     connect(_ui->obfuscateMsgIdCB,    &QAbstractButton::toggled, this, &MainWindow::onObfuscateMsgIdToggled);
     connect(_ui->nzbPassCB,           &QAbstractButton::toggled, this, &MainWindow::onNzbPassToggled);
+    connect(_ui->genPass,             &QAbstractButton::clicked, this, &MainWindow::onGenNzbPassword);
 
-    if (!_ngPost->_from.empty())
+    if (_ngPost->_from.empty())
     {
-        _ui->randomFromCB->setChecked(false);
-        _ui->fromEdit->setText(QString::fromStdString(_ngPost->_from));
+        _ui->randomFromCB->setChecked(true);
+        onRandomFromToggled(true);
     }
+    else
+    {
+        _ui->fromEdit->setText(QString::fromStdString(_ngPost->_from));
+        _ui->randomFromCB->setChecked(false);
+        onRandomFromToggled(false);
+    }
+    _ui->nzbPassCB->setChecked(false);
+    onNzbPassToggled(false);
 
     _ui->groupsEdit->setText(QString::fromStdString(_ngPost->_groups));
 
@@ -375,7 +385,7 @@ void MainWindow::_addFile(const QString &fileName, int currentNbFiles)
     if (_ui->nzbFileEdit->text().isEmpty())
     {
         QFileInfo fileInfo(fileName);
-        _ngPost->_nzbName = fileInfo.baseName();
+        _ngPost->_nzbName = fileInfo.completeBaseName();
         _ui->nzbFileEdit->setText(_ngPost->nzbPath());
     }
 }
@@ -393,6 +403,12 @@ bool MainWindow::_fileAlreadyInList(const QString &fileName, int currentNbFiles)
 void MainWindow::onRandomFromToggled(bool checked)
 {
     _ui->fromEdit->setEnabled(!checked);
+    _ui->genPoster->setEnabled(!checked);
+}
+
+void MainWindow::onGenPoster()
+{
+    _ui->fromEdit->setText(_ngPost->randomFrom());
 }
 
 void MainWindow::onObfuscateFileNameToggled(bool checked)
@@ -410,6 +426,12 @@ void MainWindow::onObfuscateMsgIdToggled(bool checked)
 void MainWindow::onNzbPassToggled(bool checked)
 {
     _ui->nzbPassEdit->setEnabled(checked);
+    _ui->genPass->setEnabled(checked);
+}
+
+void MainWindow::onGenNzbPassword()
+{
+    _ui->nzbPassEdit->setText(_ngPost->randomPass());
 }
 
 
