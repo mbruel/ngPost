@@ -82,7 +82,13 @@ so in the first example above, the nzb would be: /tmp/folderToPost2.nzb
 
 ### Portable release (Linux)
 if you don't want to build it and install the dependencies, you can also the portable release that includes everything.<br/>
-- download the latest release [ngPost_v1.1_linux_x86_64.tar.bz2](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v1.1_linux_x86_64.tar.bz2)
+- download [ngPost_v1.2-x86_64.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v1.2-x86_64.AppImage)
+- chmod 755 ngPost_v1.2-x86_64.AppImage
+- launch it using the same syntax than describe in the section above
+- if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf)
+
+<u>Notes for older releases:</u>
+- download the latest release [ngPost_v1.1_linux_x86_64.tar.bz2](https://github.com/mbruel/ngPost/raw/master/release/old/ngPost_v1.1_linux_x86_64.tar.bz2)
 - decompress it (tar xjvf ngPost_v1.1_linux_x86_64.tar.bz2)
 - use **ngPost.sh** or **postFile.sh** as they will set the required environment variables (LD_LIBRARY_PATH and QT_PLUGIN_PATH)
 
@@ -91,7 +97,7 @@ if you don't want to build it and install the dependencies, you can also the por
 
 
 ### Windows installer
-- just use the packager [ngPost_1.1_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_1.1_x64_setup.exe)
+- just use the packager [ngPost_1.2_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_1.2_x64_setup.exe) or [ngPost_1.2_x86_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_1.2_x86_setup.exe) for the 32bit version
 - edit **ngPost.conf** (in the installation folder) to add your server settings (you can put several). 
 - launch **ngPost.exe** (GUI version)
 - or you can use it with the command line: **ngPost.exe** -i "your file or directory"
