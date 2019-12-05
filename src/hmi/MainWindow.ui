@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>766</width>
-    <height>583</height>
+    <width>930</width>
+    <height>767</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -88,6 +88,9 @@
            <property name="enabled">
             <bool>true</bool>
            </property>
+           <property name="toolTip">
+            <string>Uncommnent this option to be able to have the same Poster for the whole posting</string>
+           </property>
            <property name="text">
             <string>use random Poster for each file</string>
            </property>
@@ -154,6 +157,9 @@
                <height>50</height>
               </size>
              </property>
+             <property name="toolTip">
+              <string>add the list of groups separated with a coma (no space)</string>
+             </property>
              <property name="text">
               <string>NewsGroups:</string>
              </property>
@@ -196,6 +202,9 @@
          </item>
          <item>
           <widget class="QCheckBox" name="obfuscateMsgIdCB">
+           <property name="toolTip">
+            <string>CAREFUL: you won't be able to find your post without the NZB file</string>
+           </property>
            <property name="text">
             <string>obfuscation of each Article's Message-Id </string>
            </property>
@@ -218,6 +227,9 @@
           <layout class="QHBoxLayout" name="horizontalLayout_3">
            <item>
             <widget class="QLabel" name="articleSizeLbl">
+             <property name="toolTip">
+              <string>don't touch if you don't know what it is</string>
+             </property>
              <property name="text">
               <string>Article Size:</string>
              </property>
@@ -237,6 +249,29 @@
             </widget>
            </item>
            <item>
+            <widget class="QLabel" name="nbRetryLbl">
+             <property name="toolTip">
+              <string>Number of retry if an Article FAILS to be posted (probably its msg-id is already in use)</string>
+             </property>
+             <property name="text">
+              <string>nb Retry:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="nbRetryEdit">
+             <property name="maximumSize">
+              <size>
+               <width>50</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>5</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <spacer name="horizontalSpacer_5">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
@@ -251,6 +286,9 @@
            </item>
            <item>
             <widget class="QLabel" name="threadLbl">
+             <property name="toolTip">
+              <string>Number of Threads on which all the Connections will be spreads</string>
+             </property>
              <property name="text">
               <string>Nb Threads:</string>
              </property>
@@ -389,6 +427,9 @@
             <layout class="QHBoxLayout" name="nzbPassLayout">
              <item>
               <widget class="QCheckBox" name="nzbPassCB">
+               <property name="toolTip">
+                <string>This should be the password of the archive you're posting</string>
+               </property>
                <property name="text">
                 <string>nzb password:</string>
                </property>
@@ -472,6 +513,37 @@
          <item>
           <widget class="QTextBrowser" name="logBrowser"/>
          </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <item>
+            <widget class="QCheckBox" name="debugBox">
+             <property name="text">
+              <string>show debug info</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_7">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="clearLogButton">
+             <property name="text">
+              <string>Clear</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
         </layout>
        </widget>
       </widget>
@@ -537,8 +609,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>766</width>
-     <height>20</height>
+     <width>930</width>
+     <height>24</height>
     </rect>
    </property>
   </widget>

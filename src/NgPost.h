@@ -38,6 +38,8 @@ class NntpArticle;
 class QCoreApplication;
 class MainWindow;
 
+using QAtomicBool = QAtomicInteger<unsigned short>; // 16 bit only (faster than using 8 bit variable...)
+
 #ifdef __DISP_PROGRESS_BAR__
 #include <QTimer>
 #endif
@@ -63,7 +65,7 @@ class NgPost : public QObject
 
     enum class Opt {HELP = 0, VERSION, CONF,
                     INPUT, OUTPUT, NZB_PATH, THREAD,
-                    MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS,
+                    MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY,
                     OBFUSCATE,
                     HOST, PORT, SSL, USER, PASS, CONNECTION
                    };
@@ -119,12 +121,17 @@ private:
     QString _nzbPath;       //!< default path where to write the nzb files
 
 #ifdef __DISP_PROGRESS_BAR__
-    int       _nbArticlesUploaded; //!< number of Articles that have been uploaded
+    int       _nbArticlesUploaded; //!< number of Articles that have been uploaded (+ failed ones)
+    int       _nbArticlesFailed;   //!< number of Articles that failed to be uploaded
     quint64   _uploadedSize;       //!< bytes posted (to compute the avg speed)
     int       _nbArticlesTotal;    //!< number of Articles of all the files to post
     QTimer    _progressTimer;      //!< timer to refresh the upload information (progress bar, avg. speed)
     const int _refreshRate;        //!< refresh rate
 #endif
+
+    QAtomicBool _stopPosting;
+    bool        _noMoreFiles;
+    bool        _noMoreArticles;
 
 
     static qint64 sArticleSize;
@@ -200,6 +207,7 @@ private slots:
 
 #ifdef __DISP_PROGRESS_BAR__
     void onArticlePosted(NntpArticle *article);
+    void onArticleFailed(NntpArticle *article);
     void onRefreshProgressBar();
 #endif
 
@@ -211,6 +219,8 @@ private:
     void _initPosting(const QList<QFileInfo> &filesToUpload);
     void _cleanInit();
     void _finishPosting();
+
+    void stopPosting(); //!< for HMI
 
 
     int  _createNntpConnections();

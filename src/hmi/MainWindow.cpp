@@ -26,6 +26,7 @@
 #include <QMimeData>
 #include <QDragEnterEvent>
 #include "nntp/NntpServerParams.h"
+#include "nntp/NntpArticle.h"
 #include <QProgressBar>
 #include <QLabel>
 #include <QDesktopWidget>
@@ -44,7 +45,8 @@ const QVector<int> MainWindow::sServerListSizes   = {200, 50, 30, 100, 150, 150,
 MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
     QMainWindow(parent),
     _ui(new Ui::MainWindow),
-    _ngPost(ngPost)
+    _ngPost(ngPost),
+    _state(STATE::IDLE)
 {
     qApp->installEventFilter(this);
     setAcceptDrops(true);
@@ -83,6 +85,11 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
 
     resize(QDesktopWidget().availableGeometry(this).size() * 0.8);
     setWindowIcon(QIcon(":/icons/ngPost.png"));
+
+    connect(_ui->clearLogButton, &QAbstractButton::clicked, _ui->logBrowser, &QTextEdit::clear);
+
+    // TODO: allow to add debug information on article posts even in release mode!
+    _ui->debugBox->setEnabled(false);
 }
 
 MainWindow::~MainWindow()
@@ -90,11 +97,17 @@ MainWindow::~MainWindow()
     delete _ui;
 }
 
-void MainWindow::   init()
+void MainWindow::init()
 {
     _initServerBox();
     _initFilesBox();
     _initPostingBox();
+}
+
+void MainWindow::setIDLE()
+{
+    _ui->postButton->setText(tr("Post Files"));
+    _state = STATE::IDLE;
 }
 
 void MainWindow::updateProgressBar()
@@ -133,16 +146,31 @@ void MainWindow::logError(const QString &error) const
 
 void MainWindow::onPostFiles()
 {
-    _updateServers();
-    _updateParams();
-
-    if (_createNntpFiles() > 0)
+    switch (_state)
     {
-        _ui->progressBar->setRange(0, _ngPost->_nbArticlesTotal);
-        updateProgressBar();
-        _ngPost->startPosting();
+    case STATE::IDLE:
+        _state = STATE::POSTING;
+        _updateServers();
+        _updateParams();
+
+        if (_createNntpFiles() > 0)
+        {
+            _ui->postButton->setText(tr("Stop Posting"));
+            _ui->progressBar->setRange(0, _ngPost->_nbArticlesTotal);
+            updateProgressBar();
+            if (!_ngPost->startPosting())
+                setIDLE();
+        }
+        break;
+    case STATE::POSTING:
+        _state = STATE::STOPPING;
+        _ngPost->stopPosting();
+        break;
+    default:
+        break; // we're already trying to stop the posting, nothing to do!
     }
 }
+
 
 #include "CheckBoxCenterWidget.h"
 void MainWindow::onAddServer()
@@ -226,8 +254,14 @@ void MainWindow::_initPostingBox()
     _ui->obfuscateFileNameCB->setChecked(_ngPost->_obfuscateFileNames);
 
     _ui->articleSizeEdit->setText(QString::number(_ngPost->articleSize()));
+    _ui->articleSizeEdit->setValidator(new QIntValidator(100000, 10000000, _ui->articleSizeEdit));
+
+    _ui->nbRetryEdit->setText(QString::number(NntpArticle::nbMaxTrySending()));
+    _ui->nbRetryEdit->setValidator(new QIntValidator(0, 100, _ui->nbRetryEdit));
 
     _ui->threadEdit->setText(QString::number(_ngPost->_nbThreads));
+    _ui->threadEdit->setValidator(new QIntValidator(1, 100, _ui->threadEdit));
+
 }
 
 void MainWindow::_updateServers()
@@ -279,7 +313,14 @@ void MainWindow::_updateParams()
     _ngPost->_obfuscateArticles  = _ui->obfuscateMsgIdCB->isChecked();
     _ngPost->_obfuscateFileNames = _ui->obfuscateFileNameCB->isChecked();
 
-    NgPost::sArticleSize = _ui->articleSizeEdit->text().toUInt();
+    bool ok = false;
+    uint articleSize = _ui->articleSizeEdit->text().toUInt(&ok);
+    if (ok)
+        NgPost::sArticleSize = articleSize;
+
+    ushort nbMaxRetry = _ui->nbRetryEdit->text().toUShort(&ok);
+    if (ok)
+        NntpArticle::setNbMaxRetry(nbMaxRetry);
 
     _ngPost->_nbThreads = _ui->threadEdit->text().toInt();
     if (_ngPost->_nbThreads < 1)

@@ -40,6 +40,7 @@ class NntpArticle : public QObject
     friend class NntpFile; //!< to access all members and be able to clear the _body
 
     static const QUuid::StringFormat sMsgIdFormat = QUuid::StringFormat::Id128;
+    static ushort sNbMaxTrySending;
 
 private:
     NntpFile *_nntpFile; //!< original file
@@ -59,8 +60,11 @@ private:
 
     std::string _body; //!< full body of the Article with the yEnc header
 
+    ushort _nbTrySending;
+
 signals:
     void posted(NntpArticle *article); //!< to warn the main thread (async upload)
+    void failed(NntpArticle *article); //!< to warn the main thread (async upload)
 
 public:
     NntpArticle(NntpFile *file, int part, const char data[], qint64 pos, qint64 bytes,
@@ -70,6 +74,8 @@ public:
                 const std::string &body);
 
     ~NntpArticle() = default;
+
+    bool tryResend();
 
     void write(NntpConnection *con, const std::string &idSignature);
 
@@ -83,6 +89,9 @@ public:
     inline qint64 size() const;
 
     inline void genNewId();
+
+    inline static ushort nbMaxTrySending();
+    inline static void setNbMaxRetry(ushort nbMax);
 };
 
 std::string NntpArticle::body() const { return _body; }
@@ -91,5 +100,8 @@ NntpFile *NntpArticle::nntpFile() const { return _nntpFile; }
 
 qint64 NntpArticle::size() const { return _fileBytes; }
 void NntpArticle::genNewId() { _id = QUuid::createUuid(); }
+
+ushort NntpArticle::nbMaxTrySending() { return sNbMaxTrySending; }
+void NntpArticle::setNbMaxRetry(ushort nbMax) { sNbMaxTrySending = nbMax; }
 
 #endif // NntpArticle_H

@@ -55,6 +55,8 @@ signals:
 
 public slots:
     void onArticlePosted(NntpArticle *article);
+    void onArticleFailed(NntpArticle *article);
+
 
 private:
     const QFileInfo         _file;      //!< original file
@@ -65,6 +67,7 @@ private:
     QVector<NntpArticle*>   _articles;  //!< all articles (that are yEnc encoded)
 
     int _nbPosted; //!< number of Articles that have been posted (uploaded on the socket)
+    int _nbFailed; //!< number of Articles that FAILED to be posted (uploaded on the socket)
 };
 
 void NntpFile::addArticle(NntpArticle *article) { _articles.push_back(article); }

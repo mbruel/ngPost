@@ -7,15 +7,35 @@
          \//_____/                    \/
 
 
-- TODO: try reposting Failed Article with another UUID in case of error (with a number max of retry)
+- TODO: bandwidth optimization:
+	test with no threads and no article preparation
+	check if we can play on the SSL protocol paramaters
 
 - TODO: compression:
 	button to compress or -z option (would use rar and generate par2)
 	with HMI: display rar command, propose generation of password, display par2 cmd
 
+
+####################################################
+###       Release: ngPost v1.3                   ###
+###       date:    2019/12/05                    ###
+####################################################
+
+- add robustness on posting articles by retrying a number of times if Failure
+
+- new option -r or -retry for that purpose (default value 5)
+
+- allow to stop an ongoing post from the HMI
+
+- add some tooltips for the options (HMI)
+
+- fix potential crash (double deletion of NgPost::_file)
+
+
+
 ####################################################
 ###       Release: ngPost v1.2                   ###
-###       date:    2019/16/11                    ###
+###       date:    2019/11/16                    ###
 ####################################################
 
 - switch Linux release to Qt 12.6 LTS (only 64bit available)

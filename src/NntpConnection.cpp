@@ -204,7 +204,59 @@ void NntpConnection::onReadyRead()
 #if defined(__DEBUG__) && defined(LOG_NEWS_DATA)
         _log(QString("Data In: %1").arg(line.constData()));
 #endif
-        if (_postingState == PostingState::CONNECTED)
+        if (_postingState == PostingState::SENDING_ARTICLE)
+        {
+#if defined(__DEBUG__) && defined(LOG_POSTING_STEPS)
+            _log(QString("post response: %1").arg(line.constData()));
+#endif
+
+            if(strncmp(line.constData(), Nntp::getResponse(340), 3) == 0)
+            {
+                _postingState = PostingState::WAITING_ANSWER;
+                _currentArticle->write(this, _ngPost->aticleSignature()); // This will be done async
+            }
+            else
+            {
+                _error(tr("Error on post command: %1").arg(line.constData()));
+            }
+        }
+        else if (_postingState == PostingState::WAITING_ANSWER)
+        {
+            if(strncmp(line.constData(), Nntp::getResponse(240), 3) == 0)
+            {
+                _postingState = PostingState::IDLE;
+#if defined(__DEBUG__) && defined(LOG_POSTING_STEPS)
+                _log(tr("article posted: %1").arg(_currentArticle->id()));
+#endif
+                emit _currentArticle->posted(_currentArticle);
+            }
+            else
+            {
+#if defined(__DEBUG__) && defined(LOG_POSTING_STEPS)
+                _error(tr("Error on posting article %1: %2").arg(_currentArticle->id()).arg(
+                         line.constData()));
+#endif
+                if (_currentArticle->tryResend())
+                {
+                    _postingState = PostingState::SENDING_ARTICLE;
+#if defined(__DEBUG__) && defined(LOG_POSTING_STEPS)
+                    _log(tr("start sending AGAIN article with new id: %1").arg(_currentArticle->id()));
+#endif
+                    _socket->write(Nntp::POST);
+                }
+                else
+                {
+                    _postingState = PostingState::IDLE;
+                    _error(tr("FAIL posting article %1: %2 (we tried %3 times...)").arg(_currentArticle->id()).arg(
+                             line.constData()).arg(NntpArticle::nbMaxTrySending()));
+                    emit _currentArticle->failed(_currentArticle);
+                }
+
+            }
+            if (_postingState == PostingState::IDLE)
+                _sendNextArticle();
+        }
+        else if (_postingState == PostingState::CONNECTED)
         {
             // Check welcome message
             if(strncmp(line.constData(), Nntp::getResponse(200), 3) != 0){
@@ -285,39 +337,6 @@ void NntpConnection::onReadyRead()
                 _postingState = PostingState::IDLE;
                 _sendNextArticle();
             }
-        }
-        else if (_postingState == PostingState::SENDING_ARTICLE)
-        {
-#if defined(__DEBUG__) && defined(LOG_POSTING_STEPS)
-            _log(QString("post response: %1").arg(line.constData()));
-#endif
-
-            if(strncmp(line.constData(), Nntp::getResponse(340), 3) == 0)
-            {
-                _postingState = PostingState::WAITING_ANSWER;
-                _currentArticle->write(this, _ngPost->aticleSignature()); // This will be done async
-            }
-            else
-            {
-                _error(tr("Error on post command: %1").arg(line.constData()));
-            }
-        }
-        else if (_postingState == PostingState::WAITING_ANSWER)
-        {
-            if(strncmp(line.constData(), Nntp::getResponse(240), 3) == 0)
-            {
-                _postingState = PostingState::IDLE;
-#if defined(__DEBUG__) && defined(LOG_POSTING_STEPS)
-                _log(tr("article posted: %1").arg(_currentArticle->id()));
-#endif
-            }
-            else
-            {
-                _error(tr("Error on posting article %1: %2").arg(_currentArticle->id()).arg(
-                         line.constData()));
-            }
-            emit _currentArticle->posted(_currentArticle);
-            _sendNextArticle();
         }
     }
 }

@@ -33,9 +33,13 @@ class MainWindow;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
+
 private:
+    enum class STATE {IDLE, POSTING, STOPPING};
+
     Ui::MainWindow *_ui;
     NgPost         *_ngPost;
+    STATE           _state;
 
     static const bool sDefaultServerSSL   = true;
     static const int  sDefaultConnections = 5;
@@ -46,11 +50,13 @@ private:
     static const QVector<int> sServerListSizes;
 
 
+
 public:
     explicit MainWindow(NgPost *ngPost, QWidget *parent = nullptr);
     ~MainWindow();
 
     void init();
+    void setIDLE();
 
     void updateProgressBar();
 
