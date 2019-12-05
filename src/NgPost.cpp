@@ -39,7 +39,7 @@
 
 
 const QString NgPost::sAppName = "ngPost";
-const QString NgPost::sVersion = "1.2";
+const QString NgPost::sVersion = "1.3";
 
 qint64        NgPost::sArticleSize = sDefaultArticleSize;
 const QString NgPost::sSpace       = sDefaultSpace;
@@ -60,6 +60,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::ARTICLE_SIZE, "article_size"},
     {Opt::FROM,         "from"},
     {Opt::GROUPS,       "groups"},
+    {Opt::NB_RETRY,     "retry"},
 
     {Opt::OBFUSCATE,    "obfuscate"},
 
@@ -76,26 +77,28 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
 const QList<QCommandLineOption> NgPost::sCmdOptions = {
     { sOptionNames[Opt::HELP],                tr("Help: display syntax")},
     {{"v", sOptionNames[Opt::VERSION]},       tr( "app version")},
-    {{"c", sOptionNames[Opt::CONF]},          tr( "use configuration file (if not provided, we try to load $HOME/.ngPost)"), "file"},
+    {{"c", sOptionNames[Opt::CONF]},          tr( "use configuration file (if not provided, we try to load $HOME/.ngPost)"), sOptionNames[Opt::CONF]},
 
-    {{"i", sOptionNames[Opt::INPUT]},         tr("input file to upload (single file"), "file"},
-    {{"o", sOptionNames[Opt::OUTPUT]},        tr("output file path (nzb)"), "file"},
-    {{"t", sOptionNames[Opt::THREAD]},        tr("number of Threads (the connections will be distributed amongs them)"), "nb"},
-    {{"x", sOptionNames[Opt::OBFUSCATE]},     tr("obfuscate either the name of each files (-x file) or the subjects of the articles (-x article)"), "file|article"},
+    {{"i", sOptionNames[Opt::INPUT]},         tr("input file to upload (single file"), sOptionNames[Opt::INPUT]},
+    {{"o", sOptionNames[Opt::OUTPUT]},        tr("output file path (nzb)"), sOptionNames[Opt::OUTPUT]},
+    {{"t", sOptionNames[Opt::THREAD]},        tr("number of Threads (the connections will be distributed amongs them)"), sOptionNames[Opt::THREAD]},
+    {{"x", sOptionNames[Opt::OBFUSCATE]},     tr("obfuscate either the name of each files (-x file) or the subjects of the articles (-x article)"), sOptionNames[Opt::OBFUSCATE]},
 
-    {{"g", sOptionNames[Opt::GROUPS]},        tr("newsgroups where to post the files (coma separated without space)"), "str"},
-    {{"m", sOptionNames[Opt::META]},          tr("extra meta data in header (typically \"password=qwerty42\")"), "key=val"},
-    {{"f", sOptionNames[Opt::FROM]},          tr("uploader (in nzb file, article one is random)"), "email"},
-    {{"a", sOptionNames[Opt::ARTICLE_SIZE]},  tr("article size (default one: %1)").arg(sDefaultArticleSize), "nb"},
-    {{"z", sOptionNames[Opt::MSG_ID]},        tr("msg id signature, after the @ (default one: %1)").arg(sDefaultMsgIdSignature), "str"},
+    {{"g", sOptionNames[Opt::GROUPS]},        tr("newsgroups where to post the files (coma separated without space)"), sOptionNames[Opt::GROUPS]},
+    {{"m", sOptionNames[Opt::META]},          tr("extra meta data in header (typically \"password=qwerty42\")"), sOptionNames[Opt::META]},
+    {{"f", sOptionNames[Opt::FROM]},          tr("uploader (in nzb file, article one is random)"), sOptionNames[Opt::FROM]},
+    {{"a", sOptionNames[Opt::ARTICLE_SIZE]},  tr("article size (default one: %1)").arg(sDefaultArticleSize), sOptionNames[Opt::ARTICLE_SIZE]},
+    {{"z", sOptionNames[Opt::MSG_ID]},        tr("msg id signature, after the @ (default one: %1)").arg(sDefaultMsgIdSignature), sOptionNames[Opt::MSG_ID]},
+    {{"r", sOptionNames[Opt::NB_RETRY]},      tr("number of time we retry to an Article that failed (default: %1)").arg(NntpArticle::nbMaxTrySending()), sOptionNames[Opt::NB_RETRY]},
+
 
     // for a single server...
     {{"h", sOptionNames[Opt::HOST]},          tr("NNTP server hostname (or IP)"), sOptionNames[Opt::HOST]},
-    {{"P", sOptionNames[Opt::PORT]},          tr("NNTP server port"), "nb"},
+    {{"P", sOptionNames[Opt::PORT]},          tr("NNTP server port"), sOptionNames[Opt::PORT]},
     {{"s", sOptionNames[Opt::SSL]},           tr("use SSL")},
-    {{"u", sOptionNames[Opt::USER]},          tr("NNTP server username"), "str"},
-    {{"p", sOptionNames[Opt::PASS]},          tr("NNTP server password"), "str"},
-    {{"n", sOptionNames[Opt::CONNECTION]},    tr("number of NNTP connections"), "nb"},
+    {{"u", sOptionNames[Opt::USER]},          tr("NNTP server username"), sOptionNames[Opt::USER]},
+    {{"p", sOptionNames[Opt::PASS]},          tr("NNTP server password"), sOptionNames[Opt::PASS]},
+    {{"n", sOptionNames[Opt::CONNECTION]},    tr("number of NNTP connections"), sOptionNames[Opt::CONNECTION]},
 
 };
 
@@ -121,8 +124,10 @@ NgPost::NgPost(int &argc, char *argv[]):
     _nbConnections(sDefaultNumberOfConnections), _nbThreads(QThread::idealThreadCount()),
     _socketTimeOut(sDefaultSocketTimeOut), _nzbPath(sDefaultNzbPath)
   #ifdef __DISP_PROGRESS_BAR__
-  , _nbArticlesUploaded(0), _uploadedSize(0), _nbArticlesTotal(0), _progressTimer(), _refreshRate(sDefaultRefreshRate)
+  , _nbArticlesUploaded(0), _nbArticlesFailed(0),
+    _uploadedSize(0), _nbArticlesTotal(0), _progressTimer(), _refreshRate(sDefaultRefreshRate)
   #endif
+  , _stopPosting(0x0), _noMoreFiles(false), _noMoreArticles(false)
 {
     if (_mode == AppMode::CMD)
         _app =  new QCoreApplication(argc, argv);
@@ -158,6 +163,8 @@ NgPost::~NgPost()
 
 void NgPost::_finishPosting()
 {
+    _stopPosting = 0x1;
+
 #ifdef __DISP_PROGRESS_BAR__
     disconnect(&_progressTimer, &QTimer::timeout, this, &NgPost::onRefreshProgressBar);
     if (!_timeStart.isNull())
@@ -228,15 +235,102 @@ void NgPost::_finishPosting()
     {
         _file->close();
         delete _file;
+        _file = nullptr;
     }
+
+    if (_hmi)
+        _hmi->setIDLE();
+}
+
+void NgPost::stopPosting()
+{
+    _stopPosting = 0x1;
+
+    // 0.: close all the connections (they're living in the _threadPool)
+    for (NntpConnection *con : _nntpConnections)
+        emit con->killConnection();
+
+    qApp->processEvents();
+
+
+#ifdef __DISP_PROGRESS_BAR__
+    disconnect(&_progressTimer, &QTimer::timeout, this, &NgPost::onRefreshProgressBar);
+    if (!_timeStart.isNull())
+    {
+        onRefreshProgressBar();
+        std::cout << std::endl;
+    }
+#endif
+
+#ifdef __DEBUG__
+    _log("Stop posting...");
+#endif
+
+    // 1.: print stats
+    if (!_timeStart.isNull())
+        _printStats();
+
+
+    // 2.: close nzb file
+    _closeNzb();
+
+
+    // 4.: stop and wait for all threads
+    for (QThread *th : _threadPool)
+    {
+#ifdef __DEBUG__
+        _log(tr("Stopping thread %1").arg(th->objectName()));
+#endif
+        th->quit();
+        th->wait();
+    }
+
+#ifdef __DEBUG__
+    _log("All connections are closed...");
+    _log(tr("prepared articles queue size: %1").arg(_articles.size()));
+#endif
+
+    // 5.: print out the list of files that havn't been posted
+    // (in case of disconnection)
+    int nbPendingFiles = _filesToUpload.size() + _filesInProgress.size();
+    if (nbPendingFiles)
+    {
+        _error(QString("There were %1 on %2 that havn't been posted:").arg(
+                   nbPendingFiles).arg(_nbFiles));
+        for (NntpFile *file : _filesInProgress)
+            _error(QString("  - %1").arg(file->path()));
+        for (NntpFile *file : _filesToUpload)
+            _error(QString("  - %1").arg(file->path()));
+
+        _error(tr("you can try to repost only those and concatenate the nzb with the current one ;)"));
+    }
+
+    // 6.: free all resources
+    qDeleteAll(_filesInProgress); _filesInProgress.clear();
+    qDeleteAll(_filesToUpload);   _filesToUpload.clear();
+    qDeleteAll(_nntpConnections); _nntpConnections.clear();
+    qDeleteAll(_threadPool);      _threadPool.clear();
+    if (_file)
+    {
+        _file->close();
+        delete _file;
+        _file = nullptr;
+    }
+
+    if (_hmi)
+        _hmi->setIDLE();
 }
 
 bool NgPost::startPosting()
 {
     qDebug() << "start posting... nzb: " << nzbPath();
 
+    _stopPosting        = 0x0;
+    _noMoreFiles        = false;
+    _noMoreArticles     = false;
     _nbPosted           = 0;
     _nbArticlesUploaded = 0;
+    _nbArticlesFailed   = 0;
     _uploadedSize       = 0;
     _nntpFile           = nullptr;
     _file               = nullptr;
@@ -344,14 +438,21 @@ NntpArticle *NgPost::getNextArticle()
 #ifdef __USE_MUTEX__
     QMutexLocker lock(&_mutex);
 #endif
+    if (_noMoreArticles || _stopPosting.load())
+        return nullptr;
+
     NntpArticle *article = nullptr;
     if (_articles.size())
         article = _articles.dequeue();
     else
+    {
+        // we should never come here as the goal is to have articles prepared in advance in the queue
+        qDebug() << "[NgPost::getNextArticle] No article prepared...";
         article = _prepareNextArticle();
+    }
 
     if (article)
-        emit scheduleNextArticle();
+        emit scheduleNextArticle(); // schedule the preparation of another Article in main thread
 
     return article;
 }
@@ -369,7 +470,8 @@ void NgPost::onNntpFilePosted(NntpFile *nntpFile)
     if (_nbPosted == _nbFiles)
     {
 #ifdef __DEBUG__
-        _log(QString("All files have been posted => closing application (nb article uploaded: %1)").arg(_nbArticlesUploaded));
+        _log(QString("All files have been posted => closing application (nb article uploaded: %1, failed: %2)").arg(
+                 _nbArticlesUploaded).arg(_nbArticlesFailed));
 #endif
         if (_hmi)
             _finishPosting();
@@ -421,6 +523,13 @@ void NgPost::onArticlePosted(NntpArticle *article)
 {
     _uploadedSize += static_cast<quint64>(article->size());
     ++_nbArticlesUploaded;
+}
+
+void NgPost::onArticleFailed(NntpArticle *article)
+{
+    _uploadedSize += static_cast<quint64>(article->size());
+    ++_nbArticlesUploaded;
+    ++_nbArticlesFailed;
 }
 
 #include <iostream>
@@ -565,6 +674,10 @@ void NgPost::_printStats() const
                 QTime::fromMSecsSinceStartOfDay(duration).toString("hh:mm:ss.zzz")).arg(sec).arg(
                 avgSpeed()).arg(_nntpConnections.size()).arg(_threadPool.size());
 
+    if (_nbArticlesFailed > 0)
+        msgEnd += tr("%1 / %2 articles FAILED to be uploaded (even with %3 retries)...\n").arg(
+                      _nbArticlesFailed).arg(_nbArticlesTotal).arg(NntpArticle::nbMaxTrySending());
+
 
     if (_hmi)
     {
@@ -674,6 +787,7 @@ NntpArticle *NgPost::_getNextArticle()
         _nntpFile = _getNextFile();
         if (!_nntpFile)
         {
+            _noMoreFiles = 0x1;
 #ifdef __DEBUG__
             emit log("No more file to post...");
 #endif
@@ -719,6 +833,7 @@ NntpArticle *NgPost::_getNextArticle()
 
 #ifdef __DISP_PROGRESS_BAR__
             connect(article, &NntpArticle::posted, this, &NgPost::onArticlePosted, Qt::QueuedConnection);
+            connect(article, &NntpArticle::failed, this, &NgPost::onArticleFailed, Qt::QueuedConnection);
 #endif
 
 #ifdef __SAVE_ARTICLES__
@@ -735,6 +850,12 @@ NntpArticle *NgPost::_getNextArticle()
             delete _file;
             _file = nullptr;
             _nntpFile = nullptr;
+
+            if (_noMoreFiles)
+            {
+                _noMoreArticles = 0x1;
+                return nullptr;
+            }
         }
     }
 
@@ -853,6 +974,19 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         else
         {
             _error(tr("You should give an integer for the article size (option -a)"));
+            return false;
+        }
+    }
+
+    if (parser.isSet(sOptionNames[Opt::NB_RETRY]))
+    {
+        bool ok;
+        ushort nbRetry = parser.value(sOptionNames[Opt::NB_RETRY]).toUShort(&ok);
+        if (ok)
+            NntpArticle::setNbMaxRetry(nbRetry);
+        else
+        {
+            _error(tr("You should give an unisgned integer for the number of retry for posting an Article (option -r)"));
             return false;
         }
     }
@@ -1037,6 +1171,12 @@ QString NgPost::_parseConfig(const QString &configPath)
                         if (ok)
                             sArticleSize = nb;
                     }
+                    else if (opt == sOptionNames[Opt::NB_RETRY])
+                    {
+                        ushort nb = val.toUShort(&ok);
+                        if (ok)
+                            NntpArticle::setNbMaxRetry(nb);
+                    }
                     else if (opt == sOptionNames[Opt::FROM])
                     {
                         if (!val.contains('@'))
@@ -1138,6 +1278,9 @@ QString NgPost::parseDefaultConfig()
         qCritical() << "Using default config file: " << conf;
         err = _parseConfig(conf);
     }
+    else
+        qCritical() << "The default config file doesn't exist: " << conf;
+
     return err;
 }
 

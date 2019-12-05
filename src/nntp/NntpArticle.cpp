@@ -25,6 +25,9 @@
 #include "nntp/Nntp.h"
 #include "utils/Yenc.h"
 #include <sstream>
+
+ushort NntpArticle::sNbMaxTrySending = 5;
+
 NntpArticle::NntpArticle(NntpFile *file, int part, const char data[], qint64 pos, qint64 bytes,
                          const std::string &from, const std::string &groups, bool obfuscation) :
     _nntpFile(file), _part(part),
@@ -35,10 +38,12 @@ NntpArticle::NntpArticle(NntpFile *file, int part, const char data[], qint64 pos
     _yencBody(new uchar[bytes*2]),
     _yencSize(0),
     _crc32(0xFFFFFFFF),
-    _body()
+    _body(),
+    _nbTrySending(sNbMaxTrySending)
 {
     file->addArticle(this);
     connect(this, &NntpArticle::posted, _nntpFile, &NntpFile::onArticlePosted, Qt::QueuedConnection);
+    connect(this, &NntpArticle::failed, _nntpFile, &NntpFile::onArticleFailed, Qt::QueuedConnection);
 
     _yencSize = Yenc::encode(data, bytes, _yencBody, _crc32);
 
@@ -64,11 +69,24 @@ NntpArticle::NntpArticle(const std::string &from, const std::string &groups, con
     _yencBody(nullptr),
     _yencSize(0),
     _crc32(0xFFFFFFFF),
-    _body(body)
+    _body(body),
+    _nbTrySending(sNbMaxTrySending)
 {
     _body += Nntp::ENDLINE;
     _body += ".";
     _body += Nntp::ENDLINE;
+}
+
+bool NntpArticle::tryResend()
+{
+    if (_nbTrySending-- > 0)
+    {
+        // get a new UUID
+        _id = QUuid::createUuid();
+        return true;
+    }
+    else
+        return false;
 }
 
 void NntpArticle::write(NntpConnection *con, const std::string &idSignature)

@@ -31,7 +31,8 @@ NntpFile::NntpFile(const QFileInfo &file, int num, int nbFiles, const QVector<QS
     _file(file), _num(num), _nbFiles(nbFiles), _grpList(grpList),
     _nbAticles((int)std::ceil((float)file.size()/NgPost::articleSize())),
     _articles(),
-    _nbPosted(0)
+    _nbPosted(0),
+    _nbFailed(0)
 {
 #if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
     qDebug() << "Creation NntpFile: " << file.absoluteFilePath()
@@ -53,12 +54,28 @@ NntpFile::~NntpFile()
 void NntpFile::onArticlePosted(NntpArticle *article)
 {
     ++_nbPosted;
-    qDebug() << "[NntpFile::articlePosted] " << _nbPosted << " / " << _nbAticles
+    qDebug() << "[NntpFile::onArticlePosted] " << name()
+             << ": posted: " << _nbPosted << " / " << _nbAticles
+             << " (nb FAILED: " << _nbFailed << ")"
              << " article part " << article->_part
-             << article->id();
+             << ", id: " << article->id();
     article->_body.clear(); // free resources
 
-    if (_nbPosted == _nbAticles)
+    if (_nbPosted + _nbFailed== _nbAticles)
+        emit allArticlesArePosted(this);
+}
+
+void NntpFile::onArticleFailed(NntpArticle *article)
+{
+    ++_nbFailed;
+    qDebug() << "[NntpFile::onArticleFailed] " << name()
+             << ": posted: " << _nbPosted << " / " << _nbAticles
+             << " (nb FAILED: " << _nbFailed << ")"
+             << " article part " << article->_part
+             << ", id: " << article->id();
+    article->_body.clear(); // free resources
+
+    if (_nbPosted + _nbFailed== _nbAticles)
         emit allArticlesArePosted(this);
 }
 
