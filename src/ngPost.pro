@@ -1,7 +1,7 @@
 QT += network gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-DEFINES += "APP_VERSION=\"1.3\""
+DEFINES += "APP_VERSION=\"1.4\""
 
 
 INCLUDEPATH += $$PWD

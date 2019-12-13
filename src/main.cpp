@@ -16,23 +16,26 @@ void handleShutdown(int signal)
     qApp->quit();
 }
 
-
+#include <QNetworkReply>
 int main(int argc, char *argv[])
 {
-    {
-        // disable SSL warnings
-        QLoggingCategory::setFilterRules("qt.network.ssl.warning=false");
+    // disable SSL warnings
+    QLoggingCategory::setFilterRules("qt.network.ssl.warning=false");
 
-        // to avoid the warning : "Type conversion already registered from type QSharedPointer<QNetworkSession> to type QObject*"
-        // we instanciate and destruct the QNetworkAccessManager in the main Thread
-        QNetworkAccessManager tmp;
-    }
+    QNetworkAccessManager netMgr;
+    QUrl proFileURL(NgPost::proFileUrl());
+    QNetworkRequest req(proFileURL);
+    req.setRawHeader( "User-Agent" , "ngPost C++ app" );
 
     signal(SIGINT,  &handleShutdown);// shut down on ctrl-c
     signal(SIGTERM, &handleShutdown);// shut down on killall
 
 //    qDebug() << "argc: " << argc;
     NgPost ngPost(argc, argv);
+
+    QNetworkReply *reply = netMgr.get(req);
+    QObject::connect(reply, &QNetworkReply::finished, &ngPost, &NgPost::onCheckForNewVersion);
+
     if (ngPost.useHMI())
     {
 #if defined( Q_OS_WIN )
