@@ -38,8 +38,9 @@
 
 
 
-const QString NgPost::sAppName = "ngPost";
-const QString NgPost::sVersion = "1.3";
+const QString NgPost::sAppName    = "ngPost";
+const QString NgPost::sVersion    = QString::number(APP_VERSION);
+const QString NgPost::sProFileURL = "https://raw.githubusercontent.com/mbruel/ngPost/master/src/ngPost.pro";
 
 qint64        NgPost::sArticleSize = sDefaultArticleSize;
 const QString NgPost::sSpace       = sDefaultSpace;
@@ -560,6 +561,48 @@ void NgPost:: onRefreshProgressBar()
     }
     if (_nbArticlesUploaded < _nbArticlesTotal)
         _progressTimer.start(_refreshRate);
+}
+
+#include <QNetworkReply>
+#include <QMessageBox>
+#include <QRegularExpression>
+void NgPost::onCheckForNewVersion()
+{
+    QNetworkReply      *reply = static_cast<QNetworkReply*>(sender());
+    QRegularExpression appVersionRegExp("^DEFINES \\+= \"APP_VERSION=\\\\\"((\\d+)\\.(\\d+))\\\\\"\"$");
+    QStringList v = sVersion.split(".");
+    int currentMajor = v.at(0).toInt(), currentMinor = v.at(1).toInt();
+    while (!reply->atEnd())
+    {
+        QString line = reply->readLine().trimmed();
+        QRegularExpressionMatch match = appVersionRegExp.match(line);
+        if (match.hasMatch())
+        {
+            QString lastRealease = match.captured(1);
+            int lastMajor = match.captured(2).toInt(), lastMinor = match.captured(3).toInt();
+            qDebug() << "lastMajor: " << lastMajor << ", lastMinor: " << lastMinor
+                     << " (currentMajor: " << currentMajor << ", currentMinor: " << currentMinor << ")";
+
+            if (lastMajor > currentMajor ||
+                    (lastMajor == currentMajor && lastMinor > currentMinor) )
+            {
+                if (_hmi)
+                {
+                    QString msg = tr("<center><h3>New version available on GitHUB</h3></center>");
+                    msg += tr("<br/>The last release is now <b>v%1</b>").arg(lastRealease);
+                    msg += tr("<br/><br/>You can download it from the <a href='https://github.com/mbruel/ngPost/tree/master/release'>release directory</a>");
+                    msg += tr("<br/><br/>Here are the full <a href='https://github.com/mbruel/ngPost/blob/master/release_notes.txt'>release_notes</a>");
+
+                    QMessageBox::information(_hmi, tr("New version available"), msg);
+                }
+                else
+                    qCritical() << "There is a new version available on GitHUB: v" << lastRealease
+                                << " (visit https://github.com/mbruel/ngPost/ to get it)";
+            }
+
+            break; // no need to continue to parse the page
+        }
+    }
 }
 
 void NgPost::_initPosting(const QList<QFileInfo> &filesToUpload)

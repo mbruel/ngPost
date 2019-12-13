@@ -140,6 +140,8 @@ private:
 
     static const QString sAppName;
     static const QString sVersion;
+    static const QString sProFileURL;
+
     static const QList<QCommandLineOption> sCmdOptions;
 
     static const int sDefaultNumberOfConnections = 15;
@@ -188,10 +190,17 @@ public:
 
     inline bool removeNntpServer(NntpServerParams *server);
 
+    QString randomFrom() const;
+    QString randomPass(uint length = 13) const;
+
+    inline static const QString & proFileUrl();
+
 signals:
     void scheduleNextArticle();
     void log(QString msg); //!< in case we signal from another thread
 
+public slots:
+    void onCheckForNewVersion();
 
 private slots:
     void onNntpFilePosted(NntpFile *nntpFile);
@@ -210,9 +219,6 @@ private slots:
     void onArticleFailed(NntpArticle *article);
     void onRefreshProgressBar();
 #endif
-
-    QString randomFrom() const;
-    QString randomPass(uint length = 13) const;
 
 
 private:
@@ -312,6 +318,8 @@ QString NgPost::nzbPath() const
 }
 
 bool NgPost::removeNntpServer(NntpServerParams *server){ return _nntpServers.removeOne(server); }
+
+const QString &NgPost::proFileUrl() { return sProFileURL; }
 
 
 qint64 NgPost::articleSize()  { return sArticleSize; }
