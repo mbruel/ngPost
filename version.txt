@@ -1,2 +1,0 @@
-# This file is used to check if there is a newest release available
-lastRelease = 1.3
