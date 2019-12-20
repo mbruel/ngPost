@@ -39,7 +39,7 @@ NntpArticle::NntpArticle(NntpFile *file, int part, const char data[], qint64 pos
     _yencSize(0),
     _crc32(0xFFFFFFFF),
     _body(),
-    _nbTrySending(sNbMaxTrySending)
+    _nbTrySending(0)
 {
     file->addArticle(this);
     connect(this, &NntpArticle::posted, _nntpFile, &NntpFile::onArticlePosted, Qt::QueuedConnection);
@@ -70,16 +70,23 @@ NntpArticle::NntpArticle(const std::string &from, const std::string &groups, con
     _yencSize(0),
     _crc32(0xFFFFFFFF),
     _body(body),
-    _nbTrySending(sNbMaxTrySending)
+    _nbTrySending(0)
 {
     _body += Nntp::ENDLINE;
     _body += ".";
     _body += Nntp::ENDLINE;
 }
 
+QString NntpArticle::str() const
+{
+    return QString("%5 - Article #%1/%2 <id: %3, nbTrySend: %4>").arg(
+                _part).arg(_nntpFile->nbArticles()).arg(id()).arg(
+                _nbTrySending).arg(_nntpFile->name());
+}
+
 bool NntpArticle::tryResend()
 {
-    if (_nbTrySending-- > 0)
+    if (_nbTrySending < sNbMaxTrySending)
     {
         // get a new UUID
         _id = QUuid::createUuid();
@@ -91,6 +98,7 @@ bool NntpArticle::tryResend()
 
 void NntpArticle::write(NntpConnection *con, const std::string &idSignature)
 {
+    ++_nbTrySending;
     con->write(header(idSignature).c_str());
     con->write(_body.c_str());
 }

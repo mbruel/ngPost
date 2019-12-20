@@ -6,26 +6,25 @@ since v1.1, a minimalist GUI has been added on request
 
 Here are the main features and advantages of ngPost:
 
--   it can use **several servers** (using config file) with each **several connections** (supporting ssl)
+-   it can use **several servers** (using config file or the HMI) with each **several connections** (supporting ssl)
 -   it is spreading those connection on **several threads**. By default the number of cores of the station but you can set the number if you fancy.
 -   it is using **asynchronous sockets** in the upload threads
 -   it is **preparing the Articles on the main Thread** (yEnc encoding) so the upload threads are **always ready to write** when they can. (each connections has 2 Articles ready in advance)
 -   it is **limiting the disk access** to the minimum by opening the files to post only once in the main Thread and processing them sequentially one by one (no need to open several files at the same time)
--   it can do **full obfuscation of the Article Header** (subject and msg-id)
+-   it can do **full obfuscation of the Article Header** (subject and msg-id) careful, using this, you won't be able to find your post if you don't have the NZB file
 -   it is generating a **random uploader for each Article Header** (from) but can use a fixed one if desired
 -   it is of course **generating the nzb file**
 -   it can support **multiple files** and **multiple folders**
 -   there is an **handler on interruption** which means that if you stop it, you'll close properly and **generate the nzb for what has been posted**
 -   in case of interruption, it will **list the files that havn't been uploaded** so you can repost only those ones and then manually concatenate the nzb files
 -   you can **add meta in the header of the nzb** (typically for a password)
+-   it retries to post an Article with a different UUID in case of error (cf retry parameter)
+-   it retries to reconnect if there is an error on a socket (same retry parameter than for the articles)
 -   ...
 
 What it does not:
 - compress or generate the par2 for a single files (use a script to do it ;))
-- retry posting articles (not really needed as the msg-id of **the articles are generated using UUID** (followed by @<signature> that you can configure (by default @ngPost))
-- retry to connect when a connection is lost as they are all created with the **KeepAliveOption** set. If we loose all the connections, ngPost close properly and write the nzb file
 
-RQ: you don't need to obfuscate the file names as they will only be used in the nzb file as **the obfuscation is done for each Article with a UUID as subject and msg-id**.
 
 
 ### How to build
@@ -83,8 +82,8 @@ so in the first example above, the nzb would be: /tmp/folderToPost2.nzb
 
 ### Portable release (Linux)
 if you don't want to build it and install the dependencies, you can also the portable release that includes everything.<br/>
-- download [ngPost_v1.3-x86_64.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v1.3-x86_64.AppImage)
-- chmod 755 ngPost_v1.3-x86_64.AppImage
+- download [ngPost_v1.4-x86_64.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v1.4-x86_64.AppImage)
+- chmod 755 ngPost_v1.4-x86_64.AppImage
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
@@ -98,7 +97,7 @@ if you don't want to build it and install the dependencies, you can also the por
 
 
 ### Windows installer
-- just use the packager [ngPost_1.3_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_1.3_x64_setup.exe) or [ngPost_1.3_x86_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_1.3_x86_setup.exe) for the 32bit version
+- just use the packager [ngPost_1.4_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_1.4_x64_setup.exe) or [ngPost_1.4_x86_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_1.4_x86_setup.exe) for the 32bit version
 - edit **ngPost.conf** (in the installation folder) to add your server settings (you can put several). 
 - launch **ngPost.exe** (GUI version)
 - or you can use it with the command line: **ngPost.exe** -i "your file or directory"
@@ -115,8 +114,7 @@ By default:
 
 ### Alternatives
 
-A list of Usenet posters from Nyuu github [can be found
-here](https://github.com/animetosho/Nyuu/wiki/Usenet-Uploaders).
+A list of Usenet posters from Nyuu github [can be found here](https://github.com/animetosho/Nyuu/wiki/Usenet-Uploaders).
 
 
 

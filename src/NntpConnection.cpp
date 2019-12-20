@@ -41,9 +41,9 @@ NntpConnection::NntpConnection(NgPost *ngPost, int id, const NntpServerParams &s
     _id(id), _srvParams(srvParams),
     _socket(nullptr), _isConnected(false),
     _logPrefix(QString("NntpCon #%1").arg(_id)),
-
     _postingState(PostingState::NOT_CONNECTED),
-    _currentArticle(nullptr)
+    _currentArticle(nullptr),
+    _nbErrors(0)
 #ifndef __USE_MUTEX__
     ,_articles
 #endif
@@ -184,14 +184,26 @@ void NntpConnection::onSslErrors(const QList<QSslError> &errors)
     for(int i = 0 ; i< errors.size() ; ++i)
         err += QString("\t- %1\n").arg(errors[i].errorString());
 
-    emit socketError(err);
+    _error(err);
+    if (_currentArticle)
+        emit _currentArticle->failed(_currentArticle);
+
+    emit killConnection();
+    if (++_nbErrors < NntpArticle::nbMaxTrySending())
+        emit startConnection();
 }
 
 
 
 void NntpConnection::onErrors(QAbstractSocket::SocketError)
 {
-    emit socketError(QString("Error Socket: %1").arg(_socket->errorString()));
+    _error(QString("Error Socket: %1").arg(_socket->errorString()));
+    if (_currentArticle)
+        emit _currentArticle->failed(_currentArticle);
+
+    emit killConnection();
+    if (++_nbErrors < NntpArticle::nbMaxTrySending())
+        emit startConnection();
 }
 
 
@@ -217,7 +229,19 @@ void NntpConnection::onReadyRead()
             }
             else
             {
-                _error(tr("Error on post command: %1").arg(line.constData()));
+                if (++_nbErrors < NntpArticle::nbMaxTrySending())
+                {
+                    _socket->write(Nntp::POST);
+                    if (_ngPost->debugMode())
+                        _error(tr("Error on post command: %1").arg(line.constData()));
+                }
+                else
+                {
+                    _postingState = PostingState::NOT_CONNECTED;
+                    _error(tr("FAIL cmd posting %1").arg(_currentArticle->str()));
+                    emit _currentArticle->failed(_currentArticle);
+                    emit killConnection();
+                }
             }
         }
         else if (_postingState == PostingState::WAITING_ANSWER)
@@ -226,7 +250,7 @@ void NntpConnection::onReadyRead()
             {
                 _postingState = PostingState::IDLE;
 #if defined(__DEBUG__) && defined(LOG_POSTING_STEPS)
-                _log(tr("article posted: %1").arg(_currentArticle->id()));
+                _log(tr("POSTED: %1").arg(_currentArticle->str()));
 #endif
                 emit _currentArticle->posted(_currentArticle);
             }
@@ -239,16 +263,14 @@ void NntpConnection::onReadyRead()
                 if (_currentArticle->tryResend())
                 {
                     _postingState = PostingState::SENDING_ARTICLE;
-#if defined(__DEBUG__) && defined(LOG_POSTING_STEPS)
-                    _log(tr("start sending AGAIN article with new id: %1").arg(_currentArticle->id()));
-#endif
                     _socket->write(Nntp::POST);
+                    if (_ngPost->debugMode())
+                        _log(tr("ReTry %1").arg(_currentArticle->str()));
                 }
                 else
                 {
                     _postingState = PostingState::IDLE;
-                    _error(tr("FAIL posting article %1: %2 (we tried %3 times...)").arg(_currentArticle->id()).arg(
-                             line.constData()).arg(NntpArticle::nbMaxTrySending()));
+                    _error(tr("FAIL posting %1").arg(_currentArticle->str()));
                     emit _currentArticle->failed(_currentArticle);
                 }
 

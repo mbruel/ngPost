@@ -44,6 +44,10 @@ class NntpConnection : public QObject
     Q_OBJECT
 
 private:
+    enum class PostingState {NOT_CONNECTED = 0, CONNECTED,
+                             AUTH_USER, AUTH_PASS,
+                             IDLE, SENDING_ARTICLE, WAITING_ANSWER};
+
     NgPost                 *_ngPost;
     const int               _id;        //!< connection id
     const NntpServerParams &_srvParams; //!< server parameters
@@ -53,12 +57,10 @@ private:
 
     const QString _logPrefix;      //!< log prefix: NntpConnection[<iSocketDescriptor>]
 
-    enum class PostingState {NOT_CONNECTED = 0, CONNECTED,
-                             AUTH_USER, AUTH_PASS,
-                             IDLE, SENDING_ARTICLE, WAITING_ANSWER};
 
     PostingState   _postingState;
     NntpArticle   *_currentArticle;
+    ushort         _nbErrors;
 
 #ifndef __USE_MUTEX__
     QQueue<NntpArticle*> _articles;

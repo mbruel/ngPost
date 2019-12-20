@@ -80,6 +80,8 @@ private:
     const AppMode         _mode; //!< CMD or HMI (for Windowser...)
     MainWindow           *_hmi;  //!< potential HMI
 
+    bool                  _debug;
+
     QString               _nzbName; //!< name of nzb that we'll write (without the extension)
     QQueue<NntpFile*>     _filesToUpload;  //!< list of files to upload (that we didn't start)
     QSet<NntpFile*>       _filesInProgress;//!< files in queue to be uploaded (Articles have been produced)
@@ -194,6 +196,11 @@ public:
     QString randomPass(uint length = 13) const;
 
     inline static const QString & proFileUrl();
+
+    inline bool debugMode() const;
+    inline void setDebug(bool isDebug);
+
+
 
 signals:
     void scheduleNextArticle();
@@ -320,6 +327,9 @@ QString NgPost::nzbPath() const
 bool NgPost::removeNntpServer(NntpServerParams *server){ return _nntpServers.removeOne(server); }
 
 const QString &NgPost::proFileUrl() { return sProFileURL; }
+
+bool NgPost::debugMode() const { return _debug; }
+void NgPost::setDebug(bool isDebug){ _debug = isDebug; }
 
 
 qint64 NgPost::articleSize()  { return sArticleSize; }

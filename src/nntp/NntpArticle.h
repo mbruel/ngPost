@@ -75,6 +75,8 @@ public:
 
     ~NntpArticle() = default;
 
+    QString str() const;
+
     bool tryResend();
 
     void write(NntpConnection *con, const std::string &idSignature);
