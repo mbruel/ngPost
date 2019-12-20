@@ -82,6 +82,8 @@ public slots:
     void onNzbPassToggled(bool checked);
     void onGenNzbPassword();
 
+    void onDebugToggled(bool checked);
+
 protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
 

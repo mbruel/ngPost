@@ -87,9 +87,7 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
     setWindowIcon(QIcon(":/icons/ngPost.png"));
 
     connect(_ui->clearLogButton, &QAbstractButton::clicked, _ui->logBrowser, &QTextEdit::clear);
-
-    // TODO: allow to add debug information on article posts even in release mode!
-    _ui->debugBox->setEnabled(false);
+    connect(_ui->debugBox,       &QAbstractButton::toggled, this, &MainWindow::onDebugToggled);
 }
 
 MainWindow::~MainWindow()
@@ -475,6 +473,14 @@ void MainWindow::onGenNzbPassword()
     _ui->nzbPassEdit->setText(_ngPost->randomPass());
 }
 
+void MainWindow::onDebugToggled(bool checked)
+{
+#ifdef __DEBUG__
+    qDebug() << "Debug mode: " << checked;
+#endif
+    _ngPost->setDebug(checked);
+}
+
 
 #include <QKeyEvent>
 #include <QClipboard>
@@ -576,6 +582,7 @@ void MainWindow::onSelectFilesClicked()
 void MainWindow::onClearFilesClicked()
 {
     _ui->filesList->clear();
+    _ui->nzbFileEdit->clear();
 }
 
 const QString MainWindow::sGroupBoxStyle =  "\

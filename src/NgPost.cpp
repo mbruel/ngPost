@@ -110,6 +110,7 @@ NgPost::NgPost(int &argc, char *argv[]):
     _app(nullptr),
     _mode(argc > 1 ? AppMode::CMD : AppMode::HMI),
     _hmi(nullptr),
+    _debug(false),
     _nzbName(),
     _filesToUpload(), _filesInProgress(),
     _nbFiles(0), _nbPosted(0),
@@ -333,6 +334,7 @@ bool NgPost::startPosting()
     _nbArticlesUploaded = 0;
     _nbArticlesFailed   = 0;
     _uploadedSize       = 0;
+    _totalSize          = 0;
     _nntpFile           = nullptr;
     _file               = nullptr;
     _articles.clear();

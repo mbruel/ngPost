@@ -21,7 +21,11 @@
 ###       date:    2019/12/??                    ###
 ####################################################
 
-- check for updates (parse last version on GitHUB)
+- check for updates (parse last version available on GitHUB)
+
+- add debug informations (in case of error posting Articles, telling when we retry posting)
+
+- blank the nzb name when we remove all files in the HMI to do a new post
 
 
 
