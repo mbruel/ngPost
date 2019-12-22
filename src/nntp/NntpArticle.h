@@ -81,7 +81,7 @@ public:
 
     void write(NntpConnection *con, const std::string &idSignature);
 
-    void dumpToFile(const QString &path);
+    void dumpToFile(const QString &path, const std::string &articleIdSignature);
 
     std::string header(const std::string &idSignature) const;
     inline std::string body() const;

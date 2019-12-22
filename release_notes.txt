@@ -18,7 +18,17 @@
 
 ####################################################
 ###       Release: ngPost v1.4                   ###
-###       date:    2019/12/??                    ###
+###       date:    2019/12/22                    ###
+####################################################
+
+- add -f/-from command line option that was missing
+
+- fix -z/-msg_id option
+
+
+####################################################
+###       Release: ngPost v1.4                   ###
+###       date:    2019/12/20                    ###
 ####################################################
 
 - check for updates (parse last version available on GitHUB)
