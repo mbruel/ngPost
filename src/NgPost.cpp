@@ -467,7 +467,7 @@ void NgPost::onNntpFilePosted(NntpFile *nntpFile)
     if (_hmi)
         _hmi->setFilePosted(nntpFile->path());
 
-    nntpFile->writeToNZB(_nzbStream);
+    nntpFile->writeToNZB(_nzbStream, _articleIdSignature.c_str());
     _filesInProgress.remove(nntpFile);
     delete nntpFile;
     if (_nbPosted == _nbFiles)
@@ -882,7 +882,7 @@ NntpArticle *NgPost::_getNextArticle()
 #endif
 
 #ifdef __SAVE_ARTICLES__
-            article->dumpToFile("/tmp");
+            article->dumpToFile("/tmp", _articleIdSignature);
 #endif
             return article;
         }
@@ -1007,8 +1007,18 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     if (parser.isSet(sOptionNames[Opt::GROUPS]))
         _groups = parser.value(sOptionNames[Opt::GROUPS]).toStdString();
 
+    if (parser.isSet(sOptionNames[Opt::FROM]))
+    {
+        QString val = parser.value(sOptionNames[Opt::FROM]);
+        QRegularExpression email("\\w+@\\w+\\.\\w+");
+        if (!email.match(val).hasMatch())
+            val += "@ngPost.com";
+        val = escapeXML(val);
+        _from = val.toStdString();
+    }
+
     if (parser.isSet(sOptionNames[Opt::MSG_ID]))
-        _articleIdSignature = escapeXML(sOptionNames[Opt::MSG_ID]).toStdString();
+        _articleIdSignature = escapeXML(parser.value(sOptionNames[Opt::MSG_ID])).toStdString();
 
     if (parser.isSet(sOptionNames[Opt::ARTICLE_SIZE]))
     {
@@ -1224,8 +1234,9 @@ QString NgPost::_parseConfig(const QString &configPath)
                     }
                     else if (opt == sOptionNames[Opt::FROM])
                     {
-                        if (!val.contains('@'))
-                            val += "@ngPost";
+                        QRegularExpression email("\\w+@\\w+\\.\\w+");
+                        if (!email.match(val).hasMatch())
+                            val += "@ngPost.com";
                         val = escapeXML(val);
                         _from = val.toStdString();
                     }

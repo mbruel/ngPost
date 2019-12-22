@@ -115,7 +115,7 @@ std::string NntpArticle::header(const std::string &idSignature) const
     return ss.str();
 }
 
-void NntpArticle::dumpToFile(const QString &path)
+void NntpArticle::dumpToFile(const QString &path, const std::string &articleIdSignature)
 {
     QString fileName = QString("%1/%2_%3.yenc").arg(path).arg(_nntpFile->fileName().c_str()).arg(_part);
     QFile file(fileName);
@@ -125,7 +125,7 @@ void NntpArticle::dumpToFile(const QString &path)
         return;
     }
 
-    file.write(header("ngPost").c_str());
+    file.write(header(articleIdSignature).c_str());
     file.write(_body.c_str());
     file.close();
 }

@@ -42,7 +42,7 @@ public:
 
     inline void addArticle(NntpArticle *article);
 
-    void writeToNZB(QTextStream &stream);
+    void writeToNZB(QTextStream &stream, const char *articleIdSignature);
 
     inline QString path() const;
     inline QString name() const;

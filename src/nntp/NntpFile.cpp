@@ -81,7 +81,7 @@ void NntpFile::onArticleFailed(NntpArticle *article)
 
 #include <string>
 #include <QDateTime>
-void NntpFile::writeToNZB(QTextStream &stream)
+void NntpFile::writeToNZB(QTextStream &stream, const char *articleIdSignature)
 {
     //    <file poster="NewsUP &lt;NewsUP@somewhere.cbr&gt;" date="1565026184" subject="[1/846] - &quot;1w7NbOvYC2E8D5oYeXROyp4FZAaxEOmK&quot; ">
     //        <groups>
@@ -124,7 +124,7 @@ void NntpFile::writeToNZB(QTextStream &stream)
             stream << tab << tab << tab << "<segment"
                    << " bytes=\""  << article->_fileBytes << "\""
                    << " number=\"" << article->_part << "\">"
-                   << article->id() << "@ngPost"
+                   << article->id() << "@" << articleIdSignature
                    << "</segment>\n";
         }
         stream << tab << tab << "</segments>\n";
