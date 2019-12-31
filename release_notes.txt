@@ -16,14 +16,31 @@
 	with HMI: display rar command, propose generation of password, display par2 cmd
 
 
+
 ####################################################
-###       Release: ngPost v1.4                   ###
+###       Release: ngPost v1.6                   ###
+###       date:    2019/12/31                    ###
+####################################################
+
+- fix segfault within NgPost::onArticlePosted
+
+- introduce option --disp_progress (NONE, BAR, FILES) to avoid displaying progress bar on command line
+
+- generate the poster for the whole post instead of for each Article (so we can find the post in indexers)
+
+- remove file obfuscation (that wasn't implemented) and only let the article one (CAREFUL with it!!!)
+
+
+
+####################################################
+###       Release: ngPost v1.5                   ###
 ###       date:    2019/12/22                    ###
 ####################################################
 
 - add -f/-from command line option that was missing
 
 - fix -z/-msg_id option
+
 
 
 ####################################################
@@ -36,7 +53,6 @@
 - add debug informations (in case of error posting Articles, telling when we retry posting)
 
 - blank the nzb name when we remove all files in the HMI to do a new post
-
 
 
 
@@ -77,6 +93,7 @@
 - HMI: add a button to generate a random poster email for the whole post
 
 - update postFiles.sh to manage several files and relative paths
+
 
 
 ####################################################

@@ -51,26 +51,27 @@ in order to build on other OS, the easiest way would be to [install QT](https://
 <pre>
 Syntax: ngPost (options)? (-i "file or directory to upload")+
 	-help              : Help: display syntax
-	-v or -version     : app version
-	-c or -conf        : use configuration file (if not provided, we try to load $HOME/.ngPost)
-	-i or -input       : input file to upload (single file
-	-o or -output      : output file path (nzb)
-	-t or -thread      : number of Threads (the connections will be distributed amongs them)
-	-x or -obfuscate   : obfuscate either the name of each files (-x file) or the subjects of the articles (-x article)
-	-g or -groups      : newsgroups where to post the files (coma separated without space)
-	-m or -meta        : extra meta data in header (typically "password=qwerty42")
-	-f or -from        : uploader (in nzb file, article one is random)
-	-a or -article_size: article size (default one: 716800)
-	-z or -msg_id      : msg id signature, after the @ (default one: ngPost)
-	-r or -retry       : number of time we retry to an Article that failed (default: 5)
+	-v or --version     : app version
+	-c or --conf        : use configuration file (if not provided, we try to load $HOME/.ngPost)
+	--disp_progress    : display cmd progress: NONE (default), BAR or FILES
+	-i or --input       : input file to upload (single file
+	-o or --output      : output file path (nzb)
+	-t or --thread      : number of Threads (the connections will be distributed amongs them)
+	-x or --obfuscate   : obfuscate the subjects of the articles (CAREFUL you won't find your post if you lose the nzb file)
+	-g or --groups      : newsgroups where to post the files (coma separated without space)
+	-m or --meta        : extra meta data in header (typically "password=qwerty42")
+	-f or --from        : poster email (random one if not provided)
+	-a or --article_size: article size (default one: 716800)
+	-z or --msg_id      : msg id signature, after the @ (default one: ngPost)
+	-r or --retry       : number of time we retry to an Article that failed (default: 5)
 
 // without config file, you can provide all the parameters to connect to ONE SINGLE server
-	-h or -host        : NNTP server hostname (or IP)
-	-P or -port        : NNTP server port
-	-s or -ssl         : use SSL
-	-u or -user        : NNTP server username
-	-p or -pass        : NNTP server password
-	-n or -connection  : number of NNTP connections
+	-h or --host        : NNTP server hostname (or IP)
+	-P or --port        : NNTP server port
+	-s or --ssl         : use SSL
+	-u or --user        : NNTP server username
+	-p or --pass        : NNTP server password
+	-n or --connection  : number of NNTP connections
 
 Examples:
   - with config file: ngPost -c ~/.ngPost -m "password=qwerty42" -f ngPost@nowhere.com -i /tmp/file1 -i /tmp/file2 -i /tmp/folderToPost1 -i /tmp/folderToPost2
@@ -82,8 +83,8 @@ so in the first example above, the nzb would be: /tmp/folderToPost2.nzb
 
 ### Portable release (Linux)
 if you don't want to build it and install the dependencies, you can also the portable release that includes everything.<br/>
-- download [ngPost_v1.5-x86_64.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v1.5-x86_64.AppImage)
-- chmod 755 ngPost_v1.5-x86_64.AppImage
+- download [ngPost_v1.6-x86_64.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v1.6-x86_64.AppImage)
+- chmod 755 ngPost_v1.6-x86_64.AppImage
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
@@ -97,7 +98,7 @@ if you don't want to build it and install the dependencies, you can also the por
 
 
 ### Windows installer
-- just use the packager [ngPost_1.5_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_1.5_x64_setup.exe) or [ngPost_1.5_x86_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_1.5_x86_setup.exe) for the 32bit version
+- just use the packager [ngPost_1.6_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_1.6_x64_setup.exe) or [ngPost_1.6_x86_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_1.6_x86_setup.exe) for the 32bit version
 - edit **ngPost.conf** (in the installation folder) to add your server settings (you can put several). 
 - launch **ngPost.exe** (GUI version)
 - or you can use it with the command line: **ngPost.exe** -i "your file or directory"

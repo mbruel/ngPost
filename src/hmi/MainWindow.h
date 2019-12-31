@@ -75,10 +75,7 @@ public slots:
     void onSelectFilesClicked();
     void onClearFilesClicked();
 
-    void onRandomFromToggled(bool checked);
     void onGenPoster();
-    void onObfuscateFileNameToggled(bool checked);
-    void onObfuscateMsgIdToggled(bool checked);
     void onNzbPassToggled(bool checked);
     void onGenNzbPassword();
 

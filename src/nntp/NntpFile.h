@@ -51,11 +51,12 @@ public:
     inline int nbArticles() const;
 
 signals:
-    void allArticlesArePosted(NntpFile *NntpFile);
+    void allArticlesArePosted();
+    void startPosting();
 
 public slots:
-    void onArticlePosted(NntpArticle *article);
-    void onArticleFailed(NntpArticle *article);
+    void onArticlePosted(quint64 size);
+    void onArticleFailed(quint64 size);
 
 
 private:

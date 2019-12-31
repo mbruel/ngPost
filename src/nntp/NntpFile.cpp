@@ -51,32 +51,40 @@ NntpFile::~NntpFile()
     qDeleteAll(_articles);
 }
 
-void NntpFile::onArticlePosted(NntpArticle *article)
+void NntpFile::onArticlePosted(quint64 size)
 {
+    Q_UNUSED(size)
+    NntpArticle *article = static_cast<NntpArticle*>(sender());
     ++_nbPosted;
+#ifdef __DEBUG__
     qDebug() << "[NntpFile::onArticlePosted] " << name()
              << ": posted: " << _nbPosted << " / " << _nbAticles
              << " (nb FAILED: " << _nbFailed << ")"
              << " article part " << article->_part
              << ", id: " << article->id();
+#endif
     article->_body.clear(); // free resources
 
     if (_nbPosted + _nbFailed== _nbAticles)
-        emit allArticlesArePosted(this);
+        emit allArticlesArePosted();
 }
 
-void NntpFile::onArticleFailed(NntpArticle *article)
+void NntpFile::onArticleFailed(quint64 size)
 {
+    Q_UNUSED(size)
+    NntpArticle *article = static_cast<NntpArticle*>(sender());
     ++_nbFailed;
+#ifdef __DEBUG__
     qDebug() << "[NntpFile::onArticleFailed] " << name()
              << ": posted: " << _nbPosted << " / " << _nbAticles
              << " (nb FAILED: " << _nbFailed << ")"
              << " article part " << article->_part
              << ", id: " << article->id();
+#endif
     article->_body.clear(); // free resources
 
     if (_nbPosted + _nbFailed== _nbAticles)
-        emit allArticlesArePosted(this);
+        emit allArticlesArePosted();
 }
 
 #include <string>

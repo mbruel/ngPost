@@ -225,31 +225,18 @@ void MainWindow::_initFilesBox()
 
 void MainWindow::_initPostingBox()
 {
-    connect(_ui->randomFromCB,        &QAbstractButton::toggled, this, &MainWindow::onRandomFromToggled);
     connect(_ui->genPoster,           &QAbstractButton::clicked, this, &MainWindow::onGenPoster);
-    connect(_ui->obfuscateFileNameCB, &QAbstractButton::toggled, this, &MainWindow::onObfuscateFileNameToggled);
-    connect(_ui->obfuscateMsgIdCB,    &QAbstractButton::toggled, this, &MainWindow::onObfuscateMsgIdToggled);
     connect(_ui->nzbPassCB,           &QAbstractButton::toggled, this, &MainWindow::onNzbPassToggled);
     connect(_ui->genPass,             &QAbstractButton::clicked, this, &MainWindow::onGenNzbPassword);
 
-    if (_ngPost->_from.empty())
-    {
-        _ui->randomFromCB->setChecked(true);
-        onRandomFromToggled(true);
-    }
-    else
-    {
-        _ui->fromEdit->setText(QString::fromStdString(_ngPost->_from));
-        _ui->randomFromCB->setChecked(false);
-        onRandomFromToggled(false);
-    }
+
+    _ui->fromEdit->setText(QString::fromStdString(_ngPost->_from));
     _ui->nzbPassCB->setChecked(false);
     onNzbPassToggled(false);
 
     _ui->groupsEdit->setText(QString::fromStdString(_ngPost->_groups));
 
     _ui->obfuscateMsgIdCB->setChecked(_ngPost->_obfuscateArticles);
-    _ui->obfuscateFileNameCB->setChecked(_ngPost->_obfuscateFileNames);
 
     _ui->articleSizeEdit->setText(QString::number(_ngPost->articleSize()));
     _ui->articleSizeEdit->setValidator(new QIntValidator(100000, 10000000, _ui->articleSizeEdit));
@@ -309,7 +296,6 @@ void MainWindow::_updateParams()
     _ngPost->_groups = _ui->groupsEdit->toPlainText().toStdString();
 
     _ngPost->_obfuscateArticles  = _ui->obfuscateMsgIdCB->isChecked();
-    _ngPost->_obfuscateFileNames = _ui->obfuscateFileNameCB->isChecked();
 
     bool ok = false;
     uint articleSize = _ui->articleSizeEdit->text().toUInt(&ok);
@@ -439,27 +425,9 @@ bool MainWindow::_fileAlreadyInList(const QString &fileName, int currentNbFiles)
     return false;
 }
 
-void MainWindow::onRandomFromToggled(bool checked)
-{
-    _ui->fromEdit->setEnabled(!checked);
-    _ui->genPoster->setEnabled(!checked);
-}
-
 void MainWindow::onGenPoster()
 {
     _ui->fromEdit->setText(_ngPost->randomFrom());
-}
-
-void MainWindow::onObfuscateFileNameToggled(bool checked)
-{
-    if (checked)
-        _ui->obfuscateMsgIdCB->setChecked(false);
-}
-
-void MainWindow::onObfuscateMsgIdToggled(bool checked)
-{
-    if (checked)
-        _ui->obfuscateFileNameCB->setChecked(false);
 }
 
 void MainWindow::onNzbPassToggled(bool checked)
