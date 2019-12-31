@@ -38,8 +38,9 @@ class NntpArticle : public QObject
     Q_OBJECT
 
     friend class NntpFile; //!< to access all members and be able to clear the _body
-
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
     static const QUuid::StringFormat sMsgIdFormat = QUuid::StringFormat::Id128;
+#endif
     static ushort sNbMaxTrySending;
 
 private:
@@ -99,7 +100,13 @@ public:
 };
 
 std::string NntpArticle::body() const { return _body; }
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
 QString NntpArticle::id() const { return _id.toString(sMsgIdFormat); }
+#else
+QString NntpArticle::id() const { return _id.toString(); }
+#endif
+
 NntpFile *NntpArticle::nntpFile() const { return _nntpFile; }
 
 bool NntpArticle::isFirstArticle() const { return _part == 1; }
