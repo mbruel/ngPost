@@ -27,7 +27,7 @@ What it does not:
 
 **BUT I provide the postFile.sh for Linux** that is a handy script to post Files with rar compression with obfuscation and random password, the par2 generation and finally post all that on UseNet.
 <pre>
-Syntax: ./postFile.sh (-c <ngPost config file>)? (-i <input file>)+ (-o <nzb file>)?
+Syntax: ./postFile.sh (-c {ngPost config file})? (-i {input file})+ (-o {nzb file})?
 There are 3 options:
    -i file or folders (you can add several, with relative or full path)
    -c for the config file
