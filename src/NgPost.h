@@ -323,11 +323,11 @@ QString NgPost::nzbPath() const
 {
 #if defined(WIN32) || defined(__MINGW64__)
     if (_nzbPath.isEmpty())
-        return QString("%1.nzb").arg(_nzbName);
+        return _nzbName;
     else
-        return QString("%1\\%2.nzb").arg(_nzbPath).arg(_nzbName);
+        return QString("%1\\%2").arg(_nzbPath).arg(_nzbName);
 #else
-    return QString("%1/%2.nzb").arg(_nzbPath).arg(_nzbName);
+    return QString("%1/%2").arg(_nzbPath).arg(_nzbName);
 #endif
 }
 

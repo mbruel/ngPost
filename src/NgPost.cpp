@@ -355,7 +355,7 @@ bool NgPost::startPosting()
 
     if (!_nzb->open(QIODevice::WriteOnly))
     {
-        _error(QString("Error: Can't create nzb output file: %1/%2.nzb").arg(nzbPath()).arg(_nzbName));
+        _error(QString("Error: Can't create nzb output file: %1").arg(nzbPath()));
         return false;
     }
     else
@@ -643,6 +643,8 @@ void NgPost::_initPosting(const QList<QFileInfo> &filesToUpload)
 
     // initialize buffer and nzb file
     _buffer  = new char[articleSize()+1];
+    if (!_nzbName.endsWith(".nzb"))
+        _nzbName += ".nzb";
     _nzb     = new QFile(nzbPath());
     _nbFiles = filesToUpload.size();
 
