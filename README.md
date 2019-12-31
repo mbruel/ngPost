@@ -25,7 +25,7 @@ Here are the main features and advantages of ngPost:
 What it does not:
 - compress or generate the par2 for a single files (use a script to do it ;))
 
-**BUT I provide the postFile.sh for Linux** that is a handy script to post Files with rar compression with obfuscation and random password, the par2 generation and finally post all that on UseNet.
+**BUT** I provide the **postFile.sh for Linux** which is a handy script to post Files with rar compression with obfuscation and random password, the par2 generation to finally post all that on UseNet using ngPost :)
 <pre>
 Syntax: ./postFile.sh (-c {ngPost config file})? (-i {input file})+ (-o {nzb file})?
 There are 3 options:
