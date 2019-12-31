@@ -84,22 +84,6 @@
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_4">
          <item>
-          <widget class="QCheckBox" name="randomFromCB">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <property name="toolTip">
-            <string>Uncommnent this option to be able to have the same Poster for the whole posting</string>
-           </property>
-           <property name="text">
-            <string>use random Poster for each file</string>
-           </property>
-           <property name="checked">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
           <layout class="QHBoxLayout" name="posterLayout">
            <item>
             <widget class="QLabel" name="fromLbl">
@@ -111,7 +95,7 @@
            <item>
             <widget class="QLineEdit" name="fromEdit">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
             </widget>
            </item>
@@ -184,19 +168,6 @@
            </property>
            <property name="frameShadow">
             <enum>QFrame::Raised</enum>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="obfuscateFileNameCB">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="text">
-            <string>obfuscation of each File's name</string>
-           </property>
-           <property name="checked">
-            <bool>false</bool>
            </property>
           </widget>
          </item>

@@ -63,7 +63,7 @@ class NgPost : public QObject
 
     friend class MainWindow; //!< so it can access all parameters
 
-    enum class Opt {HELP = 0, VERSION, CONF,
+    enum class Opt {HELP = 0, VERSION, CONF, DISP_PROGRESS,
                     INPUT, OUTPUT, NZB_PATH, THREAD,
                     MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY,
                     OBFUSCATE,
@@ -80,7 +80,12 @@ private:
     const AppMode         _mode; //!< CMD or HMI (for Windowser...)
     MainWindow           *_hmi;  //!< potential HMI
 
+    mutable QTextStream   _cout; //!< stream for stdout
+    mutable QTextStream   _cerr; //!< stream for stderr
+
     bool                  _debug;
+    bool                  _dispProgressBar;
+    bool                  _dispFilesPosting;
 
     QString               _nzbName; //!< name of nzb that we'll write (without the extension)
     QQueue<NntpFile*>     _filesToUpload;  //!< list of files to upload (that we didn't start)
@@ -93,7 +98,6 @@ private:
 
     QList<NntpServerParams*> _nntpServers; //!< the servers parameters
 
-    bool                 _obfuscateFileNames; //!< shall we obfuscate the name of the files (To be implemented)
     bool                 _obfuscateArticles;  //!< shall we obfuscate each Article (subject)
 
     std::string          _from;               //!< email of poster (if empty, random one will be used for each file)
@@ -200,6 +204,8 @@ public:
     inline bool debugMode() const;
     inline void setDebug(bool isDebug);
 
+    inline bool dispPostingFile() const;
+
 
 
 signals:
@@ -210,7 +216,8 @@ public slots:
     void onCheckForNewVersion();
 
 private slots:
-    void onNntpFilePosted(NntpFile *nntpFile);
+    void onNntpFileStartPosting();
+    void onNntpFilePosted();
     void onLog(QString msg);
     void onError(QString msg);
     void onDisconnectedConnection(NntpConnection *con);
@@ -222,8 +229,8 @@ private slots:
 #endif
 
 #ifdef __DISP_PROGRESS_BAR__
-    void onArticlePosted(NntpArticle *article);
-    void onArticleFailed(NntpArticle *article);
+    void onArticlePosted(quint64 size);
+    void onArticleFailed(quint64 size);
     void onRefreshProgressBar();
 #endif
 
@@ -330,6 +337,8 @@ const QString &NgPost::proFileUrl() { return sProFileURL; }
 
 bool NgPost::debugMode() const { return _debug; }
 void NgPost::setDebug(bool isDebug){ _debug = isDebug; }
+
+bool NgPost::dispPostingFile() const { return _dispFilesPosting; }
 
 
 qint64 NgPost::articleSize()  { return sArticleSize; }

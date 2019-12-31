@@ -63,8 +63,8 @@ private:
     ushort _nbTrySending;
 
 signals:
-    void posted(NntpArticle *article); //!< to warn the main thread (async upload)
-    void failed(NntpArticle *article); //!< to warn the main thread (async upload)
+    void posted(quint64 size); //!< to warn the main thread (async upload)
+    void failed(quint64 size); //!< to warn the main thread (async upload)
 
 public:
     NntpArticle(NntpFile *file, int part, const char data[], qint64 pos, qint64 bytes,
@@ -88,7 +88,9 @@ public:
     inline QString id() const;
     inline NntpFile *nntpFile() const;
 
-    inline qint64 size() const;
+    inline bool isFirstArticle() const;
+
+    inline quint64 size() const;
 
     inline void genNewId();
 
@@ -100,7 +102,9 @@ std::string NntpArticle::body() const { return _body; }
 QString NntpArticle::id() const { return _id.toString(sMsgIdFormat); }
 NntpFile *NntpArticle::nntpFile() const { return _nntpFile; }
 
-qint64 NntpArticle::size() const { return _fileBytes; }
+bool NntpArticle::isFirstArticle() const { return _part == 1; }
+
+quint64 NntpArticle::size() const { return static_cast<quint64>(_fileBytes); }
 void NntpArticle::genNewId() { _id = QUuid::createUuid(); }
 
 ushort NntpArticle::nbMaxTrySending() { return sNbMaxTrySending; }

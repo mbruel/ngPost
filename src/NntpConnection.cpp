@@ -23,6 +23,7 @@
 #include "nntp/NntpServerParams.h"
 #include "nntp/Nntp.h"
 #include "nntp/NntpArticle.h"
+#include "nntp/NntpFile.h"
 #include "NgPost.h"
 
 #include <QByteArray>
@@ -186,7 +187,7 @@ void NntpConnection::onSslErrors(const QList<QSslError> &errors)
 
     _error(err);
     if (_currentArticle)
-        emit _currentArticle->failed(_currentArticle);
+        emit _currentArticle->failed(_currentArticle->size());
 
     emit killConnection();
     if (++_nbErrors < NntpArticle::nbMaxTrySending())
@@ -199,7 +200,7 @@ void NntpConnection::onErrors(QAbstractSocket::SocketError)
 {
     _error(QString("Error Socket: %1").arg(_socket->errorString()));
     if (_currentArticle)
-        emit _currentArticle->failed(_currentArticle);
+        emit _currentArticle->failed(_currentArticle->size());
 
     emit killConnection();
     if (++_nbErrors < NntpArticle::nbMaxTrySending())
@@ -226,6 +227,8 @@ void NntpConnection::onReadyRead()
             {
                 _postingState = PostingState::WAITING_ANSWER;
                 _currentArticle->write(this, _ngPost->aticleSignature()); // This will be done async
+                if (_ngPost->dispPostingFile() && _currentArticle->isFirstArticle())
+                    emit _currentArticle->nntpFile()->startPosting();
             }
             else
             {
@@ -239,7 +242,7 @@ void NntpConnection::onReadyRead()
                 {
                     _postingState = PostingState::NOT_CONNECTED;
                     _error(tr("FAIL cmd posting %1").arg(_currentArticle->str()));
-                    emit _currentArticle->failed(_currentArticle);
+                    emit _currentArticle->failed(_currentArticle->size());
                     emit killConnection();
                 }
             }
@@ -252,7 +255,7 @@ void NntpConnection::onReadyRead()
 #if defined(__DEBUG__) && defined(LOG_POSTING_STEPS)
                 _log(tr("POSTED: %1").arg(_currentArticle->str()));
 #endif
-                emit _currentArticle->posted(_currentArticle);
+                emit _currentArticle->posted(_currentArticle->size());
             }
             else
             {
@@ -271,7 +274,7 @@ void NntpConnection::onReadyRead()
                 {
                     _postingState = PostingState::IDLE;
                     _error(tr("FAIL posting %1").arg(_currentArticle->str()));
-                    emit _currentArticle->failed(_currentArticle);
+                    emit _currentArticle->failed(_currentArticle->size());
                 }
 
             }
