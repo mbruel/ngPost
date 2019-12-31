@@ -105,7 +105,11 @@ void NntpArticle::write(NntpConnection *con, const std::string &idSignature)
 
 std::string NntpArticle::header(const std::string &idSignature) const
 {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
     QByteArray msgId = _id.toByteArray(sMsgIdFormat);
+#else
+    QByteArray msgId = _id.toByteArray();
+#endif
     std::stringstream ss;
     ss << "From: "        << _from    << Nntp::ENDLINE
        << "Newsgroups: "  << _groups  << Nntp::ENDLINE
