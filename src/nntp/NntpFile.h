@@ -53,6 +53,7 @@ public:
 signals:
     void allArticlesArePosted();
     void startPosting();
+    void scheduleDeletion();
 
 public slots:
     void onArticlePosted(quint64 size);

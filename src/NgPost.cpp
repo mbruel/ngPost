@@ -496,7 +496,7 @@ void NgPost::onNntpFilePosted()
 
     nntpFile->writeToNZB(_nzbStream, _articleIdSignature.c_str());
     _filesInProgress.remove(nntpFile);
-    delete nntpFile;
+    emit nntpFile->scheduleDeletion();
     if (_nbPosted == _nbFiles)
     {
 #ifdef __DEBUG__

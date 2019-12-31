@@ -41,6 +41,7 @@ NntpFile::NntpFile(const QFileInfo &file, int num, int nbFiles, const QVector<QS
              << " => nbArticles: " << _nbAticles;
 #endif
     _articles.reserve(_nbAticles);
+    connect(this, &NntpFile::scheduleDeletion, this, &QObject::deleteLater, Qt::QueuedConnection);
 }
 
 NntpFile::~NntpFile()
