@@ -50,11 +50,11 @@ in order to build on other OS, the easiest way would be to [install QT](https://
 ### How to use it
 <pre>
 Syntax: ngPost (options)? (-i "file or directory to upload")+
-	-help              : Help: display syntax
+	-help               : Help: display syntax
 	-v or --version     : app version
 	-c or --conf        : use configuration file (if not provided, we try to load $HOME/.ngPost)
-	--disp_progress    : display cmd progress: NONE (default), BAR or FILES
-	-i or --input       : input file to upload (single file
+	--disp_progress     : display cmd progress: NONE (default), BAR or FILES
+	-i or --input       : input file to upload (single file or directory), you can use it multiple times
 	-o or --output      : output file path (nzb)
 	-t or --thread      : number of Threads (the connections will be distributed amongs them)
 	-x or --obfuscate   : obfuscate the subjects of the articles (CAREFUL you won't find your post if you lose the nzb file)
