@@ -3,8 +3,10 @@
 # Script to upload a file on Usenet using ngPost (https://github.com/mbruel/ngPost)
 # it's goal it's to do the split and the par2 generation in a temp folder prior to upload it
 #
+
 UUID_NAME=1
 GEN_UUID=dbus-uuidgen
+
 
 QT_VERSION=5.12.6
 SCRIPT=`readlink -f "$0"`
@@ -14,7 +16,12 @@ LIBS="$SCRIPT_PATH/libs"
 export QT_PLUGIN_PATH=$LIBS/plugins/
 
 NG_POST="$SCRIPT_PATH/src/ngPost"
+NZB_PATH="$SCRIPT_PATH/nzb"
 TMP_FOLDER=/tmp
+
+if [ ! -d $NZB_PATH ]; then
+	mkdir $NZB_PATH
+fi
 
 # Uncomment the line below in case there is an issue loading the plugins
 #export QT_DEBUG_PLUGINS=1
