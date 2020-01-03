@@ -40,9 +40,7 @@ class MainWindow;
 
 using QAtomicBool = QAtomicInteger<unsigned short>; // 16 bit only (faster than using 8 bit variable...)
 
-#ifdef __DISP_PROGRESS_BAR__
 #include <QTimer>
-#endif
 
 /*!
  * \brief The NgPost is responsible to manage the posting of all files, know when it is finished and write the nzb
@@ -126,14 +124,12 @@ private:
     int     _socketTimeOut; //!< socket timeout
     QString _nzbPath;       //!< default path where to write the nzb files
 
-#ifdef __DISP_PROGRESS_BAR__
     int       _nbArticlesUploaded; //!< number of Articles that have been uploaded (+ failed ones)
     int       _nbArticlesFailed;   //!< number of Articles that failed to be uploaded
     quint64   _uploadedSize;       //!< bytes posted (to compute the avg speed)
     int       _nbArticlesTotal;    //!< number of Articles of all the files to post
     QTimer    _progressTimer;      //!< timer to refresh the upload information (progress bar, avg. speed)
     const int _refreshRate;        //!< refresh rate
-#endif
 
     QAtomicBool _stopPosting;
     bool        _noMoreFiles;
@@ -164,10 +160,8 @@ private:
     static constexpr const char *sDefaultConfig = ".ngPost";
 #endif
 
-#ifdef __DISP_PROGRESS_BAR__
     static const int sProgressBarWidth = 50;
     static const int sDefaultRefreshRate = 500; //!< how often shall we refresh the progress bar?
-#endif
 
 public:
     NgPost(int &argc, char *argv[]);
@@ -206,6 +200,8 @@ public:
 
     inline bool dispPostingFile() const;
 
+    void articlePosted(quint64 size);
+    void articleFailed(quint64 size);
 
 
 signals:
@@ -228,11 +224,7 @@ private slots:
     void onRequestArticle(NntpConnection *con);
 #endif
 
-#ifdef __DISP_PROGRESS_BAR__
-    void onArticlePosted(quint64 size);
-    void onArticleFailed(quint64 size);
     void onRefreshProgressBar();
-#endif
 
 
 private:
