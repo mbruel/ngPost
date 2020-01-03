@@ -538,18 +538,7 @@ void NgPost::onErrorConnecting(QString err)
     _error(err);
 }
 
-void NgPost::articlePosted(quint64 size)
-{
-    _uploadedSize += size;
-    ++_nbArticlesUploaded;
-}
 
-void NgPost::articleFailed(quint64 size)
-{
-    _uploadedSize += size;
-    ++_nbArticlesUploaded;
-    ++_nbArticlesFailed;
-}
 
 #include <iostream>
 void NgPost:: onRefreshProgressBar()
