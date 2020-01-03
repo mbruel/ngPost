@@ -128,7 +128,7 @@ By default:
 
 
 ### Minimalist GUI
-![ngPost_v1.1_HMI](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost_v1.1_HMI.png)
+![ngPost_v1.7](https://raw.githubusercontent.com/mbruel/ngPost/master/pics/ngPost_v1.7.png)
 
 
 ### Alternatives
