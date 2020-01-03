@@ -200,8 +200,8 @@ public:
 
     inline bool dispPostingFile() const;
 
-    void articlePosted(quint64 size);
-    void articleFailed(quint64 size);
+    inline void articlePosted(quint64 size);
+    inline void articleFailed(quint64 size);
 
 
 signals:
@@ -305,6 +305,19 @@ QString NgPost::avgSpeed() const
     }
 
     return QString("%1 %2B/s").arg(bandwidth, 6, 'f', 2).arg(power);
+}
+
+void NgPost::articlePosted(quint64 size)
+{
+    _uploadedSize += size;
+    ++_nbArticlesUploaded;
+}
+
+void NgPost::articleFailed(quint64 size)
+{
+    _uploadedSize += size;
+    ++_nbArticlesUploaded;
+    ++_nbArticlesFailed;
 }
 
 const std::string &NgPost::aticleSignature() const { return _articleIdSignature; }
