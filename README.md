@@ -4,6 +4,8 @@ command line usenet poster for binaries developped in C++/QT</br>
 it is designed to be as fast as possible and offer all the main features to post data easily and safely.</br>
 since v1.1, a minimalist GUI has been added on request
 
+Releases are available for: Linux 64bit, Windows (both 32bit and 64bit), MacOS. It will soon be available for Android...
+
 Here are the main features and advantages of ngPost:
 
 -   it can use **several servers** (using config file or the HMI) with each **several connections** (supporting ssl)
@@ -117,6 +119,12 @@ if you prefer, you can give all the server parameters in the command line (cf th
 By default:
 - ngPost will load the configuration file 'ngPost.conf' that is in the directory
 - it will write the nzb file inside this directory too. (it's name will be the one of the latest input file in the command line)
+
+
+### MacOS release built on High Sierra 9v10.13)
+- download [ngPost_v1.7.dmg](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v1.7.dmg)
+- launch it using the same syntax than describe in the section above
+- if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
 
 ### Minimalist GUI
