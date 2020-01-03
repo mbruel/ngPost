@@ -26,8 +26,9 @@
 #include <QTextStream>
 #include <QDebug>
 
-NntpFile::NntpFile(const QFileInfo &file, int num, int nbFiles, const QVector<QString> &grpList):
+NntpFile::NntpFile(NgPost *ngPost, const QFileInfo &file, int num, int nbFiles, const QVector<QString> &grpList):
     QObject(),
+    _ngPost(ngPost),
     _file(file), _num(num), _nbFiles(nbFiles), _grpList(grpList),
     _nbAticles((int)std::ceil((float)file.size()/NgPost::articleSize())),
     _articles(),
@@ -54,7 +55,7 @@ NntpFile::~NntpFile()
 
 void NntpFile::onArticlePosted(quint64 size)
 {
-    Q_UNUSED(size)
+    _ngPost->articlePosted(size);
     NntpArticle *article = static_cast<NntpArticle*>(sender());
     ++_nbPosted;
 #ifdef __DEBUG__
@@ -72,7 +73,7 @@ void NntpFile::onArticlePosted(quint64 size)
 
 void NntpFile::onArticleFailed(quint64 size)
 {
-    Q_UNUSED(size)
+    _ngPost->articleFailed(size);
     NntpArticle *article = static_cast<NntpArticle*>(sender());
     ++_nbFailed;
 #ifdef __DEBUG__

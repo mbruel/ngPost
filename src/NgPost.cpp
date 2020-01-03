@@ -31,9 +31,7 @@
 #include <QCommandLineParser>
 #include <QDir>
 #include <QDebug>
-#ifdef __DISP_PROGRESS_BAR__
 #include <iostream>
-#endif
 #include "hmi/MainWindow.h"
 
 
@@ -130,12 +128,10 @@ NgPost::NgPost(int &argc, char *argv[]):
     _timeStart(), _totalSize(0),
     _meta(), _grpList(),
     _nbConnections(sDefaultNumberOfConnections), _nbThreads(QThread::idealThreadCount()),
-    _socketTimeOut(sDefaultSocketTimeOut), _nzbPath(sDefaultNzbPath)
-  #ifdef __DISP_PROGRESS_BAR__
-  , _nbArticlesUploaded(0), _nbArticlesFailed(0),
-    _uploadedSize(0), _nbArticlesTotal(0), _progressTimer(), _refreshRate(sDefaultRefreshRate)
-  #endif
-  , _stopPosting(0x0), _noMoreFiles(false), _noMoreArticles(false)
+    _socketTimeOut(sDefaultSocketTimeOut), _nzbPath(sDefaultNzbPath),
+    _nbArticlesUploaded(0), _nbArticlesFailed(0),
+    _uploadedSize(0), _nbArticlesTotal(0), _progressTimer(), _refreshRate(sDefaultRefreshRate),
+    _stopPosting(0x0), _noMoreFiles(false), _noMoreArticles(false)
 {
     if (_mode == AppMode::CMD)
         _app =  new QCoreApplication(argc, argv);
@@ -173,7 +169,6 @@ void NgPost::_finishPosting()
 {
     _stopPosting = 0x1;
 
-#ifdef __DISP_PROGRESS_BAR__
     if (_dispProgressBar)
         disconnect(&_progressTimer, &QTimer::timeout, this, &NgPost::onRefreshProgressBar);
     if (!_timeStart.isNull())
@@ -186,7 +181,6 @@ void NgPost::_finishPosting()
             std::cout << std::endl;
         }
     }
-#endif
 
 #ifdef __DEBUG__
     _log("Finishing posting...");
@@ -265,7 +259,6 @@ void NgPost::stopPosting()
     qApp->processEvents();
 
 
-#ifdef __DISP_PROGRESS_BAR__
     if (_dispProgressBar)
     {
         disconnect(&_progressTimer, &QTimer::timeout, this, &NgPost::onRefreshProgressBar);
@@ -275,7 +268,6 @@ void NgPost::stopPosting()
             std::cout << std::endl;
         }
     }
-#endif
 
 #ifdef __DEBUG__
     _log("Stop posting...");
@@ -425,13 +417,11 @@ bool NgPost::startPosting()
     // Prepare 2 Articles for each connections
     _prepareArticles();
 
-#ifdef __DISP_PROGRESS_BAR__
     if (_dispProgressBar)
     {
         connect(&_progressTimer, &QTimer::timeout, this, &NgPost::onRefreshProgressBar, Qt::DirectConnection);
         _progressTimer.start(_refreshRate);
     }
-#endif
 
     return true;
 }
@@ -548,14 +538,13 @@ void NgPost::onErrorConnecting(QString err)
     _error(err);
 }
 
-#ifdef __DISP_PROGRESS_BAR__
-void NgPost::onArticlePosted(quint64 size)
+void NgPost::articlePosted(quint64 size)
 {
     _uploadedSize += size;
     ++_nbArticlesUploaded;
 }
 
-void NgPost::onArticleFailed(quint64 size)
+void NgPost::articleFailed(quint64 size)
 {
     _uploadedSize += size;
     ++_nbArticlesUploaded;
@@ -653,15 +642,13 @@ void NgPost::_initPosting(const QList<QFileInfo> &filesToUpload)
     int fileNum = 0;
     for (const QFileInfo &file : filesToUpload)
     {
-        NntpFile *nntpFile = new NntpFile(file, ++fileNum, _nbFiles, _grpList);
+        NntpFile *nntpFile = new NntpFile(this, file, ++fileNum, _nbFiles, _grpList);
         connect(nntpFile, &NntpFile::allArticlesArePosted, this, &NgPost::onNntpFilePosted, Qt::QueuedConnection);
         if (_dispFilesPosting)
             connect(nntpFile, &NntpFile::startPosting, this, &NgPost::onNntpFileStartPosting, Qt::QueuedConnection);
 
         _filesToUpload.enqueue(nntpFile);
-#ifdef __DISP_PROGRESS_BAR__
         _nbArticlesTotal += nntpFile->nbArticles();
-#endif
     }
 }
 
@@ -674,8 +661,6 @@ void NgPost::_cleanInit()
     qDeleteAll(_filesToUpload);_filesToUpload.clear();
 }
 
-
-#endif
 
 #ifndef __USE_MUTEX__
 void NgPost::onRequestArticle(NntpConnection *con)
@@ -905,11 +890,6 @@ NntpArticle *NgPost::_getNextArticle()
             NntpArticle *article = new NntpArticle(_nntpFile, _part, _buffer, pos, bytes,
                                                    _from,//_from.empty()?_randomFrom():_from,
                                                    _groups, _obfuscateArticles);
-
-#ifdef __DISP_PROGRESS_BAR__
-            connect(article, &NntpArticle::posted, this, &NgPost::onArticlePosted, Qt::QueuedConnection);
-            connect(article, &NntpArticle::failed, this, &NgPost::onArticleFailed, Qt::QueuedConnection);
-#endif
 
 #ifdef __SAVE_ARTICLES__
             article->dumpToFile("/tmp", _articleIdSignature);

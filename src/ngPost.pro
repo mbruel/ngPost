@@ -19,7 +19,6 @@ win32: {
 }
 
 DEFINES += __USE_MUTEX__
-DEFINES += __DISP_PROGRESS_BAR__
 
 CONFIG(debug, debug|release) :{
     DEFINES += __DEBUG__
@@ -30,7 +29,7 @@ CONFIG(debug, debug|release) :{
     DEFINES += LOG_NEWS_DATA
     DEFINES += LOG_CONSTRUCTORS
 
-    DEFINES += __SAVE_ARTICLES__
+    DEFINES -= __SAVE_ARTICLES__
 }
 else {
     # In release mode, remove all qDebugs !
