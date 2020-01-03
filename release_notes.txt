@@ -16,6 +16,18 @@
 	with HMI: display rar command, propose generation of password, display par2 cmd
 
 
+####################################################
+###       Release: ngPost v1.7                   ###
+###       date:    2020/01/03                    ###
+####################################################
+
+- no more slot NgPost::onArticlePosted, instead use inline function (no more segfault)
+
+- introduce debug in cmd (-d or --debug)
+
+- update --disp_progress files to log when finish posting (start is logged in debug mode too)
+
+
 
 ####################################################
 ###       Release: ngPost v1.6                   ###

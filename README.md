@@ -59,10 +59,11 @@ in order to build on other OS, the easiest way would be to [install QT](https://
 ### How to use it
 <pre>
 Syntax: ngPost (options)? (-i "file or directory to upload")+
-	-help               : Help: display syntax
+	--help              : Help: display syntax
 	-v or --version     : app version
 	-c or --conf        : use configuration file (if not provided, we try to load $HOME/.ngPost)
 	--disp_progress     : display cmd progress: NONE (default), BAR or FILES
+	-d or --debug       : display some debug logs
 	-i or --input       : input file to upload (single file or directory), you can use it multiple times
 	-o or --output      : output file path (nzb)
 	-t or --thread      : number of Threads (the connections will be distributed amongs them)
@@ -92,8 +93,8 @@ so in the first example above, the nzb would be: /tmp/folderToPost2.nzb
 
 ### Portable release (Linux)
 if you don't want to build it and install the dependencies, you can also the portable release that includes everything.<br/>
-- download [ngPost_v1.6-x86_64.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v1.6-x86_64.AppImage)
-- chmod 755 ngPost_v1.6-x86_64.AppImage
+- download [ngPost_v1.7-x86_64.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v1.7-x86_64.AppImage)
+- chmod 755 ngPost_v1.7-x86_64.AppImage
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
@@ -107,7 +108,7 @@ if you don't want to build it and install the dependencies, you can also the por
 
 
 ### Windows installer
-- just use the packager [ngPost_1.6_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_1.6_x64_setup.exe) or [ngPost_1.6_x86_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_1.6_x86_setup.exe) for the 32bit version
+- just use the packager [ngPost_1.7_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_1.7_x64_setup.exe) or [ngPost_1.7_x86_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_1.7_x86_setup.exe) for the 32bit version
 - edit **ngPost.conf** (in the installation folder) to add your server settings (you can put several). 
 - launch **ngPost.exe** (GUI version)
 - or you can use it with the command line: **ngPost.exe** -i "your file or directory"
