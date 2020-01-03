@@ -61,7 +61,7 @@ class NgPost : public QObject
 
     friend class MainWindow; //!< so it can access all parameters
 
-    enum class Opt {HELP = 0, VERSION, CONF, DISP_PROGRESS,
+    enum class Opt {HELP = 0, VERSION, CONF, DISP_PROGRESS, DEBUG,
                     INPUT, OUTPUT, NZB_PATH, THREAD,
                     MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY,
                     OBFUSCATE,
@@ -132,8 +132,7 @@ private:
     const int _refreshRate;        //!< refresh rate
 
     QAtomicBool _stopPosting;
-    bool        _noMoreFiles;
-    bool        _noMoreArticles;
+    QAtomicBool _noMoreFiles;
 
 
     static qint64 sArticleSize;

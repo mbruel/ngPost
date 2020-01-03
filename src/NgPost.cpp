@@ -49,6 +49,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::VERSION,      "version"},
     {Opt::CONF,         "conf"},
     {Opt::DISP_PROGRESS,"disp_progress"},
+    {Opt::DEBUG,        "debug"},
 
     {Opt::INPUT,        "input"},
     {Opt::OUTPUT,       "output"},
@@ -79,6 +80,7 @@ const QList<QCommandLineOption> NgPost::sCmdOptions = {
     {{"v", sOptionNames[Opt::VERSION]},       tr( "app version")},
     {{"c", sOptionNames[Opt::CONF]},          tr( "use configuration file (if not provided, we try to load $HOME/.ngPost)"), sOptionNames[Opt::CONF]},
     { sOptionNames[Opt::DISP_PROGRESS],       tr( "display cmd progress: NONE (default), BAR or FILES"), sOptionNames[Opt::DISP_PROGRESS]},
+    {{"d", sOptionNames[Opt::DEBUG]},         tr( "display some debug logs")},
 
     {{"i", sOptionNames[Opt::INPUT]},         tr("input file to upload (single file or directory), you can use it multiple times"), sOptionNames[Opt::INPUT]},
     {{"o", sOptionNames[Opt::OUTPUT]},        tr("output file path (nzb)"), sOptionNames[Opt::OUTPUT]},
@@ -131,7 +133,7 @@ NgPost::NgPost(int &argc, char *argv[]):
     _socketTimeOut(sDefaultSocketTimeOut), _nzbPath(sDefaultNzbPath),
     _nbArticlesUploaded(0), _nbArticlesFailed(0),
     _uploadedSize(0), _nbArticlesTotal(0), _progressTimer(), _refreshRate(sDefaultRefreshRate),
-    _stopPosting(0x0), _noMoreFiles(false), _noMoreArticles(false)
+    _stopPosting(0x0), _noMoreFiles(0x0)
 {
     if (_mode == AppMode::CMD)
         _app =  new QCoreApplication(argc, argv);
@@ -140,6 +142,7 @@ NgPost::NgPost(int &argc, char *argv[]):
         _app = new QApplication(argc, argv);
         _hmi = new MainWindow(this);
         _hmi->setWindowTitle(QString("%1_v%2").arg(sAppName).arg(sVersion));
+        _dispProgressBar = false;
     }
 
     QThread::currentThread()->setObjectName("NgPost");
@@ -333,8 +336,7 @@ bool NgPost::startPosting()
     qDebug() << "start posting... nzb: " << nzbPath();
 
     _stopPosting        = 0x0;
-    _noMoreFiles        = false;
-    _noMoreArticles     = false;
+    _noMoreFiles        = 0x0;
     _nbPosted           = 0;
     _nbArticlesUploaded = 0;
     _nbArticlesFailed   = 0;
@@ -446,20 +448,27 @@ int NgPost::startHMI()
 
 NntpArticle *NgPost::getNextArticle()
 {
+    if (_stopPosting.load())
+        return nullptr;
+
 #ifdef __USE_MUTEX__
     QMutexLocker lock(&_mutex);
 #endif
-    if (_noMoreArticles || _stopPosting.load())
-        return nullptr;
 
     NntpArticle *article = nullptr;
     if (_articles.size())
         article = _articles.dequeue();
     else
     {
-        // we should never come here as the goal is to have articles prepared in advance in the queue
-        qDebug() << "[NgPost::getNextArticle] No article prepared...";
-        article = _prepareNextArticle();
+        if (_noMoreFiles.load())
+            return nullptr;
+        else
+        {
+            // we should never come here as the goal is to have articles prepared in advance in the queue
+            if (_debug)
+                _error("[getNextArticle] No article prepared...");
+            article = _prepareNextArticle();
+        }
     }
 
     if (article)
@@ -472,8 +481,7 @@ NntpArticle *NgPost::getNextArticle()
 void NgPost::onNntpFileStartPosting()
 {
     NntpFile *nntpFile = static_cast<NntpFile*>(sender());
-    _cout << "[avg. speed: " << avgSpeed()
-          << "] starting " << nntpFile->name() << "\n" << flush;
+    _cout << "[avg. speed: " << avgSpeed() << "] >>>>> " << nntpFile->name() << "\n" << flush;
 }
 
 void NgPost::onNntpFilePosted()
@@ -483,6 +491,9 @@ void NgPost::onNntpFilePosted()
     ++_nbPosted;
     if (_hmi)
         _hmi->setFilePosted(nntpFile->path());
+
+    if (_dispFilesPosting)
+        _cout << "[avg. speed: " << avgSpeed() << "] <<<<< " << nntpFile->name() << "\n" << flush;
 
     nntpFile->writeToNZB(_nzbStream, _articleIdSignature.c_str());
     _filesInProgress.remove(nntpFile);
@@ -633,7 +644,7 @@ void NgPost::_initPosting(const QList<QFileInfo> &filesToUpload)
     {
         NntpFile *nntpFile = new NntpFile(this, file, ++fileNum, _nbFiles, _grpList);
         connect(nntpFile, &NntpFile::allArticlesArePosted, this, &NgPost::onNntpFilePosted, Qt::QueuedConnection);
-        if (_dispFilesPosting)
+        if (_dispFilesPosting && debugMode())
             connect(nntpFile, &NntpFile::startPosting, this, &NgPost::onNntpFileStartPosting, Qt::QueuedConnection);
 
         _filesToUpload.enqueue(nntpFile);
@@ -749,9 +760,10 @@ void NgPost::_printStats() const
 
 void NgPost::_log(const QString &aMsg) const
 {
-    qDebug() << QString("[%1] %2").arg(QThread::currentThread()->objectName()).arg(aMsg);
     if (_hmi)
         _hmi->log(aMsg);
+    else if (_debug)
+        _cout << QString("[%1] %2\n").arg(QThread::currentThread()->objectName()).arg(aMsg);
 }
 
 void NgPost::_error(const QString &error) const
@@ -759,7 +771,7 @@ void NgPost::_error(const QString &error) const
     if (_hmi)
         _hmi->logError(error);
     else
-        _cerr << error << "\n" << flush;
+        _cerr << QString("[%1] %2\n").arg(QThread::currentThread()->objectName()).arg(error) << flush;
 }
 
 void NgPost::_prepareArticles()
@@ -894,12 +906,6 @@ NntpArticle *NgPost::_getNextArticle()
             delete _file;
             _file = nullptr;
             _nntpFile = nullptr;
-
-            if (_noMoreFiles)
-            {
-                _noMoreArticles = 0x1;
-                return nullptr;
-            }
         }
     }
 
@@ -966,6 +972,12 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     {
         _obfuscateArticles = true;
         _cout << "Do article obfuscation (the subject of each Article will be a UUID)\n" << flush;
+    }
+
+    if (parser.isSet(sOptionNames[Opt::DEBUG]))
+    {
+        _debug = true;
+        _cout << "Debug logs are ON\n" << flush;
     }
 
     if (parser.isSet(sOptionNames[Opt::THREAD]))
