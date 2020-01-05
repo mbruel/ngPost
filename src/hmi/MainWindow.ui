@@ -669,6 +669,13 @@
             </widget>
            </item>
            <item>
+            <widget class="QCheckBox" name="obfuscateFileCB">
+             <property name="text">
+              <string>obfuscate</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QCheckBox" name="par2CB">
              <property name="text">
               <string>gen par2</string>
