@@ -3,5 +3,7 @@
         <file>icons/clear.png</file>
         <file>icons/ngPost.png</file>
         <file>icons/genKey.png</file>
+        <file>icons/save.png</file>
+        <file>icons/plus.png</file>
     </qresource>
 </RCC>
