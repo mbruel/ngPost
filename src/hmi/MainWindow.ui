@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>930</width>
-    <height>767</height>
+    <width>1143</width>
+    <height>613</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -58,6 +58,10 @@
             <widget class="QPushButton" name="addServerButton">
              <property name="text">
               <string>Add Server</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../resources/resources.qrc">
+               <normaloff>:/icons/plus.png</normaloff>:/icons/plus.png</iconset>
              </property>
             </widget>
            </item>
@@ -122,16 +126,6 @@
           </layout>
          </item>
          <item>
-          <widget class="QFrame" name="frame_3">
-           <property name="frameShape">
-            <enum>QFrame::HLine</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Raised</enum>
-           </property>
-          </widget>
-         </item>
-         <item>
           <layout class="QHBoxLayout" name="groupsLayout">
            <item>
             <widget class="QLabel" name="groupsLbl">
@@ -162,30 +156,7 @@
           </layout>
          </item>
          <item>
-          <widget class="QFrame" name="frame">
-           <property name="frameShape">
-            <enum>QFrame::HLine</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Raised</enum>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="obfuscateMsgIdCB">
-           <property name="toolTip">
-            <string>CAREFUL: you won't be able to find your post without the NZB file</string>
-           </property>
-           <property name="text">
-            <string>obfuscation of each Article's Message-Id </string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QFrame" name="frame_2">
+          <widget class="QFrame" name="frame_3">
            <property name="frameShape">
             <enum>QFrame::HLine</enum>
            </property>
@@ -281,6 +252,57 @@
           </layout>
          </item>
          <item>
+          <widget class="QFrame" name="frame">
+           <property name="frameShape">
+            <enum>QFrame::HLine</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_8">
+           <item>
+            <widget class="QCheckBox" name="obfuscateMsgIdCB">
+             <property name="toolTip">
+              <string>CAREFUL: you won't be able to find your post without the NZB file</string>
+             </property>
+             <property name="text">
+              <string>obfuscation of each Article's Message-Id </string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_12">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QPushButton" name="saveButton">
+             <property name="text">
+              <string>save</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../resources/resources.qrc">
+               <normaloff>:/icons/save.png</normaloff>:/icons/save.png</iconset>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
           <spacer name="verticalSpacer">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
@@ -306,6 +328,185 @@
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_3">
          <item>
+          <layout class="QHBoxLayout" name="compressLayout">
+           <item>
+            <layout class="QHBoxLayout" name="compressPathLayout">
+             <item>
+              <widget class="QLabel" name="compressPathLbl">
+               <property name="text">
+                <string>compress path: </string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="compressPathLE">
+               <property name="text">
+                <string>/tmp</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="compressPathButton">
+               <property name="maximumSize">
+                <size>
+                 <width>30</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>...</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_8">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>18</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_6">
+             <item>
+              <layout class="QHBoxLayout" name="zipLayout">
+               <item>
+                <widget class="QLabel" name="zipLbl">
+                 <property name="text">
+                  <string>7zip path: </string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="zipLE">
+                 <property name="text">
+                  <string>/usr/bin/7z</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pushButton_2">
+                 <property name="maximumSize">
+                  <size>
+                   <width>30</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>...</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="par2VolLayout">
+               <item>
+                <widget class="QLabel" name="volSizeLbl">
+                 <property name="text">
+                  <string>vol size:</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="volSizeLE">
+                 <property name="maximumSize">
+                  <size>
+                   <width>50</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>42m</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_11">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>18</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_7">
+             <item>
+              <layout class="QHBoxLayout" name="par2Layout">
+               <item>
+                <widget class="QLabel" name="par2Lbl">
+                 <property name="text">
+                  <string>par2 path:</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="par2LE">
+                 <property name="text">
+                  <string>/usr/bin/par2</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="par2Button">
+                 <property name="maximumSize">
+                  <size>
+                   <width>30</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>...</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="redundancyLayout">
+               <item>
+                <widget class="QLabel" name="par2RedLbl">
+                 <property name="text">
+                  <string>redundancy (%): </string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="par2RedLE">
+                 <property name="maximumSize">
+                  <size>
+                   <width>50</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>8</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </item>
+         <item>
           <widget class="QListWidget" name="filesList"/>
          </item>
          <item>
@@ -328,12 +529,20 @@
              <property name="text">
               <string>Select Files</string>
              </property>
+             <property name="icon">
+              <iconset resource="../resources/resources.qrc">
+               <normaloff>:/icons/plus.png</normaloff>:/icons/plus.png</iconset>
+             </property>
             </widget>
            </item>
            <item>
             <widget class="QPushButton" name="clearFilesButton">
              <property name="text">
               <string>Remove All</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../resources/resources.qrc">
+               <normaloff>:/icons/clear.png</normaloff>:/icons/clear.png</iconset>
              </property>
             </widget>
            </item>
@@ -453,9 +662,27 @@
             </spacer>
            </item>
            <item>
+            <widget class="QCheckBox" name="compressCB">
+             <property name="text">
+              <string>compress</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="par2CB">
+             <property name="text">
+              <string>gen par2</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QPushButton" name="postButton">
              <property name="text">
               <string>Post Files</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../resources/resources.qrc">
+               <normaloff>:/icons/ngPost.png</normaloff>:/icons/ngPost.png</iconset>
              </property>
             </widget>
            </item>
@@ -510,6 +737,10 @@
             <widget class="QPushButton" name="clearLogButton">
              <property name="text">
               <string>Clear</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../resources/resources.qrc">
+               <normaloff>:/icons/clear.png</normaloff>:/icons/clear.png</iconset>
              </property>
             </widget>
            </item>
@@ -580,7 +811,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>930</width>
+     <width>1143</width>
      <height>24</height>
     </rect>
    </property>
