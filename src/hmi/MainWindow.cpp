@@ -132,14 +132,20 @@ void MainWindow::setFilePosted(const QString &filePath)
     }
 }
 
-void MainWindow::log(const QString &aMsg) const
+void MainWindow::log(const QString &aMsg, bool newline) const
 {
-    _ui->logBrowser->append(aMsg);
+    if (newline)
+        _ui->logBrowser->append(aMsg);
+    else
+    {
+        _ui->logBrowser->insertPlainText(aMsg);
+        _ui->logBrowser->moveCursor(QTextCursor::End);
+    }
 }
 
 void MainWindow::logError(const QString &error) const
 {
-    _ui->logBrowser->append(QString("<font color='red'>%1</font>").arg(error));
+    _ui->logBrowser->append(QString("<font color='red'>%1</font><br/>\n").arg(error));
 }
 
 void MainWindow::onPostFiles()
@@ -220,7 +226,10 @@ void MainWindow::_initFilesBox()
     connect(_ui->selectFilesButton, &QAbstractButton::clicked, this, &MainWindow::onSelectFilesClicked);
     connect(_ui->clearFilesButton,  &QAbstractButton::clicked, this, &MainWindow::onClearFilesClicked);
 
+    connect(_ui->compressCB,        &QAbstractButton::toggled, this, &MainWindow::onCompressCB);
+    connect(_ui->genCompressName,   &QAbstractButton::clicked, this, &MainWindow::onGenCompressName);
 
+    onCompressCB(false);
 }
 
 void MainWindow::_initPostingBox()
@@ -413,6 +422,9 @@ void MainWindow::_addFile(const QString &fileName, int currentNbFiles)
         _ngPost->_nzbName = fileInfo.completeBaseName();
         _ui->nzbFileEdit->setText(_ngPost->nzbPath());
     }
+    if (_ui->compressNameEdit->text().isEmpty())
+        _ui->compressNameEdit->setText(_ngPost->_nzbName);
+
 }
 
 bool MainWindow::_fileAlreadyInList(const QString &fileName, int currentNbFiles) const
@@ -551,6 +563,19 @@ void MainWindow::onClearFilesClicked()
 {
     _ui->filesList->clear();
     _ui->nzbFileEdit->clear();
+    _ui->compressNameEdit->clear();
+}
+
+void MainWindow::onCompressCB(bool checked)
+{
+    _ui->compressNameEdit->setEnabled(checked);
+    _ui->genCompressName->setEnabled(checked);
+    _ui->par2CB->setEnabled(checked);
+}
+
+void MainWindow::onGenCompressName()
+{
+    _ui->compressNameEdit->setText(_ngPost->randomPass());
 }
 
 const QString MainWindow::sGroupBoxStyle =  "\

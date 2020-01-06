@@ -339,7 +339,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="compressPathLE">
+              <widget class="QLineEdit" name="compressPathEdit">
                <property name="text">
                 <string>/tmp</string>
                </property>
@@ -374,25 +374,25 @@
             </spacer>
            </item>
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_6">
+            <layout class="QHBoxLayout" name="rarLayout">
              <item>
-              <layout class="QHBoxLayout" name="zipLayout">
+              <layout class="QHBoxLayout" name="rarPathLayout">
                <item>
-                <widget class="QLabel" name="zipLbl">
+                <widget class="QLabel" name="rarLbl">
                  <property name="text">
-                  <string>7zip path: </string>
+                  <string>rar path: </string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="zipLE">
+                <widget class="QLineEdit" name="rarEdit">
                  <property name="text">
-                  <string>/usr/bin/7z</string>
+                  <string>/usr/bin/rar</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_2">
+                <widget class="QPushButton" name="rarPathButton">
                  <property name="maximumSize">
                   <size>
                    <width>30</width>
@@ -407,16 +407,16 @@
               </layout>
              </item>
              <item>
-              <layout class="QHBoxLayout" name="par2VolLayout">
+              <layout class="QHBoxLayout" name="rarSizeLayout">
                <item>
-                <widget class="QLabel" name="volSizeLbl">
+                <widget class="QLabel" name="rarSizeLbl">
                  <property name="text">
                   <string>vol size:</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="volSizeLE">
+                <widget class="QLineEdit" name="rarSizeEdit">
                  <property name="maximumSize">
                   <size>
                    <width>50</width>
@@ -446,25 +446,25 @@
             </spacer>
            </item>
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_7">
+            <layout class="QHBoxLayout" name="par2Layout">
              <item>
-              <layout class="QHBoxLayout" name="par2Layout">
+              <layout class="QHBoxLayout" name="par2PathLayout">
                <item>
-                <widget class="QLabel" name="par2Lbl">
+                <widget class="QLabel" name="par2PathLbl">
                  <property name="text">
                   <string>par2 path:</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="par2LE">
+                <widget class="QLineEdit" name="par2PathEdit">
                  <property name="text">
                   <string>/usr/bin/par2</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="par2Button">
+                <widget class="QPushButton" name="par2PathButton">
                  <property name="maximumSize">
                   <size>
                    <width>30</width>
@@ -481,14 +481,14 @@
              <item>
               <layout class="QHBoxLayout" name="redundancyLayout">
                <item>
-                <widget class="QLabel" name="par2RedLbl">
+                <widget class="QLabel" name="redundancyLbl">
                  <property name="text">
                   <string>redundancy (%): </string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="par2RedLE">
+                <widget class="QLineEdit" name="redundancyLE">
                  <property name="maximumSize">
                   <size>
                    <width>50</width>
@@ -562,7 +562,7 @@
           </layout>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="nzbLayout">
+          <layout class="QHBoxLayout" name="horizontalLayout_9">
            <item>
             <layout class="QHBoxLayout" name="nzbFileLayout">
              <item>
@@ -594,6 +594,9 @@
             <spacer name="horizontalSpacer_6">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Preferred</enum>
              </property>
              <property name="sizeHint" stdset="0">
               <size>
@@ -644,10 +647,71 @@
              </item>
             </layout>
            </item>
+           <item>
+            <spacer name="horizontalSpacer_13">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Preferred</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="compressOptionsLayout">
+             <item>
+              <widget class="QCheckBox" name="compressCB">
+               <property name="text">
+                <string>compress</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="compressNameEdit">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="genCompressName">
+               <property name="maximumSize">
+                <size>
+                 <width>24</width>
+                 <height>24</height>
+                </size>
+               </property>
+               <property name="toolTip">
+                <string>generate random password</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="../resources/resources.qrc">
+                 <normaloff>:/icons/genKey.png</normaloff>:/icons/genKey.png</iconset>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="par2CB">
+               <property name="text">
+                <string>gen par2</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
           </layout>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="postLayout">
+          <layout class="QHBoxLayout" name="horizontalLayout_10">
            <item>
             <spacer name="horizontalSpacer_9">
              <property name="orientation">
@@ -660,27 +724,6 @@
               </size>
              </property>
             </spacer>
-           </item>
-           <item>
-            <widget class="QCheckBox" name="compressCB">
-             <property name="text">
-              <string>compress</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QCheckBox" name="obfuscateFileCB">
-             <property name="text">
-              <string>obfuscate</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QCheckBox" name="par2CB">
-             <property name="text">
-              <string>gen par2</string>
-             </property>
-            </widget>
            </item>
            <item>
             <widget class="QPushButton" name="postButton">

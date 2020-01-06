@@ -435,6 +435,15 @@ int NgPost::startEventLoop()
 
 int NgPost::startHMI()
 {
+//    compressFiles("rar",
+//                  "par2",
+//                  "/tmp",
+//                  "ngPostRarArchive",
+//    {"/home/bruel/Downloads/The.Big.Bang.Theory.S11E23.HDTV.x264-SVA.mkv"},
+//                  "qwerty",
+//                  8,
+//                  "30m");
+
     parseDefaultConfig();
     if (_from.empty())
             _from = _randomFrom();
@@ -580,6 +589,8 @@ void NgPost:: onRefreshProgressBar()
     if (_nbArticlesUploaded < _nbArticlesTotal)
         _progressTimer.start(_refreshRate);
 }
+
+
 
 #include <QNetworkReply>
 #include <QMessageBox>
@@ -758,10 +769,10 @@ void NgPost::_printStats() const
     }
 }
 
-void NgPost::_log(const QString &aMsg) const
+void NgPost::_log(const QString &aMsg, bool newline) const
 {
     if (_hmi)
-        _hmi->log(aMsg);
+        _hmi->log(aMsg, newline);
     else if (_debug)
         _cout << QString("[%1] %2\n").arg(QThread::currentThread()->objectName()).arg(aMsg);
 }
@@ -1394,9 +1405,107 @@ void NgPost::_dumpParams() const
              << ", display posting files: " << _dispFilesPosting
              << "\n[NgPost::_dumpParams]<<<<<<<<<<<<<<<<<<\n";
 }
-enum class Opt {HELP = 0, VERSION, CONF,
-                INPUT, OUTPUT, THREAD, MSG_ID,
-                META, ARTICLE_SIZE, FROM, GROUPS,
-                HOST, PORT, SSL, USER, PASS, CONNECTION
-               };
 #endif
+
+#include <QProcess>
+int NgPost::compressFiles(const QString &cmdRar,
+                          const QString &cmdPar2,
+                          const QString &tmpFolder,
+                          const QString &archiveName,
+                          const QStringList &files,
+                          const QString &pass,
+                          int redundancy,
+                          const QString &volSize,
+                          const QString &compressLevel)
+{
+    _extProc = new QProcess(this);
+    connect(_extProc, &QProcess::readyReadStandardOutput, this, &NgPost::onExtProcReadyReadStandardOutput);
+    connect(_extProc, &QProcess::readyReadStandardOutput, this, &NgPost::onExtProcReadyReadStandardOutput);
+
+    // 1.: create archive temporary folder
+    QString archiveTmpFolder = QString("%1/%2").arg(tmpFolder).arg(archiveName);
+    QDir dir(archiveTmpFolder);
+    if (dir.exists())
+    {
+        _error(tr("The temporary directory '%1' already exists... (either remove it or change the archive name)").arg(archiveTmpFolder));
+        return -1;
+    }
+    else
+    {
+        if (!dir.mkpath("."))
+        {
+            _error(tr("Couldn't create the temporary folder: '%1'...").arg(archiveTmpFolder));
+            return -2;
+        }
+    }
+
+    // 2.: create rar args (rar a -v50m -ed -ep1 -m0 -hp"$PASS" "$TMP_FOLDER/$RAR_NAME.rar" "${FILES[@]}")
+    QStringList args = {"a", "-idp", "-ep1", compressLevel, QString("%1/%2.rar").arg(archiveTmpFolder).arg(archiveName)};
+    if (!pass.isEmpty())
+        args << QString("-hp\"%1\"").arg(pass);
+    if (!volSize.isEmpty())
+        args << QString("-v%1").arg(volSize);
+    args << files;
+
+    // 3.: launch rar
+    if (_debug)
+        _log(QString("Compressing files: %1 %2\n").arg(cmdRar).arg(args.join(" ")));
+    else
+        _log("Compressing files...\n");
+    _extProc->start(cmdRar, args);
+    _extProc->waitForFinished();
+    int exitCode = _extProc->exitCode();
+    if (_debug)
+        _log(QString("rar exit code: %1\n").arg(exitCode));
+    else
+        _log("");
+
+
+    // 4.: create the par2 if required
+    if (exitCode == 0 && redundancy > 0)
+    {
+        args.clear();
+        //par2 c -s768000 -r8 /tmp/ngPostArchive/ngPostArchive.par2 /tmp/ngPostArchive/ngPostArchive.7z*
+        args << "c" << "-q" << "-s768000" << QString("-r%1").arg(redundancy)
+             << QString("%1/%2.par2").arg(archiveTmpFolder).arg(archiveName);
+        if (volSize.isEmpty())
+            args << QString("%1/%2.rar").arg(archiveTmpFolder).arg(archiveName);
+        else
+            args << QString("%1/%2.part*").arg(archiveTmpFolder).arg(archiveName);
+
+        if (_debug)
+            _log(QString("Generating par2: %1 %2\n").arg(cmdPar2).arg(args.join(" ")));
+        else
+            _log("Generating par2...\n");
+        _extProc->start(cmdPar2, args);
+        _extProc->waitForFinished();
+        int exitCode = _extProc->exitCode();
+        if (_debug)
+            _log(QString("=> par2 exit code: %1\n").arg(exitCode));
+        else
+            _log("");
+    }
+
+
+    _log("Ready to post!");
+
+    // 5.: free the resources
+    delete _extProc;
+    _extProc = nullptr;
+    dir.removeRecursively();
+
+    return exitCode;
+}
+
+void NgPost::onExtProcReadyReadStandardOutput()
+{
+    if (_debug)
+        _log(_extProc->readAllStandardOutput(), false);
+    else
+        _log("*", false);
+}
+
+void NgPost::onExtProcReadyReadStandardError()
+{
+    _error(_extProc->readAllStandardError());
+}

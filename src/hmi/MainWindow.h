@@ -62,11 +62,11 @@ public:
 
     void setFilePosted(const QString &filePath);
 
-    void log(const QString &aMsg) const; //!< log function for QString
+    void log(const QString &aMsg, bool newline = true) const; //!< log function for QString
     void logError(const QString &error) const; //!< log function for QString
 
 
-public slots:
+private slots:
     void onPostFiles();
 
     void onAddServer();
@@ -74,6 +74,9 @@ public slots:
 
     void onSelectFilesClicked();
     void onClearFilesClicked();
+    void onCompressCB(bool checked);
+    void onGenCompressName();
+
 
     void onGenPoster();
     void onNzbPassToggled(bool checked);

@@ -37,6 +37,7 @@ class NntpFile;
 class NntpArticle;
 class QCoreApplication;
 class MainWindow;
+class QProcess;
 
 using QAtomicBool = QAtomicInteger<unsigned short>; // 16 bit only (faster than using 8 bit variable...)
 
@@ -134,6 +135,8 @@ private:
     QAtomicBool _stopPosting;
     QAtomicBool _noMoreFiles;
 
+    QProcess   *_extProc;
+
 
     static qint64 sArticleSize;
     static const QString sSpace;
@@ -225,6 +228,9 @@ private slots:
 
     void onRefreshProgressBar();
 
+    void onExtProcReadyReadStandardOutput();
+    void onExtProcReadyReadStandardError();
+
 
 private:
     void _initPosting(const QList<QFileInfo> &filesToUpload);
@@ -237,7 +243,7 @@ private:
     int  _createNntpConnections();
     void _closeNzb();
     void _printStats() const;
-    void _log(const QString &aMsg) const; //!< log function for QString
+    void _log(const QString &aMsg, bool newline = true) const; //!< log function for QString
     void _error(const QString &error) const;
     void _prepareArticles();
 
@@ -256,6 +262,16 @@ private:
 #ifdef __DEBUG__
     void _dumpParams() const;
 #endif
+
+    int compressFiles(const QString &cmdRar,
+                      const QString &cmdPar2,
+                      const QString &tmpFolder,
+                      const QString &archiveName,
+                      const QStringList &files,
+                      const QString &pass,
+                      int redundancy = 0,
+                      const QString &volSize = "",
+                      const QString &compressLevel = "-m0");
 
 
 public:
