@@ -30,6 +30,8 @@
 #include <QProgressBar>
 #include <QLabel>
 #include <QDesktopWidget>
+#include <QMessageBox>
+
 
 const QStringList  MainWindow::sServerListHeaders = {
     tr("Host (name or IP)"),
@@ -160,6 +162,13 @@ void MainWindow::onPostFiles()
         int nbFiles = 0;
         if (_ui->compressCB->isChecked())
         {
+// MB_TODO:
+//     - check the rar path is not empty and executable (no need for par2 as it will be included)
+//     - check the compress path is not empty and writable
+// if not open a popup AND SET BACK the _state to IDLE!!!
+//
+
+
             QStringList filesToCompress;
             for (int i = 0 ; i < _ui->filesList->count() ; ++i)
             {
@@ -171,7 +180,7 @@ void MainWindow::onPostFiles()
 
             if ( _ngPost->compressFiles(
                      _ui->rarEdit->text(),
-                     _ui->par2PathEdit->text(),
+                     QString("%1/%2").arg(qApp->applicationDirPath()).arg("par2"),//_ui->par2PathEdit->text(),
                      _ui->compressPathEdit->text(),
                      _ui->compressNameEdit->text(),
                      filesToCompress,
@@ -188,8 +197,9 @@ void MainWindow::onPostFiles()
                         _ngPost->_log(QString("  - %1").arg(file.fileName()));
 
                 }
-
-                nbFiles = _createNntpFiles();
+///// MB_TODO: REMOVE THIS HACK TO NOT POST !!!!
+                nbFiles = 0;
+//                nbFiles = _createNntpFiles();
             }
 
         }
@@ -266,14 +276,27 @@ void MainWindow::_initFilesBox()
     connect(_ui->compressCB,        &QAbstractButton::toggled, this, &MainWindow::onCompressCB);
     connect(_ui->genCompressName,   &QAbstractButton::clicked, this, &MainWindow::onGenCompressName);
 
+
+    // MB_TODO
+    connect(_ui->compressPathButton,&QAbstractButton::clicked, this, &MainWindow::toBeImplemented);
+    connect(_ui->rarPathButton,     &QAbstractButton::clicked, this, &MainWindow::toBeImplemented);
+
+    connect(_ui->aboutButton,       &QAbstractButton::clicked, this, &MainWindow::toBeImplemented);
+    connect(_ui->donateButton,      &QAbstractButton::clicked, this, &MainWindow::toBeImplemented);
+
+
+
     onCompressCB(false);
 }
 
 void MainWindow::_initPostingBox()
 {
-    connect(_ui->genPoster,           &QAbstractButton::clicked, this, &MainWindow::onGenPoster);
-    connect(_ui->nzbPassCB,           &QAbstractButton::toggled, this, &MainWindow::onNzbPassToggled);
-    connect(_ui->genPass,             &QAbstractButton::clicked, this, &MainWindow::onGenNzbPassword);
+    //MB_TODO
+    connect(_ui->saveButton,        &QAbstractButton::clicked, this, &MainWindow::toBeImplemented);
+
+    connect(_ui->genPoster,         &QAbstractButton::clicked, this, &MainWindow::onGenPoster);
+    connect(_ui->nzbPassCB,         &QAbstractButton::toggled, this, &MainWindow::onNzbPassToggled);
+    connect(_ui->genPass,           &QAbstractButton::clicked, this, &MainWindow::onGenNzbPassword);
 
 
     _ui->fromEdit->setText(QString::fromStdString(_ngPost->_from));
@@ -496,6 +519,11 @@ void MainWindow::onDebugToggled(bool checked)
     qDebug() << "Debug mode: " << checked;
 #endif
     _ngPost->setDebug(checked);
+}
+
+void MainWindow::toBeImplemented()
+{
+    QMessageBox::information(nullptr, "To be implemented...", "To be implemented...", QMessageBox::Ok);
 }
 
 
