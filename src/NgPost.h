@@ -136,6 +136,7 @@ private:
     QAtomicBool _noMoreFiles;
 
     QProcess   *_extProc;
+    QDir       *_compressDir;
 
 
     static qint64 sArticleSize;
