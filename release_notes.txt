@@ -11,9 +11,23 @@
 	test with no threads and no article preparation
 	check if we can play on the SSL protocol paramaters
 
-- TODO: compression:
-	button to compress or -z option (would use rar and generate par2)
-	with HMI: display rar command, propose generation of password, display par2 cmd
+
+####################################################
+###       Release: ngPost v2.1                   ###
+###       date:    2020/01/??                    ###
+####################################################
+
+- implement the possibility to compress and generate par2 from the selected files before posting
+- allow rar and par2 name obfuscation
+- use rar for the compression to allow automatic decompression with all major readers
+- incorporate par2 to the release
+
+- add the Save configuration feature
+- add About button
+- add Donation button
+
+- fix wong published date of the posted files in the nzb
+
 
 
 ####################################################
