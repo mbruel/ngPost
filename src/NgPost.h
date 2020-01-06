@@ -137,6 +137,8 @@ private:
 
     QProcess   *_extProc;
     QDir       *_compressDir;
+    bool        _limitProcDisplay;
+    ushort      _nbProcDisp;
 
 
     static qint64 sArticleSize;

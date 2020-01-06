@@ -5,5 +5,7 @@
         <file>icons/genKey.png</file>
         <file>icons/save.png</file>
         <file>icons/plus.png</file>
+        <file>icons/donate.png</file>
+        <file>icons/about.png</file>
     </qresource>
 </RCC>

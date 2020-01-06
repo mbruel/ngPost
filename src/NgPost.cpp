@@ -1458,6 +1458,7 @@ int NgPost::compressFiles(const QString &cmdRar,
         _log(QString("Compressing files: %1 %2\n").arg(cmdRar).arg(args.join(" ")));
     else
         _log("Compressing files...\n");
+    _limitProcDisplay = false;
     _extProc->start(cmdRar, args);
     _extProc->waitForFinished(-1);
     int exitCode = _extProc->exitCode();
@@ -1466,23 +1467,26 @@ int NgPost::compressFiles(const QString &cmdRar,
     else
         _log("");
 
-
-    // 4.: create the par2 if required
-    if (exitCode == 0 && redundancy > 0)
-    {
+    if (exitCode != 0)
+        _error(QString("Error during compression: %1").arg(exitCode));
+    else if (redundancy > 0)
+    {// 4.: create the par2 as required
         args.clear();
         //par2 c -s768000 -r8 /tmp/ngPostArchive/ngPostArchive.par2 /tmp/ngPostArchive/ngPostArchive.7z*
-        args << "c" << "-q" << "-s768000" << QString("-r%1").arg(redundancy)
-             << QString("%1/%2.par2").arg(archiveTmpFolder).arg(archiveName);
-        if (volSize.isEmpty())
-            args << QString("%1/%2.rar").arg(archiveTmpFolder).arg(archiveName);
-        else
-            args << QString("%1/%2.part*").arg(archiveTmpFolder).arg(archiveName);
+        args << "c" << "-s768000" << QString("-r%1").arg(redundancy)
+             << QString("%1/%2.par2").arg(archiveTmpFolder).arg(archiveName)
+             << QString("%1/%2.rar").arg(archiveTmpFolder).arg(archiveName) // in case only one file
+             << QString("%1/%2.part*").arg(archiveTmpFolder).arg(archiveName);
 
         if (_debug)
+        {
+            args << "-q"; // remove the progress bar
             _log(QString("Generating par2: %1 %2\n").arg(cmdPar2).arg(args.join(" ")));
+        }
         else
             _log("Generating par2...\n");
+        _limitProcDisplay = true;
+        _nbProcDisp = 0;
         _extProc->start(cmdPar2, args);
         _extProc->waitForFinished(-1);
         int exitCode = _extProc->exitCode();
@@ -1490,6 +1494,9 @@ int NgPost::compressFiles(const QString &cmdRar,
             _log(QString("=> par2 exit code: %1\n").arg(exitCode));
         else
             _log("");
+
+        if (exitCode != 0)
+            _error(QString("Error during par2 generation: %1").arg(exitCode));
     }
 
 
@@ -1498,7 +1505,6 @@ int NgPost::compressFiles(const QString &cmdRar,
     _extProc = nullptr;
     if (exitCode != 0)
     {
-        _error(QString("Error compressing: %1").arg(exitCode));
         delete _compressDir;
         _compressDir = nullptr;
     }
@@ -1513,7 +1519,10 @@ void NgPost::onExtProcReadyReadStandardOutput()
     if (_debug)
         _log(_extProc->readAllStandardOutput(), false);
     else
-        _log("*", false);
+    {
+        if (!_limitProcDisplay || ++_nbProcDisp%42 == 0)
+            _log("*", false);
+    }
     qApp->processEvents();
 }
 
