@@ -148,16 +148,55 @@ void MainWindow::logError(const QString &error) const
     _ui->logBrowser->append(QString("<font color='red'>%1</font><br/>\n").arg(error));
 }
 
+#include <QDir>
 void MainWindow::onPostFiles()
 {
-    switch (_state)
+    if (_state == STATE::IDLE)
     {
-    case STATE::IDLE:
         _state = STATE::POSTING;
         _updateServers();
         _updateParams();
 
-        if (_createNntpFiles() > 0)
+        int nbFiles = 0;
+        if (_ui->compressCB->isChecked())
+        {
+            QStringList filesToCompress;
+            for (int i = 0 ; i < _ui->filesList->count() ; ++i)
+            {
+                QString fileName(_ui->filesList->item(i)->text());
+                QFileInfo fileInfo(fileName);
+                if (fileInfo.exists() && fileInfo.isFile())
+                    filesToCompress << fileName;
+            }
+
+            if ( _ngPost->compressFiles(
+                     _ui->rarEdit->text(),
+                     _ui->par2PathEdit->text(),
+                     _ui->compressPathEdit->text(),
+                     _ui->compressNameEdit->text(),
+                     filesToCompress,
+                     _ui->nzbPassEdit->text().toLocal8Bit(),
+                     _ui->par2CB->isChecked() ? _ui->redundancyLE->text().toInt() : 0,
+                     _ui->rarSizeEdit->text()
+                     ) == 0){
+
+                _ui->filesList->clear();
+                for (const QFileInfo & file : _ngPost->_compressDir->entryInfoList(QDir::Files, QDir::Name))
+                {
+                    _ui->filesList->addItem(file.absoluteFilePath());
+                    if (_ngPost->debugMode())
+                        _ngPost->_log(QString("  - %1").arg(file.fileName()));
+
+                }
+
+                nbFiles = _createNntpFiles();
+            }
+
+        }
+        else
+            nbFiles = _createNntpFiles();
+
+        if (nbFiles > 0)
         {
             _ui->postButton->setText(tr("Stop Posting"));
             _ui->progressBar->setRange(0, _ngPost->_nbArticlesTotal);
@@ -165,13 +204,11 @@ void MainWindow::onPostFiles()
             if (!_ngPost->startPosting())
                 setIDLE();
         }
-        break;
-    case STATE::POSTING:
+    }
+    else  if (_state == STATE::POSTING)
+    {
         _state = STATE::STOPPING;
         _ngPost->stopPosting();
-        break;
-    default:
-        break; // we're already trying to stop the posting, nothing to do!
     }
 }
 

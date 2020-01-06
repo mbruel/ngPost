@@ -133,7 +133,8 @@ NgPost::NgPost(int &argc, char *argv[]):
     _socketTimeOut(sDefaultSocketTimeOut), _nzbPath(sDefaultNzbPath),
     _nbArticlesUploaded(0), _nbArticlesFailed(0),
     _uploadedSize(0), _nbArticlesTotal(0), _progressTimer(), _refreshRate(sDefaultRefreshRate),
-    _stopPosting(0x0), _noMoreFiles(0x0)
+    _stopPosting(0x0), _noMoreFiles(0x0),
+    _extProc(nullptr), _compressDir(nullptr)
 {
     if (_mode == AppMode::CMD)
         _app =  new QCoreApplication(argc, argv);
@@ -435,15 +436,6 @@ int NgPost::startEventLoop()
 
 int NgPost::startHMI()
 {
-//    compressFiles("rar",
-//                  "par2",
-//                  "/tmp",
-//                  "ngPostRarArchive",
-//    {"/home/bruel/Downloads/The.Big.Bang.Theory.S11E23.HDTV.x264-SVA.mkv"},
-//                  "qwerty",
-//                  8,
-//                  "30m");
-
     parseDefaultConfig();
     if (_from.empty())
             _from = _randomFrom();
@@ -513,6 +505,16 @@ void NgPost::onNntpFilePosted()
         _log(QString("All files have been posted => closing application (nb article uploaded: %1, failed: %2)").arg(
                  _nbArticlesUploaded).arg(_nbArticlesFailed));
 #endif
+        if (_compressDir)
+        {
+            _compressDir->removeRecursively();
+            delete _compressDir;
+            _compressDir = nullptr;
+
+            if (_debug)
+                _log("Compressed files deleted.");
+        }
+
         if (_hmi)
             _finishPosting();
         else
@@ -1424,17 +1426,21 @@ int NgPost::compressFiles(const QString &cmdRar,
 
     // 1.: create archive temporary folder
     QString archiveTmpFolder = QString("%1/%2").arg(tmpFolder).arg(archiveName);
-    QDir dir(archiveTmpFolder);
-    if (dir.exists())
+    _compressDir = new QDir(archiveTmpFolder);
+    if (_compressDir->exists())
     {
         _error(tr("The temporary directory '%1' already exists... (either remove it or change the archive name)").arg(archiveTmpFolder));
+        delete _compressDir;
+        _compressDir = nullptr;
         return -1;
     }
     else
     {
-        if (!dir.mkpath("."))
+        if (!_compressDir->mkpath("."))
         {
             _error(tr("Couldn't create the temporary folder: '%1'...").arg(archiveTmpFolder));
+            delete _compressDir;
+            _compressDir = nullptr;
             return -2;
         }
     }
@@ -1442,7 +1448,7 @@ int NgPost::compressFiles(const QString &cmdRar,
     // 2.: create rar args (rar a -v50m -ed -ep1 -m0 -hp"$PASS" "$TMP_FOLDER/$RAR_NAME.rar" "${FILES[@]}")
     QStringList args = {"a", "-idp", "-ep1", compressLevel, QString("%1/%2.rar").arg(archiveTmpFolder).arg(archiveName)};
     if (!pass.isEmpty())
-        args << QString("-hp\"%1\"").arg(pass);
+        args << QString("-hp%1").arg(pass);
     if (!volSize.isEmpty())
         args << QString("-v%1").arg(volSize);
     args << files;
@@ -1453,7 +1459,7 @@ int NgPost::compressFiles(const QString &cmdRar,
     else
         _log("Compressing files...\n");
     _extProc->start(cmdRar, args);
-    _extProc->waitForFinished();
+    _extProc->waitForFinished(-1);
     int exitCode = _extProc->exitCode();
     if (_debug)
         _log(QString("rar exit code: %1\n").arg(exitCode));
@@ -1478,7 +1484,7 @@ int NgPost::compressFiles(const QString &cmdRar,
         else
             _log("Generating par2...\n");
         _extProc->start(cmdPar2, args);
-        _extProc->waitForFinished();
+        _extProc->waitForFinished(-1);
         int exitCode = _extProc->exitCode();
         if (_debug)
             _log(QString("=> par2 exit code: %1\n").arg(exitCode));
@@ -1487,12 +1493,17 @@ int NgPost::compressFiles(const QString &cmdRar,
     }
 
 
-    _log("Ready to post!");
-
     // 5.: free the resources
     delete _extProc;
     _extProc = nullptr;
-    dir.removeRecursively();
+    if (exitCode != 0)
+    {
+        _error(QString("Error compressing: %1").arg(exitCode));
+        delete _compressDir;
+        _compressDir = nullptr;
+    }
+    else
+        _log("Ready to post!");
 
     return exitCode;
 }
@@ -1503,9 +1514,11 @@ void NgPost::onExtProcReadyReadStandardOutput()
         _log(_extProc->readAllStandardOutput(), false);
     else
         _log("*", false);
+    qApp->processEvents();
 }
 
 void NgPost::onExtProcReadyReadStandardError()
 {
     _error(_extProc->readAllStandardError());
+    qApp->processEvents();
 }
