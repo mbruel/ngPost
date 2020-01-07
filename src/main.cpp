@@ -33,8 +33,6 @@ int main(int argc, char *argv[])
 //    qDebug() << "argc: " << argc;
     NgPost ngPost(argc, argv);
 
-    std::cout << "Application path: " << qApp->applicationDirPath().toStdString() << std::endl;
-
     QNetworkReply *reply = netMgr.get(req);
     QObject::connect(reply, &QNetworkReply::finished, &ngPost, &NgPost::onCheckForNewVersion);
 
