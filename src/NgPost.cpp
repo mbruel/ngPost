@@ -965,19 +965,26 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         args << argv[i];
 
     bool res = parser.parse(args);
+#ifdef __DEBUG__
     qDebug() << "args: " << args
              << "=> parsing: " << res << " (error: " << parser.errorText() << ")";
+#endif
 
     if (!parser.parse(args))
     {
-        _error(QString("Error syntax: %1").arg(parser.errorText()));
+        _error(tr("Error syntax: %1\nTo list the available options use: %2 --help\n").arg(parser.errorText()).arg(argv[0]));
+        return false;
+    }
+
+    if (parser.isSet(sOptionNames[Opt::HELP]))
+    {
         _syntax(argv[0]);
         return false;
     }
 
-    if (parser.isSet(sOptionNames[Opt::HELP]) || parser.isSet(sOptionNames[Opt::VERSION]))
+    if (parser.isSet(sOptionNames[Opt::VERSION]))
     {
-        _syntax(argv[0]);
+        _cout << sAppName << " v" << sVersion << "\n" << flush;
         return false;
     }
 
@@ -1111,14 +1118,43 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     }
 
 
-    // MB_TODO: parse compression section!
+
+    // compression section
+    if (parser.isSet(sOptionNames[Opt::TMP_DIR]))
+        _tmpPath = parser.value(sOptionNames[Opt::TMP_DIR]);
+    if (parser.isSet(sOptionNames[Opt::RAR_PATH]))
+        _rarPath = parser.value(sOptionNames[Opt::RAR_PATH]);
+    if (parser.isSet(sOptionNames[Opt::RAR_SIZE]))
+    {
+        bool ok;
+        uint nb = parser.value(sOptionNames[Opt::RAR_SIZE]).toUInt(&ok);
+        if (ok)
+            _rarSize = nb;
+    }
+    if (parser.isSet(sOptionNames[Opt::PAR2_PCT]))
+    {
+        bool ok;
+        uint nb = parser.value(sOptionNames[Opt::PAR2_PCT]).toUInt(&ok);
+        if (ok)
+            _par2Pct = nb;
+    }
+    if (parser.isSet(sOptionNames[Opt::PAR2_PATH]))
+    {
+        QString val = parser.value(sOptionNames[Opt::PAR2_PATH]);
+        if (!val.isEmpty())
+        {
+            QFileInfo fi(val);
+            if (fi.exists() && fi.isFile() && fi.isExecutable())
+                _par2Path = val;
+        }
+    }
 
 
 
 
 
 
-
+    // Server Section under
     // check if the server params are given in the command line
     if (parser.isSet(sOptionNames[Opt::HOST]))
     {
@@ -1224,7 +1260,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     _dumpParams();
 #endif
 
-    return true;
+    return false;
 }
 
 
@@ -1349,7 +1385,7 @@ QString NgPost::_parseConfig(const QString &configPath)
                         if (ok)
                             _par2Pct = nb;
                     }
-                    else if (opt == sOptionNames[Opt::RAR_PATH])
+                    else if (opt == sOptionNames[Opt::PAR2_PATH])
                     {
                         if (!val.isEmpty())
                         {
