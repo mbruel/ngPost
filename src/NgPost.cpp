@@ -65,6 +65,12 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
 
     {Opt::OBFUSCATE,    "obfuscate"},
 
+    {Opt::TMP_DIR,      "tmp_dir"},
+    {Opt::RAR_PATH,     "rar_path"},
+    {Opt::RAR_SIZE,     "rar_size"},
+    {Opt::PAR2_PCT,     "par2_pct"},
+    {Opt::PAR2_PATH,    "par2_path"},
+
 
     {Opt::HOST,         "host"},
     {Opt::PORT,         "port"},
@@ -93,6 +99,13 @@ const QList<QCommandLineOption> NgPost::sCmdOptions = {
     {{"a", sOptionNames[Opt::ARTICLE_SIZE]},  tr("article size (default one: %1)").arg(sDefaultArticleSize), sOptionNames[Opt::ARTICLE_SIZE]},
     {{"z", sOptionNames[Opt::MSG_ID]},        tr("msg id signature, after the @ (default one: %1)").arg(sDefaultMsgIdSignature), sOptionNames[Opt::MSG_ID]},
     {{"r", sOptionNames[Opt::NB_RETRY]},      tr("number of time we retry to an Article that failed (default: %1)").arg(NntpArticle::nbMaxTrySending()), sOptionNames[Opt::NB_RETRY]},
+
+//    TMP_PATH, RAR_PATH, RAR_SIZE, PAR2_PCT, PAR2_PATH,
+    { sOptionNames[Opt::TMP_DIR],             tr( "temporary folder where the compressed files and par2 will be stored"), sOptionNames[Opt::TMP_DIR]},
+    { sOptionNames[Opt::RAR_PATH],            tr( "RAR absolute file path (external application)"), sOptionNames[Opt::RAR_PATH]},
+    { sOptionNames[Opt::RAR_SIZE],            tr( "size in MB of the RAR volumes (0 by default meaning NO split)"), sOptionNames[Opt::RAR_SIZE]},
+    { sOptionNames[Opt::PAR2_PCT],            tr( "par2 redundancy percentage (0 by default meaning NO par2 generation)"), sOptionNames[Opt::PAR2_PCT]},
+    { sOptionNames[Opt::PAR2_PATH],           tr( "par2 absolute file path (in case of self compilation of ngPost)"), sOptionNames[Opt::PAR2_PCT]},
 
 
     // for a single server...
@@ -134,7 +147,8 @@ NgPost::NgPost(int &argc, char *argv[]):
     _nbArticlesUploaded(0), _nbArticlesFailed(0),
     _uploadedSize(0), _nbArticlesTotal(0), _progressTimer(), _refreshRate(sDefaultRefreshRate),
     _stopPosting(0x0), _noMoreFiles(0x0),
-    _extProc(nullptr), _compressDir(nullptr)
+    _extProc(nullptr), _compressDir(nullptr),
+    _tmpPath(), _rarPath(), _rarSize(0), _par2Pct(0), _par2Path()
 {
     if (_mode == AppMode::CMD)
         _app =  new QCoreApplication(argc, argv);
@@ -151,6 +165,17 @@ NgPost::NgPost(int &argc, char *argv[]):
 
     // in case we want to generate random uploader (_from not provided)
     std::srand(static_cast<uint>(QDateTime::currentMSecsSinceEpoch()));
+
+    // check if the embedded par2 is available (windows or appImage)
+    QString par2Embedded;
+#if defined(WIN32) || defined(__MINGW64__)
+    par2Embedded = QString("%1/par2.exe").arg(qApp->applicationDirPath());
+#else
+    par2Embedded = QString("%1/par2").arg(qApp->applicationDirPath());
+#endif
+    QFileInfo fi(par2Embedded);
+    if (fi.exists() && fi.isFile() && fi.isExecutable())
+        _par2Path = par2Embedded;
 
 #ifdef __DEBUG__
     connect(this, &NgPost::log, this, &NgPost::onLog, Qt::QueuedConnection);
@@ -1085,6 +1110,15 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         }
     }
 
+
+    // MB_TODO: parse compression section!
+
+
+
+
+
+
+
     // check if the server params are given in the command line
     if (parser.isSet(sOptionNames[Opt::HOST]))
     {
@@ -1193,6 +1227,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     return true;
 }
 
+
 QString NgPost::_parseConfig(const QString &configPath)
 {
     QString err;
@@ -1292,6 +1327,44 @@ QString NgPost::_parseConfig(const QString &configPath)
                     {
                         _groups = val.toStdString();
                     }
+
+
+
+
+
+                    // compression section
+                    else if (opt == sOptionNames[Opt::TMP_DIR])
+                        _tmpPath = val;
+                    else if (opt == sOptionNames[Opt::RAR_PATH])
+                        _rarPath = val;
+                    else if (opt == sOptionNames[Opt::RAR_SIZE])
+                    {
+                        uint nb = val.toUInt(&ok);
+                        if (ok)
+                            _rarSize = nb;
+                    }
+                    else if (opt == sOptionNames[Opt::PAR2_PCT])
+                    {
+                        uint nb = val.toUInt(&ok);
+                        if (ok)
+                            _par2Pct = nb;
+                    }
+                    else if (opt == sOptionNames[Opt::RAR_PATH])
+                    {
+                        if (!val.isEmpty())
+                        {
+                            QFileInfo fi(val);
+                            if (fi.exists() && fi.isFile() && fi.isExecutable())
+                                _par2Path = val;
+                        }
+                    }
+
+
+
+
+
+
+                    // Server Section under
                     else if (opt == sOptionNames[Opt::HOST])
                     {
                         serverParams->host = val;
@@ -1328,7 +1401,7 @@ QString NgPost::_parseConfig(const QString &configPath)
                         int nb = val.toInt(&ok);
                         if (ok)
                             serverParams->nbCons = nb;
-                    }
+                    }               
                 }
             }
         }
@@ -1405,24 +1478,28 @@ void NgPost::_dumpParams() const
              << ", obfuscate articles: " << _obfuscateArticles
              << ", display progress bar: " << _dispProgressBar
              << ", display posting files: " << _dispFilesPosting
+             << "\ncompression settings: <tmp_path: " << _tmpPath << ">"
+             << ", <rar_path: " << _rarPath << ">"
+             << ", <rar_size: " << _rarSize << ">"
+             << ", <par2_pct: " << _par2Pct << ">"
+             << ", <par2_path: " << _par2Path << ">"
              << "\n[NgPost::_dumpParams]<<<<<<<<<<<<<<<<<<\n";
 }
 #endif
 
 #include <QProcess>
 int NgPost::compressFiles(const QString &cmdRar,
-                          const QString &cmdPar2,
                           const QString &tmpFolder,
                           const QString &archiveName,
                           const QStringList &files,
                           const QString &pass,
-                          int redundancy,
-                          const QString &volSize,
+                          uint redundancy,
+                          uint volSize,
                           const QString &compressLevel)
 {
     _extProc = new QProcess(this);
-    connect(_extProc, &QProcess::readyReadStandardOutput, this, &NgPost::onExtProcReadyReadStandardOutput);
-    connect(_extProc, &QProcess::readyReadStandardOutput, this, &NgPost::onExtProcReadyReadStandardOutput);
+    connect(_extProc, &QProcess::readyReadStandardOutput, this, &NgPost::onExtProcReadyReadStandardOutput, Qt::DirectConnection);
+    connect(_extProc, &QProcess::readyReadStandardOutput, this, &NgPost::onExtProcReadyReadStandardOutput, Qt::DirectConnection);
 
     // 1.: create archive temporary folder
     QString archiveTmpFolder = QString("%1/%2").arg(tmpFolder).arg(archiveName);
@@ -1449,8 +1526,8 @@ int NgPost::compressFiles(const QString &cmdRar,
     QStringList args = {"a", "-idp", "-ep1", compressLevel, QString("%1/%2.rar").arg(archiveTmpFolder).arg(archiveName)};
     if (!pass.isEmpty())
         args << QString("-hp%1").arg(pass);
-    if (!volSize.isEmpty())
-        args << QString("-v%1").arg(volSize);
+    if (volSize > 0)
+        args << QString("-v%1m").arg(volSize);
     args << files;
 
     // 3.: launch rar
@@ -1481,13 +1558,13 @@ int NgPost::compressFiles(const QString &cmdRar,
         if (_debug)
         {
             args << "-q"; // remove the progress bar
-            _log(QString("Generating par2: %1 %2\n").arg(cmdPar2).arg(args.join(" ")));
+            _log(QString("Generating par2: %1 %2\n").arg(_par2Path).arg(args.join(" ")));
         }
         else
             _log("Generating par2...\n");
         _limitProcDisplay = true;
         _nbProcDisp = 0;
-        _extProc->start(cmdPar2, args);
+        _extProc->start(_par2Path, args);
         _extProc->waitForFinished(-1);
         int exitCode = _extProc->exitCode();
         if (_debug)
@@ -1514,6 +1591,7 @@ int NgPost::compressFiles(const QString &cmdRar,
     return exitCode;
 }
 
+
 void NgPost::onExtProcReadyReadStandardOutput()
 {
     if (_debug)
@@ -1530,4 +1608,57 @@ void NgPost::onExtProcReadyReadStandardError()
 {
     _error(_extProc->readAllStandardError());
     qApp->processEvents();
+}
+
+
+bool NgPost::_checkTmpFolder() const
+{
+    if (_tmpPath.isEmpty())
+    {
+        _error(tr("NO_POSSIBLE_COMPRESSION: You must define the temporary directory..."));
+        return false;
+    }
+
+    QFileInfo fi(_tmpPath);
+    if (!fi.exists() || !fi.isDir() || !fi.isWritable())
+    {
+        _error(tr("ERROR: the temporary directory must be a WRITABLE directory..."));
+        return false;
+    }
+
+    return true;
+}
+
+bool NgPost::canCompress() const
+{
+    //1.: the _tmp_folder must be writable
+    if (_checkTmpFolder())
+        return false;
+
+    //2.: check _rarPath is executable
+    QFileInfo fi(_rarPath);
+    if (!fi.exists() || !fi.isFile() || !fi.isExecutable())
+    {
+        _error(tr("ERROR: the RAR path is not executable..."));
+        return false;
+    }
+
+    return true;
+}
+
+bool NgPost::canGenPar2() const
+{
+    //1.: the _tmp_folder must be writable
+    if (_checkTmpFolder())
+        return false;
+
+    //2.: check _ is executable
+    QFileInfo fi(_par2Path);
+    if (!fi.exists() || !fi.isFile() || !fi.isExecutable())
+    {
+        _error(tr("ERROR: par2 is not available..."));
+        return false;
+    }
+
+    return true;
 }

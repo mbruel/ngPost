@@ -353,7 +353,7 @@
                 </size>
                </property>
                <property name="text">
-                <string>/tmp</string>
+                <string/>
                </property>
               </widget>
              </item>
@@ -402,7 +402,7 @@
                <item>
                 <widget class="QLineEdit" name="rarEdit">
                  <property name="text">
-                  <string>/usr/bin/rar</string>
+                  <string/>
                  </property>
                 </widget>
                </item>
@@ -439,7 +439,7 @@
                   </size>
                  </property>
                  <property name="text">
-                  <string>42m</string>
+                  <string>42</string>
                  </property>
                 </widget>
                </item>
@@ -473,7 +473,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="redundancyLE">
+              <widget class="QLineEdit" name="redundancyEdit">
                <property name="maximumSize">
                 <size>
                  <width>50</width>

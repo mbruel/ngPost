@@ -163,11 +163,17 @@ void MainWindow::onPostFiles()
         if (_ui->compressCB->isChecked())
         {
 // MB_TODO:
-//     - check the rar path is not empty and executable (no need for par2 as it will be included)
+//     - check the rar path is not empty and executable
+//     - check also for par2 (included for Windows and in AppImage but not in Linux if compiled from source..)
 //     - check the compress path is not empty and writable
 // if not open a popup AND SET BACK the _state to IDLE!!!
 //
 
+// MB_TODO: do a post with compression
+//            the folder should be destroyed
+//                    but the files are still in _ui->filesList
+//                    press POST again and see what happens
+//                    NOTHING SHOULD HAPPEN!!!
 
             QStringList filesToCompress;
             for (int i = 0 ; i < _ui->filesList->count() ; ++i)
@@ -178,15 +184,29 @@ void MainWindow::onPostFiles()
                     filesToCompress << fileName;
             }
 
+            uint rarSize = 0, redundancy = 0, val = 0;
+            bool ok = true;
+            if (!_ui->rarSizeEdit->text().isEmpty())
+            {
+                val = _ui->rarSizeEdit->text().toUInt(&ok);
+                if (ok)
+                    rarSize = val;
+            }
+            if (_ui->par2CB->isChecked() && !_ui->redundancyEdit->text().isEmpty())
+            {
+                val = _ui->redundancyEdit->text().toUInt(&ok);
+                if (ok)
+                    redundancy = val;
+            }
+
             if ( _ngPost->compressFiles(
                      _ui->rarEdit->text(),
-                     QString("%1/%2").arg(qApp->applicationDirPath()).arg("par2"),//_ui->par2PathEdit->text(),
                      _ui->compressPathEdit->text(),
                      _ui->compressNameEdit->text(),
                      filesToCompress,
                      _ui->nzbPassEdit->text().toLocal8Bit(),
-                     _ui->par2CB->isChecked() ? _ui->redundancyLE->text().toInt() : 0,
-                     _ui->rarSizeEdit->text()
+                     redundancy,
+                     rarSize
                      ) == 0){
 
                 _ui->filesList->clear();
@@ -268,6 +288,15 @@ void MainWindow::_initServerBox()
 
 void MainWindow::_initFilesBox()
 {
+    _ui->compressPathEdit->setText(_ngPost->_tmpPath);
+    _ui->rarEdit->setText(_ngPost->_rarPath);
+
+    _ui->rarSizeEdit->setText(QString::number(_ngPost->_rarSize));
+    _ui->rarSizeEdit->setValidator(new QIntValidator(1, 1000000, _ui->rarSizeEdit));
+
+    _ui->redundancyEdit->setText(QString::number(_ngPost->_par2Pct));
+    _ui->redundancyEdit->setValidator(new QIntValidator(1, 100, _ui->redundancyEdit));
+
     _ui->filesList->setSelectionMode(QAbstractItemView::MultiSelection);
 
     connect(_ui->selectFilesButton, &QAbstractButton::clicked, this, &MainWindow::onSelectFilesClicked);

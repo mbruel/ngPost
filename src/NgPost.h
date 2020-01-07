@@ -66,7 +66,8 @@ class NgPost : public QObject
                     INPUT, OUTPUT, NZB_PATH, THREAD,
                     MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY,
                     OBFUSCATE,
-                    HOST, PORT, SSL, USER, PASS, CONNECTION
+                    TMP_DIR, RAR_PATH, RAR_SIZE, PAR2_PCT, PAR2_PATH,
+                    HOST, PORT, SSL, USER, PASS, CONNECTION,
                    };
 
     static const QMap<Opt, QString> sOptionNames;
@@ -140,6 +141,13 @@ private:
     bool        _limitProcDisplay;
     ushort      _nbProcDisp;
 
+    QString     _tmpPath;
+    QString     _rarPath;
+    uint        _rarSize;
+    uint        _par2Pct;
+    QString     _par2Path;
+
+
 
     static qint64 sArticleSize;
     static const QString sSpace;
@@ -186,6 +194,9 @@ public:
     NntpArticle *getNextArticle();
 
     bool parseCommandLine(int argc, char *argv[]);
+
+    bool canCompress() const;
+    bool canGenPar2() const;
 
     inline const std::string &aticleSignature() const;
 
@@ -267,14 +278,15 @@ private:
 #endif
 
     int compressFiles(const QString &cmdRar,
-                      const QString &cmdPar2,
                       const QString &tmpFolder,
                       const QString &archiveName,
                       const QStringList &files,
                       const QString &pass,
-                      int redundancy = 0,
-                      const QString &volSize = "",
+                      uint redundancy = 0,
+                      uint volSize = 0,
                       const QString &compressLevel = "-m0");
+
+    bool _checkTmpFolder() const;
 
 
 public:
