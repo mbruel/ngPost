@@ -327,7 +327,7 @@ void MainWindow::_initFilesBox()
     connect(_ui->nzbFileButton,     &QAbstractButton::clicked, this, &MainWindow::toBeImplemented);
 
     connect(_ui->aboutButton,       &QAbstractButton::clicked, this, &MainWindow::toBeImplemented);
-    connect(_ui->donateButton,      &QAbstractButton::clicked, this, &MainWindow::toBeImplemented);
+    connect(_ui->donateButton,      &QAbstractButton::clicked, this, &MainWindow::onDonateClicked);
 
 
 
@@ -564,6 +564,12 @@ void MainWindow::onDebugToggled(bool checked)
     qDebug() << "Debug mode: " << checked;
 #endif
     _ngPost->setDebug(checked);
+}
+
+#include <QDesktopServices>
+void MainWindow::onDonateClicked()
+{
+    QDesktopServices::openUrl(_ngPost->donationURL());
 }
 
 void MainWindow::toBeImplemented()

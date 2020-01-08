@@ -36,9 +36,10 @@
 
 
 
-const QString NgPost::sAppName    = "ngPost";
-const QString NgPost::sVersion    = QString::number(APP_VERSION);
-const QString NgPost::sProFileURL = "https://raw.githubusercontent.com/mbruel/ngPost/master/src/ngPost.pro";
+const QString NgPost::sAppName     = "ngPost";
+const QString NgPost::sVersion     = QString::number(APP_VERSION);
+const QString NgPost::sProFileURL  = "https://raw.githubusercontent.com/mbruel/ngPost/master/src/ngPost.pro";
+const QString NgPost::sDonationURL = "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=W2C236U6JNTUA&item_name=ngPost&currency_code=EUR";
 
 qint64        NgPost::sArticleSize = sDefaultArticleSize;
 const QString NgPost::sSpace       = sDefaultSpace;

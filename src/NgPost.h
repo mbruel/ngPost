@@ -178,6 +178,8 @@ private:
     static const int sProgressBarWidth = 50;
     static const int sDefaultRefreshRate = 500; //!< how often shall we refresh the progress bar?
 
+    static const QString sDonationURL;
+
 public:
     NgPost(int &argc, char *argv[]);
     ~NgPost();
@@ -212,6 +214,8 @@ public:
     QString randomPass(uint length = 13) const;
 
     inline static const QString & proFileUrl();
+    inline static const QString & donationURL();
+
 
     inline bool debugMode() const;
     inline void setDebug(bool isDebug);
@@ -371,6 +375,7 @@ QString NgPost::nzbPath() const
 bool NgPost::removeNntpServer(NntpServerParams *server){ return _nntpServers.removeOne(server); }
 
 const QString &NgPost::proFileUrl() { return sProFileURL; }
+const QString &NgPost::donationURL(){ return sDonationURL; }
 
 bool NgPost::debugMode() const { return _debug; }
 void NgPost::setDebug(bool isDebug){ _debug = isDebug; }
