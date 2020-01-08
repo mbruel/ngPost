@@ -25,6 +25,7 @@
 #include <QMainWindow>
 class NgPost;
 class NntpServerParams;
+class NntpFile;
 
 namespace Ui {
 class MainWindow;
@@ -60,7 +61,7 @@ public:
 
     void updateProgressBar();
 
-    void setFilePosted(const QString &filePath);
+    void setFilePosted(NntpFile *nntpFile);
 
     void log(const QString &aMsg, bool newline = true) const; //!< log function for QString
     void logError(const QString &error) const; //!< log function for QString

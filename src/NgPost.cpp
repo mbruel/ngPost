@@ -139,7 +139,7 @@ NgPost::NgPost(int &argc, char *argv[]):
     _articleIdSignature(sDefaultMsgIdSignature),
     _nzb(nullptr), _nzbStream(),
     _nntpFile(nullptr), _file(nullptr), _buffer(nullptr), _part(0),
-    _articles(),
+    _articles(), _secureArticlesQueue(),
     _timeStart(), _totalSize(0),
     _meta(), _grpList(),
     _nbConnections(sDefaultNumberOfConnections), _nbThreads(QThread::idealThreadCount()),
@@ -178,6 +178,7 @@ NgPost::NgPost(int &argc, char *argv[]):
         _par2Path = par2Embedded;
 
 #ifdef __DEBUG__
+    _debug = true;
     connect(this, &NgPost::log, this, &NgPost::onLog, Qt::QueuedConnection);
 #endif
 }
@@ -478,25 +479,35 @@ NntpArticle *NgPost::getNextArticle()
         return nullptr;
 
 #ifdef __USE_MUTEX__
-    QMutexLocker lock(&_mutex);
+    _secureArticlesQueue.lock();
 #endif
 
     NntpArticle *article = nullptr;
     if (_articles.size())
+    {
+#ifdef __DEBUG__
+        _cout << QString("[NgPost::getNextArticle][%1] _articles.size() = %2").arg(
+                     QThread::currentThread()->objectName()).arg(_articles.size());
+#endif
         article = _articles.dequeue();
+    }
     else
     {
-        if (_noMoreFiles.load())
-            return nullptr;
-        else
+        if (!_noMoreFiles.load())
         {
             // we should never come here as the goal is to have articles prepared in advance in the queue
+#ifdef __DEBUG__
+            _cout << QString("[NgPost::getNextArticle][%1] NO ARTICLE READY...").arg(
+                         QThread::currentThread()->objectName());
+#else
             if (_debug)
                 _error("[getNextArticle] No article prepared...");
+#endif
             article = _prepareNextArticle();
         }
     }
 
+    _secureArticlesQueue.unlock();
     if (article)
         emit scheduleNextArticle(); // schedule the preparation of another Article in main thread
 
@@ -516,7 +527,7 @@ void NgPost::onNntpFilePosted()
     _totalSize += nntpFile->fileSize();
     ++_nbPosted;
     if (_hmi)
-        _hmi->setFilePosted(nntpFile->path());
+        _hmi->setFilePosted(nntpFile);
 
     if (_dispFilesPosting)
         _cout << "[avg. speed: " << avgSpeed() << "] <<<<< " << nntpFile->name() << "\n" << flush;
@@ -711,17 +722,17 @@ void NgPost::onRequestArticle(NntpConnection *con)
 
 int NgPost::_createNntpConnections()
 {
-    int nbCon = 0;
+    _nbConnections = 0;
     for (NntpServerParams *srvParams : _nntpServers)
-        nbCon += srvParams->nbCons;
+        _nbConnections += srvParams->nbCons;
 
-    _nntpConnections.reserve(nbCon);
-    nbCon = 0;
+    _nntpConnections.reserve(_nbConnections);
+    int conIdx = 0;
     for (NntpServerParams *srvParams : _nntpServers)
     {
         for (int k = 0 ; k < srvParams->nbCons ; ++k)
         {
-            NntpConnection *nntpCon = new NntpConnection(this, ++nbCon, *srvParams);
+            NntpConnection *nntpCon = new NntpConnection(this, ++conIdx, *srvParams);
             connect(nntpCon, &NntpConnection::log, this, &NgPost::onLog, Qt::QueuedConnection);
             connect(nntpCon, &NntpConnection::error, this, &NgPost::onError, Qt::QueuedConnection);
             connect(nntpCon, &NntpConnection::errorConnecting, this, &NgPost::onErrorConnecting, Qt::QueuedConnection);
@@ -733,8 +744,8 @@ int NgPost::_createNntpConnections()
         }
     }
 
-    _log(tr("Number of available Nntp Connections: %1").arg(nbCon));
-    return nbCon;
+    _log(tr("Number of available Nntp Connections: %1").arg(_nbConnections));
+    return _nbConnections;
 }
 
 
@@ -817,11 +828,26 @@ void NgPost::_prepareArticles()
     int nbPreparedArticlePerConnection = 2;
 
 #ifdef __USE_MUTEX__
-    for (int i = 0; i < nbPreparedArticlePerConnection * _nntpConnections.size() ; ++i)
+    int nbArticlesToPrepare = nbPreparedArticlePerConnection * _nntpConnections.size();
+#ifdef __DEBUG__
+    _cout << "[NgPost::_prepareArticles] >>>> preparing " << nbPreparedArticlePerConnection
+          << " articles for each connections. Nb cons = " << _nntpConnections.size()
+          << " => should prepare " << nbArticlesToPrepare << " articles!\n";
+#endif
+    for (int i = 0; i < nbArticlesToPrepare ; ++i)
     {
         if (!_prepareNextArticle())
+        {
+#ifdef __DEBUG__
+            _cout << "[NgPost::_prepareArticles] No more Articles to produce after i = " << i << "\n";
+#endif
             break;
+        }
     }
+#ifdef __DEBUG__
+    _cout << "[NgPost::_prepareArticles] <<<<< finish preparing "
+          << ", current article queue size: " << _articles.size() << "\n" << flush;
+#endif
 #else
     for (int i = 0 ; i < nbPreparedArticlePerConnection ; ++i)
     {
@@ -843,7 +869,10 @@ NntpArticle *NgPost::_prepareNextArticle()
 {
     NntpArticle *article = _getNextArticle();
     if (article)
+    {
+        QMutexLocker lock(&_secureArticlesQueue);
         _articles.enqueue(article);
+    }
     return article;
 }
 
@@ -1260,7 +1289,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     _dumpParams();
 #endif
 
-    return false;
+    return true;
 }
 
 

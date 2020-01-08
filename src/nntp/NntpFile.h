@@ -50,6 +50,8 @@ public:
     inline std::string fileName() const;
     inline qint64 fileSize() const;
     inline int nbArticles() const;
+    inline int nbFailedArticles() const;
+    inline bool hasFailedArticles() const;
 
 signals:
     void allArticlesArePosted();
@@ -80,5 +82,7 @@ QString NntpFile::name() const { return QString("[%1/%2] %3").arg(_num).arg(_nbF
 std::string NntpFile::fileName() const { return _file.fileName().toStdString(); }
 qint64 NntpFile::fileSize() const { return _file.size(); }
 int NntpFile::nbArticles() const { return _nbAticles; }
+int NntpFile::nbFailedArticles() const { return _nbFailed; }
+bool NntpFile::hasFailedArticles() const { return _nbFailed != 0; }
 
 #endif // NntpFile_H

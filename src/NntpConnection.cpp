@@ -141,9 +141,8 @@ void NntpConnection::onDisconnected()
 
         _socket->deleteLater();
         _socket = nullptr;
-
-        emit disconnected(this);
     }
+    emit disconnected(this);
 }
 
 void NntpConnection::onConnected()
@@ -236,12 +235,12 @@ void NntpConnection::onReadyRead()
                 {
                     _socket->write(Nntp::POST);
                     if (_ngPost->debugMode())
-                        _error(tr("Error on post command: %1").arg(line.constData()));
+                        _error(tr("ERROR on post command: %1").arg(line.constData()));
                 }
                 else
                 {
                     _postingState = PostingState::NOT_CONNECTED;
-                    _error(tr("FAIL cmd posting %1").arg(_currentArticle->str()));
+                    _error(tr("Closing Connection due to ERROR on post command: '%2' (%1 skipped)\n").arg(_currentArticle->str()).arg(line.constData()));
                     emit _currentArticle->failed(_currentArticle->size());
                     emit killConnection();
                 }
@@ -268,12 +267,12 @@ void NntpConnection::onReadyRead()
                     _postingState = PostingState::SENDING_ARTICLE;
                     _socket->write(Nntp::POST);
                     if (_ngPost->debugMode())
-                        _log(tr("ReTry %1").arg(_currentArticle->str()));
+                        _log(tr("ReTry %1 (Error: '%2')").arg(_currentArticle->str()).arg(line.constData()));
                 }
                 else
                 {
                     _postingState = PostingState::IDLE;
-                    _error(tr("FAIL posting %1").arg(_currentArticle->str()));
+                    _error(tr("FAIL posting %1 (Error: '%2')").arg(_currentArticle->str()).arg(line.constData()));
                     emit _currentArticle->failed(_currentArticle->size());
                 }
 

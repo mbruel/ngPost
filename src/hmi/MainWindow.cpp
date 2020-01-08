@@ -120,15 +120,29 @@ void MainWindow::updateProgressBar()
                                 _ngPost->avgSpeed()));
 }
 
-void MainWindow::setFilePosted(const QString &filePath)
+#include "nntp/NntpFile.h"
+void MainWindow::setFilePosted(NntpFile *nntpFile)
 {
+    QString filePath = nntpFile->path();
     int nbFiles = _ui->filesList->count();
     for (int i = 0 ; i < nbFiles ; ++i)
     {
         QListWidgetItem *item = _ui->filesList->item(i);
         if (item->text() == filePath)
         {
-            item->setForeground(Qt::darkGreen);
+            Qt::GlobalColor color = Qt::darkGreen;
+            int nbArticles = nntpFile->nbArticles(), nbFailed = nntpFile->nbFailedArticles();
+            if (nbFailed == 0)
+                item->setText(QString("%1 [%2 ok]").arg(filePath).arg(nbArticles));
+            else
+            {
+                item->setText(QString("%1 [%2 err / %3]").arg(filePath).arg(nbFailed).arg(nbArticles));
+                if (nbFailed == nbArticles)
+                    color = Qt::darkRed;
+                else
+                    color = Qt::darkYellow;
+            }
+            item->setForeground(color);
             break;
         }
     }
@@ -218,8 +232,8 @@ void MainWindow::onPostFiles()
 
                 }
 ///// MB_TODO: REMOVE THIS HACK TO NOT POST !!!!
-                nbFiles = 0;
-//                nbFiles = _createNntpFiles();
+//                nbFiles = 0;
+                nbFiles = _createNntpFiles();
             }
 
         }
@@ -309,6 +323,8 @@ void MainWindow::_initFilesBox()
     // MB_TODO
     connect(_ui->compressPathButton,&QAbstractButton::clicked, this, &MainWindow::toBeImplemented);
     connect(_ui->rarPathButton,     &QAbstractButton::clicked, this, &MainWindow::toBeImplemented);
+
+    connect(_ui->nzbFileButton,     &QAbstractButton::clicked, this, &MainWindow::toBeImplemented);
 
     connect(_ui->aboutButton,       &QAbstractButton::clicked, this, &MainWindow::toBeImplemented);
     connect(_ui->donateButton,      &QAbstractButton::clicked, this, &MainWindow::toBeImplemented);
