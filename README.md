@@ -168,3 +168,6 @@ A list of Usenet posters from Nyuu github [can be found here](https://github.com
 
 Here is my email: Matthieu.Bruel@gmail.com
 
+
+
+[![](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=W2C236U6JNTUA&item_name=ngPost&currency_code=EUR)
