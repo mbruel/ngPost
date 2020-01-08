@@ -32,8 +32,7 @@ NntpFile::NntpFile(NgPost *ngPost, const QFileInfo &file, int num, int nbFiles, 
     _file(file), _num(num), _nbFiles(nbFiles), _grpList(grpList),
     _nbAticles((int)std::ceil((float)file.size()/NgPost::articleSize())),
     _articles(),
-    _nbPosted(0),
-    _nbFailed(0)
+    _posted(), _failed()
 {
 #if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
     qDebug() << "Creation NntpFile: " << file.absoluteFilePath()
@@ -57,17 +56,22 @@ void NntpFile::onArticlePosted(quint64 size)
 {
     _ngPost->articlePosted(size);
     NntpArticle *article = static_cast<NntpArticle*>(sender());
-    ++_nbPosted;
+    int part = article->_part;
 #ifdef __DEBUG__
+    if (_posted.contains(part) || _failed.contains(part))
+        qCritical() << "[NntpFile::onArticlePosted] DUPLICATE article #" << part
+                    << " for file: " << name();
+
     qDebug() << "[NntpFile::onArticlePosted] " << name()
-             << ": posted: " << _nbPosted << " / " << _nbAticles
-             << " (nb FAILED: " << _nbFailed << ")"
-             << " article part " << article->_part
+             << ": posted: " << _posted.size() << " / " << _nbAticles
+             << " (nb FAILED: " << _failed.size() << ")"
+             << " article part " << part
              << ", id: " << article->id();
 #endif
+    _posted.insert(part);
     article->_body.clear(); // free resources
 
-    if (_nbPosted + _nbFailed== _nbAticles)
+    if (_posted.size() + _failed.size() == _nbAticles)
         emit allArticlesArePosted();
 }
 
@@ -75,17 +79,22 @@ void NntpFile::onArticleFailed(quint64 size)
 {
     _ngPost->articleFailed(size);
     NntpArticle *article = static_cast<NntpArticle*>(sender());
-    ++_nbFailed;
+    int part = article->_part;
 #ifdef __DEBUG__
+    if (_posted.contains(part) || _failed.contains(part))
+        qCritical() << "[NntpFile::onArticleFailed] DUPLICATE article #" << part
+                    << " for file: " << name();
+
     qDebug() << "[NntpFile::onArticleFailed] " << name()
-             << ": posted: " << _nbPosted << " / " << _nbAticles
-             << " (nb FAILED: " << _nbFailed << ")"
-             << " article part " << article->_part
+             << ": posted: " << _posted.size() << " / " << _nbAticles
+             << " (nb FAILED: " << _failed.size() << ")"
+             << " article part " << part
              << ", id: " << article->id();
 #endif
+    _failed.insert(part);
     article->_body.clear(); // free resources
 
-    if (_nbPosted + _nbFailed== _nbAticles)
+    if (_posted.size() + _failed.size() == _nbAticles)
         emit allArticlesArePosted();
 }
 
