@@ -111,6 +111,7 @@ private:
     QFile       *_file;     //!< file handler on the file getting processed
     char        *_buffer;   //!< buffer to read the current file
     int          _part;     //!< part number (Article) on the current file
+    QMutex       _secureFile;
 
     QQueue<NntpArticle*> _articles; //!< prepared articles that are yEnc encoded
     QMutex               _secureArticlesQueue; //!< mutex to protect the Article stack (as the NntpConnection will pop from the ThreadPool)
