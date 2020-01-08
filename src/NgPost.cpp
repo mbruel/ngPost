@@ -138,7 +138,7 @@ NgPost::NgPost(int &argc, char *argv[]):
     _groups(sDefaultGroups),
     _articleIdSignature(sDefaultMsgIdSignature),
     _nzb(nullptr), _nzbStream(),
-    _nntpFile(nullptr), _file(nullptr), _buffer(nullptr), _part(0),
+    _nntpFile(nullptr), _file(nullptr), _buffer(nullptr), _part(0), _secureFile(),
     _articles(), _secureArticlesQueue(),
     _timeStart(), _totalSize(0),
     _meta(), _grpList(),
@@ -570,6 +570,9 @@ void NgPost::onError(QString msg)
 
 void NgPost::onDisconnectedConnection(NntpConnection *con)
 {
+    if (_stopPosting.load())
+        return; // we're destructing all the connections
+
     _error(tr("Error: disconnected connection: #%1\n").arg(con->getId()));
     _nntpConnections.removeOne(con);
     delete con;
@@ -910,6 +913,7 @@ QString NgPost::randomPass(uint length) const
 
 NntpArticle *NgPost::_getNextArticle()
 {
+    _secureFile.lock();
     if (!_nntpFile)
     {
         _nntpFile = _getNextFile();
@@ -919,6 +923,7 @@ NntpArticle *NgPost::_getNextArticle()
 #ifdef __DEBUG__
             emit log("No more file to post...");
 #endif
+            _secureFile.unlock();
             return nullptr;
         }
     }
@@ -939,6 +944,7 @@ NntpArticle *NgPost::_getNextArticle()
             delete _file;
             _file = nullptr;
             _nntpFile = nullptr;
+            _secureFile.unlock();
             return _getNextArticle(); // Check if we have more files
         }
     }
@@ -962,6 +968,7 @@ NntpArticle *NgPost::_getNextArticle()
 #ifdef __SAVE_ARTICLES__
             article->dumpToFile("/tmp", _articleIdSignature);
 #endif
+            _secureFile.unlock();
             return article;
         }
         else
@@ -976,6 +983,7 @@ NntpArticle *NgPost::_getNextArticle()
         }
     }
 
+    _secureFile.unlock();
     return _getNextArticle(); // if we didn't have an Article, check next file
 }
 
