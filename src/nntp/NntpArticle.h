@@ -87,6 +87,7 @@ public:
     std::string header(const std::string &idSignature) const;
     inline std::string body() const;
     inline QString id() const;
+    inline int part() const;
     inline NntpFile *nntpFile() const;
 
     inline bool isFirstArticle() const;
@@ -106,7 +107,7 @@ QString NntpArticle::id() const { return _id.toString(sMsgIdFormat); }
 #else
 QString NntpArticle::id() const { return _id.toString(); }
 #endif
-
+int NntpArticle::part() const{ return _part; }
 NntpFile *NntpArticle::nntpFile() const { return _nntpFile; }
 
 bool NntpArticle::isFirstArticle() const { return _part == 1; }

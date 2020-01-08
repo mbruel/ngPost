@@ -23,6 +23,7 @@
 #define NntpFile_H
 #include <QObject>
 #include <QVector>
+#include <QSet>
 #include <QFileInfo>
 class NntpArticle;
 class QTextStream;
@@ -72,8 +73,8 @@ private:
     const int               _nbAticles; //!< total number of articles
     QVector<NntpArticle*>   _articles;  //!< all articles (that are yEnc encoded)
 
-    int _nbPosted; //!< number of Articles that have been posted (uploaded on the socket)
-    int _nbFailed; //!< number of Articles that FAILED to be posted (uploaded on the socket)
+    QSet<int> _posted; //!< part number of the Articles that have been posted (uploaded on the socket)
+    QSet<int> _failed; //!< part number of the Articles that FAILED to be posted (uploaded on the socket)
 };
 
 void NntpFile::addArticle(NntpArticle *article) { _articles.push_back(article); }
@@ -82,7 +83,7 @@ QString NntpFile::name() const { return QString("[%1/%2] %3").arg(_num).arg(_nbF
 std::string NntpFile::fileName() const { return _file.fileName().toStdString(); }
 qint64 NntpFile::fileSize() const { return _file.size(); }
 int NntpFile::nbArticles() const { return _nbAticles; }
-int NntpFile::nbFailedArticles() const { return _nbFailed; }
-bool NntpFile::hasFailedArticles() const { return _nbFailed != 0; }
+int NntpFile::nbFailedArticles() const { return _failed.size(); }
+bool NntpFile::hasFailedArticles() const { return _failed.size() != 0; }
 
 #endif // NntpFile_H
