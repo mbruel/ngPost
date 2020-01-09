@@ -676,6 +676,12 @@ void NgPost::onCheckForNewVersion()
     }
 }
 
+#include <QDesktopServices>
+void NgPost::onDonation()
+{
+    QDesktopServices::openUrl(sDonationURL);
+}
+
 
 
 void NgPost::_initPosting(const QList<QFileInfo> &filesToUpload)
@@ -1489,15 +1495,8 @@ void NgPost::_syntax(char *appName)
 {
 //    QString appVersion = QString("%1_v%2").arg(sAppName).arg(sVersion);
     QString app = QFileInfo(appName).fileName();
-    _cout << sAppName << " is a Usenet poster that can:\n"
-          << "    - spread multiple connections (from multiple servers) on several threads\n"
-          << "    - post several files or directories (you can put several times the option -i)\n"
-          << "    - automate rar compression and par2 generation with obfuscation\n"
-          << "    - generate the nzb\n"
-          << "    - ... cf https://github.com/mbruel/ngPost for more details\n\n"
-          << "Syntax: "
-          << app << " (options)? (-i <file or directory to upload>)+"
-          << "\n";
+    _cout << sNgPostDesc << "\n"
+          << "Syntax: " << app << " (options)? (-i <file or directory to upload>)+\n";
     for (const QCommandLineOption & opt : sCmdOptions)
     {
         if (opt.valueName() == sOptionNames[Opt::HOST])
@@ -1752,3 +1751,14 @@ const QString NgPost::sNgPostASCII = QString("\
      |___|  /\\___  /|____|   \\____/____  > |__|\n\
           \\//_____/                    \\/\n\
 ");
+
+const QString NgPost::sNgPostDesc = QString("%1 is a CMD/GUI Usenet binaries poster developped in C++11/Qt5:\n\
+It is designed to be as fast as possible and offer all the main features to post data easily and safely.\n\n\
+Here are the main features and advantages of ngPost:\n\
+    - spread multiple connections (from multiple servers) on several threads\n\
+    - post several files or directories (you can put several times the option -i)\n\
+    - automate rar compression and par2 generation with obfuscation\n\
+    - generate the nzb\n\
+    - ... \n\
+for more details, cf https://github.com/mbruel/ngPost\n\
+").arg(sAppName);
