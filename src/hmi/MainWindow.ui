@@ -490,7 +490,7 @@
           </layout>
          </item>
          <item>
-          <widget class="QListWidget" name="filesList"/>
+          <widget class="SignedListWidget" name="filesList"/>
          </item>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -534,6 +534,9 @@
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
              </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Expanding</enum>
+             </property>
              <property name="sizeHint" stdset="0">
               <size>
                <width>40</width>
@@ -541,6 +544,13 @@
               </size>
              </property>
             </spacer>
+           </item>
+           <item>
+            <widget class="QLabel" name="fileListLbl">
+             <property name="text">
+              <string>(press DEL on selected files to remove them)</string>
+             </property>
+            </widget>
            </item>
           </layout>
          </item>
@@ -899,6 +909,13 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>SignedListWidget</class>
+   <extends>QListWidget</extends>
+   <header location="global">hmi/SignedListWidget.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="../resources/resources.qrc"/>
  </resources>

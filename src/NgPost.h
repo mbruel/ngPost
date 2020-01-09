@@ -179,6 +179,7 @@ private:
     static const int sDefaultRefreshRate = 500; //!< how often shall we refresh the progress bar?
 
     static const QString sDonationURL;
+    static const QString sNgPostASCII;
 
 public:
     NgPost(int &argc, char *argv[]);
@@ -293,6 +294,8 @@ private:
                       const QString &compressLevel = "-m0");
 
     bool _checkTmpFolder() const;
+
+    void _showVersionASCII() const;
 
 
 public:
