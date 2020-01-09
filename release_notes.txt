@@ -22,17 +22,17 @@ TODO:
 
 - make the architecture thread safe to prevent duplicate articles and potential segfault
 - fix completion check of the posting of all Articles of a NntpFile (and log duplicate Article even if there shouldn't be any)
+- fix wong published date of the posted files in the nzb
+- use random poster (From) for each article when doing Article's obfuscation
 
 - implement the possibility to compress and generate par2 from the selected files before posting
 - rar has been chosen for the compression to allow the automatic decompression with all major readers
 - allow rar and par2 name obfuscation
 - incorporate par2 to the release
 
-- add Donation button linked to Paypal
 - add the Save configuration feature (implementation to be done...)
-- add About button (implementation to be done...)
-
-- fix wong published date of the posted files in the nzb
+- add Donation button linked to Paypal
+- add About button
 
 
 
