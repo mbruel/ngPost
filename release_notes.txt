@@ -7,24 +7,30 @@
          \//_____/                    \/
 
 
-- TODO: bandwidth optimization:
+TODO: bandwidth optimization:
 	test with no threads and no article preparation
 	check if we can play on the SSL protocol paramaters
 
+TODO:
+	compress and par2 generation for command line
+	implement last HMI buttons connected to MainWindow::toBeImplemented
 
 ####################################################
 ###       Release: ngPost v2.1                   ###
 ###       date:    2020/01/??                    ###
 ####################################################
 
+- make the architecture thread safe to prevent duplicate articles and potential segfault
+- fix completion check of the posting of all Articles of a NntpFile (and log duplicate Article even if there shouldn't be any)
+
 - implement the possibility to compress and generate par2 from the selected files before posting
+- rar has been chosen for the compression to allow the automatic decompression with all major readers
 - allow rar and par2 name obfuscation
-- use rar for the compression to allow automatic decompression with all major readers
 - incorporate par2 to the release
 
-- add the Save configuration feature
-- add About button
-- add Donation button
+- add Donation button linked to Paypal
+- add the Save configuration feature (implementation to be done...)
+- add About button (implementation to be done...)
 
 - fix wong published date of the posted files in the nzb
 

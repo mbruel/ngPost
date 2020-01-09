@@ -53,6 +53,7 @@ SOURCES += \
         NgPost.cpp \
         NntpConnection.cpp \
         hmi/CheckBoxCenterWidget.cpp \
+        hmi/SignedListWidget.cpp \
         main.cpp \
         nntp/Nntp.cpp \
         nntp/NntpArticle.cpp \
@@ -70,6 +71,7 @@ HEADERS += \
     NgPost.h \
     NntpConnection.h \
     hmi/CheckBoxCenterWidget.h \
+    hmi/SignedListWidget.h \
     nntp/Nntp.h \
     nntp/NntpArticle.h \
     nntp/NntpFile.h \

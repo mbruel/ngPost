@@ -487,7 +487,7 @@ NntpArticle *NgPost::getNextArticle()
     if (_articles.size())
     {
 #ifdef __DEBUG__
-        _cout << QString("[NgPost::getNextArticle][%1] _articles.size() = %2").arg(
+        _cout << QString("[NgPost::getNextArticle][%1] _articles.size() = %2\n").arg(
                      QThread::currentThread()->objectName()).arg(_articles.size());
 #endif
         article = _articles.dequeue();
@@ -498,7 +498,7 @@ NntpArticle *NgPost::getNextArticle()
         {
             // we should never come here as the goal is to have articles prepared in advance in the queue
 #ifdef __DEBUG__
-            _cout << QString("[NgPost::getNextArticle][%1] NO ARTICLE READY...").arg(
+            _cout << QString("[NgPost::getNextArticle][%1] NO ARTICLE READY...\n").arg(
                          QThread::currentThread()->objectName());
 #else
             if (_debug)
@@ -1016,13 +1016,14 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
 
     if (parser.isSet(sOptionNames[Opt::HELP]))
     {
+        _showVersionASCII();
         _syntax(argv[0]);
         return false;
     }
 
     if (parser.isSet(sOptionNames[Opt::VERSION]))
     {
-        _cout << sAppName << " v" << sVersion << "\n" << flush;
+        _showVersionASCII();
         return false;
     }
 
@@ -1486,15 +1487,14 @@ QString NgPost::_parseConfig(const QString &configPath)
 
 void NgPost::_syntax(char *appName)
 {
-    QString appVersion = QString("%1_v%2").arg(sAppName).arg(sVersion);
+//    QString appVersion = QString("%1_v%2").arg(sAppName).arg(sVersion);
     QString app = QFileInfo(appName).fileName();
-    _cout << appVersion << " is a NNTP poster that can:\n"
-          << "  - use multiple connections on multiple servers. (for multiple server, you've to use a config file)\n"
-          << "  - spread those connections on several threads (by default the number of cores available)\n"
-          << "  - post several files or directory (you can put several times the option -i)\n"
-          << "  - generate the nzb\n"
-          << "  - use SSL encryption if desired\n"
-          << "\n"
+    _cout << sAppName << " is a Usenet poster that can:\n"
+          << "    - spread multiple connections (from multiple servers) on several threads\n"
+          << "    - post several files or directories (you can put several times the option -i)\n"
+          << "    - automate rar compression and par2 generation with obfuscation\n"
+          << "    - generate the nzb\n"
+          << "    - ... cf https://github.com/mbruel/ngPost for more details\n\n"
           << "Syntax: "
           << app << " (options)? (-i <file or directory to upload>)+"
           << "\n";
@@ -1703,6 +1703,12 @@ bool NgPost::_checkTmpFolder() const
     return true;
 }
 
+void NgPost::_showVersionASCII() const
+{
+    _cout << sNgPostASCII
+          << "                          v" << sVersion << "\n\n" << flush;
+}
+
 bool NgPost::canCompress() const
 {
     //1.: the _tmp_folder must be writable
@@ -1736,3 +1742,13 @@ bool NgPost::canGenPar2() const
 
     return true;
 }
+
+
+const QString NgPost::sNgPostASCII = QString("\
+                   __________               __\n\
+       ____    ____\\______   \\____  _______/  |_\n\
+      /    \\  / ___\\|     ___/  _ \\/  ___/\\   __\\\n\
+     |   |  \\/ /_/  >    |  (  <_> )___ \\  |  |\n\
+     |___|  /\\___  /|____|   \\____/____  > |__|\n\
+          \\//_____/                    \\/\n\
+");

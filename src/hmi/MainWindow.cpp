@@ -302,6 +302,10 @@ void MainWindow::_initServerBox()
 
 void MainWindow::_initFilesBox()
 {
+    _ui->fileListLbl->hide();
+    _ui->filesList->setSignature(QString("<pre>%1</pre>").arg(_ngPost->escapeXML(_ngPost->sNgPostASCII)));
+    connect(_ui->filesList, &SignedListWidget::rightClick, this, &MainWindow::onSelectFilesClicked);
+
     _ui->compressPathEdit->setText(_ngPost->_tmpPath);
     _ui->rarEdit->setText(_ngPost->_rarPath);
 
@@ -519,7 +523,7 @@ void MainWindow::_addFile(const QString &fileName, int currentNbFiles)
             return;
         }
     }
-    _ui->filesList->addItem(fileName);
+    _ui->filesList->addItem2(fileName);
 
     if (_ui->nzbFileEdit->text().isEmpty())
     {
@@ -593,7 +597,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
                 for (QListWidgetItem *item : _ui->filesList->selectedItems())
                 {
                     qDebug() << "[MainWindow::eventFilter] remove item: " << item->text();
-                    _ui->filesList->removeItemWidget(item);
+                    _ui->filesList->removeItemWidget2(item);
                     delete item;
                 }
             }
@@ -677,7 +681,7 @@ void MainWindow::onSelectFilesClicked()
 
 void MainWindow::onClearFilesClicked()
 {
-    _ui->filesList->clear();
+    _ui->filesList->clear2();
     _ui->nzbFileEdit->clear();
     _ui->compressNameEdit->clear();
 }
