@@ -969,7 +969,7 @@ NntpArticle *NgPost::_getNextArticle()
 #endif
             ++_part;
             NntpArticle *article = new NntpArticle(_nntpFile, _part, _buffer, pos, bytes,
-                                                   _from,//_from.empty()?_randomFrom():_from,
+                                                   _obfuscateArticles ? _randomFrom() : _from,
                                                    _groups, _obfuscateArticles);
 
 #ifdef __SAVE_ARTICLES__

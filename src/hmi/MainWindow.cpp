@@ -699,7 +699,7 @@ void MainWindow::onCompressCB(bool checked)
 
 void MainWindow::onGenCompressName()
 {
-    _ui->compressNameEdit->setText(_ngPost->randomPass());
+    _ui->compressNameEdit->setText(_ngPost->randomPass(17));
 }
 
 const QString MainWindow::sGroupBoxStyle =  "\

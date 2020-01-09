@@ -269,7 +269,7 @@
               <string>CAREFUL: you won't be able to find your post without the NZB file</string>
              </property>
              <property name="text">
-              <string>obfuscation of each Article's Message-Id </string>
+              <string>Article's obfuscation: Subject changed to be a UUID + random From</string>
              </property>
              <property name="checked">
               <bool>true</bool>
