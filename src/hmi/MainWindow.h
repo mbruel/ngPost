@@ -84,7 +84,7 @@ private slots:
     void onGenNzbPassword();
 
     void onDebugToggled(bool checked);
-    void onDonateClicked();
+    void onAboutClicked();
 
     void toBeImplemented();
 

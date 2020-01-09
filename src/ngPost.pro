@@ -52,6 +52,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         NgPost.cpp \
         NntpConnection.cpp \
+        hmi/AboutNgPost.cpp \
         hmi/CheckBoxCenterWidget.cpp \
         hmi/SignedListWidget.cpp \
         main.cpp \
@@ -70,6 +71,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 HEADERS += \
     NgPost.h \
     NntpConnection.h \
+    hmi/AboutNgPost.h \
     hmi/CheckBoxCenterWidget.h \
     hmi/SignedListWidget.h \
     nntp/Nntp.h \
@@ -82,6 +84,7 @@ HEADERS += \
 
 
 FORMS += \
+    hmi/AboutNgPost.ui \
     hmi/MainWindow.ui
 
 RESOURCES += \

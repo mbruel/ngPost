@@ -85,8 +85,10 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
 
     statusBar()->hide();
 
-    resize(QDesktopWidget().availableGeometry(this).size() * 0.8);
+    QSize screenSize = QDesktopWidget().availableGeometry(this).size();
+    resize(screenSize * 0.8);
     setWindowIcon(QIcon(":/icons/ngPost.png"));
+    setGeometry((screenSize.width() - width())/2,  (screenSize.height() - height())/2, width(), height());
 
     connect(_ui->clearLogButton, &QAbstractButton::clicked, _ui->logBrowser, &QTextEdit::clear);
     connect(_ui->debugBox,       &QAbstractButton::toggled, this, &MainWindow::onDebugToggled);
@@ -303,7 +305,7 @@ void MainWindow::_initServerBox()
 void MainWindow::_initFilesBox()
 {
     _ui->fileListLbl->hide();
-    _ui->filesList->setSignature(QString("<pre>%1</pre>").arg(_ngPost->escapeXML(_ngPost->sNgPostASCII)));
+    _ui->filesList->setSignature(QString("<pre>%1</pre>").arg(_ngPost->escapeXML(_ngPost->asciiArt())));
     connect(_ui->filesList, &SignedListWidget::rightClick, this, &MainWindow::onSelectFilesClicked);
 
     _ui->compressPathEdit->setText(_ngPost->_tmpPath);
@@ -330,8 +332,8 @@ void MainWindow::_initFilesBox()
 
     connect(_ui->nzbFileButton,     &QAbstractButton::clicked, this, &MainWindow::toBeImplemented);
 
-    connect(_ui->aboutButton,       &QAbstractButton::clicked, this, &MainWindow::toBeImplemented);
-    connect(_ui->donateButton,      &QAbstractButton::clicked, this, &MainWindow::onDonateClicked);
+    connect(_ui->aboutButton,       &QAbstractButton::clicked, this, &MainWindow::onAboutClicked);
+    connect(_ui->donateButton,      &QAbstractButton::clicked, _ngPost, &NgPost::onDonation);
 
 
 
@@ -570,10 +572,12 @@ void MainWindow::onDebugToggled(bool checked)
     _ngPost->setDebug(checked);
 }
 
-#include <QDesktopServices>
-void MainWindow::onDonateClicked()
+
+#include "AboutNgPost.h"
+void MainWindow::onAboutClicked()
 {
-    QDesktopServices::openUrl(_ngPost->donationURL());
+    AboutNgPost about(_ngPost);
+    about.exec();
 }
 
 void MainWindow::toBeImplemented()

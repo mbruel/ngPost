@@ -180,6 +180,8 @@ private:
 
     static const QString sDonationURL;
     static const QString sNgPostASCII;
+    static const QString sNgPostDesc;
+
 
 public:
     NgPost(int &argc, char *argv[]);
@@ -216,6 +218,10 @@ public:
 
     inline static const QString & proFileUrl();
     inline static const QString & donationURL();
+    inline static const QString & asciiArt();
+    inline static QString asciiArtWithVersion();
+    inline static const QString & desc();
+
 
 
     inline bool debugMode() const;
@@ -233,6 +239,7 @@ signals:
 
 public slots:
     void onCheckForNewVersion();
+    void onDonation();
 
 private slots:
     void onNntpFileStartPosting();
@@ -379,6 +386,14 @@ bool NgPost::removeNntpServer(NntpServerParams *server){ return _nntpServers.rem
 
 const QString &NgPost::proFileUrl() { return sProFileURL; }
 const QString &NgPost::donationURL(){ return sDonationURL; }
+const QString &NgPost::asciiArt()   { return sNgPostASCII; }
+
+QString NgPost::asciiArtWithVersion()
+{
+    return QString("%1                          v%2\n").arg(sNgPostASCII).arg(sVersion);
+}
+
+const QString &NgPost::desc() { return sNgPostDesc; }
 
 bool NgPost::debugMode() const { return _debug; }
 void NgPost::setDebug(bool isDebug){ _debug = isDebug; }
