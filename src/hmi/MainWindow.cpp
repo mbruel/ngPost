@@ -233,8 +233,7 @@ void MainWindow::onPostFiles()
                         _ngPost->_log(QString("  - %1").arg(file.fileName()));
 
                 }
-///// MB_TODO: REMOVE THIS HACK TO NOT POST !!!!
-//                nbFiles = 0;
+
                 nbFiles = _createNntpFiles();
             }
 
@@ -317,7 +316,7 @@ void MainWindow::_initFilesBox()
     _ui->redundancyEdit->setText(QString::number(_ngPost->_par2Pct));
     _ui->redundancyEdit->setValidator(new QIntValidator(1, 100, _ui->redundancyEdit));
 
-    _ui->filesList->setSelectionMode(QAbstractItemView::MultiSelection);
+    _ui->filesList->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
     connect(_ui->selectFilesButton, &QAbstractButton::clicked, this, &MainWindow::onSelectFilesClicked);
     connect(_ui->clearFilesButton,  &QAbstractButton::clicked, this, &MainWindow::onClearFilesClicked);
@@ -447,7 +446,7 @@ int MainWindow::_createNntpFiles()
     {
         QFileInfo fileInfo(_ui->filesList->item(i)->text());
         if (fileInfo.exists() && fileInfo.isFile())
-            filesToUpload.append(fileInfo);
+            filesToUpload << fileInfo;
     }
     _ngPost->_initPosting(filesToUpload);
     return filesToUpload.size();

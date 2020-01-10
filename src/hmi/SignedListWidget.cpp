@@ -2,8 +2,10 @@
 #include <QLabel>
 #include <QResizeEvent>
 
-SignedListWidget::SignedListWidget(QWidget *parent) : QListWidget(parent),
-    _asciiLbl(new QLabel(this)){}
+SignedListWidget::SignedListWidget(QWidget *parent) :
+    QListWidget(parent),
+    _asciiLbl(new QLabel(this))
+{}
 
 
 void SignedListWidget::setSignature(const QString &str)
