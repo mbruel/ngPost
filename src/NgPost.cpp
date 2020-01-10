@@ -1315,6 +1315,9 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     QString archiveName = _nzbName;
     if (_doCompress)
     {
+        if (!canCompress())
+            return false;
+
         if (_genName)
             archiveName = randomPass(17);
 
@@ -1330,6 +1333,9 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     }
     if (_doPar2)
     {
+        if (!canGenPar2())
+            return false;
+
         if (_genPar2(_tmpPath, archiveName, _par2Pct, filesPath) != 0)
             return false;
     }
@@ -1646,6 +1652,9 @@ int NgPost::compressFiles(const QString &cmdRar,
                           uint volSize,
                           const QString &compressLevel)
 {
+    if (!canCompress() || (redundancy >0 && !canGenPar2()))
+        return -1;
+
     _extProc = new QProcess(this);
     connect(_extProc, &QProcess::readyReadStandardOutput, this, &NgPost::onExtProcReadyReadStandardOutput, Qt::DirectConnection);
     connect(_extProc, &QProcess::readyReadStandardOutput, this, &NgPost::onExtProcReadyReadStandardOutput, Qt::DirectConnection);
