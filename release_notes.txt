@@ -12,7 +12,6 @@ TODO: bandwidth optimization:
 	check if we can play on the SSL protocol paramaters
 
 TODO:
-	compress and par2 generation for command line
 	implement last HMI buttons connected to MainWindow::toBeImplemented
 
 ####################################################

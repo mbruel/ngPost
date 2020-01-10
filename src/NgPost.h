@@ -67,6 +67,7 @@ class NgPost : public QObject
                     MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY,
                     OBFUSCATE,
                     TMP_DIR, RAR_PATH, RAR_SIZE, PAR2_PCT, PAR2_PATH,
+                    COMPRESS, GEN_PAR2, GEN_NAME, GEN_PASS,
                     HOST, PORT, SSL, USER, PASS, CONNECTION,
                    };
 
@@ -148,6 +149,11 @@ private:
     uint        _rarSize;
     uint        _par2Pct;
     QString     _par2Path;
+
+    bool        _doCompress;
+    bool        _doPar2;
+    bool        _genName;
+    bool        _genPass;
 
 
 
@@ -299,6 +305,20 @@ private:
                       uint redundancy = 0,
                       uint volSize = 0,
                       const QString &compressLevel = "-m0");
+
+    int _compressFiles(const QString &cmdRar,
+                       const QString &tmpFolder,
+                       const QString &archiveName,
+                       const QStringList &files,
+                       const QString &pass,
+                       uint volSize = 0,
+                       const QString &compressLevel = "-m0");
+    int _genPar2(const QString &tmpFolder,
+                 const QString &archiveName,
+                 uint redundancy = 0,
+                 const QStringList &files = QStringList());
+
+    QString _createArchiveFolder(const QString &tmpFolder, const QString &archiveName);
 
     bool _checkTmpFolder() const;
 
