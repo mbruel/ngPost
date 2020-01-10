@@ -178,19 +178,6 @@ void MainWindow::onPostFiles()
         int nbFiles = 0;
         if (_ui->compressCB->isChecked())
         {
-// MB_TODO:
-//     - check the rar path is not empty and executable
-//     - check also for par2 (included for Windows and in AppImage but not in Linux if compiled from source..)
-//     - check the compress path is not empty and writable
-// if not open a popup AND SET BACK the _state to IDLE!!!
-//
-
-// MB_TODO: do a post with compression
-//            the folder should be destroyed
-//                    but the files are still in _ui->filesList
-//                    press POST again and see what happens
-//                    NOTHING SHOULD HAPPEN!!!
-
             QStringList filesToCompress;
             for (int i = 0 ; i < _ui->filesList->count() ; ++i)
             {
@@ -236,7 +223,6 @@ void MainWindow::onPostFiles()
 
                 nbFiles = _createNntpFiles();
             }
-
         }
         else
             nbFiles = _createNntpFiles();
@@ -249,6 +235,8 @@ void MainWindow::onPostFiles()
             if (!_ngPost->startPosting())
                 setIDLE();
         }
+        else
+            setIDLE();
     }
     else  if (_state == STATE::POSTING)
     {
