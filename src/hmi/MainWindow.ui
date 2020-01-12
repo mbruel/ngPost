@@ -681,7 +681,7 @@
                 </size>
                </property>
                <property name="toolTip">
-                <string>generate random password</string>
+                <string>generate random archive name</string>
                </property>
                <property name="text">
                 <string/>

@@ -41,6 +41,8 @@ const QString NgPost::sVersion     = QString::number(APP_VERSION);
 const QString NgPost::sProFileURL  = "https://raw.githubusercontent.com/mbruel/ngPost/master/src/ngPost.pro";
 const QString NgPost::sDonationURL = "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=W2C236U6JNTUA&item_name=ngPost&currency_code=EUR";
 
+const QString NgPost::sMainThreadName = "MainThread";
+
 qint64        NgPost::sArticleSize = sDefaultArticleSize;
 const QString NgPost::sSpace       = sDefaultSpace;
 
@@ -136,7 +138,11 @@ NgPost::NgPost(int &argc, char *argv[]):
     _hmi(nullptr),
     _cout(stdout),
     _cerr(stderr),
+#ifdef __DEBUG__
+    _debug(true),
+#else
     _debug(false),
+#endif
     _dispProgressBar(false),
     _dispFilesPosting(false),
     _nzbName(),
@@ -170,7 +176,7 @@ NgPost::NgPost(int &argc, char *argv[]):
         _dispProgressBar = false;
     }
 
-    QThread::currentThread()->setObjectName("NgPost");
+    QThread::currentThread()->setObjectName(sMainThreadName);
     connect(this, &NgPost::scheduleNextArticle, this, &NgPost::onPrepareNextArticle, Qt::QueuedConnection);
 
     // in case we want to generate random uploader (_from not provided)
@@ -187,10 +193,8 @@ NgPost::NgPost(int &argc, char *argv[]):
     if (fi.exists() && fi.isFile() && fi.isExecutable())
         _par2Path = par2Embedded;
 
-#ifdef __DEBUG__
-    _debug = true;
-    connect(this, &NgPost::log, this, &NgPost::onLog, Qt::QueuedConnection);
-#endif
+    connect(this, &NgPost::log,   this, &NgPost::onLog,   Qt::QueuedConnection);
+    connect(this, &NgPost::error, this, &NgPost::onError, Qt::QueuedConnection);  
 }
 
 
@@ -198,7 +202,9 @@ NgPost::NgPost(int &argc, char *argv[]):
 
 NgPost::~NgPost()
 {
+#ifdef __DEBUG__
     _log("Destuction NgPost...");
+#endif
 
     _finishPosting();
     qDeleteAll(_nntpServers);
@@ -435,21 +441,15 @@ bool NgPost::startPosting()
     for (int threadIdx = 0; threadIdx < nbTh ; ++threadIdx)
     {
         QThread *thread = new QThread();
-        thread->setObjectName(QString("Thread #%1").arg(threadIdx+1));
+        QString threadName = QString("Thread #%1").arg(threadIdx+1);
+        thread->setObjectName(threadName);
         _threadPool.append(thread);
 
         for (int i = 0 ; i < nbConPerThread ; ++i)
-        {
-            NntpConnection *con = _nntpConnections.at(conIdx++);
-            con->moveToThread(thread);
-            con->startConnection();
-        }
+            _startConnectionInThread(conIdx++, thread, threadName);
+
         if (nbExtraCon-- > 0)
-        {
-            NntpConnection *con = _nntpConnections.at(conIdx++);
-            con->moveToThread(thread);
-            emit con->startConnection();
-        }
+            _startConnectionInThread(conIdx++, thread, threadName);
         thread->start();
     }    
 
@@ -464,6 +464,24 @@ bool NgPost::startPosting()
 
     return true;
 }
+
+void NgPost::updateGroups(const QString &groups)
+{
+    _groups = groups.toStdString();
+
+    _grpList.clear();
+    for (const QString &grp : groups.split(","))
+        _grpList << grp;
+}
+
+void NgPost::_startConnectionInThread(int conIdx, QThread *thread, const QString &threadName)
+{
+    NntpConnection *con = _nntpConnections.at(conIdx);
+    con->setThreadName(threadName);
+    con->moveToThread(thread);
+    emit con->startConnection();
+}
+
 
 int NgPost::startEventLoop()
 {
@@ -483,7 +501,7 @@ int NgPost::startHMI()
     return _app->exec();
 }
 
-NntpArticle *NgPost::getNextArticle()
+NntpArticle *NgPost::getNextArticle(const QString &threadName)
 {
     if (_stopPosting.load())
         return nullptr;
@@ -496,28 +514,25 @@ NntpArticle *NgPost::getNextArticle()
     if (_articles.size())
     {
 #ifdef __DEBUG__
-        _cout << QString("[NgPost::getNextArticle][%1] _articles.size() = %2\n").arg(
-                     QThread::currentThread()->objectName()).arg(_articles.size());
+        emit log(tr("[%1][NgPost::getNextArticle] _articles.size() = %2").arg(threadName).arg(_articles.size()));
 #endif
         article = _articles.dequeue();
+        _secureArticlesQueue.unlock();
     }
     else
     {
+        _secureArticlesQueue.unlock();
         if (!_noMoreFiles.load())
         {
             // we should never come here as the goal is to have articles prepared in advance in the queue
-#ifdef __DEBUG__
-            _cout << QString("[NgPost::getNextArticle][%1] NO ARTICLE READY...\n").arg(
-                         QThread::currentThread()->objectName());
-#else
+
             if (_debug)
-                _error("[getNextArticle] No article prepared...");
-#endif
-            article = _prepareNextArticle();
+                emit log(tr("[%1][NgPost::getNextArticle] no article prepared...").arg(threadName));
+
+            article = _prepareNextArticle(threadName, false);
         }
     }
 
-    _secureArticlesQueue.unlock();
     if (article)
         emit scheduleNextArticle(); // schedule the preparation of another Article in main thread
 
@@ -601,7 +616,7 @@ void NgPost::onDisconnectedConnection(NntpConnection *con)
 
 void NgPost::onPrepareNextArticle()
 {
-    _prepareNextArticle();
+    _prepareNextArticle(sMainThreadName);
 }
 
 void NgPost::onErrorConnecting(QString err)
@@ -830,8 +845,8 @@ void NgPost::_log(const QString &aMsg, bool newline) const
 {
     if (_hmi)
         _hmi->log(aMsg, newline);
-    else if (_debug)
-        _cout << QString("[%1] %2\n").arg(QThread::currentThread()->objectName()).arg(aMsg);
+    else
+        _cout << aMsg << "\n" << flush;
 }
 
 void NgPost::_error(const QString &error) const
@@ -839,12 +854,12 @@ void NgPost::_error(const QString &error) const
     if (_hmi)
         _hmi->logError(error);
     else
-        _cerr << QString("[%1] %2\n").arg(QThread::currentThread()->objectName()).arg(error) << flush;
+        _cerr << error << flush << "\n" << flush;
 }
 
 void NgPost::_prepareArticles()
 {
-    int nbPreparedArticlePerConnection = 2;
+    int nbPreparedArticlePerConnection = 0;
 
 #ifdef __USE_MUTEX__
     int nbArticlesToPrepare = nbPreparedArticlePerConnection * _nntpConnections.size();
@@ -855,7 +870,7 @@ void NgPost::_prepareArticles()
 #endif
     for (int i = 0; i < nbArticlesToPrepare ; ++i)
     {
-        if (!_prepareNextArticle())
+        if (!_prepareNextArticle(sMainThreadName))
         {
 #ifdef __DEBUG__
             _cout << "[NgPost::_prepareArticles] No more Articles to produce after i = " << i << "\n";
@@ -884,10 +899,10 @@ void NgPost::_prepareArticles()
 }
 
 
-NntpArticle *NgPost::_prepareNextArticle()
+NntpArticle *NgPost::_prepareNextArticle(const QString &threadName, bool fillQueue)
 {
-    NntpArticle *article = _getNextArticle();
-    if (article)
+    NntpArticle *article = _getNextArticle(threadName);
+    if (article && fillQueue)
     {
         QMutexLocker lock(&_secureArticlesQueue);
         _articles.enqueue(article);
@@ -927,7 +942,7 @@ QString NgPost::randomPass(uint length) const
     return pass;
 }
 
-NntpArticle *NgPost::_getNextArticle()
+NntpArticle *NgPost::_getNextArticle(const QString &threadName)
 {
     _secureFile.lock();
     if (!_nntpFile)
@@ -937,7 +952,7 @@ NntpArticle *NgPost::_getNextArticle()
         {
             _noMoreFiles = 0x1;
 #ifdef __DEBUG__
-            emit log("No more file to post...");
+            emit log(tr("[%1] No more file to post...").arg(threadName));
 #endif
             _secureFile.unlock();
             return nullptr;
@@ -949,19 +964,21 @@ NntpArticle *NgPost::_getNextArticle()
         _file = new QFile(_nntpFile->path());
         if (_file->open(QIODevice::ReadOnly))
         {
-#ifdef __DEBUG__
-            emit log(tr("starting processing file %1").arg(_nntpFile->path()));
-#endif
+            if (_debug)
+                emit log(tr("[%1] starting processing file %2").arg(threadName).arg(_nntpFile->path()));
             _part = 0;
         }
         else
         {
-            emit log(tr("Error: couldn't open file %1").arg(_nntpFile->path()));
+            if (_debug)
+                emit error(tr("[%1] Error: couldn't open file %2").arg(threadName).arg(_nntpFile->path()));
+            else
+                emit error(tr("Error: couldn't open file %1").arg(_nntpFile->path()));
             delete _file;
             _file = nullptr;
             _nntpFile = nullptr;
             _secureFile.unlock();
-            return _getNextArticle(); // Check if we have more files
+            return _getNextArticle(threadName); // Check if we have more files
         }
     }
 
@@ -973,9 +990,8 @@ NntpArticle *NgPost::_getNextArticle()
         if (bytes > 0)
         {
             _buffer[bytes] = '\0';
-#ifdef __DEBUG__
-            emit log(tr("we've read %1 bytes from %2 (=> new pos: %3)").arg(bytes).arg(pos).arg(_file->pos()));
-#endif
+            if (_debug)
+                emit log(tr("[%1] we've read %2 bytes from %3 (=> new pos: %4)").arg(threadName).arg(bytes).arg(pos).arg(_file->pos()));
             ++_part;
             NntpArticle *article = new NntpArticle(_nntpFile, _part, _buffer, pos, bytes,
                                                    _obfuscateArticles ? _randomFrom() : _from,
@@ -989,9 +1005,9 @@ NntpArticle *NgPost::_getNextArticle()
         }
         else
         {
-#ifdef __DEBUG__
-            emit log(tr("finished processing file %1").arg(_nntpFile->path()));
-#endif
+            if (_debug)
+                emit log(tr("[%1] finished processing file %2").arg(threadName).arg(_nntpFile->path()));
+
             _file->close();
             delete _file;
             _file = nullptr;
@@ -1000,7 +1016,7 @@ NntpArticle *NgPost::_getNextArticle()
     }
 
     _secureFile.unlock();
-    return _getNextArticle(); // if we didn't have an Article, check next file
+    return _getNextArticle(threadName); // if we didn't have an Article, check next file
 }
 
 
@@ -1104,7 +1120,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
 
 
     if (parser.isSet(sOptionNames[Opt::GROUPS]))
-        _groups = parser.value(sOptionNames[Opt::GROUPS]).toStdString();
+        updateGroups(parser.value(sOptionNames[Opt::GROUPS]));
 
     if (parser.isSet(sOptionNames[Opt::FROM]))
     {
@@ -1286,7 +1302,8 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         }
         else
         {
-            _nzbName = fileInfo.fileName(); // The last one will be kept
+            if (_nzbName.isEmpty())
+                _nzbName = fileInfo.fileName(); // The first file will be used
             if (fileInfo.isFile())
             {
                 filesToUpload << fileInfo;
@@ -1372,12 +1389,6 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         _nzbName = nzb.fileName();
         _nzbPath = nzb.absolutePath();
     }
-
-
-    QStringList grps = QString(_groups.c_str()).split(",");
-    _grpList.reserve(grps.size());
-    for (const QString &grp : grps)
-        _grpList << grp;
 
     _initPosting(filesToUpload);
 
@@ -1486,7 +1497,7 @@ QString NgPost::_parseConfig(const QString &configPath)
                     }
                     else if (opt == sOptionNames[Opt::GROUPS])
                     {
-                        _groups = val.toStdString();
+                        updateGroups(val);
                     }
 
 
@@ -1581,6 +1592,9 @@ void NgPost::_syntax(char *appName)
     {
         if (opt.valueName() == sOptionNames[Opt::HOST])
             _cout << "\n// without config file, you can provide all the parameters to connect to ONE SINGLE server\n";
+        else if (opt.valueName() == sOptionNames[Opt::TMP_DIR])
+            _cout << "\n// for compression and par2 support\n";
+
         if (opt.names().size() == 1)
             _cout << QString("\t--%1: %2\n").arg(opt.names().first(), -17).arg(opt.description());
         else
@@ -1588,11 +1602,12 @@ void NgPost::_syntax(char *appName)
     }
 
     _cout << "\nExamples:\n"
+          << "  - with compression, filename obfuscation, random password and par2: " << app << " -i /tmp/file1 -i /tmp/folder1 -o /nzb/myPost.nzb --compress --gen_name --gen_pass --gen_par2\n"
           << "  - with config file: " << app << " -c ~/.ngPost -m \"password=qwerty42\" -f ngPost@nowhere.com -i /tmp/file1 -i /tmp/file2 -i /tmp/folderToPost1 -i /tmp/folderToPost2\n"
           << "  - with all params:  " << app << " -t 1 -m \"password=qwerty42\" -m \"metaKey=someValue\" -h news.newshosting.com -P 443 -s -u user -p pass -n 30 -f ngPost@nowhere.com \
-             -g \"alt.binaries.test,alt.binaries.test2\" -a 64000 -i /tmp/folderToPost -o /tmp/folderToPost.nzb\n"
-          << "\nIf you don't provide the output file (nzb file), we will create it in the nzbPath with the name of the last file or folder given in the command line.\n"
-          << "so in the first example above, the nzb would be: /tmp/folderToPost2.nzb\n"
+ -g \"alt.binaries.test,alt.binaries.test2\" -a 64000 -i /tmp/folderToPost -o /tmp/folderToPost.nzb\n"
+          << "\nIf you don't provide the output file (nzb file), we will create it in the nzbPath with the name of the first file or folder given in the command line.\n"
+          << "so in the second example above, the nzb would be: /tmp/file1.nzb\n"
           << flush;
 }
 

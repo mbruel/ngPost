@@ -92,6 +92,7 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
 
     connect(_ui->clearLogButton, &QAbstractButton::clicked, _ui->logBrowser, &QTextEdit::clear);
     connect(_ui->debugBox,       &QAbstractButton::toggled, this, &MainWindow::onDebugToggled);
+    _ui->debugBox->setChecked(_ngPost->debugMode());
 }
 
 MainWindow::~MainWindow()
@@ -236,7 +237,10 @@ void MainWindow::onPostFiles()
                 setIDLE();
         }
         else
+        {
+            _ngPost->_error(tr("No existing file to post..."));
             setIDLE();
+        }
     }
     else  if (_state == STATE::POSTING)
     {
@@ -400,6 +404,8 @@ void MainWindow::_updateParams()
             from += QString("@%1.com").arg(_ngPost->_articleIdSignature.c_str());
         _ngPost->_from   = from.toStdString();
     }
+
+    _ngPost->updateGroups(_ui->groupsEdit->toPlainText());
     _ngPost->_groups = _ui->groupsEdit->toPlainText().toStdString();
 
     _ngPost->_obfuscateArticles  = _ui->obfuscateMsgIdCB->isChecked();
