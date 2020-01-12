@@ -39,7 +39,7 @@ class NntpFile : public QObject
     Q_OBJECT
 
 public:
-    NntpFile(NgPost *ngPost, const QFileInfo &file, int num, int nbFiles, const QVector<QString> &grpList);
+    NntpFile(NgPost *ngPost, const QFileInfo &file, int num, int nbFiles, const QList<QString> &grpList);
     ~NntpFile();
 
     inline void addArticle(NntpArticle *article);
@@ -69,7 +69,7 @@ private:
     const QFileInfo         _file;      //!< original file
     const int               _num;       //!< file number
     const int               _nbFiles;   //!< total number of file
-    const QVector<QString> &_grpList;   //!< groups where the file is posted
+    const QList<QString>   &_grpList;   //!< groups where the file is posted
     const int               _nbAticles; //!< total number of articles
     QVector<NntpArticle*>   _articles;  //!< all articles (that are yEnc encoded)
 

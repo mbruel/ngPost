@@ -122,7 +122,7 @@ private:
     quint64     _totalSize; //!< total size (in Bytes) to be uploaded
 
     QMap<QString, QString> _meta;    //!< list of meta to add in the nzb header (typically a password)
-    QVector<QString>       _grpList; //!< Newsgroup where we're posting in a list format to write in the nzb file
+    QList<QString>         _grpList; //!< Newsgroup where we're posting in a list format to write in the nzb file
 
     int     _nbConnections; //!< available number of NntpConnection (we may loose some)
     int     _nbThreads;     //!< size of the ThreadPool
@@ -188,6 +188,8 @@ private:
     static const QString sNgPostASCII;
     static const QString sNgPostDesc;
 
+    static const QString sMainThreadName;
+
 
 public:
     NgPost(int &argc, char *argv[]);
@@ -202,9 +204,11 @@ public:
 
     bool startPosting();
 
+    void updateGroups(const QString &groups);
+
     inline QString avgSpeed() const;
 
-    NntpArticle *getNextArticle();
+    NntpArticle *getNextArticle(const QString &threadName);
 
     bool parseCommandLine(int argc, char *argv[]);
 
@@ -242,6 +246,7 @@ public:
 signals:
     void scheduleNextArticle();
     void log(QString msg); //!< in case we signal from another thread
+    void error(QString msg); //!< in case we signal from another thread
 
 public slots:
     void onCheckForNewVersion();
@@ -273,6 +278,7 @@ private:
 
     void stopPosting(); //!< for HMI
 
+    void _startConnectionInThread(int conIdx, QThread *thread, const QString &threadName);
 
     int  _createNntpConnections();
     void _closeNzb();
@@ -283,9 +289,9 @@ private:
 
 
     inline NntpFile *_getNextFile();
-    NntpArticle *_getNextArticle();
+    NntpArticle *_getNextArticle(const QString &threadName);
 
-    NntpArticle *_prepareNextArticle();
+    NntpArticle *_prepareNextArticle(const QString &threadName, bool fillQueue = true);
 
     std::string _randomFrom() const;
 

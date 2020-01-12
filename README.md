@@ -7,36 +7,22 @@ since v1.1, a minimalist GUI has been added on request
 Releases are available for: Linux 64bit, Windows (both 32bit and 64bit), MacOS. It will soon be available for Android...
 
 Here are the main features and advantages of ngPost:
-
--   it can use **several servers** (using config file or the HMI) with each **several connections** (supporting ssl)
--   it is spreading those connection on **several threads**. By default the number of cores of the station but you can set the number if you fancy.
--   it is using **asynchronous sockets** in the upload threads
--   it is **preparing the Articles on the main Thread** (yEnc encoding) so the upload threads are **always ready to write** when they can. (each connections has 2 Articles ready in advance)
--   it is **limiting the disk access** to the minimum by opening the files to post only once in the main Thread and processing them sequentially one by one (no need to open several files at the same time)
--   it can do **full obfuscation of the Article Header** (subject and msg-id) careful, using this, you won't be able to find your post if you don't have the NZB file
--   it is generating a **random uploader for each Article Header** (from) but can use a fixed one if desired
--   it is of course **generating the nzb file**
--   it can support **multiple files** and **multiple folders**
--   there is an **handler on interruption** which means that if you stop it, you'll close properly and **generate the nzb for what has been posted**
--   in case of interruption, it will **list the files that havn't been uploaded** so you can repost only those ones and then manually concatenate the nzb files
--   you can **add meta in the header of the nzb** (typically for a password)
--   it retries to post an Article with a different UUID in case of error (cf retry parameter)
--   it retries to reconnect if there is an error on a socket (same retry parameter than for the articles)
+-   **full obfuscation of the Article Header** : the Subject will be a UUID (as the msg-id) and a random Poster will be used. **Be Careful**, using this, you won't be able to find your post on Usenet (or any Indexers) if you lose the NZB file. But using this method is **completely safe**, **no need to obfuscate your files or even use a password**.
+-   **compress using RAR** (external command) with random **name obfuscation** and password and **generate par2** before posting
+-   support **multiple files** and **multiple folders**
+-   support **several servers** (using config file or the HMI) with each **several connections** (supporting ssl)
+-   spread those connection on **several threads**. By default the number of cores of the station but you can set the number if you fancy.
+-   **prepare the Articles on the main Thread** (yEnc encoding) so the upload threads are **always ready to write** when they can. (each connections has 2 Articles ready in advance)
+-   use **asynchronous sockets** in the upload threads
+-   **limit the disk access** to the minimum by opening the files to post only once in the main Thread and processing them sequentially one by one (no need to open several files at the same time, the Articles will be spread to all the connections)
+-   generate a **random poster** (from) but can use a fixed one if desired
+-   **generate the nzb file**
+-   **handle interruption** : if a post is stopped,  **the nzb is generated with the files that have been posted** and it will **list the files that havn't been posted** so you can repost only those ones and then manually concatenate the nzb files. (in CMD, the application would close properly)
+-   **add meta in the header of the nzb** (typically for a password)
+-   Retry to post Articles **with a different UUID** in case of error
+-   Try to reconnect if there is an error on a socket (same Retry parameter than for the articles)
 -   ...
 
-What it does not:
-- compress or generate the par2 for a single files (use a script to do it ;))
-
-**BUT** I provide the **postFile.sh for Linux** which is a handy script to post Files with rar compression with obfuscation and random password, the par2 generation to finally post all that on UseNet using ngPost :)
-<pre>
-Syntax: ./postFile.sh (-c {ngPost config file})? (-i {input file})+ (-o {nzb file})?
-There are 3 options:
-   -i file or folders (you can add several, with relative or full path)
-   -c for the config file
-   -o for the nzb path
-(   -h for the syntax)
-</pre>
-   
 
 ### How to build
 #### Dependencies:
@@ -60,37 +46,49 @@ in order to build on other OS, the easiest way would be to [install QT](https://
 
 ### How to use it
 <pre>
-Syntax: ngPost (options)? (-i "file or directory to upload")+
-	--help              : Help: display syntax
-	-v or --version     : app version
-	-c or --conf        : use configuration file (if not provided, we try to load $HOME/.ngPost)
-	--disp_progress     : display cmd progress: NONE (default), BAR or FILES
-	-d or --debug       : display some debug logs
-	-i or --input       : input file to upload (single file or directory), you can use it multiple times
-	-o or --output      : output file path (nzb)
-	-t or --thread      : number of Threads (the connections will be distributed amongs them)
-	-x or --obfuscate   : obfuscate the subjects of the articles (CAREFUL you won't find your post if you lose the nzb file)
-	-g or --groups      : newsgroups where to post the files (coma separated without space)
-	-m or --meta        : extra meta data in header (typically "password=qwerty42")
-	-f or --from        : poster email (random one if not provided)
+Syntax: ngPost (options)? (-i <file or directory to upload>)+
+	--help             : Help: display syntax
+	-v or --version    : app version
+	-c or --conf       : use configuration file (if not provided, we try to load $HOME/.ngPost)
+	--disp_progress    : display cmd progress: NONE (default), BAR or FILES
+	-d or --debug      : display some debug logs
+	-i or --input      : input file to upload (single file or directory), you can use it multiple times
+	-o or --output     : output file path (nzb)
+	-t or --thread     : number of Threads (the connections will be distributed amongs them)
+	-x or --obfuscate  : obfuscate the subjects of the articles (CAREFUL you won't find your post if you lose the nzb file)
+	-g or --groups     : newsgroups where to post the files (coma separated without space)
+	-m or --meta       : extra meta data in header (typically "password=qwerty42")
+	-f or --from       : poster email (random one if not provided)
 	-a or --article_size: article size (default one: 716800)
-	-z or --msg_id      : msg id signature, after the @ (default one: ngPost)
-	-r or --retry       : number of time we retry to an Article that failed (default: 5)
+	-z or --msg_id     : msg id signature, after the @ (default one: ngPost)
+	-r or --retry      : number of time we retry to an Article that failed (default: 5)
+
+// for compression and par2 support
+	--tmp_dir          : temporary folder where the compressed files and par2 will be stored
+	--rar_path         : RAR absolute file path (external application)
+	--rar_size         : size in MB of the RAR volumes (0 by default meaning NO split)
+	--par2_pct         : par2 redundancy percentage (0 by default meaning NO par2 generation)
+	--par2_path        : par2 absolute file path (in case of self compilation of ngPost)
+	--compress         : compress inputs using RAR
+	--gen_name         : generate random RAR name (to be used with --compress)
+	--gen_pass         : generate random RAR password (to be used with --compress)
+	--gen_par2         : generate par2 (to be used with --compress)
 
 // without config file, you can provide all the parameters to connect to ONE SINGLE server
-	-h or --host        : NNTP server hostname (or IP)
-	-P or --port        : NNTP server port
-	-s or --ssl         : use SSL
-	-u or --user        : NNTP server username
-	-p or --pass        : NNTP server password
-	-n or --connection  : number of NNTP connections
+	-h or --host       : NNTP server hostname (or IP)
+	-P or --port       : NNTP server port
+	-s or --ssl        : use SSL
+	-u or --user       : NNTP server username
+	-p or --pass       : NNTP server password
+	-n or --connection : number of NNTP connections
 
 Examples:
+  - with compression, filename obfuscation, random password and par2: ngPost -i /tmp/file1 -i /tmp/folder1 -o /nzb/myPost.nzb --compress --gen_name --gen_pass --gen_par2
   - with config file: ngPost -c ~/.ngPost -m "password=qwerty42" -f ngPost@nowhere.com -i /tmp/file1 -i /tmp/file2 -i /tmp/folderToPost1 -i /tmp/folderToPost2
-  - with all params:  ngPost -t 1 -m "password=qwerty42" -m "metaKey=someValue" -h news.newshosting.com -P 443 -s -u user -p pass -n 30 -f ngPost@nowhere.com             -g "alt.binaries.test,alt.binaries.test2" -a 64000 -i /tmp/folderToPost -o /tmp/folderToPost.nzb
+  - with all params:  ngPost -t 1 -m "password=qwerty42" -m "metaKey=someValue" -h news.newshosting.com -P 443 -s -u user -p pass -n 30 -f ngPost@nowhere.com  -g "alt.binaries.test,alt.binaries.test2" -a 64000 -i /tmp/folderToPost -o /tmp/folderToPost.nzb
 
-If you don't provide the output file (nzb file), we will create it in the nzbPath with the name of the last file or folder given in the command line.
-so in the first example above, the nzb would be: /tmp/folderToPost2.nzb
+If you don't provide the output file (nzb file), we will create it in the nzbPath with the name of the first file or folder given in the command line.
+so in the second example above, the nzb would be: /tmp/file1.nzb
 </pre>
 
 ### Portable release (Linux)

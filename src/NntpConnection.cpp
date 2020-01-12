@@ -33,7 +33,6 @@
 #include <QFile>
 #include <QAbstractSocket>
 #include <QSslCipher>
-#include <QThread>
 
 int NntpConnection::sSocketTimeoutMs = 5000;
 
@@ -44,7 +43,8 @@ NntpConnection::NntpConnection(NgPost *ngPost, int id, const NntpServerParams &s
     _logPrefix(QString("NntpCon #%1").arg(_id)),
     _postingState(PostingState::NOT_CONNECTED),
     _currentArticle(nullptr),
-    _nbErrors(0)
+    _nbErrors(0),
+    _threadName()
 #ifndef __USE_MUTEX__
     ,_articles
 #endif
@@ -366,36 +366,10 @@ void NntpConnection::onReadyRead()
 }
 
 
-void NntpConnection::_log(const char *aMsg) const
-{
-    emit log(QString("[%1][%2] %3").arg(QThread::currentThread()->objectName()).arg(_logPrefix).arg(aMsg));
-}
-void NntpConnection::_log(const QString &aMsg) const
-{
-    emit log(QString("[%1][%2] %3").arg(QThread::currentThread()->objectName()).arg(_logPrefix).arg(aMsg));
-}
-void NntpConnection::_log(const std::string &aMsg) const
-{
-    emit log(QString("[%1][%2] %3").arg(QThread::currentThread()->objectName()).arg(_logPrefix).arg(QString::fromStdString(aMsg)));
-}
-
-void NntpConnection::_error(const char *aMsg) const
-{
-    emit error(QString("[%1][%2] %3").arg(QThread::currentThread()->objectName()).arg(_logPrefix).arg(aMsg));
-}
-void NntpConnection::_error(const QString &aMsg) const
-{
-    emit error(QString("[%1][%2] %3").arg(QThread::currentThread()->objectName()).arg(_logPrefix).arg(aMsg));
-}
-void NntpConnection::_error(const std::string &aMsg) const
-{
-    emit error(QString("[%1][%2] %3").arg(QThread::currentThread()->objectName()).arg(_logPrefix).arg(QString::fromStdString(aMsg)));
-}
-
 void NntpConnection::_sendNextArticle()
 {
 #ifdef __USE_MUTEX__
-    _currentArticle = _ngPost->getNextArticle();
+    _currentArticle = _ngPost->getNextArticle(_threadName);
     if (_currentArticle)
     {
         _postingState = PostingState::SENDING_ARTICLE;
