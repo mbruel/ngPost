@@ -34,7 +34,7 @@
 #include <iostream>
 #include "hmi/MainWindow.h"
 
-
+#define NB_ARTICLES_TO_PREPARE_PER_CONNECTION 2
 
 const QString NgPost::sAppName     = "ngPost";
 const QString NgPost::sVersion     = QString::number(APP_VERSION);
@@ -846,7 +846,12 @@ void NgPost::_log(const QString &aMsg, bool newline) const
     if (_hmi)
         _hmi->log(aMsg, newline);
     else
-        _cout << aMsg << "\n" << flush;
+    {
+        _cout << aMsg;
+        if (newline)
+            _cout << "\n";
+        _cout << flush;
+    }
 }
 
 void NgPost::_error(const QString &error) const
@@ -859,7 +864,7 @@ void NgPost::_error(const QString &error) const
 
 void NgPost::_prepareArticles()
 {
-    int nbPreparedArticlePerConnection = 0;
+    int nbPreparedArticlePerConnection = NB_ARTICLES_TO_PREPARE_PER_CONNECTION;
 
 #ifdef __USE_MUTEX__
     int nbArticlesToPrepare = nbPreparedArticlePerConnection * _nntpConnections.size();
@@ -1713,7 +1718,7 @@ int NgPost::compressFiles(const QString &cmdRar,
     _extProc->waitForFinished(-1);
     int exitCode = _extProc->exitCode();
     if (_debug)
-        _log(tr("rar exit code: %1\n").arg(exitCode));
+        _log(tr("=> rar exit code: %1\n").arg(exitCode));
     else
         _log("");
 
@@ -1800,7 +1805,7 @@ int NgPost::_compressFiles(const QString &cmdRar,
     _extProc->waitForFinished(-1);
     int exitCode = _extProc->exitCode();
     if (_debug)
-        _log(tr("rar exit code: %1\n").arg(exitCode));
+        _log(tr("=> rar exit code: %1\n").arg(exitCode));
     else
         _log("");
 
@@ -1965,7 +1970,7 @@ void NgPost::_showVersionASCII() const
 bool NgPost::canCompress() const
 {
     //1.: the _tmp_folder must be writable
-    if (_checkTmpFolder())
+    if (!_checkTmpFolder())
         return false;
 
     //2.: check _rarPath is executable
@@ -1982,7 +1987,7 @@ bool NgPost::canCompress() const
 bool NgPost::canGenPar2() const
 {
     //1.: the _tmp_folder must be writable
-    if (_checkTmpFolder())
+    if (!_checkTmpFolder())
         return false;
 
     //2.: check _ is executable
