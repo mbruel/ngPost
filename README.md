@@ -1,14 +1,14 @@
 # ngPost
 
-command line usenet poster for binaries developped in C++/QT</br>
+command line / GUI Usenet poster for binaries developped in C++/QT</br>
 it is designed to be as fast as possible and offer all the main features to post data easily and safely.</br>
-since v1.1, a minimalist GUI has been added on request
 
-Releases are available for: Linux 64bit, Windows (both 32bit and 64bit), MacOS. It will soon be available for Android...
+Releases are available for: Linux 64bit, Windows (both 32bit and 64bit), MacOS. It will soon be available for Raspbian, Android then iOS...
 
 Here are the main features and advantages of ngPost:
 -   **full obfuscation of the Article Header** : the Subject will be a UUID (as the msg-id) and a random Poster will be used. **Be Careful**, using this, you won't be able to find your post on Usenet (or any Indexers) if you lose the NZB file. But using this method is **completely safe**, **no need to obfuscate your files or even use a password**.
 -   **compress using RAR** (external command) with random **name obfuscation** and password and **generate par2** before posting
+-   **par2 is included in the package** but you can use another tool (like Multipar) if you wish using the PAR2_CMD and PAR2_ARGS keywords in the config file
 -   support **multiple files** and **multiple folders**
 -   support **several servers** (using config file or the HMI) with each **several connections** (supporting ssl)
 -   spread those connection on **several threads**. By default the number of cores of the station but you can set the number if you fancy.
@@ -41,12 +41,12 @@ you can copy it somewhere in your PATH so it will be accessible from anywhere
 
  
 As it is made in C++/QT, you can build it and run it on any OS (Linux / Windows / MacOS / Android) <br/>
-releases have only been made for Linux x64 and Windows x64 (for 7 and above)<br/>
+releases have only been made for Linux x64 and Windows x64 (for 7 and above) and MacOS (<br/>
 in order to build on other OS, the easiest way would be to [install QT](https://www.qt.io/download) and load the project in QtCreator<br/>
 
 ### How to use it
 <pre>
-Syntax: ngPost (options)? (-i <file or directory to upload>)+
+Syntax: ngPost (options)? (-i &lt;file or directory to upload&gt;)+
 	--help             : Help: display syntax
 	-v or --version    : app version
 	-c or --conf       : use configuration file (if not provided, we try to load $HOME/.ngPost)
@@ -70,9 +70,13 @@ Syntax: ngPost (options)? (-i <file or directory to upload>)+
 	--par2_pct         : par2 redundancy percentage (0 by default meaning NO par2 generation)
 	--par2_path        : par2 absolute file path (in case of self compilation of ngPost)
 	--compress         : compress inputs using RAR
+	--gen_par2         : generate par2 (to be used with --compress)
+	--rar_name         : provide the RAR file name (to be used with --compress)
+	--rar_pass         : provide the RAR password (to be used with --compress)
 	--gen_name         : generate random RAR name (to be used with --compress)
 	--gen_pass         : generate random RAR password (to be used with --compress)
-	--gen_par2         : generate par2 (to be used with --compress)
+	--length_name      : length of the random RAR name (to be used with --gen_name), default: 17
+	--length_pass      : length of the random RAR password (to be used with --gen_pass), default: 13
 
 // without config file, you can provide all the parameters to connect to ONE SINGLE server
 	-h or --host       : NNTP server hostname (or IP)
@@ -93,22 +97,15 @@ so in the second example above, the nzb would be: /tmp/file1.nzb
 
 ### Portable release (Linux)
 if you don't want to build it and install the dependencies, you can also the portable release that includes everything.<br/>
-- download [ngPost_v1.7-x86_64.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v1.7-x86_64.AppImage)
-- chmod 755 ngPost_v1.7-x86_64.AppImage
+- download [ngPost_v2.1-x86_64.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v2.1-x86_64.AppImage)
+- chmod 755 ngPost_v2.1-x86_64.AppImage
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
-<u>Notes for older releases:</u>
-- download the latest release [ngPost_v1.1_linux_x86_64.tar.bz2](https://github.com/mbruel/ngPost/raw/master/release/old/ngPost_v1.1_linux_x86_64.tar.bz2)
-- decompress it (tar xjvf ngPost_v1.1_linux_x86_64.tar.bz2)
-- use **ngPost.sh** or **postFile.sh** as they will set the required environment variables (LD_LIBRARY_PATH and QT_PLUGIN_PATH)
-
-**ngPost.sh** uses the exact same arguments than ngPost (cf the above section)</br>
-**postFile.sh** is a handy script that can only takes 2 arguments: -c for the config file and -i for a single input file that will be rar and par2 before posting
 
 
 ### Windows installer
-- just use the packager [ngPost_1.7_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_1.7_x64_setup.exe) or [ngPost_1.7_x86_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_1.7_x86_setup.exe) for the 32bit version
+- just use the packager [ngPost_2.1_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_2.1_x64_setup.exe) or [ngPost_2.1_x86_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_2.1_x86_setup.exe) for the 32bit version
 - edit **ngPost.conf** (in the installation folder) to add your server settings (you can put several). 
 - launch **ngPost.exe** (GUI version)
 - or you can use it with the command line: **ngPost.exe** -i "your file or directory"
@@ -120,13 +117,13 @@ By default:
 
 
 ### MacOS release built on High Sierra 9v10.13)
-- download [ngPost_v1.7.dmg](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v1.7.dmg)
+- download [ngPost_v2.1.dmg](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v2.1.dmg)
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
 
 ### Minimalist GUI
-![ngPost_v1.7](https://raw.githubusercontent.com/mbruel/ngPost/master/pics/ngPost_v1.7.png)
+![ngPost_v2.1](https://raw.githubusercontent.com/mbruel/ngPost/master/pics/ngPost_v2.1.png)
 
 
 ### Alternatives
@@ -167,5 +164,13 @@ A list of Usenet posters from Nyuu github [can be found here](https://github.com
 Here is my email: Matthieu.Bruel@gmail.com
 
 
+### Thanks
+- Uukrull for testing on an unstable version, providing the crash logs and backtraces, suggesting nice features to add to the app
+- demanuel for the dev of NewsUP that was my first poster
+- all ngPost users ;)
 
+
+### Donations
+I'm Freelance nowadays, working on several personal projects, so if you use the app and would like to contribute to the effort, feel free to donate what you can.<br/>
+<br/>
 [![](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=W2C236U6JNTUA&item_name=ngPost&currency_code=EUR)
