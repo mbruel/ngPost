@@ -2,7 +2,7 @@
 
 # ngPost
 
-command line / GUI Usenet poster for binaries developped in C++/QT</br>
+command line / GUI Usenet poster for binaries developped in C++11/Qt5</br>
 it is designed to be as fast as possible and offer all the main features to post data easily and safely.</br>
 since v2.1 it can compress (using your external rar binary) and generate the par2 before posting!<br/>
 
