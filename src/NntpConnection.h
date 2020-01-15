@@ -23,7 +23,9 @@
 #define NNTPCONNECTION_H
 
 #include <QTcpSocket>
+#ifndef __USE_MUTEX__
 #include <QQueue>
+#endif
 
 class NntpServerParams;
 class NntpArticle;

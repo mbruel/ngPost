@@ -67,16 +67,23 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::NB_RETRY,     "retry"},
 
     {Opt::OBFUSCATE,    "obfuscate"},
+    {Opt::INPUT_DIR,    "inputdir"},
+
 
     {Opt::TMP_DIR,      "tmp_dir"},
     {Opt::RAR_PATH,     "rar_path"},
     {Opt::RAR_SIZE,     "rar_size"},
     {Opt::PAR2_PCT,     "par2_pct"},
     {Opt::PAR2_PATH,    "par2_path"},
+    {Opt::PAR2_ARGS,    "par2_args"},
     {Opt::COMPRESS,     "compress"},
     {Opt::GEN_PAR2,     "gen_par2"},
     {Opt::GEN_NAME,     "gen_name"},
     {Opt::GEN_PASS,     "gen_pass"},
+    {Opt::RAR_NAME,     "rar_name"},
+    {Opt::RAR_PASS,     "rar_pass"},
+    {Opt::LENGTH_NAME,  "length_name"},
+    {Opt::LENGTH_PASS,  "length_pass"},
 
 
     {Opt::HOST,         "host"},
@@ -114,9 +121,13 @@ const QList<QCommandLineOption> NgPost::sCmdOptions = {
     { sOptionNames[Opt::PAR2_PCT],            tr( "par2 redundancy percentage (0 by default meaning NO par2 generation)"), sOptionNames[Opt::PAR2_PCT]},
     { sOptionNames[Opt::PAR2_PATH],           tr( "par2 absolute file path (in case of self compilation of ngPost)"), sOptionNames[Opt::PAR2_PCT]},
     { sOptionNames[Opt::COMPRESS],            tr( "compress inputs using RAR")},
+    { sOptionNames[Opt::GEN_PAR2],            tr( "generate par2 (to be used with --compress)")},
+    { sOptionNames[Opt::RAR_NAME],            tr( "provide the RAR file name (to be used with --compress)"), sOptionNames[Opt::RAR_NAME]},
+    { sOptionNames[Opt::RAR_PASS],            tr( "provide the RAR password (to be used with --compress)"), sOptionNames[Opt::RAR_PASS]},
     { sOptionNames[Opt::GEN_NAME],            tr( "generate random RAR name (to be used with --compress)")},
     { sOptionNames[Opt::GEN_PASS],            tr( "generate random RAR password (to be used with --compress)")},
-    { sOptionNames[Opt::GEN_PAR2],            tr( "generate par2 (to be used with --compress)")},
+    { sOptionNames[Opt::LENGTH_NAME],         tr( "length of the random RAR name (to be used with --gen_name), default: %1").arg(sDefaultLengthName), sOptionNames[Opt::LENGTH_NAME]},
+    { sOptionNames[Opt::LENGTH_PASS],         tr( "length of the random RAR password (to be used with --gen_pass), default: %1").arg(sDefaultLengthPass), sOptionNames[Opt::LENGTH_PASS]},
 
 
     // for a single server...
@@ -158,13 +169,15 @@ NgPost::NgPost(int &argc, char *argv[]):
     _timeStart(), _totalSize(0),
     _meta(), _grpList(),
     _nbConnections(sDefaultNumberOfConnections), _nbThreads(QThread::idealThreadCount()),
-    _socketTimeOut(sDefaultSocketTimeOut), _nzbPath(sDefaultNzbPath),
+    _socketTimeOut(sDefaultSocketTimeOut), _nzbPath(sDefaultNzbPath), _nzbPathConf(sDefaultNzbPath),
     _nbArticlesUploaded(0), _nbArticlesFailed(0),
     _uploadedSize(0), _nbArticlesTotal(0), _progressTimer(), _refreshRate(sDefaultRefreshRate),
     _stopPosting(0x0), _noMoreFiles(0x0),
     _extProc(nullptr), _compressDir(nullptr),
-    _tmpPath(), _rarPath(), _rarSize(0), _par2Pct(0), _par2Path(),
-    _doCompress(false), _doPar2(false), _genName(), _genPass()
+    _tmpPath(), _rarPath(), _rarSize(0), _par2Pct(0), _par2Path(), _par2Args(),
+    _doCompress(false), _doPar2(false), _genName(), _genPass(),
+    _lengthName(sDefaultLengthName), _lengthPass(sDefaultLengthPass),
+    _rarName(), _rarPass(), _inputDir()
 {
     if (_mode == AppMode::CMD)
         _app =  new QCoreApplication(argc, argv);
@@ -173,7 +186,6 @@ NgPost::NgPost(int &argc, char *argv[]):
         _app = new QApplication(argc, argv);
         _hmi = new MainWindow(this);
         _hmi->setWindowTitle(QString("%1_v%2").arg(sAppName).arg(sVersion));
-        _dispProgressBar = false;
     }
 
     QThread::currentThread()->setObjectName(sMainThreadName);
@@ -189,6 +201,7 @@ NgPost::NgPost(int &argc, char *argv[]):
 #else
     par2Embedded = QString("%1/par2").arg(qApp->applicationDirPath());
 #endif
+
     QFileInfo fi(par2Embedded);
     if (fi.exists() && fi.isFile() && fi.isExecutable())
         _par2Path = par2Embedded;
@@ -215,16 +228,17 @@ void NgPost::_finishPosting()
 {
     _stopPosting = 0x1;
 
-    if (_dispProgressBar)
+    if (_hmi || _dispProgressBar)
         disconnect(&_progressTimer, &QTimer::timeout, this, &NgPost::onRefreshProgressBar);
     if (!_timeStart.isNull())
     {
         _nbArticlesUploaded = _nbArticlesTotal; // we might not have processed the last onArticlePosted
         _uploadedSize       = _totalSize;
-        if (_dispProgressBar)
+        if (_hmi || _dispProgressBar)
         {
             onRefreshProgressBar();
-            std::cout << std::endl;
+            if (!_hmi)
+                std::cout << std::endl;
         }
     }
 
@@ -305,13 +319,14 @@ void NgPost::stopPosting()
     qApp->processEvents();
 
 
-    if (_dispProgressBar)
+    if (_hmi || _dispProgressBar)
     {
         disconnect(&_progressTimer, &QTimer::timeout, this, &NgPost::onRefreshProgressBar);
         if (!_timeStart.isNull())
         {
             onRefreshProgressBar();
-            std::cout << std::endl;
+            if (!_hmi)
+                std::cout << std::endl;
         }
     }
 
@@ -389,6 +404,11 @@ bool NgPost::startPosting()
     _file               = nullptr;
     _articles.clear();
 
+    if (_nbThreads < 1)
+        _nbThreads = 1;
+    else if (_nbThreads > QThread::idealThreadCount())
+        _nbThreads = QThread::idealThreadCount();
+
 
     if (!_nzb->open(QIODevice::WriteOnly))
     {
@@ -413,12 +433,10 @@ bool NgPost::startPosting()
         _nzbStream << flush;
     }
 
-    int  nbTh = nbThreads(), nbCon = _createNntpConnections();
-
-
+    int  nbTh = _nbThreads, nbCon = _createNntpConnections();
     if (!nbCon)
     {
-        qCritical() << "Error: there are no NntpConnection...";
+        _error("Error: there are no NntpConnection...");
         return false;
     }
 
@@ -456,7 +474,7 @@ bool NgPost::startPosting()
     // Prepare 2 Articles for each connections
     _prepareArticles();
 
-    if (_dispProgressBar)
+    if (_hmi || _dispProgressBar)
     {
         connect(&_progressTimer, &QTimer::timeout, this, &NgPost::onRefreshProgressBar, Qt::DirectConnection);
         _progressTimer.start(_refreshRate);
@@ -868,25 +886,25 @@ void NgPost::_prepareArticles()
 
 #ifdef __USE_MUTEX__
     int nbArticlesToPrepare = nbPreparedArticlePerConnection * _nntpConnections.size();
-#ifdef __DEBUG__
+  #ifdef __DEBUG__
     _cout << "[NgPost::_prepareArticles] >>>> preparing " << nbPreparedArticlePerConnection
           << " articles for each connections. Nb cons = " << _nntpConnections.size()
           << " => should prepare " << nbArticlesToPrepare << " articles!\n";
-#endif
+  #endif
     for (int i = 0; i < nbArticlesToPrepare ; ++i)
     {
         if (!_prepareNextArticle(sMainThreadName))
         {
-#ifdef __DEBUG__
+  #ifdef __DEBUG__
             _cout << "[NgPost::_prepareArticles] No more Articles to produce after i = " << i << "\n";
-#endif
+  #endif
             break;
         }
     }
-#ifdef __DEBUG__
+  #ifdef __DEBUG__
     _cout << "[NgPost::_prepareArticles] <<<<< finish preparing "
           << ", current article queue size: " << _articles.size() << "\n" << flush;
-#endif
+  #endif
 #else
     for (int i = 0 ; i < nbPreparedArticlePerConnection ; ++i)
     {
@@ -1233,9 +1251,25 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     if (parser.isSet(sOptionNames[Opt::GEN_PASS]))
         _genPass = true;
 
+    if (parser.isSet(sOptionNames[Opt::RAR_NAME]))
+        _rarName = parser.value(sOptionNames[Opt::RAR_NAME]);
+    if (parser.isSet(sOptionNames[Opt::RAR_PASS]))
+        _rarPass = parser.value(sOptionNames[Opt::RAR_PASS]);
 
-
-
+    if (parser.isSet(sOptionNames[Opt::LENGTH_NAME]))
+    {
+        bool ok;
+        uint nb = parser.value(sOptionNames[Opt::LENGTH_NAME]).toUInt(&ok);
+        if (ok)
+            _lengthName = nb;
+    }
+    if (parser.isSet(sOptionNames[Opt::LENGTH_PASS]))
+    {
+        bool ok;
+        uint nb = parser.value(sOptionNames[Opt::LENGTH_PASS]).toUInt(&ok);
+        if (ok)
+            _lengthPass = nb;
+    }
 
 
 
@@ -1334,23 +1368,23 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         }
     }
 
-    QString archiveName = _nzbName;
+    if (_rarName.isEmpty())
+        _rarName = _nzbName;
     if (_doCompress)
     {
         if (!canCompress())
             return false;
 
         if (_genName)
-            archiveName = randomPass(17);
+            _rarName = randomPass(_lengthName);
 
-        QString rarPass;
         if (_genPass)
         {
-            rarPass = randomPass();
-            _meta.insert("password", rarPass);
+            _rarPass = randomPass(_lengthPass);
+            _meta.insert("password", _rarPass);
         }
 
-        if (_compressFiles(_rarPath, _tmpPath, archiveName, filesPath, rarPass, _rarSize) !=0 )
+        if (_compressFiles(_rarPath, _tmpPath, _rarName, filesPath, _rarPass, _rarSize) !=0 )
             return false;
     }
     if (_doPar2)
@@ -1358,7 +1392,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         if (!canGenPar2())
             return false;
 
-        if (_genPar2(_tmpPath, archiveName, _par2Pct, filesPath) != 0)
+        if (_genPar2(_tmpPath, _rarName, _par2Pct, filesPath) != 0)
             return false;
     }
 
@@ -1450,7 +1484,10 @@ QString NgPost::_parseConfig(const QString &configPath)
                     {
                         QFileInfo nzbFI(val);
                         if (nzbFI.exists() && nzbFI.isDir() && nzbFI.isWritable())
-                            _nzbPath = val;
+                        {
+                            _nzbPath     = val;
+                            _nzbPathConf = val;
+                        }
                         else
                             err += tr("the nzbPath '%1' is not writable...\n").arg(val);
                     }
@@ -1506,6 +1543,8 @@ QString NgPost::_parseConfig(const QString &configPath)
                     }
 
 
+                    else if (opt == sOptionNames[Opt::INPUT_DIR])
+                        _inputDir = val;
 
 
 
@@ -1535,7 +1574,20 @@ QString NgPost::_parseConfig(const QString &configPath)
                                 _par2Path = val;
                         }
                     }
-
+                    else if (opt == sOptionNames[Opt::PAR2_ARGS])
+                        _par2Args = val;
+                    else if (opt == sOptionNames[Opt::LENGTH_NAME])
+                    {
+                        uint nb = val.toUInt(&ok);
+                        if (ok)
+                            _lengthName = nb;
+                    }
+                    else if (opt == sOptionNames[Opt::LENGTH_PASS])
+                    {
+                        uint nb = val.toUInt(&ok);
+                        if (ok)
+                            _lengthPass = nb;
+                    }
 
 
 
@@ -1645,6 +1697,7 @@ void NgPost::_dumpParams() const
     qDebug() << "[NgPost::_dumpParams]>>>>>>>>>>>>>>>>>>\n"
              << "nbThreads: " << _nbThreads << " nb Inputs: " << _nbFiles
              << ", nzbPath: " << _nzbPath << ", nzbName" << _nzbName
+             << ", inputDir: " << _inputDir
              << "\nnb Servers: " << _nntpServers.size() << ": " << servers
              << "\nfrom: " << _from.c_str() << ", groups: " << _groups.c_str()
              << "\narticleSize: " << sArticleSize
@@ -1656,23 +1709,22 @@ void NgPost::_dumpParams() const
              << ", <rar_size: " << _rarSize << ">"
              << ", <par2_pct: " << _par2Pct << ">"
              << ", <par2_path: " << _par2Path << ">"
+             << ", <par2_args: " << _par2Args << ">"
              << "\ncompress: " << _doCompress << ", doPar2: " << _doPar2
              << ", gen_name: " << _genName << ", genPass: " << _genPass
+             << ", rarName: " << _rarName << ", rarPass: " << _rarPass
+             << ", lengthName: " << _lengthName << ", lengthPass: " << _lengthPass
              << "\n[NgPost::_dumpParams]<<<<<<<<<<<<<<<<<<\n";
 }
 #endif
 
 #include <QProcess>
-int NgPost::compressFiles(const QString &cmdRar,
-                          const QString &tmpFolder,
-                          const QString &archiveName,
+int NgPost::compressFiles(const QString &archiveName,
                           const QStringList &files,
                           const QString &pass,
-                          uint redundancy,
-                          uint volSize,
                           const QString &compressLevel)
 {
-    if (!canCompress() || (redundancy >0 && !canGenPar2()))
+    if (!canCompress() || (_par2Pct >0 && !canGenPar2()))
         return -1;
 
     _extProc = new QProcess(this);
@@ -1680,7 +1732,7 @@ int NgPost::compressFiles(const QString &cmdRar,
     connect(_extProc, &QProcess::readyReadStandardOutput, this, &NgPost::onExtProcReadyReadStandardOutput, Qt::DirectConnection);
 
     // 1.: create archive temporary folder
-    QString archiveTmpFolder = QString("%1/%2").arg(tmpFolder).arg(archiveName);
+    QString archiveTmpFolder = QString("%1/%2").arg(_tmpPath).arg(archiveName);
     _compressDir = new QDir(archiveTmpFolder);
     if (_compressDir->exists())
     {
@@ -1704,17 +1756,17 @@ int NgPost::compressFiles(const QString &cmdRar,
     QStringList args = {"a", "-idp", "-ep1", compressLevel, QString("%1/%2.rar").arg(archiveTmpFolder).arg(archiveName)};
     if (!pass.isEmpty())
         args << QString("-hp%1").arg(pass);
-    if (volSize > 0)
-        args << QString("-v%1m").arg(volSize);
-    args << files;
+    if (_rarSize > 0)
+        args << QString("-v%1m").arg(_rarSize);
+    args << "-r" << files;
 
     // 3.: launch rar
     if (_debug)
-        _log(tr("Compressing files: %1 %2\n").arg(cmdRar).arg(args.join(" ")));
+        _log(tr("Compressing files: %1 %2\n").arg(_rarPath).arg(args.join(" ")));
     else
         _log("Compressing files...\n");
     _limitProcDisplay = false;
-    _extProc->start(cmdRar, args);
+    _extProc->start(_rarPath, args);
     _extProc->waitForFinished(-1);
     int exitCode = _extProc->exitCode();
     if (_debug)
@@ -1724,18 +1776,22 @@ int NgPost::compressFiles(const QString &cmdRar,
 
     if (exitCode != 0)
         _error(QString("Error during compression: %1").arg(exitCode));
-    else if (redundancy > 0)
+    else if (_par2Pct > 0)
     {// 4.: create the par2 as required
         args.clear();
-        //par2 c -s768000 -r8 /tmp/ngPostArchive/ngPostArchive.par2 /tmp/ngPostArchive/ngPostArchive.7z*
-        args << "c" << "-s768000" << QString("-r%1").arg(redundancy)
-             << QString("%1/%2.par2").arg(archiveTmpFolder).arg(archiveName)
-             << QString("%1/%2.rar").arg(archiveTmpFolder).arg(archiveName) // in case only one file
-             << QString("%1/%2.part*").arg(archiveTmpFolder).arg(archiveName);
+        //par2 c  -r8 /tmp/ngPostArchive/ngPostArchive.par2 /tmp/ngPostArchive/ngPostArchive.7z*
+        if (_par2Args.isEmpty())
+            args << "c" << "-l" << "-m1024" << QString("-r%1").arg(_par2Pct);
+        else
+            args << _par2Args.split(" ");
+
+        args << QString("%1/%2.par2").arg(archiveTmpFolder).arg(archiveName)
+             << QString("%1/%2*rar").arg(archiveTmpFolder).arg(archiveName);
 
         if (_debug)
         {
-            args << "-q"; // remove the progress bar
+            if (_par2Args.isEmpty())
+                args << "-q"; // remove the progress bar
             _log(tr("Generating par2: %1 %2\n").arg(_par2Path).arg(args.join(" ")));
         }
         else
@@ -1744,7 +1800,7 @@ int NgPost::compressFiles(const QString &cmdRar,
         _nbProcDisp = 0;
         _extProc->start(_par2Path, args);
         _extProc->waitForFinished(-1);
-        int exitCode = _extProc->exitCode();
+        exitCode = _extProc->exitCode();
         if (_debug)
             _log(tr("=> par2 exit code: %1\n").arg(exitCode));
         else
@@ -1793,7 +1849,7 @@ int NgPost::_compressFiles(const QString &cmdRar,
         args << QString("-hp%1").arg(pass);
     if (volSize > 0)
         args << QString("-v%1m").arg(volSize);
-    args << files;
+    args << "-r" << files;
 
     // 3.: launch rar
     if (_debug || !_hmi)
@@ -1832,17 +1888,21 @@ int NgPost::_genPar2(const QString &tmpFolder,
                      uint redundancy,
                      const QStringList &files)
 {
+    Q_UNUSED(files)
+
     QString archiveTmpFolder;
-    QStringList args = { "c", "-s768000", QString("-r%1").arg(redundancy) };
+    QStringList args;
+    if (_par2Args.isEmpty())
+        args << "c" << "-l" << "-m1024" << QString("-r%1").arg(redundancy);
+    else
+        args << _par2Args.split(" ");
 
     // we've already compressed => we gen par2 for the files in the archive folder
     if (_extProc)
     {
         archiveTmpFolder = QString("%1/%2").arg(tmpFolder).arg(archiveName);
-
         args << QString("%1/%2.par2").arg(archiveTmpFolder).arg(archiveName)
-             << QString("%1/%2.rar").arg(archiveTmpFolder).arg(archiveName) // in case only one file
-             << QString("%1/%2.part*").arg(archiveTmpFolder).arg(archiveName);
+             << QString("%1/%2*rar").arg(archiveTmpFolder).arg(archiveName);
     }
     else
     {
@@ -2002,6 +2062,145 @@ bool NgPost::canGenPar2() const
 }
 
 
+void NgPost::saveConfig()
+{
+#if defined(WIN32) || defined(__MINGW64__)
+    QString conf = sDefaultConfig;
+#else
+    QString conf = QString("%1/%2").arg(getenv("HOME")).arg(sDefaultConfig);
+#endif
+
+    QFile file(conf);
+    if (file.open(QIODevice::WriteOnly|QIODevice::Text))
+    {
+        QTextStream stream(&file);
+        stream << "# ngPost configuration file\n"
+               << "#\n"
+               << "#\n"
+               << "\n"
+               << "## destination folder for all your nzb\n"
+               << "## if you don't put anything, the nzb will be generated in the folder of ngPost on Windows and in /tmp on Linux\n"
+               << "## this will be overwritten if you use the option -o with the full path of the nzb\n"
+               << "nzbPath  = " << (_nzbPath.isEmpty() ? _nzbPathConf : _nzbPath) << "\n"
+               << "\n"
+               << "## Default folder to open to select files from the HMI\n"
+               << "inputDir = " << _inputDir << "\n"
+               << "\n"
+               << "groups   = " << _groups.c_str() << "\n"
+               << "\n"
+               << "\n"
+               << "## uncomment the next line if you want a fixed uploader email (in the nzb and in the header of each articles)\n"
+               << "## if you let it commented, we'll generate a random email for the whole post\n"
+               << "#from     = someone@ngPost.com\n"
+               << "\n"
+               << "\n"
+               << "## uncomment the next line to limit the number of threads,  (by default it'll use the number of cores)\n"
+               << "## all the connections are spread equally on those posting threads\n"
+               << "thread  =  " << _nbThreads << "\n"
+               << "\n"
+               << "\n"
+               << "## How to display progress in command line: NONE, BAR, FILES\n"
+               << (_dispProgressBar  ? "" : "#") << "DISP_PROGRESS = BAR\n"
+               << (_dispFilesPosting ? "" : "#") << "DISP_PROGRESS = FILES\n"
+               << "\n"
+               << "\n"
+               << "## suffix of the msg_id for all the articles (cf nzb file)\n"
+               << (_articleIdSignature == "ngPost" ? "#msg_id  =  ngPost\n" : QString("msg_id  =  %1\n").arg(_articleIdSignature.c_str()))
+               << "\n"
+               << "## article size (default 700k)\n"
+               << "article_size = " << sArticleSize << "\n"
+               << "\n"
+               << "## number of retry to post an Article in case of failure (probably due to an already existing msg-id)\n"
+               << "retry = " << NntpArticle::nbMaxTrySending() << "\n"
+               << "\n"
+               << "\n"
+               << "## uncomment the following line to obfuscate the subjects of each Article\n"
+               << "## /!\\ CAREFUL you won't find your post if you lose the nzb file /!\\\n"
+               << (_obfuscateArticles ? "" : "#") << "obfuscate = article\n"
+               << "\n"
+               << "\n"
+               << "\n"
+               << "\n"
+               << "##############################################################\n"
+               << "##           Compression and par2 section                   ##\n"
+               << "##############################################################\n"
+               << "\n"
+               << "## temporary folder where the compressed files and par2 will be stored\n"
+               << "## so we can post directly a compressed (obfuscated or not) archive of the selected files\n"
+               << "## /!\\ The directory MUST HAVE WRITE PERMISSION /!\\\n"
+               << "## this is set for Linux environment, Windows users MUST change it\n"
+               << "TMP_DIR = " << _tmpPath << "\n"
+               << "\n"
+               << "## RAR absolute file path (external application)\n"
+               << "## /!\\ The file MUST EXIST and BE EXECUTABLE /!\\\n"
+               << "## this is set for Linux environment, Windows users MUST change it\n"
+               << "RAR_PATH = " << _rarPath << "\n"
+               << "\n"
+               << "## size in MB of the RAR volumes (0 by default meaning NO split)\n"
+               << "## feel free to change the value or to comment the next line if you don't want to split the archive\n"
+               << "RAR_SIZE = " << _rarSize << "\n"
+               << "\n"
+               << "## par2 redundancy percentage (0 by default meaning NO par2 generation)\n"
+               << "PAR2_PCT = " << _par2Pct << "\n"
+               << "\n"
+               << "## par2 (or alternative) absolute file path\n"
+               << "## this is only useful if you compile from source (as par2 is included on Windows and the AppImage)\n"
+               << "## or if you wish to use an alternative to par2 (for exemple Multipar on Windows)\n"
+               << "## (in that case, you may need to set also PAR2_ARGS)\n"
+               << "PAR2_PATH = " << _par2Path << "\n"
+               << "#PAR2_PATH = par2j64.exe\n"
+               << "\n"
+               << "## fixed parameters for the par2 (or alternative) command\n"
+               << "## you could for exemple use Multipar on Windows\n"
+               << "#PAR2_ARGS = c -l -m1024 -r8 -s768000\n"
+               << "#PAR2_ARGS = create /rr8 /lc40 /lr /rd2\n"
+               << (_par2Args.isEmpty() ? "" : QString("PAR2_ARGS = %1\n").arg(_par2Args))
+               << "\n"
+               << "\n"
+               << "## length of the random generated archive's file name\n"
+               << "LENGTH_NAME = " << _lengthName << "\n"
+               << "\n"
+               << "## length of the random archive's passsword\n"
+               << "LENGTH_PASS = "<< _lengthPass << "\n"
+               << "\n"
+               << "\n"
+               << "\n"
+               << "\n"
+               << "##############################################################\n"
+               << "##                   servers section                        ##\n"
+               << "##############################################################\n"
+               << "\n";
+
+        for (NntpServerParams *param : _nntpServers)
+        {
+            stream << "[server]\n"
+                   << "host = " << param->host << "\n"
+                   << "port = " << param->port << "\n"
+                   << "ssl  = " << (param->useSSL ? "true" : "false") << "\n"
+                   << "user = " << param->user.c_str() << "\n"
+                   << "pass = " << param->pass.c_str() << "\n"
+                   << "connection = " << param->nbCons << "\n"
+                   << "\n\n";
+        }
+        stream << "## You can add as many server if you have several providers by adding other \"server\" sections\n"
+               << "#[server]\n"
+               << "#host = news.otherprovider.com\n"
+               << "#port = 563\n"
+               << "#ssl  = true\n"
+               << "#user = myOtherUser\n"
+               << "#pass = myOtherPass\n"
+               << "#connection = 15\n"
+               << "\n";
+
+
+        _log(tr("the config '%1' file has been updated").arg(conf));
+        file.close();
+    }
+    else
+        _error(tr("Error: Couldn't write default configuration file: ").arg(conf));
+
+}
+
 const QString NgPost::sNgPostASCII = QString("\
                    __________               __\n\
        ____    ____\\______   \\____  _______/  |_\n\
@@ -2015,8 +2214,8 @@ const QString NgPost::sNgPostDesc = QString("%1 is a CMD/GUI Usenet binary poste
 It is designed to be as fast as possible and offer all the main features to post data easily and safely.\n\n\
 Here are the main features and advantages of ngPost:\n\
     - spread multiple connections (from multiple servers) on several threads\n\
-    - post several files or directories (you can put several times the option -i)\n\
-    - automate rar compression and par2 generation with obfuscation\n\
+    - post several files and/or directories\n\
+    - automate rar compression with obfuscation and par2 generation\n\
     - generate the nzb\n\
     - full Article obfuscation: unique feature making all Aricles completely unrecognizable without the nzb\n\
     - ... \n\

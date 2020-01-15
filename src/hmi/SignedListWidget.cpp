@@ -4,7 +4,9 @@
 
 SignedListWidget::SignedListWidget(QWidget *parent) :
     QListWidget(parent),
-    _asciiLbl(new QLabel(this))
+    _asciiLbl(new QLabel(this)),
+    _fileIcon(":/icons/file.png"),
+    _folderIcon(":/icons/folder.png")
 {}
 
 
@@ -14,9 +16,10 @@ void SignedListWidget::setSignature(const QString &str)
     _sizeAscii = _asciiLbl->sizeHint();
 }
 
-void SignedListWidget::addItem2(const QString &label)
+void SignedListWidget::addPath(const QString &path, bool isDir)
 {
-    addItem(label);
+    QListWidgetItem *item = new QListWidgetItem(isDir ? _folderIcon : _fileIcon, path);
+    addItem(item);
     if (_asciiLbl->isVisible())
         _asciiLbl->hide();
 }

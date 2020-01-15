@@ -65,9 +65,10 @@ class NgPost : public QObject
     enum class Opt {HELP = 0, VERSION, CONF, DISP_PROGRESS, DEBUG,
                     INPUT, OUTPUT, NZB_PATH, THREAD,
                     MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY,
-                    OBFUSCATE,
-                    TMP_DIR, RAR_PATH, RAR_SIZE, PAR2_PCT, PAR2_PATH,
-                    COMPRESS, GEN_PAR2, GEN_NAME, GEN_PASS,
+                    OBFUSCATE, INPUT_DIR,
+                    TMP_DIR, RAR_PATH, RAR_SIZE, PAR2_PCT, PAR2_PATH, PAR2_ARGS,
+                    COMPRESS, GEN_PAR2, GEN_NAME, GEN_PASS, LENGTH_NAME, LENGTH_PASS,
+                    RAR_NAME, RAR_PASS,
                     HOST, PORT, SSL, USER, PASS, CONNECTION,
                    };
 
@@ -128,6 +129,7 @@ private:
     int     _nbThreads;     //!< size of the ThreadPool
     int     _socketTimeOut; //!< socket timeout
     QString _nzbPath;       //!< default path where to write the nzb files
+    QString _nzbPathConf;       //!< default path where to write the nzb files
 
     int       _nbArticlesUploaded; //!< number of Articles that have been uploaded (+ failed ones)
     int       _nbArticlesFailed;   //!< number of Articles that failed to be uploaded
@@ -149,12 +151,19 @@ private:
     uint        _rarSize;
     uint        _par2Pct;
     QString     _par2Path;
+    QString     _par2Args;
 
     bool        _doCompress;
     bool        _doPar2;
     bool        _genName;
     bool        _genPass;
 
+    uint        _lengthName;
+    uint        _lengthPass;
+    QString     _rarName;
+    QString     _rarPass;
+
+    QString     _inputDir;
 
 
     static qint64 sArticleSize;
@@ -189,6 +198,9 @@ private:
     static const QString sNgPostDesc;
 
     static const QString sMainThreadName;
+
+    static const uint sDefaultLengthName = 17;
+    static const uint sDefaultLengthPass = 13;
 
 
 public:
@@ -243,6 +255,7 @@ public:
     inline void articleFailed(quint64 size);
 
 
+    void saveConfig();
 signals:
     void scheduleNextArticle();
     void log(QString msg); //!< in case we signal from another thread
@@ -303,13 +316,9 @@ private:
     void _dumpParams() const;
 #endif
 
-    int compressFiles(const QString &cmdRar,
-                      const QString &tmpFolder,
-                      const QString &archiveName,
+    int compressFiles(const QString &archiveName,
                       const QStringList &files,
                       const QString &pass,
-                      uint redundancy = 0,
-                      uint volSize = 0,
                       const QString &compressLevel = "-m0");
 
     int _compressFiles(const QString &cmdRar,
