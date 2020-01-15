@@ -4,6 +4,7 @@
 
 command line / GUI Usenet poster for binaries developped in C++/QT</br>
 it is designed to be as fast as possible and offer all the main features to post data easily and safely.</br>
+since v2.1 it can compress (using your external rar binary) and generate the par2 before posting!<br/>
 
 Releases are available for: Linux 64bit, Windows (both 32bit and 64bit), MacOS. It will soon be available for Raspbian, Android then iOS...
 
