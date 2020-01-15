@@ -457,6 +457,7 @@ void MainWindow::_updateParams()
             _ngPost->_rarSize = val;
     }
     _ngPost->_par2Pct = 0;
+    _ngPost->_doPar2  = _ui->par2CB->isChecked();
     if (_ui->par2CB->isChecked() && !_ui->redundancyEdit->text().isEmpty())
     {
         val = _ui->redundancyEdit->text().toUInt(&ok);

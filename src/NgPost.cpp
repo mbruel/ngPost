@@ -1776,7 +1776,7 @@ int NgPost::compressFiles(const QString &archiveName,
 
     if (exitCode != 0)
         _error(QString("Error during compression: %1").arg(exitCode));
-    else if (_par2Pct > 0)
+    else if (_doPar2)
     {// 4.: create the par2 as required
         args.clear();
         //par2 c  -r8 /tmp/ngPostArchive/ngPostArchive.par2 /tmp/ngPostArchive/ngPostArchive.7z*
