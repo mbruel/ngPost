@@ -73,10 +73,16 @@ private slots:
     void onAddServer();
     void onDelServer();
 
+    void onObfucateToggled(bool checked);
+
     void onSelectFilesClicked();
+    void onSelectFolderClicked();
     void onClearFilesClicked();
     void onCompressCB(bool checked);
     void onGenCompressName();
+    void onCompressPathClicked();
+    void onNzbFileClicked();
+    void onRarPathClicked();
 
 
     void onGenPoster();
@@ -85,6 +91,8 @@ private slots:
 
     void onDebugToggled(bool checked);
     void onAboutClicked();
+
+    void onSaveConfig();
 
     void toBeImplemented();
 
@@ -108,9 +116,10 @@ private:
     int  _serverRow(QObject *delButton);
 
 
-    void _addFile(const QString &fileName, int currentNbFiles);
+    void _addPath(const QString &path, int currentNbFiles, int isDir = false);
     bool _fileAlreadyInList(const QString &fileName, int currentNbFiles) const;
 
+    bool _thereAreFolders() const;
 
     static const QString sGroupBoxStyle;
 };

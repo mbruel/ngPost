@@ -172,6 +172,12 @@ void MainWindow::onPostFiles()
 {
     if (_state == STATE::IDLE)
     {
+        if (_thereAreFolders() && !_ui->compressCB->isChecked())
+        {
+            _ngPost->error(tr("You can't post folders without using compression..."));
+            return;
+        }
+
         _state = STATE::POSTING;
         _updateServers();
         _updateParams();
@@ -184,39 +190,20 @@ void MainWindow::onPostFiles()
             {
                 QString fileName(_ui->filesList->item(i)->text());
                 QFileInfo fileInfo(fileName);
-                if (fileInfo.exists() && fileInfo.isFile())
+                if (fileInfo.exists())
                     filesToCompress << fileName;
             }
 
-            uint rarSize = 0, redundancy = 0, val = 0;
-            bool ok = true;
-            if (!_ui->rarSizeEdit->text().isEmpty())
-            {
-                val = _ui->rarSizeEdit->text().toUInt(&ok);
-                if (ok)
-                    rarSize = val;
-            }
-            if (_ui->par2CB->isChecked() && !_ui->redundancyEdit->text().isEmpty())
-            {
-                val = _ui->redundancyEdit->text().toUInt(&ok);
-                if (ok)
-                    redundancy = val;
-            }
-
             if ( _ngPost->compressFiles(
-                     _ui->rarEdit->text(),
-                     _ui->compressPathEdit->text(),
                      _ui->compressNameEdit->text(),
                      filesToCompress,
-                     _ui->nzbPassEdit->text().toLocal8Bit(),
-                     redundancy,
-                     rarSize
+                     _ui->nzbPassEdit->text().toLocal8Bit()
                      ) == 0){
 
                 _ui->filesList->clear();
                 for (const QFileInfo & file : _ngPost->_compressDir->entryInfoList(QDir::Files, QDir::Name))
                 {
-                    _ui->filesList->addItem(file.absoluteFilePath());
+                    _ui->filesList->addPath(file.absoluteFilePath());
                     if (_ngPost->debugMode())
                         _ngPost->_log(QString("  - %1").arg(file.fileName()));
 
@@ -271,6 +258,12 @@ void MainWindow::onDelServer()
     }
 }
 
+void MainWindow::onObfucateToggled(bool checked)
+{
+    _ui->fromEdit->setEnabled(!checked);
+    _ui->genPoster->setEnabled(!checked);
+}
+
 
 
 void MainWindow::_initServerBox()
@@ -305,12 +298,26 @@ void MainWindow::_initFilesBox()
     _ui->rarSizeEdit->setText(QString::number(_ngPost->_rarSize));
     _ui->rarSizeEdit->setValidator(new QIntValidator(1, 1000000, _ui->rarSizeEdit));
 
-    _ui->redundancyEdit->setText(QString::number(_ngPost->_par2Pct));
-    _ui->redundancyEdit->setValidator(new QIntValidator(1, 100, _ui->redundancyEdit));
+    if (_ngPost->_par2Args.isEmpty())
+    {
+        _ui->redundancyEdit->setText(QString::number(_ngPost->_par2Pct));
+        _ui->redundancyEdit->setValidator(new QIntValidator(1, 100, _ui->redundancyEdit));
+    }
+    else
+    {
+        _ui->redundancyEdit->setEnabled(false);
+        _ui->redundancyEdit->setToolTip(tr("Using PAR2_ARGS from config file: %1").arg(_ngPost->_par2Args));
+    }
+
+    _ui->nameLengthSB->setRange(5, 50);
+    _ui->nameLengthSB->setValue(static_cast<int>(_ngPost->_lengthName));
+    _ui->passLengthSB->setRange(5, 50);
+    _ui->passLengthSB->setValue(static_cast<int>(_ngPost->_lengthPass));
 
     _ui->filesList->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
     connect(_ui->selectFilesButton, &QAbstractButton::clicked, this, &MainWindow::onSelectFilesClicked);
+    connect(_ui->selectFolderButton,&QAbstractButton::clicked, this, &MainWindow::onSelectFolderClicked);
     connect(_ui->clearFilesButton,  &QAbstractButton::clicked, this, &MainWindow::onClearFilesClicked);
 
     connect(_ui->compressCB,        &QAbstractButton::toggled, this, &MainWindow::onCompressCB);
@@ -318,10 +325,10 @@ void MainWindow::_initFilesBox()
 
 
     // MB_TODO
-    connect(_ui->compressPathButton,&QAbstractButton::clicked, this, &MainWindow::toBeImplemented);
-    connect(_ui->rarPathButton,     &QAbstractButton::clicked, this, &MainWindow::toBeImplemented);
+    connect(_ui->compressPathButton,&QAbstractButton::clicked, this, &MainWindow::onCompressPathClicked);
+    connect(_ui->rarPathButton,     &QAbstractButton::clicked, this, &MainWindow::onRarPathClicked);
 
-    connect(_ui->nzbFileButton,     &QAbstractButton::clicked, this, &MainWindow::toBeImplemented);
+    connect(_ui->nzbFileButton,     &QAbstractButton::clicked, this, &MainWindow::onNzbFileClicked);
 
     connect(_ui->aboutButton,       &QAbstractButton::clicked, this, &MainWindow::onAboutClicked);
     connect(_ui->donateButton,      &QAbstractButton::clicked, _ngPost, &NgPost::onDonation);
@@ -334,12 +341,12 @@ void MainWindow::_initFilesBox()
 void MainWindow::_initPostingBox()
 {
     //MB_TODO
-    connect(_ui->saveButton,        &QAbstractButton::clicked, this, &MainWindow::toBeImplemented);
+    connect(_ui->saveButton,        &QAbstractButton::clicked, this, &MainWindow::onSaveConfig);
 
     connect(_ui->genPoster,         &QAbstractButton::clicked, this, &MainWindow::onGenPoster);
     connect(_ui->nzbPassCB,         &QAbstractButton::toggled, this, &MainWindow::onNzbPassToggled);
     connect(_ui->genPass,           &QAbstractButton::clicked, this, &MainWindow::onGenNzbPassword);
-
+    connect(_ui->obfuscateMsgIdCB,  &QAbstractButton::toggled, this, &MainWindow::onObfucateToggled);
 
     _ui->fromEdit->setText(QString::fromStdString(_ngPost->_from));
     _ui->nzbPassCB->setChecked(false);
@@ -423,14 +430,39 @@ void MainWindow::_updateParams()
     if (_ngPost->_nbThreads < 1)
         _ngPost->_nbThreads = 1;
 
-    QFileInfo nzb(_ui->nzbFileEdit->text());
-    _ngPost->_nzbPath = nzb.absolutePath();
-    _ngPost->_nzbName = nzb.completeBaseName();
+    if (!_ui->nzbFileEdit->text().isEmpty())
+    {
+        QFileInfo nzb(_ui->nzbFileEdit->text());
+        if (!nzb.absolutePath().isEmpty())
+            _ngPost->_nzbPath = nzb.absolutePath();
+        _ngPost->_nzbName = nzb.completeBaseName();
+    }
 
     if (_ui->nzbPassEdit->text().isEmpty())
         _ngPost->_meta.remove("password");
     else
         _ngPost->_meta["password"] = _ui->nzbPassEdit->text();
+
+    _ngPost->_lengthName = static_cast<uint>(_ui->nameLengthSB->value());
+    _ngPost->_lengthPass = static_cast<uint>(_ui->passLengthSB->value());
+
+    _ngPost->_rarPath = _ui->rarEdit->text();
+    _ngPost->_tmpPath = _ui->compressPathEdit->text();
+    uint val = 0;
+    _ngPost->_rarSize = 0;
+    if (!_ui->rarSizeEdit->text().isEmpty())
+    {
+        val = _ui->rarSizeEdit->text().toUInt(&ok);
+        if (ok)
+            _ngPost->_rarSize = val;
+    }
+    _ngPost->_par2Pct = 0;
+    if (_ui->par2CB->isChecked() && !_ui->redundancyEdit->text().isEmpty())
+    {
+        val = _ui->redundancyEdit->text().toUInt(&ok);
+        if (ok)
+            _ngPost->_par2Pct = val;
+    }
 }
 
 int MainWindow::_createNntpFiles()
@@ -508,21 +540,21 @@ int MainWindow::_serverRow(QObject *delButton)
     return nbRows;
 }
 
-void MainWindow::_addFile(const QString &fileName, int currentNbFiles)
+void MainWindow::_addPath(const QString &path, int currentNbFiles, int isDir)
 {
     for (int i = 0 ; i < currentNbFiles ; ++i)
     {
-        if (_ui->filesList->item(i)->text() == fileName)
+        if (_ui->filesList->item(i)->text() == path)
         {
-            qDebug() << "[MainWindow::_addFile] we already have the file " << fileName;
+            qDebug() << "[MainWindow::_addFile] we already have the file " << path;
             return;
         }
     }
-    _ui->filesList->addItem2(fileName);
+    _ui->filesList->addPath(path, isDir);
 
     if (_ui->nzbFileEdit->text().isEmpty())
     {
-        QFileInfo fileInfo(fileName);
+        QFileInfo fileInfo(path);
         _ngPost->_nzbName = fileInfo.completeBaseName();
         _ui->nzbFileEdit->setText(_ngPost->nzbPath());
     }
@@ -541,6 +573,17 @@ bool MainWindow::_fileAlreadyInList(const QString &fileName, int currentNbFiles)
     return false;
 }
 
+bool MainWindow::_thereAreFolders() const
+{
+    int currentNbFiles = _ui->filesList->count();
+    for (int i = 0 ; i < currentNbFiles ; ++i)
+    {
+        if (QFileInfo(_ui->filesList->item(i)->text()).isDir())
+            return true;
+    }
+    return false;
+}
+
 void MainWindow::onGenPoster()
 {
     _ui->fromEdit->setText(_ngPost->randomFrom());
@@ -549,12 +592,13 @@ void MainWindow::onGenPoster()
 void MainWindow::onNzbPassToggled(bool checked)
 {
     _ui->nzbPassEdit->setEnabled(checked);
+    _ui->passLengthSB->setEnabled(checked);
     _ui->genPass->setEnabled(checked);
 }
 
 void MainWindow::onGenNzbPassword()
 {
-    _ui->nzbPassEdit->setText(_ngPost->randomPass());
+    _ui->nzbPassEdit->setText(_ngPost->randomPass(static_cast<uint>(_ui->passLengthSB->value())));
 }
 
 void MainWindow::onDebugToggled(bool checked)
@@ -571,6 +615,13 @@ void MainWindow::onAboutClicked()
 {
     AboutNgPost about(_ngPost);
     about.exec();
+}
+
+void MainWindow::onSaveConfig()
+{
+    _updateServers();
+    _updateParams();
+    _ngPost->saveConfig();
 }
 
 void MainWindow::toBeImplemented()
@@ -615,17 +666,17 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
                         QFileInfo fileInfo(path);
                         if (!fileInfo.exists())
                             qDebug() << "[MainWindow::eventFilter] NOT A FILE: " << path;
-                        else if (fileInfo.isFile())
-                            _addFile(path, currentNbFiles);
-                        else if (fileInfo.isDir())
-                        {
-                            QDir dir(fileInfo.absoluteFilePath());
-                            for (const QFileInfo &subFile : dir.entryInfoList(QDir::Files, QDir::Name))
-                            {
-                                if (subFile.isReadable())
-                                    _addFile(subFile.absoluteFilePath(), currentNbFiles);
-                            }
-                        }
+                        else
+                            _addPath(path, currentNbFiles, fileInfo.isDir());
+//                        else if (fileInfo.isDir())
+//                        {
+//                            QDir dir(fileInfo.absoluteFilePath());
+//                            for (const QFileInfo &subFile : dir.entryInfoList(QDir::Files, QDir::Name))
+//                            {
+//                                if (subFile.isReadable())
+//                                    _addFile(subFile.absoluteFilePath(), currentNbFiles);
+//                            }
+//                        }
                     }
 
                 } else if (mimeData->hasUrls()) {
@@ -654,7 +705,7 @@ void MainWindow::dropEvent(QDropEvent *e)
     for (const QUrl &url : e->mimeData()->urls())
     {
         QString fileName = url.toLocalFile();
-        _addFile(fileName, currentNbFiles);
+        _addPath(fileName, currentNbFiles, QFileInfo(fileName).isDir());
     }
 }
 
@@ -669,11 +720,24 @@ void MainWindow::onSelectFilesClicked()
 
     QStringList files = QFileDialog::getOpenFileNames(
                 this,
-                tr("Select one or more files to Post"));
+                tr("Select one or more files to Post"),
+                _ngPost->_inputDir);
 
     int currentNbFiles = _ui->filesList->count();
     for (QString &file : files)
-        _addFile(file, currentNbFiles);
+        _addPath(file, currentNbFiles);
+}
+
+void MainWindow::onSelectFolderClicked()
+{
+    QString folder = QFileDialog::getExistingDirectory(
+                this,
+                tr("Select a Folder"),
+                _ngPost->_inputDir,
+                QFileDialog::ShowDirsOnly);
+
+    if (!folder.isEmpty())
+        _addPath(folder, _ui->filesList->count(), true);
 }
 
 void MainWindow::onClearFilesClicked()
@@ -686,13 +750,56 @@ void MainWindow::onClearFilesClicked()
 void MainWindow::onCompressCB(bool checked)
 {
     _ui->compressNameEdit->setEnabled(checked);
+    _ui->nameLengthSB->setEnabled(checked);
     _ui->genCompressName->setEnabled(checked);
     _ui->par2CB->setEnabled(checked);
 }
 
 void MainWindow::onGenCompressName()
 {
-    _ui->compressNameEdit->setText(_ngPost->randomPass(17));
+    _ui->compressNameEdit->setText(_ngPost->randomPass(static_cast<uint>(_ui->nameLengthSB->value())));
+}
+
+void MainWindow::onCompressPathClicked()
+{
+    QString path = QFileDialog::getExistingDirectory(
+                this,
+                tr("Select a Folder"),
+                _ngPost->_tmpPath,
+                QFileDialog::ShowDirsOnly);
+
+    if (!path.isEmpty())
+        _ui->compressPathEdit->setText(path);
+}
+
+void MainWindow::onNzbFileClicked()
+{
+    QString path = QFileDialog::getSaveFileName(
+                this,
+                tr("Create nzb file"),
+                _ngPost->_nzbPath
+                );
+
+    if (!path.isEmpty())
+        _ui->nzbFileEdit->setText(path);
+}
+
+void MainWindow::onRarPathClicked()
+{
+    QString path = QFileDialog::getOpenFileName(
+                this,
+                tr("Select rar executable"),
+                QFileInfo(_ngPost->_rarPath).absolutePath()
+                );
+
+    if (!path.isEmpty())
+    {
+        QFileInfo fi(path);
+        if (fi.isFile() && fi.isExecutable())
+            _ui->rarEdit->setText(path);
+        else
+            _ngPost->error(tr("the selected file is not executable..."));
+    }
 }
 
 const QString MainWindow::sGroupBoxStyle =  "\

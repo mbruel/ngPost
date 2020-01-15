@@ -46,7 +46,7 @@ NntpConnection::NntpConnection(NgPost *ngPost, int id, const NntpServerParams &s
     _nbErrors(0),
     _threadName()
 #ifndef __USE_MUTEX__
-    ,_articles
+    ,_articles()
 #endif
 {
 #if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)

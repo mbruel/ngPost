@@ -12,7 +12,7 @@ public:
 
     void setSignature(const QString &str);
 
-    void addItem2(const QString &label);
+    void addPath(const QString &path, bool isDir = false);
     void removeItemWidget2(QListWidgetItem *item);
     void clear2();
 
@@ -27,6 +27,8 @@ protected:
 private:
     QLabel *_asciiLbl;
     QSize   _sizeAscii;
+    QIcon   _fileIcon;
+    QIcon   _folderIcon;
 };
 
 
