@@ -1,3 +1,5 @@
+<img align="left" width="80" height="80" src="https://raw.githubusercontent.com/mbruel/ngPost/master/src/resources/icons/ngPost.png" alt="ngPost">
+
 # ngPost
 
 command line / GUI Usenet poster for binaries developped in C++/QT</br>
