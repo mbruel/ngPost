@@ -178,10 +178,27 @@ void MainWindow::onPostFiles()
             return;
         }
 
-        _state = STATE::POSTING;
+
         _updateServers();
         _updateParams();
 
+        // check if the nzb file name already exist
+        QString nzbPath = _ngPost->nzbPath();
+        if (!nzbPath.endsWith(".nzb"))
+            nzbPath += ".nzb";
+        QFileInfo fiNzb(nzbPath);
+        if (fiNzb.exists())
+        {
+            int overwrite = QMessageBox::question(nullptr,
+                                              tr("Overwrite existing nzb file?"),
+                                              tr("The nzb file '%1' already exists.\nWould you like to overwrite it ?").arg(nzbPath),
+                                              QMessageBox::Yes,
+                                              QMessageBox::No);
+            if (overwrite == QMessageBox::No)
+                return;
+        }
+
+        _state = STATE::POSTING;
         int nbFiles = 0;
         if (_ui->compressCB->isChecked())
         {
@@ -556,7 +573,7 @@ void MainWindow::_addPath(const QString &path, int currentNbFiles, int isDir)
     if (_ui->nzbFileEdit->text().isEmpty())
     {
         QFileInfo fileInfo(path);
-        _ngPost->_nzbName = fileInfo.completeBaseName();
+        _ngPost->_nzbName = QString("%1.nzb").arg(fileInfo.completeBaseName());
         _ui->nzbFileEdit->setText(_ngPost->nzbPath());
     }
     if (_ui->compressNameEdit->text().isEmpty())
@@ -778,7 +795,8 @@ void MainWindow::onNzbFileClicked()
     QString path = QFileDialog::getSaveFileName(
                 this,
                 tr("Create nzb file"),
-                _ngPost->_nzbPath
+                _ngPost->_nzbPath,
+                "*.nzb"
                 );
 
     if (!path.isEmpty())
