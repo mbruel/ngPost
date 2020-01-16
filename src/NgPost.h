@@ -333,6 +333,9 @@ private:
                  uint redundancy = 0,
                  const QStringList &files = QStringList());
 
+    void _cleanExtProc();
+    void _cleanCompressDir();
+
     QString _createArchiveFolder(const QString &tmpFolder, const QString &archiveName);
 
     bool _checkTmpFolder() const;
