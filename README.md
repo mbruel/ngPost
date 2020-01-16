@@ -166,7 +166,7 @@ Here is my email: Matthieu.Bruel@gmail.com
 
 
 ### Thanks
-- Uukrull for testing on an unstable version, providing the crash logs and backtraces, suggesting nice features to add to the app
+- Uukrull for testing on an unstable version, providing crash logs and backtraces, suggesting nice features to add to the app
 - demanuel for the dev of NewsUP that was my first poster
 - all ngPost users ;)
 
