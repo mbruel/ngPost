@@ -1,0 +1,347 @@
+/tmp/testParpar$ gdb --args ~/apps/bin/parpar -s 1M -r8% -o /tmp/testParpar/plop.par2 -R /tmp/testParpar
+GNU gdb (Debian 8.2.1-2+b3) 8.2.1
+Copyright (C) 2018 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Type "show copying" and "show warranty" for details.
+This GDB was configured as "x86_64-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+    <http://www.gnu.org/software/gdb/documentation/>.
+
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from /home/bruel/apps/bin/parpar...done.
+(gdb) run
+Starting program: /home/bruel/apps/bin/parpar -s 1M -r8% -o /tmp/testParpar/plop.par2 -R /tmp/testParpar
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+[New Thread 0x7ffff7a88700 (LWP 8453)]
+[New Thread 0x7ffff7287700 (LWP 8454)]
+[New Thread 0x7ffff6a86700 (LWP 8455)]
+[New Thread 0x7ffff6285700 (LWP 8456)]
+[New Thread 0x7ffff5a84700 (LWP 8457)]
+[New Thread 0x7fffdd0bf700 (LWP 8458)]
+[New Thread 0x7fffdc8be700 (LWP 8459)]
+[New Thread 0x7fffdc0bd700 (LWP 8460)]
+[New Thread 0x7fffdb8bc700 (LWP 8461)]
+Multiply method used: Shuffle (256 bit), 8 threads
+Generating 15 MiB recovery data (15 slices) from 182.05 MiB of data
+[New Thread 0x7fffd3fff700 (LWP 8462)]
+[New Thread 0x7fffd37fe700 (LWP 8463)]
+[New Thread 0x7fffd2ffd700 (LWP 8464)]
+[New Thread 0x7fffd27fc700 (LWP 8465)]
+[New Thread 0x7fffd1ffb700 (LWP 8466)]
+[New Thread 0x7fffd17fa700 (LWP 8467)]
+[New Thread 0x7fffd0ff9700 (LWP 8468)]
+[New Thread 0x7fffabfff700 (LWP 8469)]
+[New Thread 0x7fffab7fe700 (LWP 8470)]
+[New Thread 0x7fffaaffd700 (LWP 8471)]
+[New Thread 0x7fffaa7fc700 (LWP 8472)]
+[New Thread 0x7fffa9ffb700 (LWP 8473)]
+[New Thread 0x7fffa97fa700 (LWP 8474)]
+[New Thread 0x7fffa8ff9700 (LWP 8475)]
+[New Thread 0x7fff8bfff700 (LWP 8476)]
+[New Thread 0x7fff8b7fe700 (LWP 8477)]
+[New Thread 0x7fff8affd700 (LWP 8478)]
+[New Thread 0x7fff8a7fc700 (LWP 8479)]
+[New Thread 0x7fff89ffb700 (LWP 8480)]
+[New Thread 0x7fff897fa700 (LWP 8481)]
+[New Thread 0x7fff88ff9700 (LWP 8482)]
+[New Thread 0x7fff7bfff700 (LWP 8483)]
+[New Thread 0x7fff7b7fe700 (LWP 8484)]
+[New Thread 0x7fff7affd700 (LWP 8485)]
+[New Thread 0x7fff7a7fc700 (LWP 8486)]
+[New Thread 0x7fff79ffb700 (LWP 8487)]
+[New Thread 0x7fff797fa700 (LWP 8488)]
+[New Thread 0x7fff78ff9700 (LWP 8489)]
+[New Thread 0x7fff4bfff700 (LWP 8490)]
+[New Thread 0x7fff4b7fe700 (LWP 8491)]
+[New Thread 0x7fff4affd700 (LWP 8492)]
+[New Thread 0x7fff4a7fc700 (LWP 8493)]
+[New Thread 0x7fff49ffb700 (LWP 8494)]
+[New Thread 0x7fff497fa700 (LWP 8495)]
+[New Thread 0x7fff48ff9700 (LWP 8496)]
+Calculating: 100.00%
+PAR2 created. Time taken: 0.887 second(s)
+[Thread 0x7ffff5a84700 (LWP 8457) exited]
+[Thread 0x7ffff6285700 (LWP 8456) exited]
+[Thread 0x7ffff6a86700 (LWP 8455) exited]
+[Thread 0x7ffff7287700 (LWP 8454) exited]
+[Thread 0x7ffff7a88700 (LWP 8453) exited]
+
+Thread 1 "ParPar" received signal SIGABRT, Aborted.
+__GI_raise (sig=sig@entry=6) at ../sysdeps/unix/sysv/linux/raise.c:50
+50	../sysdeps/unix/sysv/linux/raise.c: No such file or directory.
+(gdb) thread apply all bt
+
+Thread 45 (Thread 0x7fff48ff9700 (LWP 8496)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 44 (Thread 0x7fff497fa700 (LWP 8495)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 43 (Thread 0x7fff49ffb700 (LWP 8494)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 42 (Thread 0x7fff4a7fc700 (LWP 8493)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 41 (Thread 0x7fff4affd700 (LWP 8492)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 40 (Thread 0x7fff4b7fe700 (LWP 8491)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 39 (Thread 0x7fff4bfff700 (LWP 8490)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+--Type <RET> for more, q to quit, c to continue without paging--
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 38 (Thread 0x7fff78ff9700 (LWP 8489)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 37 (Thread 0x7fff797fa700 (LWP 8488)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 36 (Thread 0x7fff79ffb700 (LWP 8487)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 35 (Thread 0x7fff7a7fc700 (LWP 8486)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 34 (Thread 0x7fff7affd700 (LWP 8485)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 33 (Thread 0x7fff7b7fe700 (LWP 8484)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 32 (Thread 0x7fff7bfff700 (LWP 8483)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+--Type <RET> for more, q to quit, c to continue without paging--
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 31 (Thread 0x7fff88ff9700 (LWP 8482)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 30 (Thread 0x7fff897fa700 (LWP 8481)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 29 (Thread 0x7fff89ffb700 (LWP 8480)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 28 (Thread 0x7fff8a7fc700 (LWP 8479)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 27 (Thread 0x7fff8affd700 (LWP 8478)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 26 (Thread 0x7fff8b7fe700 (LWP 8477)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 25 (Thread 0x7fff8bfff700 (LWP 8476)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+--Type <RET> for more, q to quit, c to continue without paging--
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 24 (Thread 0x7fffa8ff9700 (LWP 8475)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 23 (Thread 0x7fffa97fa700 (LWP 8474)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 22 (Thread 0x7fffa9ffb700 (LWP 8473)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 21 (Thread 0x7fffaa7fc700 (LWP 8472)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 20 (Thread 0x7fffaaffd700 (LWP 8471)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 19 (Thread 0x7fffab7fe700 (LWP 8470)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 18 (Thread 0x7fffabfff700 (LWP 8469)):
+--Type <RET> for more, q to quit, c to continue without paging--
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 17 (Thread 0x7fffd0ff9700 (LWP 8468)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 16 (Thread 0x7fffd17fa700 (LWP 8467)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 15 (Thread 0x7fffd1ffb700 (LWP 8466)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 14 (Thread 0x7fffd27fc700 (LWP 8465)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 13 (Thread 0x7fffd2ffd700 (LWP 8464)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 12 (Thread 0x7fffd37fe700 (LWP 8463)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+--Type <RET> for more, q to quit, c to continue without paging--
+Thread 11 (Thread 0x7fffd3fff700 (LWP 8462)):
+#0  0x00007ffff5213cfe in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#1  0x00007ffff5211778 in ?? () from /usr/lib/x86_64-linux-gnu/libgomp.so.1
+#2  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#3  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 10 (Thread 0x7fffdb8bc700 (LWP 8461)):
+#0  futex_wait_cancelable (private=0, expected=0, futex_word=0x24cc02c <cond+44>) at ../sysdeps/unix/sysv/linux/futex-internal.h:88
+#1  __pthread_cond_wait_common (abstime=0x0, mutex=0x24cbfc0 <mutex>, cond=0x24cc000 <cond>) at pthread_cond_wait.c:502
+#2  __pthread_cond_wait (cond=cond@entry=0x24cc000 <cond>, mutex=mutex@entry=0x24cbfc0 <mutex>) at pthread_cond_wait.c:655
+#3  0x0000000000a20849 in uv_cond_wait (cond=cond@entry=0x24cc000 <cond>, mutex=mutex@entry=0x24cbfc0 <mutex>) at ../deps/uv/src/unix/thread.c:760
+#4  0x0000000000a0e414 in worker (arg=0x0) at ../deps/uv/src/threadpool.c:76
+#5  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#6  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 9 (Thread 0x7fffdc0bd700 (LWP 8460)):
+#0  futex_wait_cancelable (private=0, expected=0, futex_word=0x24cc02c <cond+44>) at ../sysdeps/unix/sysv/linux/futex-internal.h:88
+#1  __pthread_cond_wait_common (abstime=0x0, mutex=0x24cbfc0 <mutex>, cond=0x24cc000 <cond>) at pthread_cond_wait.c:502
+#2  __pthread_cond_wait (cond=cond@entry=0x24cc000 <cond>, mutex=mutex@entry=0x24cbfc0 <mutex>) at pthread_cond_wait.c:655
+#3  0x0000000000a20849 in uv_cond_wait (cond=cond@entry=0x24cc000 <cond>, mutex=mutex@entry=0x24cbfc0 <mutex>) at ../deps/uv/src/unix/thread.c:760
+#4  0x0000000000a0e414 in worker (arg=0x0) at ../deps/uv/src/threadpool.c:76
+#5  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#6  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 8 (Thread 0x7fffdc8be700 (LWP 8459)):
+#0  futex_wait_cancelable (private=0, expected=0, futex_word=0x24cc02c <cond+44>) at ../sysdeps/unix/sysv/linux/futex-internal.h:88
+#1  __pthread_cond_wait_common (abstime=0x0, mutex=0x24cbfc0 <mutex>, cond=0x24cc000 <cond>) at pthread_cond_wait.c:502
+#2  __pthread_cond_wait (cond=cond@entry=0x24cc000 <cond>, mutex=mutex@entry=0x24cbfc0 <mutex>) at pthread_cond_wait.c:655
+#3  0x0000000000a20849 in uv_cond_wait (cond=cond@entry=0x24cc000 <cond>, mutex=mutex@entry=0x24cbfc0 <mutex>) at ../deps/uv/src/unix/thread.c:760
+#4  0x0000000000a0e414 in worker (arg=0x0) at ../deps/uv/src/threadpool.c:76
+#5  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#6  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 7 (Thread 0x7fffdd0bf700 (LWP 8458)):
+#0  futex_wait_cancelable (private=0, expected=0, futex_word=0x24cc02c <cond+44>) at ../sysdeps/unix/sysv/linux/futex-internal.h:88
+#1  __pthread_cond_wait_common (abstime=0x0, mutex=0x24cbfc0 <mutex>, cond=0x24cc000 <cond>) at pthread_cond_wait.c:502
+#2  __pthread_cond_wait (cond=cond@entry=0x24cc000 <cond>, mutex=mutex@entry=0x24cbfc0 <mutex>) at pthread_cond_wait.c:655
+#3  0x0000000000a20849 in uv_cond_wait (cond=cond@entry=0x24cc000 <cond>, mutex=mutex@entry=0x24cbfc0 <mutex>) at ../deps/uv/src/unix/thread.c:760
+#4  0x0000000000a0e414 in worker (arg=0x0) at ../deps/uv/src/threadpool.c:76
+#5  0x00007ffff7c56fa3 in start_thread (arg=<optimized out>) at pthread_create.c:486
+#6  0x00007ffff7b854cf in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+--Type <RET> for more, q to quit, c to continue without paging--
+
+Thread 1 (Thread 0x7ffff7a89740 (LWP 8449)):
+#0  __GI_raise (sig=sig@entry=6) at ../sysdeps/unix/sysv/linux/raise.c:50
+#1  0x00007ffff7aae535 in __GI_abort () at abort.c:79
+#2  0x000000000089b7a7 in uv_mutex_lock (mutex=<optimized out>) at ../deps/uv/src/unix/thread.c:311
+#3  0x000000000098a2be in node::SigintWatchdogHelper::Stop() () at ../deps/uv/src/threadpool.c:158
+#4  0x000000000098a397 in node::SigintWatchdogHelper::~SigintWatchdogHelper() () at ../deps/uv/src/threadpool.c:158
+#5  0x00007ffff7ac5d8c in __run_exit_handlers (status=0, listp=0x7ffff7c47718 <__exit_funcs>, run_list_atexit=run_list_atexit@entry=true, 
+    run_dtors=run_dtors@entry=true) at exit.c:108
+#6  0x00007ffff7ac5eba in __GI_exit (status=<optimized out>) at exit.c:139
+#7  0x00007ffff7ab00a2 in __libc_start_main (main=0x89f6e0 <main>, argc=8, argv=0x7fffffffdda8, init=<optimized out>, fini=<optimized out>, 
+    rtld_fini=<optimized out>, stack_end=0x7fffffffdd98) at ../csu/libc-start.c:342
+#8  0x000000000089f7a5 in _start () at ../deps/uv/src/threadpool.c:158
+(gdb) 
+(gdb) 
+
