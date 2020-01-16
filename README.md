@@ -13,7 +13,7 @@ Releases are available for: Linux 64bit, Windows (both 32bit and 64bit), MacOS. 
 Here are the main features and advantages of ngPost:
 -   **full obfuscation of the Article Header** : the Subject will be a UUID (as the msg-id) and a random Poster will be used. **Be Careful**, using this, you won't be able to find your post on Usenet (or any Indexers) if you lose the NZB file. But using this method is **completely safe**, **no need to obfuscate your files or even use a password**.
 -   **compress using RAR** (external command) with random **name obfuscation** and password and **generate par2** before posting
--   **par2 is included in the package** but you can use another tool (like Multipar) if you wish using the PAR2_CMD and PAR2_ARGS keywords in the config file
+-   **par2cmdline is included in the package** but you can use another tool (like Multipar) if you wish using the PAR2_CMD and PAR2_ARGS keywords in the config file
 -   support **multiple files** and **multiple folders**
 -   support **several servers** (using config file or the HMI) with each **several connections** (supporting ssl)
 -   spread those connection on **several threads**. By default the number of cores of the station but you can set the number if you fancy.
