@@ -6,6 +6,8 @@ command line / GUI Usenet poster for binaries developped in C++11/Qt5</br>
 it is designed to be as fast as possible and offer all the main features to post data easily and safely.</br>
 since v2.1 it can compress (using your external rar binary) and generate the par2 before posting!<br/>
 
+![ngPost_v2.1](https://raw.githubusercontent.com/mbruel/ngPost/master/pics/ngPost_v2.1.png)
+
 Releases are available for: Linux 64bit, Windows (both 32bit and 64bit), MacOS. It will soon be available for Raspbian, Android then iOS...
 
 Here are the main features and advantages of ngPost:
@@ -123,10 +125,6 @@ By default:
 - download [ngPost_v2.1.dmg](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v2.1.dmg)
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
-
-
-### Minimalist GUI
-![ngPost_v2.1](https://raw.githubusercontent.com/mbruel/ngPost/master/pics/ngPost_v2.1.png)
 
 
 ### Alternatives
