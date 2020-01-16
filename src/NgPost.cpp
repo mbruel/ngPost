@@ -1229,7 +1229,11 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         bool ok;
         uint nb = parser.value(sOptionNames[Opt::PAR2_PCT]).toUInt(&ok);
         if (ok)
+        {
             _par2Pct = nb;
+            if (nb > 0)
+                _doPar2 = true;
+        }
     }
     if (parser.isSet(sOptionNames[Opt::PAR2_PATH]))
     {
@@ -1245,7 +1249,14 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     if (parser.isSet(sOptionNames[Opt::COMPRESS]))
         _doCompress = true;
     if (parser.isSet(sOptionNames[Opt::GEN_PAR2]))
+    {
         _doPar2 = true;
+        if (_par2Pct == 0)
+        {
+            _error(tr("Error: can't generate par2 if the redundancy percentage is null...\nEither use --par2_pct or set PAR2_PCT in the config file."));
+            return false;
+        }
+    }
     if (parser.isSet(sOptionNames[Opt::GEN_NAME]))
         _genName = true;
     if (parser.isSet(sOptionNames[Opt::GEN_PASS]))
