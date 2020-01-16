@@ -585,14 +585,7 @@ void NgPost::onNntpFilePosted()
                  _nbArticlesUploaded).arg(_nbArticlesFailed));
 #endif
         if (_compressDir)
-        {
-            _compressDir->removeRecursively();
-            delete _compressDir;
-            _compressDir = nullptr;
-
-            if (_debug)
-                _log("Compressed files deleted.");
-        }
+            _cleanCompressDir();
 
         if (_hmi)
             _finishPosting();
@@ -1738,99 +1731,13 @@ int NgPost::compressFiles(const QString &archiveName,
     if (!canCompress() || (_par2Pct >0 && !canGenPar2()))
         return -1;
 
-    _extProc = new QProcess(this);
-    connect(_extProc, &QProcess::readyReadStandardOutput, this, &NgPost::onExtProcReadyReadStandardOutput, Qt::DirectConnection);
-    connect(_extProc, &QProcess::readyReadStandardOutput, this, &NgPost::onExtProcReadyReadStandardOutput, Qt::DirectConnection);
+    // 1.: Compress
+    int exitCode = _compressFiles(_rarPath, _tmpPath, archiveName, files, pass, _rarSize, compressLevel);
 
-    // 1.: create archive temporary folder
-    QString archiveTmpFolder = QString("%1/%2").arg(_tmpPath).arg(archiveName);
-    _compressDir = new QDir(archiveTmpFolder);
-    if (_compressDir->exists())
-    {
-        _error(tr("The temporary directory '%1' already exists... (either remove it or change the archive name)").arg(archiveTmpFolder));
-        delete _compressDir;
-        _compressDir = nullptr;
-        return -1;
-    }
-    else
-    {
-        if (!_compressDir->mkpath("."))
-        {
-            _error(tr("Couldn't create the temporary folder: '%1'...").arg(archiveTmpFolder));
-            delete _compressDir;
-            _compressDir = nullptr;
-            return -2;
-        }
-    }
+    if (exitCode == 0 && _doPar2)
+        exitCode = _genPar2(_tmpPath, archiveName, _par2Pct, files);
 
-    // 2.: create rar args (rar a -v50m -ed -ep1 -m0 -hp"$PASS" "$TMP_FOLDER/$RAR_NAME.rar" "${FILES[@]}")
-    QStringList args = {"a", "-idp", "-ep1", compressLevel, QString("%1/%2.rar").arg(archiveTmpFolder).arg(archiveName)};
-    if (!pass.isEmpty())
-        args << QString("-hp%1").arg(pass);
-    if (_rarSize > 0)
-        args << QString("-v%1m").arg(_rarSize);
-    args << "-r" << files;
-
-    // 3.: launch rar
-    if (_debug)
-        _log(tr("Compressing files: %1 %2\n").arg(_rarPath).arg(args.join(" ")));
-    else
-        _log("Compressing files...\n");
-    _limitProcDisplay = false;
-    _extProc->start(_rarPath, args);
-    _extProc->waitForFinished(-1);
-    int exitCode = _extProc->exitCode();
-    if (_debug)
-        _log(tr("=> rar exit code: %1\n").arg(exitCode));
-    else
-        _log("");
-
-    if (exitCode != 0)
-        _error(QString("Error during compression: %1").arg(exitCode));
-    else if (_doPar2)
-    {// 4.: create the par2 as required
-        args.clear();
-        //par2 c  -r8 /tmp/ngPostArchive/ngPostArchive.par2 /tmp/ngPostArchive/ngPostArchive.7z*
-        if (_par2Args.isEmpty())
-            args << "c" << "-l" << "-m1024" << QString("-r%1").arg(_par2Pct);
-        else
-            args << _par2Args.split(" ");
-
-        args << QString("%1/%2.par2").arg(archiveTmpFolder).arg(archiveName)
-             << QString("%1/%2*rar").arg(archiveTmpFolder).arg(archiveName);
-
-        if (_debug)
-        {
-            if (_par2Args.isEmpty())
-                args << "-q"; // remove the progress bar
-            _log(tr("Generating par2: %1 %2\n").arg(_par2Path).arg(args.join(" ")));
-        }
-        else
-            _log("Generating par2...\n");
-        _limitProcDisplay = true;
-        _nbProcDisp = 0;
-        _extProc->start(_par2Path, args);
-        _extProc->waitForFinished(-1);
-        exitCode = _extProc->exitCode();
-        if (_debug)
-            _log(tr("=> par2 exit code: %1\n").arg(exitCode));
-        else
-            _log("");
-
-        if (exitCode != 0)
-            _error(tr("Error during par2 generation: %1").arg(exitCode));
-    }
-
-
-    // 5.: free the resources
-    delete _extProc;
-    _extProc = nullptr;
-    if (exitCode != 0)
-    {
-        delete _compressDir;
-        _compressDir = nullptr;
-    }
-    else
+    if (exitCode == 0)
         _log("Ready to post!");
 
     return exitCode;
@@ -1844,14 +1751,14 @@ int NgPost::_compressFiles(const QString &cmdRar,
                            uint volSize,
                            const QString &compressLevel)
 {
-    _extProc = new QProcess(this);
-    connect(_extProc, &QProcess::readyReadStandardOutput, this, &NgPost::onExtProcReadyReadStandardOutput, Qt::DirectConnection);
-    connect(_extProc, &QProcess::readyReadStandardOutput, this, &NgPost::onExtProcReadyReadStandardOutput, Qt::DirectConnection);
-
     // 1.: create archive temporary folder
     QString archiveTmpFolder = _createArchiveFolder(tmpFolder, archiveName);
     if (archiveTmpFolder.isEmpty())
         return -1;
+
+    _extProc = new QProcess(this);
+    connect(_extProc, &QProcess::readyReadStandardOutput, this, &NgPost::onExtProcReadyReadStandardOutput, Qt::DirectConnection);
+    connect(_extProc, &QProcess::readyReadStandardError,  this, &NgPost::onExtProcReadyReadStandardError,  Qt::DirectConnection);
 
 
     // 2.: create rar args (rar a -v50m -ed -ep1 -m0 -hp"$PASS" "$TMP_FOLDER/$RAR_NAME.rar" "${FILES[@]}")
@@ -1877,18 +1784,14 @@ int NgPost::_compressFiles(const QString &cmdRar,
         _log("");
 
 
-    // 4.: free resources if no par2 after
+    // 4.: free process if no par2 after
     if (!_doPar2)
-    {
-        delete _extProc;
-        _extProc = nullptr;
-    }
+        _cleanExtProc();
 
     if (exitCode != 0)
     {
         _error(tr("Error during compression: %1").arg(exitCode));
-        delete _compressDir;
-        _compressDir = nullptr;
+        _cleanCompressDir();
     }
 
     return exitCode;
@@ -1912,8 +1815,21 @@ int NgPost::_genPar2(const QString &tmpFolder,
     if (_extProc)
     {
         archiveTmpFolder = QString("%1/%2").arg(tmpFolder).arg(archiveName);
-        args << QString("%1/%2.par2").arg(archiveTmpFolder).arg(archiveName)
-             << QString("%1/%2*rar").arg(archiveTmpFolder).arg(archiveName);
+        if (_par2Path.toLower().contains("parpar"))
+        {
+            if (args.last().trimmed() != "-o")
+                args << "-o";
+            args << QString("%1/%2.par2").arg(archiveTmpFolder).arg(archiveName)
+                 << "-R" << archiveTmpFolder;
+        }
+        else
+        {
+            args << QString("%1/%2.par2").arg(archiveTmpFolder).arg(archiveName)
+                 << QString("%1/%2*rar").arg(archiveTmpFolder).arg(archiveName);
+            if (_debug || !_hmi)
+                args << "-q"; // remove the progress bar
+
+        }
     }
     else
     {
@@ -1939,10 +1855,7 @@ int NgPost::_genPar2(const QString &tmpFolder,
 
 
     if (_debug || !_hmi)
-    {
-        args << "-q"; // remove the progress bar
         _log(tr("Generating par2: %1 %2\n").arg(_par2Path).arg(args.join(" ")));
-    }
     else
         _log("Generating par2...\n");
     _limitProcDisplay = true;
@@ -1956,18 +1869,44 @@ int NgPost::_genPar2(const QString &tmpFolder,
         _log("");
 
 
-
-    delete _extProc;
-    _extProc = nullptr;
-
     if (exitCode != 0)
     {
         _error(tr("Error during par2 generation: %1").arg(exitCode));
-        delete _compressDir;
-        _compressDir = nullptr;
+
+        // parpar hack: it can abort after managing to create the par2 (apparently with node v10)
+        if (_par2Path.toLower().contains("parpar"))
+        {
+            QFileInfo fi(QString("%1/%2.par2").arg(archiveTmpFolder).arg(archiveName));
+            if (fi.exists())
+            {
+                _log(tr("=> parpar aborted but the par2 are generated!"));
+                exitCode = 0;
+            }
+        }
     }
 
+    // 4.: free process if no par2 after
+    _cleanExtProc();
+
+    if (exitCode != 0)
+        _cleanCompressDir();
+
     return exitCode;
+}
+
+void NgPost::_cleanExtProc()
+{
+    delete _extProc;
+    _extProc = nullptr;
+}
+
+void NgPost::_cleanCompressDir()
+{
+    _compressDir->removeRecursively();
+    delete _compressDir;
+    _compressDir = nullptr;
+    if (_debug)
+        _log("Compressed files deleted.");
 }
 
 QString NgPost::_createArchiveFolder(const QString &tmpFolder, const QString &archiveName)
