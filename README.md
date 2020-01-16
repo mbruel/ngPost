@@ -6,12 +6,14 @@ command line / GUI Usenet poster for binaries developped in C++11/Qt5</br>
 it is designed to be as fast as possible and offer all the main features to post data easily and safely.</br>
 since v2.1 it can compress (using your external rar binary) and generate the par2 before posting!<br/>
 
+![ngPost_v2.1](https://raw.githubusercontent.com/mbruel/ngPost/master/pics/ngPost_v2.1.png)
+
 Releases are available for: Linux 64bit, Windows (both 32bit and 64bit), MacOS. It will soon be available for Raspbian, Android then iOS...
 
 Here are the main features and advantages of ngPost:
 -   **full obfuscation of the Article Header** : the Subject will be a UUID (as the msg-id) and a random Poster will be used. **Be Careful**, using this, you won't be able to find your post on Usenet (or any Indexers) if you lose the NZB file. But using this method is **completely safe**, **no need to obfuscate your files or even use a password**.
 -   **compress using RAR** (external command) with random **name obfuscation** and password and **generate par2** before posting
--   **par2 is included in the package** but you can use another tool (like Multipar) if you wish using the PAR2_CMD and PAR2_ARGS keywords in the config file
+-   **par2cmdline is included in the package** but you can use another tool (like Multipar) if you wish using the PAR2_CMD and PAR2_ARGS keywords in the config file
 -   support **multiple files** and **multiple folders**
 -   support **several servers** (using config file or the HMI) with each **several connections** (supporting ssl)
 -   spread those connection on **several threads**. By default the number of cores of the station but you can set the number if you fancy.
@@ -47,7 +49,7 @@ As it is made in C++/QT, you can build it and run it on any OS (Linux / Windows 
 releases have only been made for Linux x64 and Windows x64 (for 7 and above) and MacOS (<br/>
 in order to build on other OS, the easiest way would be to [install QT](https://www.qt.io/download) and load the project in QtCreator<br/>
 
-### How to use it
+### How to use it in command line
 <pre>
 Syntax: ngPost (options)? (-i &lt;file or directory to upload&gt;)+
 	--help             : Help: display syntax
@@ -119,14 +121,10 @@ By default:
 - it will write the nzb file inside this directory too. (it's name will be the one of the latest input file in the command line)
 
 
-### MacOS release built on High Sierra 9v10.13)
+### MacOS release built on High Sierra (v10.13)
 - download [ngPost_v2.1.dmg](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v2.1.dmg)
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
-
-
-### Minimalist GUI
-![ngPost_v2.1](https://raw.githubusercontent.com/mbruel/ngPost/master/pics/ngPost_v2.1.png)
 
 
 ### Alternatives
@@ -168,7 +166,7 @@ Here is my email: Matthieu.Bruel@gmail.com
 
 
 ### Thanks
-- Uukrull for testing on an unstable version, providing the crash logs and backtraces, suggesting nice features to add to the app
+- Uukrull for testing on an unstable version, providing crash logs and backtraces, suggesting nice features to add to the app
 - demanuel for the dev of NewsUP that was my first poster
 - all ngPost users ;)
 
