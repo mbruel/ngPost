@@ -11,6 +11,8 @@ class AboutNgPost;
 class AboutNgPost : public QDialog
 {
     Q_OBJECT
+private:
+    static constexpr const char *sTextColor = "#25aae1"; //!< same blue that the logo
 
 public:
     explicit AboutNgPost(NgPost *ngPost, QWidget *parent = nullptr);

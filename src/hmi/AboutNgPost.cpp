@@ -17,7 +17,7 @@ AboutNgPost::AboutNgPost(NgPost *ngPost, QWidget *parent) :
     ui->copyrightLbl->setFont(QFont( "Arial", 12, QFont::Bold));
 
     ui->descLbl->setText(ngPost->desc());
-    ui->descLbl->setStyleSheet("QLabel { color : #359bdb; }");
+    ui->descLbl->setStyleSheet(QString("QLabel { color : %1; }").arg(sTextColor));
     ui->descLbl->setFont(QFont( "Caladea", 14, QFont::Medium));
 //    ui->cosi7->setFont(QFont( "DejaVu Serif", 28, QFont::Bold));
 
