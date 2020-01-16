@@ -49,7 +49,7 @@ As it is made in C++/QT, you can build it and run it on any OS (Linux / Windows 
 releases have only been made for Linux x64 and Windows x64 (for 7 and above) and MacOS (<br/>
 in order to build on other OS, the easiest way would be to [install QT](https://www.qt.io/download) and load the project in QtCreator<br/>
 
-### How to use it
+### How to use it in command line
 <pre>
 Syntax: ngPost (options)? (-i &lt;file or directory to upload&gt;)+
 	--help             : Help: display syntax
@@ -121,7 +121,7 @@ By default:
 - it will write the nzb file inside this directory too. (it's name will be the one of the latest input file in the command line)
 
 
-### MacOS release built on High Sierra 9v10.13)
+### MacOS release built on High Sierra (v10.13)
 - download [ngPost_v2.1.dmg](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v2.1.dmg)
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
