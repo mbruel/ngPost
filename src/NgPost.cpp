@@ -1855,7 +1855,7 @@ int NgPost::_genPar2(const QString &tmpFolder,
         {
             args << QString("%1/%2.par2").arg(archiveTmpFolder).arg(archiveName)
                  << QString("%1/%2*rar").arg(archiveTmpFolder).arg(archiveName);
-            if (_debug || !_hmi)
+            if (_par2Args.isEmpty() && (_debug || !_hmi))
                 args << "-q"; // remove the progress bar
 
         }

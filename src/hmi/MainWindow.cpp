@@ -361,7 +361,7 @@ void MainWindow::_initPostingBox()
     connect(_ui->genPass,           &QAbstractButton::clicked, this, &MainWindow::onGenNzbPassword);
     connect(_ui->obfuscateMsgIdCB,  &QAbstractButton::toggled, this, &MainWindow::onObfucateToggled);
 
-    _ui->fromEdit->setText(QString::fromStdString(_ngPost->_from));
+    _ui->fromEdit->setText(_ngPost->xml2txt(_ngPost->_from.c_str()));
     _ui->nzbPassCB->setChecked(false);
     onNzbPassToggled(false);
 
@@ -422,7 +422,7 @@ void MainWindow::_updateParams()
         QRegularExpression email("\\w+@\\w+\\.\\w+");
         if (!email.match(from).hasMatch())
             from += QString("@%1.com").arg(_ngPost->_articleIdSignature.c_str());
-        _ngPost->_from   = from.toStdString();
+        _ngPost->_from   = _ngPost->escapeXML(from).toStdString();
     }
 
     _ngPost->updateGroups(_ui->groupsEdit->toPlainText());

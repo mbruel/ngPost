@@ -346,6 +346,8 @@ public:
     inline static const QString &space();
     inline static QString escapeXML(const char *str);
     inline static QString escapeXML(const QString &str);
+    inline static QString xml2txt(const char *str);
+    inline static QString xml2txt(const QString &str);
 
 
 };
@@ -459,6 +461,28 @@ QString NgPost::escapeXML(const QString &str)
     escaped.replace('>',  "&gt;");
     escaped.replace('"',  "&quot;");
     escaped.replace('\'', "&apos;");
+    return escaped;
+}
+
+QString NgPost::xml2txt(const char *str)
+{
+    QString escaped(str);
+    escaped.replace("&amp;",  "&");
+    escaped.replace("&lt;",   "<");
+    escaped.replace("&gt;",   ">");
+    escaped.replace("&quot;", "\"");
+    escaped.replace("&apos;", "'");
+    return escaped;
+}
+
+QString NgPost::xml2txt(const QString &str)
+{
+    QString escaped(str);
+    escaped.replace("&amp;",  "&");
+    escaped.replace("&lt;",   "<");
+    escaped.replace("&gt;",   ">");
+    escaped.replace("&quot;", "\"");
+    escaped.replace("&apos;", "'");
     return escaped;
 }
 
