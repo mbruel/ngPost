@@ -72,7 +72,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
 
     {Opt::TMP_DIR,      "tmp_dir"},
     {Opt::RAR_PATH,     "rar_path"},
-    {Opt::RAR_ARGS,     "rar_args"},
+    {Opt::RAR_EXTRA,    "rar_extra"},
     {Opt::RAR_SIZE,     "rar_size"},
     {Opt::PAR2_PCT,     "par2_pct"},
     {Opt::PAR2_PATH,    "par2_path"},
@@ -175,7 +175,7 @@ NgPost::NgPost(int &argc, char *argv[]):
     _uploadedSize(0), _nbArticlesTotal(0), _progressTimer(), _refreshRate(sDefaultRefreshRate),
     _stopPosting(0x0), _noMoreFiles(0x0),
     _extProc(nullptr), _compressDir(nullptr),
-    _tmpPath(), _rarPath(), _rarArgs(sDefaultRarOptions), _rarSize(0), _par2Pct(0), _par2Path(), _par2Args(),
+    _tmpPath(), _rarPath(), _rarArgs(sDefaultRarExtraOptions), _rarSize(0), _par2Pct(0), _par2Path(), _par2Args(),
     _doCompress(false), _doPar2(false), _genName(), _genPass(),
     _lengthName(sDefaultLengthName), _lengthPass(sDefaultLengthPass),
     _rarName(), _rarPass(), _inputDir()
@@ -1377,7 +1377,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         _rarName = _nzbName;
     if (_doCompress)
     {
-        if (!canCompress())
+        if (!_canCompress())
             return false;
 
         if (_genName)
@@ -1394,7 +1394,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     }
     if (_doPar2)
     {
-        if (!canGenPar2())
+        if (!_canGenPar2())
             return false;
 
         if (_genPar2(_tmpPath, _rarName, _par2Pct, filesPath) != 0)
@@ -1558,7 +1558,7 @@ QString NgPost::_parseConfig(const QString &configPath)
                         _tmpPath = val;
                     else if (opt == sOptionNames[Opt::RAR_PATH])
                         _rarPath = val;
-                    else if (opt == sOptionNames[Opt::RAR_ARGS])
+                    else if (opt == sOptionNames[Opt::RAR_EXTRA])
                         _rarArgs = val;
                     else if (opt == sOptionNames[Opt::RAR_SIZE])
                     {
@@ -1730,7 +1730,7 @@ int NgPost::compressFiles(const QString &archiveName,
                           const QStringList &files,
                           const QString &pass)
 {
-    if (!canCompress() || (_par2Pct >0 && !canGenPar2()))
+    if (!_canCompress() || (_doPar2 && !_canGenPar2()))
         return -1;
 
     // 1.: Compress
@@ -1985,7 +1985,7 @@ void NgPost::_showVersionASCII() const
           << "                          v" << sVersion << "\n\n" << flush;
 }
 
-bool NgPost::canCompress() const
+bool NgPost::_canCompress() const
 {
     //1.: the _tmp_folder must be writable
     if (!_checkTmpFolder())
@@ -2002,7 +2002,7 @@ bool NgPost::canCompress() const
     return true;
 }
 
-bool NgPost::canGenPar2() const
+bool NgPost::_canGenPar2() const
 {
     //1.: the _tmp_folder must be writable
     if (!_checkTmpFolder())
@@ -2098,7 +2098,7 @@ void NgPost::saveConfig()
                << "## -hp will be added if you use a password with --gen_pass, --rar_pass or using the HMI\n"
                << "## -v42m will be added with --rar_size or using the HMI\n"
                << "## you could change the compression level, lock the archive, add redundancy...\n"
-               << "RAR_ARGS = " << _rarArgs << "\n"
+               << "RAR_EXTRA = " << _rarArgs << "\n"
                << "\n"
                << "## size in MB of the RAR volumes (0 by default meaning NO split)\n"
                << "## feel free to change the value or to comment the next line if you don't want to split the archive\n"

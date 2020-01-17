@@ -11,6 +11,16 @@ TODO: bandwidth optimization:
 	test with no threads and no article preparation
 	check if we can play on the SSL protocol paramaters
 
+####################################################
+###       Release: ngPost v2.2                   ###
+###       date:    2020/01/17                    ###
+####################################################
+
+- fix / hack to use parpar (as external command)
+- add keyword RAR_EXTRA in config file
+- ask to overwrite existing nzb file
+- refactor NgPost::compressFiles
+
 
 ####################################################
 ###       Release: ngPost v2.1                   ###
