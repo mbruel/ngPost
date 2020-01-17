@@ -842,7 +842,7 @@ void NgPost::_printStats() const
         msgEnd += QString("nzb file: %1\n").arg(nzbPath());
         if (_doCompress)
         {
-            msgEnd += QString("rar name: &1").arg(_rarName);
+            msgEnd += QString("file: %1, rar name: %2").arg(_nzbName).arg(_rarName);
             if (!_rarPass.isEmpty())
                 msgEnd += QString(", rar pass: %1").arg(_rarPass);
         }
