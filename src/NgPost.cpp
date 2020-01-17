@@ -72,6 +72,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
 
     {Opt::TMP_DIR,      "tmp_dir"},
     {Opt::RAR_PATH,     "rar_path"},
+    {Opt::RAR_ARGS,     "rar_args"},
     {Opt::RAR_SIZE,     "rar_size"},
     {Opt::PAR2_PCT,     "par2_pct"},
     {Opt::PAR2_PATH,    "par2_path"},
@@ -174,7 +175,7 @@ NgPost::NgPost(int &argc, char *argv[]):
     _uploadedSize(0), _nbArticlesTotal(0), _progressTimer(), _refreshRate(sDefaultRefreshRate),
     _stopPosting(0x0), _noMoreFiles(0x0),
     _extProc(nullptr), _compressDir(nullptr),
-    _tmpPath(), _rarPath(), _rarSize(0), _par2Pct(0), _par2Path(), _par2Args(),
+    _tmpPath(), _rarPath(), _rarArgs(sDefaultRarOptions), _rarSize(0), _par2Pct(0), _par2Path(), _par2Args(),
     _doCompress(false), _doPar2(false), _genName(), _genPass(),
     _lengthName(sDefaultLengthName), _lengthPass(sDefaultLengthPass),
     _rarName(), _rarPass(), _inputDir()
@@ -1557,6 +1558,8 @@ QString NgPost::_parseConfig(const QString &configPath)
                         _tmpPath = val;
                     else if (opt == sOptionNames[Opt::RAR_PATH])
                         _rarPath = val;
+                    else if (opt == sOptionNames[Opt::RAR_ARGS])
+                        _rarArgs = val;
                     else if (opt == sOptionNames[Opt::RAR_SIZE])
                     {
                         uint nb = val.toUInt(&ok);
@@ -1725,14 +1728,13 @@ void NgPost::_dumpParams() const
 #include <QProcess>
 int NgPost::compressFiles(const QString &archiveName,
                           const QStringList &files,
-                          const QString &pass,
-                          const QString &compressLevel)
+                          const QString &pass)
 {
     if (!canCompress() || (_par2Pct >0 && !canGenPar2()))
         return -1;
 
     // 1.: Compress
-    int exitCode = _compressFiles(_rarPath, _tmpPath, archiveName, files, pass, _rarSize, compressLevel);
+    int exitCode = _compressFiles(_rarPath, _tmpPath, archiveName, files, pass, _rarSize);
 
     if (exitCode == 0 && _doPar2)
         exitCode = _genPar2(_tmpPath, archiveName, _par2Pct, files);
@@ -1748,8 +1750,7 @@ int NgPost::_compressFiles(const QString &cmdRar,
                            const QString &archiveName,
                            const QStringList &files,
                            const QString &pass,
-                           uint volSize,
-                           const QString &compressLevel)
+                           uint volSize)
 {
     // 1.: create archive temporary folder
     QString archiveTmpFolder = _createArchiveFolder(tmpFolder, archiveName);
@@ -1762,12 +1763,19 @@ int NgPost::_compressFiles(const QString &cmdRar,
 
 
     // 2.: create rar args (rar a -v50m -ed -ep1 -m0 -hp"$PASS" "$TMP_FOLDER/$RAR_NAME.rar" "${FILES[@]}")
-    QStringList args = {"a", "-idp", "-ep1", compressLevel, QString("%1/%2.rar").arg(archiveTmpFolder).arg(archiveName)};
+//    QStringList args = {"a", "-idp", "-ep1", compressLevel, QString("%1/%2.rar").arg(archiveTmpFolder).arg(archiveName)};
+    QStringList args = _rarArgs.split(" ");
+    if (!args.contains("a"))
+        args.prepend("a");
+    if (!args.contains("-idp"))
+        args << "-idp";
     if (!pass.isEmpty())
         args << QString("-hp%1").arg(pass);
     if (volSize > 0)
         args << QString("-v%1m").arg(volSize);
-    args << "-r" << files;
+    if (!args.contains("-r"))
+        args << "-r";
+    args << QString("%1/%2.rar").arg(archiveTmpFolder).arg(archiveName) << files;
 
     // 3.: launch rar
     if (_debug || !_hmi)
@@ -2085,6 +2093,12 @@ void NgPost::saveConfig()
                << "## /!\\ The file MUST EXIST and BE EXECUTABLE /!\\\n"
                << "## this is set for Linux environment, Windows users MUST change it\n"
                << "RAR_PATH = " << _rarPath << "\n"
+               << "\n"
+               << "## RAR EXTRA options (the first 'a' and '-idp' will be added automatically)\n"
+               << "## -hp will be added if you use a password with --gen_pass, --rar_pass or using the HMI\n"
+               << "## -v42m will be added with --rar_size or using the HMI\n"
+               << "## you could change the compression level, lock the archive, add redundancy...\n"
+               << "RAR_ARGS = " << _rarArgs << "\n"
                << "\n"
                << "## size in MB of the RAR volumes (0 by default meaning NO split)\n"
                << "## feel free to change the value or to comment the next line if you don't want to split the archive\n"
