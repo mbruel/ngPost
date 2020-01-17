@@ -66,7 +66,7 @@ class NgPost : public QObject
                     INPUT, OUTPUT, NZB_PATH, THREAD,
                     MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY,
                     OBFUSCATE, INPUT_DIR,
-                    TMP_DIR, RAR_PATH, RAR_ARGS, RAR_SIZE, PAR2_PCT, PAR2_PATH, PAR2_ARGS,
+                    TMP_DIR, RAR_PATH, RAR_EXTRA, RAR_SIZE, PAR2_PCT, PAR2_PATH, PAR2_ARGS,
                     COMPRESS, GEN_PAR2, GEN_NAME, GEN_PASS, LENGTH_NAME, LENGTH_PASS,
                     RAR_NAME, RAR_PASS,
                     HOST, PORT, SSL, USER, PASS, CONNECTION,
@@ -202,7 +202,7 @@ private:
 
     static const uint sDefaultLengthName = 17;
     static const uint sDefaultLengthPass = 13;
-    static constexpr const char *sDefaultRarOptions = "-ep1 -m0";
+    static constexpr const char *sDefaultRarExtraOptions = "-ep1 -m0";
 
 
 public:
@@ -225,9 +225,6 @@ public:
     NntpArticle *getNextArticle(const QString &threadName);
 
     bool parseCommandLine(int argc, char *argv[]);
-
-    bool canCompress() const;
-    bool canGenPar2() const;
 
     inline const std::string &aticleSignature() const;
 
@@ -332,6 +329,9 @@ private:
                  const QString &archiveName,
                  uint redundancy = 0,
                  const QStringList &files = QStringList());
+
+    bool _canCompress() const;
+    bool _canGenPar2() const;
 
     void _cleanExtProc();
     void _cleanCompressDir();
