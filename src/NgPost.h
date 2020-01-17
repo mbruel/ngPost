@@ -203,7 +203,7 @@ private:
     static const uint sDefaultLengthName = 17;
     static const uint sDefaultLengthPass = 13;
     static constexpr const char *sDefaultRarExtraOptions = "-ep1 -m0";
-
+    static constexpr const char *sDefault7zOptions = "-mx0 -mhe=on";
 
 public:
     NgPost(int &argc, char *argv[]);
@@ -315,9 +315,7 @@ private:
     void _dumpParams() const;
 #endif
 
-    int compressFiles(const QString &archiveName,
-                      const QStringList &files,
-                      const QString &pass);
+    int compressFiles(const QStringList &files);
 
     int _compressFiles(const QString &cmdRar,
                        const QString &tmpFolder,

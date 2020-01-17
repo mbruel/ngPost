@@ -12,7 +12,7 @@ Releases are available for: Linux 64bit, Windows (both 32bit and 64bit), MacOS. 
 
 Here are the main features and advantages of ngPost:
 -   **full obfuscation of the Article Header** : the Subject will be a UUID (as the msg-id) and a random Poster will be used. **Be Careful**, using this, you won't be able to find your post on Usenet (or any Indexers) if you lose the NZB file. But using this method is **completely safe**, **no need to obfuscate your files or even use a password**.
--   **compress using RAR** (external command) with random **name obfuscation** and password and **generate par2** before posting
+-   **compress using RAR or 7zip** (external command) with random **name obfuscation** and password and **generate par2** before posting
 -   **par2cmdline is included in the package** but you can use another tool (like Multipar) if you wish using the PAR2_CMD and PAR2_ARGS keywords in the config file
 -   support **multiple files** and **multiple folders**
 -   support **several servers** (using config file or the HMI) with each **several connections** (supporting ssl)
@@ -100,17 +100,34 @@ If you don't provide the output file (nzb file), we will create it in the nzbPat
 so in the second example above, the nzb would be: /tmp/file1.nzb
 </pre>
 
-### Portable release (Linux)
+
+### Configuration file and keywords that are only in config
+The default configuration file for Linux and Mac environment is: **~/.ngPost** (no conf extension)<br/>
+If you wish, you can use another one in command line with the -c option.<br/>
+[Here the example to follow](https://github.com/mbruel/ngPost/blob/master/ngPost.conf).<br/>
+<br/>
+Most configuration keywords can be used in command line but few of them, for experimented posters, are only in the config file:
+- **RAR_EXTRA** : to customize the rar command (no need to put the 'a', '-idp' or '-r'). No need to use it for 7-zip except if you wish to change the compession level.
+- **PAR2_CMD**  : to change the par2 generator and be able to use [Parpar](https://github.com/animetosho/ParPar) or [Multipar](http://hp.vector.co.jp/authors/VA021385/) if you wish. (par2cmdline is the default embedded generator)
+- **PAR2_ARGS** : to customize the par2 command, especially if you choose to use another one than the default par2cmdline
+
+### Linux 64bit portable release
 if you don't want to build it and install the dependencies, you can also the portable release that includes everything.<br/>
-- download [ngPost_v2.1-x86_64.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v2.1-x86_64.AppImage)
-- chmod 755 ngPost_v2.1-x86_64.AppImage
+- download [ngPost_v2.2-x86_64.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v2.2-x86_64.AppImage)
+- chmod 755 ngPost_v2.2-x86_64.AppImage
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
 
+### Raspbian release (armhf for Raspberry PI)
+- download [ngPost_v2.2-armhf.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v2.2-armhf.AppImage)
+- chmod 755 ngPost_v2.2-armhf.AppImage
+- launch it using the same syntax than describe in the section above
+- if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
+
 
 ### Windows installer
-- just use the packager [ngPost_v2.1_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v2.1_x64_setup.exe) or [ngPost_v2.1_x86_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v2.1_x86_setup.exe) for the 32bit version
+- just use the packager [ngPost_v2.2_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v2.2_x64_setup.exe) or [ngPost_v2.2_x86_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v2.2_x86_setup.exe) for the 32bit version
 - edit **ngPost.conf** (in the installation folder) to add your server settings (you can put several). 
 - launch **ngPost.exe** (GUI version)
 - or you can use it with the command line: **ngPost.exe** -i "your file or directory"
@@ -122,7 +139,7 @@ By default:
 
 
 ### MacOS release built on High Sierra (v10.13)
-- download [ngPost_v2.1.dmg](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v2.1.dmg)
+- download [ngPost_v2.2.dmg](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v2.2.dmg)
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
