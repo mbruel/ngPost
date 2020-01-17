@@ -211,11 +211,7 @@ void MainWindow::onPostFiles()
                     filesToCompress << fileName;
             }
 
-            if ( _ngPost->compressFiles(
-                     _ui->compressNameEdit->text(),
-                     filesToCompress,
-                     _ui->nzbPassEdit->text().toLocal8Bit()
-                     ) == 0){
+            if ( _ngPost->compressFiles(filesToCompress) == 0 ){
 
                 _ui->filesList->clear();
                 for (const QFileInfo & file : _ngPost->_compressDir->entryInfoList(QDir::Files, QDir::Name))
@@ -460,11 +456,17 @@ void MainWindow::_updateParams()
     else
         _ngPost->_meta["password"] = _ui->nzbPassEdit->text();
 
+    // fetch compression settings
+    _ngPost->_tmpPath    = _ui->compressPathEdit->text();
+    _ngPost->_doCompress = _ui->compressCB->isChecked();
+    _ngPost->_rarPath    = _ui->rarEdit->text();
+    _ngPost->_rarName    = _ui->compressNameEdit->text();
+    if (_ui->nzbPassCB->isEnabled())
+        _ngPost->_rarPass = _ui->nzbPassEdit->text().toLocal8Bit();
+    else
+        _ngPost->_rarPass = QString();
     _ngPost->_lengthName = static_cast<uint>(_ui->nameLengthSB->value());
     _ngPost->_lengthPass = static_cast<uint>(_ui->passLengthSB->value());
-
-    _ngPost->_rarPath = _ui->rarEdit->text();
-    _ngPost->_tmpPath = _ui->compressPathEdit->text();
     uint val = 0;
     _ngPost->_rarSize = 0;
     if (!_ui->rarSizeEdit->text().isEmpty())
@@ -473,8 +475,10 @@ void MainWindow::_updateParams()
         if (ok)
             _ngPost->_rarSize = val;
     }
-    _ngPost->_par2Pct = 0;
+
+    // fetch par2 settings
     _ngPost->_doPar2  = _ui->par2CB->isChecked();
+    _ngPost->_par2Pct = 0;
     if (_ui->par2CB->isChecked() && !_ui->redundancyEdit->text().isEmpty())
     {
         val = _ui->redundancyEdit->text().toUInt(&ok);

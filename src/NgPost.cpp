@@ -175,7 +175,7 @@ NgPost::NgPost(int &argc, char *argv[]):
     _uploadedSize(0), _nbArticlesTotal(0), _progressTimer(), _refreshRate(sDefaultRefreshRate),
     _stopPosting(0x0), _noMoreFiles(0x0),
     _extProc(nullptr), _compressDir(nullptr),
-    _tmpPath(), _rarPath(), _rarArgs(sDefaultRarExtraOptions), _rarSize(0), _par2Pct(0), _par2Path(), _par2Args(),
+    _tmpPath(), _rarPath(), _rarArgs(), _rarSize(0), _par2Pct(0), _par2Path(), _par2Args(),
     _doCompress(false), _doPar2(false), _genName(), _genPass(),
     _lengthName(sDefaultLengthName), _lengthPass(sDefaultLengthPass),
     _rarName(), _rarPass(), _inputDir()
@@ -837,20 +837,19 @@ void NgPost::_printStats() const
         msgEnd += tr("%1 / %2 articles FAILED to be uploaded (even with %3 retries)...\n").arg(
                       _nbArticlesFailed).arg(_nbArticlesTotal).arg(NntpArticle::nbMaxTrySending());
 
+    if (_nzb)
+    {
+        msgEnd += QString("nzb file: %1\n").arg(nzbPath());
+        if (_doCompress)
+        {
+            msgEnd += QString("rar name: &1").arg(_rarName);
+            if (!_rarPass.isEmpty())
+                msgEnd += QString(", rar pass: %1").arg(_rarPass);
+        }
+        msgEnd += "\n";
+    }
 
-    if (_hmi)
-    {
-        _hmi->log(msgEnd);
-        if (_nzb)
-            _hmi->log(QString("nzb file: %1\n").arg(nzbPath()));
-    }
-    else
-    {
-        _cout << msgEnd;
-        if (_nzb)
-            _cout << QString("nzb file: %1\n").arg(nzbPath());
-        _cout << "\n" << flush;
-    }
+    _log(msgEnd);
 }
 
 void NgPost::_log(const QString &aMsg, bool newline) const
@@ -1726,18 +1725,16 @@ void NgPost::_dumpParams() const
 #endif
 
 #include <QProcess>
-int NgPost::compressFiles(const QString &archiveName,
-                          const QStringList &files,
-                          const QString &pass)
+int NgPost::compressFiles(const QStringList &files)
 {
     if (!_canCompress() || (_doPar2 && !_canGenPar2()))
         return -1;
 
     // 1.: Compress
-    int exitCode = _compressFiles(_rarPath, _tmpPath, archiveName, files, pass, _rarSize);
+    int exitCode = _compressFiles(_rarPath, _tmpPath, _rarName, files, _rarPass, _rarSize);
 
     if (exitCode == 0 && _doPar2)
-        exitCode = _genPar2(_tmpPath, archiveName, _par2Pct, files);
+        exitCode = _genPar2(_tmpPath, _rarName, _par2Pct, files);
 
     if (exitCode == 0)
         _log("Ready to post!");
@@ -1761,21 +1758,45 @@ int NgPost::_compressFiles(const QString &cmdRar,
     connect(_extProc, &QProcess::readyReadStandardOutput, this, &NgPost::onExtProcReadyReadStandardOutput, Qt::DirectConnection);
     connect(_extProc, &QProcess::readyReadStandardError,  this, &NgPost::onExtProcReadyReadStandardError,  Qt::DirectConnection);
 
+    bool is7z = false;
+    if (_rarPath.contains("7z"))
+    {
+        is7z = true;
+        if (_rarArgs.isEmpty())
+            _rarArgs = sDefault7zOptions;
+    }
+    else
+    {
+        if (_rarArgs.isEmpty())
+            _rarArgs = sDefaultRarExtraOptions;
+    }
 
     // 2.: create rar args (rar a -v50m -ed -ep1 -m0 -hp"$PASS" "$TMP_FOLDER/$RAR_NAME.rar" "${FILES[@]}")
 //    QStringList args = {"a", "-idp", "-ep1", compressLevel, QString("%1/%2.rar").arg(archiveTmpFolder).arg(archiveName)};
     QStringList args = _rarArgs.split(" ");
     if (!args.contains("a"))
         args.prepend("a");
-    if (!args.contains("-idp"))
+    if (!is7z && !args.contains("-idp"))
         args << "-idp";
     if (!pass.isEmpty())
-        args << QString("-hp%1").arg(pass);
+    {
+        if (is7z)
+        {
+            if (!args.contains("-mhe=on"))
+                args << "-mhe=on";
+            args << QString("-p%1").arg(pass);
+        }
+        else
+            args << QString("-hp%1").arg(pass);
+    }
     if (volSize > 0)
         args << QString("-v%1m").arg(volSize);
+
+    args << QString("%1/%2.%3").arg(archiveTmpFolder).arg(archiveName).arg(is7z ? "7z" : "rar");
     if (!args.contains("-r"))
         args << "-r";
-    args << QString("%1/%2.rar").arg(archiveTmpFolder).arg(archiveName) << files;
+
+    args << files;
 
     // 3.: launch rar
     if (_debug || !_hmi)
