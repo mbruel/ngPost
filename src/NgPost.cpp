@@ -507,9 +507,6 @@ int NgPost::startEventLoop()
     return _app->exec();
 }
 
-#ifdef __DEBUG__
-#include <QSslSocket>
-#endif
 int NgPost::startHMI()
 {
     parseDefaultConfig();
@@ -521,10 +518,6 @@ int NgPost::startHMI()
     _hmi->init();
     _hmi->show();
 
-#ifdef __DEBUG__
-    _log(QString("SSL support: %1, build version: %2, system version: %3").arg(QSslSocket::supportsSsl() ? "yes" : "no").arg(
-                 QSslSocket::sslLibraryBuildVersionString()).arg(QSslSocket::sslLibraryVersionString()));
-#endif
     return _app->exec();
 }
 
