@@ -61,6 +61,7 @@ class NgPost : public QObject
     Q_OBJECT
 
     friend class MainWindow; //!< so it can access all parameters
+    friend class PostingWidget;
 
     enum class Opt {HELP = 0, VERSION, CONF, DISP_PROGRESS, DEBUG,
                     INPUT, OUTPUT, NZB_PATH, THREAD,
