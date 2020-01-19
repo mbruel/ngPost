@@ -21,12 +21,9 @@ PostingWidget::PostingWidget(NgPost *ngPost, MainWindow *hmi) :
 {
     _ui->setupUi(this);
 
-    init();
-
     connect(_ui->postButton, &QAbstractButton::clicked, this, &PostingWidget::onPostFiles);
     connect(_ui->nzbPassCB,  &QAbstractButton::toggled, this, &PostingWidget::onNzbPassToggled);
     connect(_ui->genPass,    &QAbstractButton::clicked, this, &PostingWidget::onGenNzbPassword);
-
 }
 
 PostingWidget::~PostingWidget()

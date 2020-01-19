@@ -102,6 +102,11 @@ void NntpConnection::onStartConnection()
             this, SLOT(onErrors(QAbstractSocket::SocketError)), Qt::DirectConnection);
 
     _socket->connectToHost(_srvParams.host, _srvParams.port);
+
+    if (_ngPost->debugMode())
+        _log(QString("SSL support: %1, build version: %2, system version: %3").arg(QSslSocket::supportsSsl() ? "yes" : "no").arg(
+                 QSslSocket::sslLibraryBuildVersionString()).arg(QSslSocket::sslLibraryVersionString()));
+
 }
 
 void NntpConnection::onKillConnection()

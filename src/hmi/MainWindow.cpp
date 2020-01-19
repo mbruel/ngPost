@@ -416,7 +416,11 @@ void MainWindow::onJobTabClicked(int index)
 //    int nbJob = _ui->postTabWidget->count() -1;
 //    qDebug() << "Click on tab: " << index << ", count: " << nbJob;
 //    if (index == nbJob) // click on the last tab
-//        _ui->postTabWidget->insertTab(nbJob, new PostingWidget(_ngPost, this), QString("Job #%1").arg(nbJob+1));
+//    {
+//        PostingWidget *newPostingWidget = new PostingWidget(_ngPost, this);
+//        newPostingWidget->init();
+//        _ui->postTabWidget->insertTab(nbJob, newPostingWidget , QString("Job #%1").arg(nbJob+1));
+//    }
 }
 
 void MainWindow::onCloseJob(int index)
