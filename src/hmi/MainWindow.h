@@ -26,6 +26,7 @@
 class NgPost;
 class NntpServerParams;
 class NntpFile;
+class PostingWidget;
 
 namespace Ui {
 class MainWindow;
@@ -41,6 +42,7 @@ private:
     Ui::MainWindow *_ui;
     NgPost         *_ngPost;
     STATE           _state;
+    PostingWidget  *_uploadTab;
 
     static const bool sDefaultServerSSL   = true;
     static const int  sDefaultConnections = 5;
@@ -57,11 +59,17 @@ public:
     ~MainWindow();
 
     void init();
-    void setIDLE();
-
-    void updateProgressBar();
 
     void setFilePosted(NntpFile *nntpFile);
+    void setIDLE();
+
+
+    void setProgressBarRange(int start, int end);
+    void updateProgressBar();
+
+    void updateServers();
+    void updateParams();
+
 
     void log(const QString &aMsg, bool newline = true) const; //!< log function for QString
     void logError(const QString &error) const; //!< log function for QString
@@ -75,51 +83,26 @@ private slots:
 
     void onObfucateToggled(bool checked);
 
-    void onSelectFilesClicked();
-    void onSelectFolderClicked();
-    void onClearFilesClicked();
-    void onCompressCB(bool checked);
-    void onGenCompressName();
-    void onCompressPathClicked();
-    void onNzbFileClicked();
-    void onRarPathClicked();
-
 
     void onGenPoster();
-    void onNzbPassToggled(bool checked);
-    void onGenNzbPassword();
 
     void onDebugToggled(bool checked);
-    void onAboutClicked();
 
     void onSaveConfig();
 
+    void onJobTabClicked(int index);
+    void onCloseJob(int index);
+
     void toBeImplemented();
-
-
-protected:
-    bool eventFilter(QObject *obj, QEvent *event) override;
-
-    void dragEnterEvent(QDragEnterEvent *e) override;
-    void dropEvent(QDropEvent *e) override;
 
 private:
     void _initServerBox();
-    void _initFilesBox();
     void _initPostingBox();
-
-    void _updateServers();
-    void _updateParams();
-    int  _createNntpFiles();
 
     void _addServer(NntpServerParams *serverParam);
     int  _serverRow(QObject *delButton);
 
 
-    void _addPath(const QString &path, int currentNbFiles, int isDir = false);
-    bool _fileAlreadyInList(const QString &fileName, int currentNbFiles) const;
-
-    bool _thereAreFolders() const;
 
     static const QString sGroupBoxStyle;
 };

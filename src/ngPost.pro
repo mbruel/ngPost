@@ -1,7 +1,7 @@
 QT += network gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-DEFINES += "APP_VERSION=\"2.2\""
+DEFINES += "APP_VERSION=\"2.3\""
 
 
 INCLUDEPATH += $$PWD
@@ -54,6 +54,7 @@ SOURCES += \
         NntpConnection.cpp \
         hmi/AboutNgPost.cpp \
         hmi/CheckBoxCenterWidget.cpp \
+        hmi/PostingWidget.cpp \
         hmi/SignedListWidget.cpp \
         main.cpp \
         nntp/Nntp.cpp \
@@ -73,6 +74,7 @@ HEADERS += \
     NntpConnection.h \
     hmi/AboutNgPost.h \
     hmi/CheckBoxCenterWidget.h \
+    hmi/PostingWidget.h \
     hmi/SignedListWidget.h \
     nntp/Nntp.h \
     nntp/NntpArticle.h \
@@ -85,7 +87,8 @@ HEADERS += \
 
 FORMS += \
     hmi/AboutNgPost.ui \
-    hmi/MainWindow.ui
+    hmi/MainWindow.ui \
+    hmi/PostingWidget.ui
 
 RESOURCES += \
     resources/resources.qrc
