@@ -8,7 +8,7 @@ since v2.1 it can compress (using your external rar binary) and generate the par
 
 ![ngPost_v2.1](https://raw.githubusercontent.com/mbruel/ngPost/master/pics/ngPost_v2.1.png)
 
-Releases are available for: Linux 64bit, Windows (both 32bit and 64bit), MacOS. It will soon be available for Raspbian, Android then iOS...
+[Releases are availables](https://github.com/mbruel/ngPost/tree/master/release) for: Linux 64bit, Windows (both 32bit and 64bit), MacOS and Raspbian (RPI 4). Soon for Android then iOS...
 
 Here are the main features and advantages of ngPost:
 -   **full obfuscation of the Article Header** : the Subject will be a UUID (as the msg-id) and a random Poster will be used. **Be Careful**, using this, you won't be able to find your post on Usenet (or any Indexers) if you lose the NZB file. But using this method is **completely safe**, **no need to obfuscate your files or even use a password**.
@@ -113,21 +113,21 @@ Most configuration keywords can be used in command line but few of them, for exp
 
 ### Linux 64bit portable release
 if you don't want to build it and install the dependencies, you can also the portable release that includes everything.<br/>
-- download [ngPost_v2.2-x86_64.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v2.2-x86_64.AppImage)
-- chmod 755 ngPost_v2.2-x86_64.AppImage
+- download [ngPost_v2.3-x86_64.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v2.3-x86_64.AppImage)
+- chmod 755 ngPost_v2.3-x86_64.AppImage
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
 
 ### Raspbian release (armhf for Raspberry PI)
-- download [ngPost_v2.2-armhf.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v2.2-armhf.AppImage)
-- chmod 755 ngPost_v2.2-armhf.AppImage
+- download [ngPost_v2.3-armhf.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v2.3-armhf.AppImage)
+- chmod 755 ngPost_v2.3-armhf.AppImage
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
 
 ### Windows installer
-- just use the packager [ngPost_v2.2_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v2.2_x64_setup.exe) or [ngPost_v2.2_x86_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v2.2_x86_setup.exe) for the 32bit version
+- just use the packager [ngPost_v2.3_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v2.3_x64_setup.exe) or [ngPost_v2.3_x86_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v2.3_x86_setup.exe) for the 32bit version
 - edit **ngPost.conf** (in the installation folder) to add your server settings (you can put several). 
 - launch **ngPost.exe** (GUI version)
 - or you can use it with the command line: **ngPost.exe** -i "your file or directory"
@@ -139,7 +139,7 @@ By default:
 
 
 ### MacOS release built on High Sierra (v10.13)
-- download [ngPost_v2.2.dmg](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v2.2.dmg)
+- download [ngPost_v2.3.dmg](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v2.3.dmg)
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 

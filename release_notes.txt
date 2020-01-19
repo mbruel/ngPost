@@ -11,6 +11,17 @@ TODO: bandwidth optimization:
 	test with no threads and no article preparation
 	check if we can play on the SSL protocol paramaters
 
+
+####################################################
+###       Release: ngPost v2.3                   ###
+###       date:    2020/01/19                    ###
+####################################################
+
+Prepare the HMI to be able to create several Posting Jobs
+The implementation will be done if I get some donations for it.
+
+
+
 ####################################################
 ###       Release: ngPost v2.2                   ###
 ###       date:    2020/01/17                    ###
