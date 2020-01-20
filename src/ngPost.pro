@@ -18,6 +18,14 @@ win32: {
     CONFIG += console
 }
 
+macx: {
+    ICON = ngPost.icns
+    CONFIG += app_bundle
+    ExtraFiles.files = $$PWD/par2
+    ExtraFiles.path = Contents/MacOS
+    QMAKE_BUNDLE_DATA += ExtraFiles
+} 
+
 DEFINES += __USE_MUTEX__
 
 CONFIG(debug, debug|release) :{
