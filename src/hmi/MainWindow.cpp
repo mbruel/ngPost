@@ -97,10 +97,13 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
 
     _ui->postTabWidget->clear();
     _ui->postTabWidget->setTabsClosable(true);
-    _ui->postTabWidget->addTab(_uploadTab, tr("Job #1"));
+    _ui->postTabWidget->addTab(new QLabel("<h1>To be implemented...</h1>"), _ngPost->sFolderMonitoringName);
+    _ui->postTabWidget->addTab(_uploadTab, QString("%1 #%2").arg(_ngPost->sQuickJobName).arg(1));
     _ui->postTabWidget->addTab(new QWidget(_ui->postTabWidget), QIcon(":/icons/plus.png"), "New");
+    _ui->postTabWidget->tabBar()->setTabToolTip(2, QString("Create a new %1").arg(_ngPost->sQuickJobName));
 
-    connect(_ui->postTabWidget,           &QTabWidget::currentChanged, this, &MainWindow::onJobTabClicked);
+//    connect(_ui->postTabWidget,           &QTabWidget::currentChanged, this, &MainWindow::onJobTabClicked);
+    connect(_ui->postTabWidget->tabBar(), &QTabBar::tabBarClicked,     this, &MainWindow::onJobTabClicked);
     connect(_ui->postTabWidget->tabBar(), &QTabBar::tabCloseRequested, this, &MainWindow::onCloseJob);
 
     _ui->jobLabel->setText("<b><u>Job #1</u></b>");
@@ -395,39 +398,46 @@ void MainWindow::onSaveConfig()
 
 void MainWindow::onJobTabClicked(int index)
 {
-    Q_UNUSED(index)
-    if (index == 1)
-    {
-        QMessageBox box(this);
-        box.setWindowTitle(tr("to be implemented..."));
-        box.setInformativeText( tr("The idea would be to allow to prepare several posting Jobs with compression/par2... while the first job is posting.\n")
-                               +tr("They will then start automatically, one after each other!\n")
-                               +tr("\nAs this feature will require few days of work and that I don't particularly need it, ")
-                               +tr("I'm waiting for some donations and if I get several, I'll definitely code it for you ;)\n"));
-        box.setIcon(QMessageBox::Icon::Information);
-        QAbstractButton* donateButton = box.addButton(tr("Donate"), QMessageBox::ActionRole);
-        donateButton->setIcon(QIcon(":/icons/donate.png"));
-        connect(donateButton, &QAbstractButton::clicked, _ngPost, &NgPost::onDonation);
-        box.addButton(tr("Ok"), QMessageBox::AcceptRole);
-        box.exec();
-        _ui->postTabWidget->setCurrentIndex(0);
-    }
-
-//    int nbJob = _ui->postTabWidget->count() -1;
-//    qDebug() << "Click on tab: " << index << ", count: " << nbJob;
-//    if (index == nbJob) // click on the last tab
+//    Q_UNUSED(index)
+//    if (index == 1)
 //    {
-//        PostingWidget *newPostingWidget = new PostingWidget(_ngPost, this);
-//        newPostingWidget->init();
-//        _ui->postTabWidget->insertTab(nbJob, newPostingWidget , QString("Job #%1").arg(nbJob+1));
+//        QMessageBox box(this);
+//        box.setWindowTitle(tr("to be implemented..."));
+//        box.setInformativeText( tr("The idea would be to allow to prepare several posting Jobs with compression/par2... while the first job is posting.\n")
+//                               +tr("They will then start automatically, one after each other!\n")
+//                               +tr("\nAs this feature will require few days of work and that I don't particularly need it, ")
+//                               +tr("I'm waiting for some donations and if I get several, I'll definitely code it for you ;)\n"));
+//        box.setIcon(QMessageBox::Icon::Information);
+//        QAbstractButton* donateButton = box.addButton(tr("Donate"), QMessageBox::ActionRole);
+//        donateButton->setIcon(QIcon(":/icons/donate.png"));
+//        connect(donateButton, &QAbstractButton::clicked, _ngPost, &NgPost::onDonation);
+//        box.addButton(tr("Ok"), QMessageBox::AcceptRole);
+//        box.exec();
+//        _ui->postTabWidget->setCurrentIndex(0);
 //    }
+
+    int nbJob = _ui->postTabWidget->count() -1;
+    qDebug() << "Click on tab: " << index << ", count: " << nbJob;
+    if (index == nbJob) // click on the last tab
+    {
+        PostingWidget *newPostingWidget = new PostingWidget(_ngPost, this);
+        newPostingWidget->init();
+        _ui->postTabWidget->insertTab(nbJob, newPostingWidget , QString("%1 #%2").arg(_ngPost->sQuickJobName).arg(nbJob));
+//        _ui->postTabWidget->tabBar()->setTabTextColor(nbJob, Qt::darkBlue);
+//        _ui->postTabWidget->tabBar()->setTabToolTip(nbJob, "my tooltip");
+    }
 }
 
 void MainWindow::onCloseJob(int index)
 {
     int nbJob = _ui->postTabWidget->count() -1;
-    if (index > 0 && index < nbJob )
-        delete _ui->postTabWidget->widget(index);
+    qDebug() << "onCloseJob on tab: " << index << ", count: " << nbJob;
+    if (index > 1 && index < nbJob )
+    {
+        QWidget *jobWidget = _ui->postTabWidget->widget(index);
+        _ui->postTabWidget->removeTab(index);
+        delete jobWidget;
+    }
     if (index == nbJob - 1)
         _ui->postTabWidget->setCurrentIndex(_ui->postTabWidget->count() - 2);
 }
