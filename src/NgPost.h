@@ -206,6 +206,10 @@ private:
     static constexpr const char *sDefaultRarExtraOptions = "-ep1 -m0";
     static constexpr const char *sDefault7zOptions = "-mx0 -mhe=on";
 
+    static constexpr const char *sFolderMonitoringName = "Folder Monitoring";
+    static constexpr const char *sQuickJobName = "Quick Post";
+
+
 public:
     NgPost(int &argc, char *argv[]);
     ~NgPost();
