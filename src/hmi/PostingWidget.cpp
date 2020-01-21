@@ -3,6 +3,7 @@
 #include "MainWindow.h"
 #include "AboutNgPost.h"
 #include "NgPost.h"
+#include "PostingJob.h"
 #include "nntp/NntpFile.h"
 
 #include <QDebug>
@@ -13,10 +14,23 @@
 #include <QClipboard>
 #include <QMimeData>
 
-PostingWidget::PostingWidget(NgPost *ngPost, MainWindow *hmi) :
+
+const QColor  PostingWidget::sPostingColor = QColor(255,215,0); // gold (#FFD700)
+const QString PostingWidget::sPostingIcon  = ":/icons/uploading.png";
+const QColor  PostingWidget::sPendingColor = Qt::darkBlue;
+const QString PostingWidget::sPendingIcon  = ":/icons/pending.png";
+const QColor  PostingWidget::sDoneOKColor  = Qt::darkGreen;
+const QString PostingWidget::sDoneOKIcon   = ":/icons/ok.png";
+const QColor  PostingWidget::sDoneKOColor  = Qt::darkRed;
+const QString PostingWidget::sDoneKOIcon   = ":/icons/ko.png";
+
+PostingWidget::PostingWidget(NgPost *ngPost, MainWindow *hmi, uint jobNumber) :
     QWidget(hmi),
-    _ui(new Ui::PostingWidget), _hmi(hmi),
+    _ui(new Ui::PostingWidget),
+    _hmi(hmi),
     _ngPost(ngPost),
+    _jobNumber(jobNumber),
+    _postingJob(nullptr),
     _state(STATE::IDLE)
 {
     _ui->setupUi(this);
@@ -31,9 +45,8 @@ PostingWidget::~PostingWidget()
     delete _ui;
 }
 
-void PostingWidget::setFilePosted(NntpFile *nntpFile)
+void PostingWidget::onFilePosted(QString filePath, int nbArticles, int nbFailed)
 {
-    QString filePath = nntpFile->path();
     int nbFiles = _ui->filesList->count();
     for (int i = 0 ; i < nbFiles ; ++i)
     {
@@ -41,7 +54,6 @@ void PostingWidget::setFilePosted(NntpFile *nntpFile)
         if (item->text() == filePath)
         {
             Qt::GlobalColor color = Qt::darkGreen;
-            int nbArticles = nntpFile->nbArticles(), nbFailed = nntpFile->nbFailedArticles();
             if (nbFailed == 0)
                 item->setText(QString("%1 [%2 ok]").arg(filePath).arg(nbArticles));
             else
@@ -58,13 +70,52 @@ void PostingWidget::setFilePosted(NntpFile *nntpFile)
     }
 }
 
+void PostingWidget::onArchiveFileNames(QStringList paths)
+{
+    _ui->filesList->clear();
+    for (const QString & path : paths)
+        _ui->filesList->addPath(path);
+}
+
+void PostingWidget::onArticlesNumber(int nbArticles)
+{
+    _hmi->setJobLabel(_jobNumber);
+    _hmi->setProgressBarRange(0, nbArticles);
+}
+
+void PostingWidget::onPostingJobDone()
+{
+    if (_postingJob->_nbArticlesFailed > 0)
+        _hmi->updateJobTab(this, sDoneKOColor, QIcon(sDoneKOIcon));
+    else
+        _hmi->updateJobTab(this, sDoneOKColor, QIcon(sDoneOKIcon));
+
+    _postingJob = nullptr; //!< we don't own it, NgPost will delete it
+    setIDLE();
+}
+
 void PostingWidget::onPostFiles()
 {
     if (_state == STATE::IDLE)
     {
-        if (_thereAreFolders() && !_ui->compressCB->isChecked())
+        if (_ui->filesList->count() == 0)
         {
-            _ngPost->error(tr("You can't post folders without using compression..."));
+            _hmi->logError(tr("There are no selected files to post..."));
+            return;
+        }
+
+        QFileInfoList files;
+        bool hasFolder = false;
+        _buildFilesList(files, hasFolder);
+        if (files.isEmpty())
+        {
+            _hmi->logError(tr("There are no existing files to post..."));
+            return;
+        }
+
+        if (hasFolder && !_ui->compressCB->isChecked())
+        {
+            _hmi->logError(tr("You can't post folders without using compression..."));
             return;
         }
 
@@ -90,53 +141,35 @@ void PostingWidget::onPostFiles()
         }
 
         _state = STATE::POSTING;
-        int nbFiles = 0;
-        if (_ui->compressCB->isChecked())
+        _postingJob = new PostingJob(_ngPost, nzbPath, files, this,
+                                     _ngPost->_tmpPath, _ngPost->_rarPath, _ngPost->_rarSize,  _ngPost->_par2Pct,
+                                     _ngPost->_doCompress, _ngPost->_doPar2, false, false,
+                                     _ngPost->_lengthName, _ngPost->_lengthPass, _ngPost->_rarName, _ngPost->_rarPass);
+
+        bool hasStarted = _ngPost->startPostingJob(_postingJob);
+
+        QString buttonTxt;
+        QColor  tabColor;
+        QString tabIcon;
+        if (hasStarted)
         {
-            QStringList filesToCompress;
-            for (int i = 0 ; i < _ui->filesList->count() ; ++i)
-            {
-                QString fileName(_ui->filesList->item(i)->text());
-                QFileInfo fileInfo(fileName);
-                if (fileInfo.exists())
-                    filesToCompress << fileName;
-            }
-
-            if ( _ngPost->compressFiles(filesToCompress) == 0 ){
-
-                _ui->filesList->clear();
-                for (const QFileInfo & file : _ngPost->_compressDir->entryInfoList(QDir::Files, QDir::Name))
-                {
-                    _ui->filesList->addPath(file.absoluteFilePath());
-                    if (_ngPost->debugMode())
-                        _ngPost->_log(QString("  - %1").arg(file.fileName()));
-
-                }
-
-                nbFiles = _createNntpFiles();
-            }
-        }
-        else
-            nbFiles = _createNntpFiles();
-
-        if (nbFiles > 0)
-        {
-            _ui->postButton->setText(tr("Stop Posting"));
-            _hmi->setProgressBarRange(0, _ngPost->_nbArticlesTotal);
-            _hmi->updateProgressBar();
-            if (!_ngPost->startPosting())
-                setIDLE();
+            buttonTxt = tr("Stop Posting");
+            tabColor  = sPostingColor;
+            tabIcon   = sPostingIcon;
         }
         else
         {
-            _ngPost->_error(tr("No existing file to post..."));
-            setIDLE();
+            buttonTxt = tr("Cancel Posting");
+            tabColor  = sPendingColor;
+            tabIcon   = sPendingIcon;
         }
+        _ui->postButton->setText(buttonTxt);
+        _hmi->updateJobTab(this, tabColor, QIcon(tabIcon), _postingJob->_nzbName);
     }
     else  if (_state == STATE::POSTING)
     {
         _state = STATE::STOPPING;
-        _ngPost->stopPosting();
+        emit _postingJob->stopPosting();
     }
 }
 
@@ -187,6 +220,7 @@ void PostingWidget::onClearFilesClicked()
     _ui->filesList->clear2();
     _ui->nzbFileEdit->clear();
     _ui->compressNameEdit->clear();
+    _hmi->clearJobTab(this);
 }
 
 void PostingWidget::onCompressCB(bool checked)
@@ -319,6 +353,21 @@ void PostingWidget::dropEvent(QDropEvent *e)
         _addPath(fileName, currentNbFiles, QFileInfo(fileName).isDir());
     }
 }
+#include <QList>
+#include <QFileInfoList>
+void PostingWidget::_buildFilesList(QFileInfoList &files, bool &hasFolder)
+{
+    for (int i = 0 ; i < _ui->filesList->count() ; ++i)
+    {
+        QFileInfo fileInfo(_ui->filesList->item(i)->text());
+        if (fileInfo.exists())
+        {
+            files << fileInfo;
+            if (fileInfo.isDir())
+                hasFolder = true;
+        }
+    }
+}
 
 void PostingWidget::init()
 {
@@ -375,18 +424,7 @@ void PostingWidget::init()
     onCompressCB(false);
 }
 
-int PostingWidget::_createNntpFiles()
-{
-    QList<QFileInfo> filesToUpload;
-    for (int i = 0 ; i < _ui->filesList->count() ; ++i)
-    {
-        QFileInfo fileInfo(_ui->filesList->item(i)->text());
-        if (fileInfo.exists() && fileInfo.isFile())
-            filesToUpload << fileInfo;
-    }
-    _ngPost->_initPosting(filesToUpload);
-    return filesToUpload.size();
-}
+
 
 void PostingWidget::_udatePostingParams()
 {
@@ -462,17 +500,6 @@ bool PostingWidget::_fileAlreadyInList(const QString &fileName, int currentNbFil
     for (int i = 0 ; i < currentNbFiles ; ++i)
     {
         if (_ui->filesList->item(i)->text() == fileName)
-            return true;
-    }
-    return false;
-}
-
-bool PostingWidget::_thereAreFolders() const
-{
-    int currentNbFiles = _ui->filesList->count();
-    for (int i = 0 ; i < currentNbFiles ; ++i)
-    {
-        if (QFileInfo(_ui->filesList->item(i)->text()).isDir())
             return true;
     }
     return false;

@@ -20,15 +20,16 @@
 //========================================================================
 
 #include "NntpFile.h"
+#include "PostingJob.h"
 #include "NgPost.h"
 #include "NntpArticle.h"
 #include <cmath>
 #include <QTextStream>
 #include <QDebug>
 
-NntpFile::NntpFile(NgPost *ngPost, const QFileInfo &file, int num, int nbFiles, const QList<QString> &grpList):
+NntpFile::NntpFile(PostingJob *postingJob, const QFileInfo &file, int num, int nbFiles, const QList<QString> &grpList):
     QObject(),
-    _ngPost(ngPost),
+    _postingJob(postingJob),
     _file(file), _num(num), _nbFiles(nbFiles), _grpList(grpList),
     _nbAticles((int)std::ceil((float)file.size()/NgPost::articleSize())),
     _articles(),
@@ -54,7 +55,7 @@ NntpFile::~NntpFile()
 
 void NntpFile::onArticlePosted(quint64 size)
 {
-    _ngPost->articlePosted(size);
+    _postingJob->articlePosted(size);
     NntpArticle *article = static_cast<NntpArticle*>(sender());
     int part = article->_part;
 #ifdef __DEBUG__
@@ -77,7 +78,7 @@ void NntpFile::onArticlePosted(quint64 size)
 
 void NntpFile::onArticleFailed(quint64 size)
 {
-    _ngPost->articleFailed(size);
+    _postingJob->articleFailed(size);
     NntpArticle *article = static_cast<NntpArticle*>(sender());
     int part = article->_part;
 #ifdef __DEBUG__

@@ -37,9 +37,11 @@ class NntpFile;
 class NntpArticle;
 class QCoreApplication;
 class MainWindow;
-class QProcess;
+class PostingJob;
 
-using QAtomicBool = QAtomicInteger<unsigned short>; // 16 bit only (faster than using 8 bit variable...)
+#define NB_ARTICLES_TO_PREPARE_PER_CONNECTION 2
+
+//using QAtomicBool = QAtomicInteger<unsigned short>; // 16 bit only (faster than using 8 bit variable...)
 
 #include <QTimer>
 
@@ -51,7 +53,7 @@ using QAtomicBool = QAtomicInteger<unsigned short>; // 16 bit only (faster than 
  * 3.: it creates the upload Threads (at least one)
  * 4.: it creates the NntpConnections and spreads them amongst the upload Threads
  * 5.: it prepares 2 Articles for each NntpConnections (yEnc encoding done)
- * 6.: it updates the progress bar when Articles are posted
+ * 6.: it updates the progressbar bar when Articles are posted
  * 7.: it writes NntpFile to the nzb file when they are fully posted
  * 8.: it handles properly the shutdown
  *
@@ -62,8 +64,9 @@ class NgPost : public QObject
 
     friend class MainWindow; //!< so it can access all parameters
     friend class PostingWidget;
+    friend class PostingJob;
 
-    enum class Opt {HELP = 0, VERSION, CONF, DISP_PROGRESS, DEBUG,
+    enum class Opt {HELP = 0, VERSION, CONF, DISP_progressbar, DEBUG,
                     INPUT, OUTPUT, NZB_PATH, THREAD,
                     MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY,
                     OBFUSCATE, INPUT_DIR,
@@ -87,17 +90,17 @@ private:
     mutable QTextStream   _cerr; //!< stream for stderr
 
     bool                  _debug;
-    bool                  _dispProgressBar;
+    bool                  _dispprogressbarBar;
     bool                  _dispFilesPosting;
 
     QString               _nzbName; //!< name of nzb that we'll write (without the extension)
-    QQueue<NntpFile*>     _filesToUpload;  //!< list of files to upload (that we didn't start)
-    QSet<NntpFile*>       _filesInProgress;//!< files in queue to be uploaded (Articles have been produced)
+//    QQueue<NntpFile*>     _filesToUpload;  //!< list of files to upload (that we didn't start)
+//    QSet<NntpFile*>       _filesInprogressbar;//!< files in queue to be uploaded (Articles have been produced)
     int                   _nbFiles;  //!< number of files to post in this iteration
-    int                   _nbPosted; //!< number of files posted
+//    int                   _nbPosted; //!< number of files posted
 
-    QVector<QThread*>        _threadPool;      //!< the connections are distributed among several threads
-    QVector<NntpConnection*> _nntpConnections; //!< the NNTP connections (owning the TCP sockets)
+//    QVector<QThread*>        _threadPool;      //!< the connections are distributed among several threads
+//    QVector<NntpConnection*> _nntpConnections; //!< the NNTP connections (owning the TCP sockets)
 
     QList<NntpServerParams*> _nntpServers; //!< the servers parameters
 
@@ -107,45 +110,46 @@ private:
     std::string          _groups;             //!< Newsgroup where to post
     std::string          _articleIdSignature; //!< signature for Article message id (must be as a email address)
 
-    QFile      *_nzb;       //!< nzb file that will be filled on the fly when a file is fully posted
-    QTextStream _nzbStream; //!< txt stream for the nzb file
+//    QFile      *_nzb;       //!< nzb file that will be filled on the fly when a file is fully posted
+//    QTextStream _nzbStream; //!< txt stream for the nzb file
 
-    NntpFile    *_nntpFile; //!< current file that is getting processed
-    QFile       *_file;     //!< file handler on the file getting processed
-    char        *_buffer;   //!< buffer to read the current file
-    int          _part;     //!< part number (Article) on the current file
-    QMutex       _secureFile;
+//    NntpFile    *_nntpFile; //!< current file that is getting processed
+//    QFile       *_file;     //!< file handler on the file getting processed
+//    char        *_buffer;   //!< buffer to read the current file
+//    int          _part;     //!< part number (Article) on the current file
+//    QMutex       _secureFile;
 
-    QQueue<NntpArticle*> _articles; //!< prepared articles that are yEnc encoded
-    QMutex               _secureArticlesQueue; //!< mutex to protect the Article stack (as the NntpConnection will pop from the ThreadPool)
+//    QQueue<NntpArticle*> _articles; //!< prepared articles that are yEnc encoded
+//    QMutex               _secureArticlesQueue; //!< mutex to protect the Article stack (as the NntpConnection will pop from the ThreadPool)
 
 
-    QTime       _timeStart; //!< to get some stats (upload time and avg speed)
-    quint64     _totalSize; //!< total size (in Bytes) to be uploaded
+//    QTime       _timeStart; //!< to get some stats (upload time and avg speed)
+//    quint64     _totalSize; //!< total size (in Bytes) to be uploaded
 
     QMap<QString, QString> _meta;    //!< list of meta to add in the nzb header (typically a password)
     QList<QString>         _grpList; //!< Newsgroup where we're posting in a list format to write in the nzb file
 
-    int     _nbConnections; //!< available number of NntpConnection (we may loose some)
+//    int     _nbConnections; //!< available number of NntpConnection (we may loose some)
     int     _nbThreads;     //!< size of the ThreadPool
     int     _socketTimeOut; //!< socket timeout
     QString _nzbPath;       //!< default path where to write the nzb files
     QString _nzbPathConf;       //!< default path where to write the nzb files
 
-    int       _nbArticlesUploaded; //!< number of Articles that have been uploaded (+ failed ones)
-    int       _nbArticlesFailed;   //!< number of Articles that failed to be uploaded
-    quint64   _uploadedSize;       //!< bytes posted (to compute the avg speed)
-    int       _nbArticlesTotal;    //!< number of Articles of all the files to post
-    QTimer    _progressTimer;      //!< timer to refresh the upload information (progress bar, avg. speed)
+//    int       _nbArticlesUploaded; //!< number of Articles that have been uploaded (+ failed ones)
+//    int       _nbArticlesFailed;   //!< number of Articles that failed to be uploaded
+//    quint64   _uploadedSize;       //!< bytes posted (to compute the avg speed)
+//    int       _nbArticlesTotal;    //!< number of Articles of all the files to post
+    QTimer    _progressbarTimer;      //!< timer to refresh the upload information (progressbar bar, avg. speed)
     const int _refreshRate;        //!< refresh rate
 
-    QAtomicBool _stopPosting;
-    QAtomicBool _noMoreFiles;
+//    QAtomicBool _stopPosting;
+//    QAtomicBool _noMoreFiles;
 
-    QProcess   *_extProc;
-    QDir       *_compressDir;
-    bool        _limitProcDisplay;
-    ushort      _nbProcDisp;
+
+//    QProcess   *_extProc;
+//    QDir       *_compressDir;
+//    bool        _limitProcDisplay;
+//    ushort      _nbProcDisp;
 
     QString     _tmpPath;
     QString     _rarPath;
@@ -166,6 +170,10 @@ private:
     QString     _rarPass;
 
     QString     _inputDir;
+
+    PostingJob         *_activeJob;
+    QQueue<PostingJob*> _pendingJobs;
+
 
 
     static qint64 sArticleSize;
@@ -192,8 +200,8 @@ private:
     static constexpr const char *sDefaultConfig = ".ngPost";
 #endif
 
-    static const int sProgressBarWidth = 50;
-    static const int sDefaultRefreshRate = 500; //!< how often shall we refresh the progress bar?
+    static const int sprogressbarBarWidth = 50;
+    static const int sDefaultRefreshRate = 500; //!< how often shall we refresh the progressbar bar?
 
     static const QString sDonationURL;
     static const QString sNgPostASCII;
@@ -206,9 +214,10 @@ private:
     static constexpr const char *sDefaultRarExtraOptions = "-ep1 -m0";
     static constexpr const char *sDefault7zOptions = "-mx0 -mhe=on";
 
-    static constexpr const char *sFolderMonitoringName = "Folder Monitoring";
+    static constexpr const char *sFolderMonitoringName = "Folder Parsing";
     static constexpr const char *sQuickJobName = "Quick Post";
 
+    static const int nbPreparedArticlePerConnection = NB_ARTICLES_TO_PREPARE_PER_CONNECTION;
 
 public:
     NgPost(int &argc, char *argv[]);
@@ -220,12 +229,12 @@ public:
     int startHMI();
     QString parseDefaultConfig();
 
+    bool startPostingJob(PostingJob *job);
 
-    bool startPosting();
 
     void updateGroups(const QString &groups);
 
-    inline QString avgSpeed() const;
+//    inline QString avgSpeed() const;
 
     NntpArticle *getNextArticle(const QString &threadName);
 
@@ -255,60 +264,40 @@ public:
 
     inline bool dispPostingFile() const;
 
-    inline void articlePosted(quint64 size);
-    inline void articleFailed(quint64 size);
+//    inline void articlePosted(quint64 size);
+//    inline void articleFailed(quint64 size);
 
 
     void saveConfig();
+
 signals:
-    void scheduleNextArticle();
-    void log(QString msg); //!< in case we signal from another thread
+    void log(QString msg, bool newline); //!< in case we signal from another thread
     void error(QString msg); //!< in case we signal from another thread
 
 public slots:
     void onCheckForNewVersion();
     void onDonation();
 
+    void onPostingJobStarted();
+    void onPostingJobFinished();
+
 private slots:
-    void onNntpFileStartPosting();
-    void onNntpFilePosted();
-    void onLog(QString msg);
+    void onLog(QString msg, bool newline);
     void onError(QString msg);
-    void onDisconnectedConnection(NntpConnection *con);
-    void onPrepareNextArticle();
     void onErrorConnecting(QString err);
 
 #ifndef __USE_MUTEX__
     void onRequestArticle(NntpConnection *con);
 #endif
 
-    void onRefreshProgressBar();
-
-    void onExtProcReadyReadStandardOutput();
-    void onExtProcReadyReadStandardError();
+    void onRefreshprogressbarBar();
 
 
 private:
-    void _initPosting(const QList<QFileInfo> &filesToUpload);
-    void _cleanInit();
     void _finishPosting();
 
-    void stopPosting(); //!< for HMI
-
-    void _startConnectionInThread(int conIdx, QThread *thread, const QString &threadName);
-
-    int  _createNntpConnections();
-    void _closeNzb();
-    void _printStats() const;
     void _log(const QString &aMsg, bool newline = true) const; //!< log function for QString
     void _error(const QString &error) const;
-    void _prepareArticles();
-
-
-    inline NntpFile *_getNextFile();
-    NntpArticle *_getNextArticle(const QString &threadName);
-
-    NntpArticle *_prepareNextArticle(const QString &threadName, bool fillQueue = true);
 
     std::string _randomFrom() const;
 
@@ -319,29 +308,6 @@ private:
 #ifdef __DEBUG__
     void _dumpParams() const;
 #endif
-
-    int compressFiles(const QStringList &files);
-
-    int _compressFiles(const QString &cmdRar,
-                       const QString &tmpFolder,
-                       const QString &archiveName,
-                       const QStringList &files,
-                       const QString &pass,
-                       uint volSize = 0);
-    int _genPar2(const QString &tmpFolder,
-                 const QString &archiveName,
-                 uint redundancy = 0,
-                 const QStringList &files = QStringList());
-
-    bool _canCompress() const;
-    bool _canGenPar2() const;
-
-    void _cleanExtProc();
-    void _cleanCompressDir();
-
-    QString _createArchiveFolder(const QString &tmpFolder, const QString &archiveName);
-
-    bool _checkTmpFolder() const;
 
     void _showVersionASCII() const;
 
@@ -357,57 +323,57 @@ public:
 
 };
 
-NntpFile *NgPost::_getNextFile()
-{
-    if (_filesToUpload.size())
-    {
-        NntpFile *file = _filesToUpload.dequeue();
-        _filesInProgress.insert(file);
-        return file;
-    }
-    else
-        return nullptr;
-}
+//NntpFile *NgPost::_getNextFile()
+//{
+//    if (_filesToUpload.size())
+//    {
+//        NntpFile *file = _filesToUpload.dequeue();
+//        _filesInprogressbar.insert(file);
+//        return file;
+//    }
+//    else
+//        return nullptr;
+//}
 
 bool NgPost::useHMI() const { return _mode == AppMode::HMI; }
 
-QString NgPost::avgSpeed() const
-{
-    QString power = " ";
-    double bandwidth = 0.;
+//QString NgPost::avgSpeed() const
+//{
+//    QString power = " ";
+//    double bandwidth = 0.;
 
-    if (!_timeStart.isNull())
-    {
-        double sec = _timeStart.elapsed()/1000.;
-        bandwidth = _uploadedSize / sec;
+//    if (!_timeStart.isNull())
+//    {
+//        double sec = _timeStart.elapsed()/1000.;
+//        bandwidth = _uploadedSize / sec;
 
-        if (bandwidth > 1024)
-        {
-            bandwidth /= 1024;
-            power = "k";
-        }
-        if (bandwidth > 1024)
-        {
-            bandwidth /= 1024;
-            power = "M";
-        }
-    }
+//        if (bandwidth > 1024)
+//        {
+//            bandwidth /= 1024;
+//            power = "k";
+//        }
+//        if (bandwidth > 1024)
+//        {
+//            bandwidth /= 1024;
+//            power = "M";
+//        }
+//    }
 
-    return QString("%1 %2B/s").arg(bandwidth, 6, 'f', 2).arg(power);
-}
+//    return QString("%1 %2B/s").arg(bandwidth, 6, 'f', 2).arg(power);
+//}
 
-void NgPost::articlePosted(quint64 size)
-{
-    _uploadedSize += size;
-    ++_nbArticlesUploaded;
-}
+//void NgPost::articlePosted(quint64 size)
+//{
+//    _uploadedSize += size;
+//    ++_nbArticlesUploaded;
+//}
 
-void NgPost::articleFailed(quint64 size)
-{
-    _uploadedSize += size;
-    ++_nbArticlesUploaded;
-    ++_nbArticlesFailed;
-}
+//void NgPost::articleFailed(quint64 size)
+//{
+//    _uploadedSize += size;
+//    ++_nbArticlesUploaded;
+//    ++_nbArticlesFailed;
+//}
 
 const std::string &NgPost::aticleSignature() const { return _articleIdSignature; }
 

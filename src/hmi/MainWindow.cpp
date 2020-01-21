@@ -49,7 +49,7 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
     _ui(new Ui::MainWindow),
     _ngPost(ngPost),
     _state(STATE::IDLE),
-    _uploadTab(new PostingWidget(ngPost, this))
+    _quickJobTab(new PostingWidget(ngPost, this, 1))
 {
     qApp->installEventFilter(this);
     setAcceptDrops(true);
@@ -81,7 +81,7 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
 
 
     _ui->progressBar->setRange(0, 100);
-    updateProgressBar();
+    updateProgressBar(0, 0, "");
 
     statusBar()->hide();
 
@@ -98,7 +98,7 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
     _ui->postTabWidget->clear();
     _ui->postTabWidget->setTabsClosable(true);
     _ui->postTabWidget->addTab(new QLabel("<h1>To be implemented...</h1>"), _ngPost->sFolderMonitoringName);
-    _ui->postTabWidget->addTab(_uploadTab, QString("%1 #%2").arg(_ngPost->sQuickJobName).arg(1));
+    _ui->postTabWidget->addTab(_quickJobTab, QString("%1 #%2").arg(_ngPost->sQuickJobName).arg(1));
     _ui->postTabWidget->addTab(new QWidget(_ui->postTabWidget), QIcon(":/icons/plus.png"), "New");
     _ui->postTabWidget->tabBar()->setTabToolTip(2, QString("Create a new %1").arg(_ngPost->sQuickJobName));
 
@@ -106,7 +106,7 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
     connect(_ui->postTabWidget->tabBar(), &QTabBar::tabBarClicked,     this, &MainWindow::onJobTabClicked);
     connect(_ui->postTabWidget->tabBar(), &QTabBar::tabCloseRequested, this, &MainWindow::onCloseJob);
 
-    _ui->jobLabel->setText("<b><u>Job #1</u></b>");
+    setJobLabel(1);
 }
 
 MainWindow::~MainWindow()
@@ -118,20 +118,11 @@ void MainWindow::init()
 {
     _initServerBox();
     _initPostingBox();
-    _uploadTab->init();
+    _quickJobTab->init();
 }
 
-void MainWindow::setFilePosted(NntpFile *nntpFile)
-{
-    if (_uploadTab)
-        _uploadTab->setFilePosted(nntpFile);
-}
 
-void MainWindow::setIDLE()
-{
-    if (_uploadTab)
-        _uploadTab->setIDLE();
-}
+
 
 void MainWindow::setProgressBarRange(int start, int end)
 {
@@ -139,14 +130,14 @@ void MainWindow::setProgressBarRange(int start, int end)
 }
 
 
-void MainWindow::updateProgressBar()
+void MainWindow::updateProgressBar(int nbArticlesTotal, int nbArticlesUploaded, const QString &avgSpeed)
 {
-    qDebug() << "[MainWindow::updateProgressBar] _nbArticlesUploaded: " << _ngPost->_nbArticlesUploaded;
-    _ui->progressBar->setValue(_ngPost->_nbArticlesUploaded);
+    qDebug() << "[MainWindow::updateProgressBar] _nbArticlesUploaded: " << nbArticlesUploaded;
+    _ui->progressBar->setValue(nbArticlesUploaded);
     _ui->uploadLbl->setText(QString("(%1 / %2) avg speed: %3").arg(
-                                _ngPost->_nbArticlesUploaded).arg(
-                                _ngPost->_nbArticlesTotal).arg(
-                                _ngPost->avgSpeed()));
+                                nbArticlesUploaded).arg(
+                                nbArticlesTotal).arg(
+                                avgSpeed));
 }
 
 
@@ -166,10 +157,6 @@ void MainWindow::logError(const QString &error) const
     _ui->logBrowser->append(QString("<font color='red'>%1</font><br/>\n").arg(error));
 }
 
-#include <QDir>
-void MainWindow::onPostFiles()
-{
-}
 
 
 #include "CheckBoxCenterWidget.h"
@@ -310,6 +297,43 @@ void MainWindow::updateParams()
         _ngPost->_nbThreads = 1;
 }
 
+void MainWindow::clearJobTab(QWidget *postWidget)
+{
+    int nbJob = _ui->postTabWidget->count() -1;
+    for (int i = 0 ; i < nbJob ; ++i)
+    {
+        if (_ui->postTabWidget->widget(i) == postWidget)
+        {
+            QTabBar *bar = _ui->postTabWidget->tabBar();
+            bar->setTabToolTip(i, "");
+            bar->setTabTextColor(i, Qt::black);
+            bar->setTabIcon(i, QIcon());
+        }
+    }
+}
+
+void MainWindow::updateJobTab(QWidget *postWidget, const QColor &color, const QIcon &icon, const QString &tooltip)
+{
+    int nbJob = _ui->postTabWidget->count() -1;
+    for (int i = 0 ; i < nbJob ; ++i)
+    {
+        if (_ui->postTabWidget->widget(i) == postWidget)
+        {
+            QTabBar *bar = _ui->postTabWidget->tabBar();
+            if (!tooltip.isEmpty())
+                bar->setTabToolTip(i, tooltip);
+            bar->setTabTextColor(i, color);
+            bar->setTabIcon(i, icon);
+            break;
+        }
+    }
+}
+
+void MainWindow::setJobLabel(uint jobNumber)
+{
+    _ui->jobLabel->setText(QString("<b><u>Post #%1</u></b>").arg(jobNumber));
+}
+
 
 void MainWindow::_addServer(NntpServerParams *serverParam)
 {
@@ -420,7 +444,7 @@ void MainWindow::onJobTabClicked(int index)
     qDebug() << "Click on tab: " << index << ", count: " << nbJob;
     if (index == nbJob) // click on the last tab
     {
-        PostingWidget *newPostingWidget = new PostingWidget(_ngPost, this);
+        PostingWidget *newPostingWidget = new PostingWidget(_ngPost, this, static_cast<uint>(nbJob));
         newPostingWidget->init();
         _ui->postTabWidget->insertTab(nbJob, newPostingWidget , QString("%1 #%2").arg(_ngPost->sQuickJobName).arg(nbJob));
 //        _ui->postTabWidget->tabBar()->setTabTextColor(nbJob, Qt::darkBlue);

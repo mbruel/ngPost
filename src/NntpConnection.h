@@ -103,7 +103,7 @@ signals:
     void socketError(QString aError);                //!< Error during socket creation (ssl or not)
     void errorConnecting(QString aError);
     void disconnected(NntpConnection *con);
-    void log(QString msg) const;
+    void log(QString msg, bool newline = true) const;
     void error(QString msg) const;
 
 
