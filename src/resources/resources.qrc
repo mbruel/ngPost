@@ -9,5 +9,9 @@
         <file>icons/about.png</file>
         <file>icons/folder.png</file>
         <file>icons/file.png</file>
+        <file>icons/uploading.png</file>
+        <file>icons/pending.png</file>
+        <file>icons/ok.png</file>
+        <file>icons/ko.png</file>
     </qresource>
 </RCC>

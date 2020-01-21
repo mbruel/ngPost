@@ -45,7 +45,8 @@ int main(int argc, char *argv[])
     }
     else if (ngPost.parseCommandLine(argc, argv))
     {
-        ngPost.startPosting();
+        // MB_TODO create the posting job here!
+//        ngPost.startPosting();
         return ngPost.startEventLoop();
     }
     else

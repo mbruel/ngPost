@@ -42,7 +42,7 @@ private:
     Ui::MainWindow *_ui;
     NgPost         *_ngPost;
     STATE           _state;
-    PostingWidget  *_uploadTab;
+    PostingWidget  *_quickJobTab;
 
     static const bool sDefaultServerSSL   = true;
     static const int  sDefaultConnections = 5;
@@ -60,24 +60,23 @@ public:
 
     void init();
 
-    void setFilePosted(NntpFile *nntpFile);
-    void setIDLE();
-
 
     void setProgressBarRange(int start, int end);
-    void updateProgressBar();
+    void updateProgressBar(int nbArticlesTotal, int nbArticlesUploaded, const QString &avgSpeed);
 
     void updateServers();
     void updateParams();
 
+    void clearJobTab(QWidget *postWidget);
+    void updateJobTab(QWidget *postWidget, const QColor &color, const QIcon &icon, const QString &tooltip = "");
+
+    void setJobLabel(uint jobNumber);
 
     void log(const QString &aMsg, bool newline = true) const; //!< log function for QString
     void logError(const QString &error) const; //!< log function for QString
 
 
 private slots:
-    void onPostFiles();
-
     void onAddServer();
     void onDelServer();
 

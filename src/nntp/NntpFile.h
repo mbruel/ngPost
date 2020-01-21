@@ -27,7 +27,7 @@
 #include <QFileInfo>
 class NntpArticle;
 class QTextStream;
-class NgPost;
+class PostingJob;
 
 /*!
  * \brief The NntpFile class represent a File uploaded on Usenet thus it will holds all its Articles
@@ -39,7 +39,7 @@ class NntpFile : public QObject
     Q_OBJECT
 
 public:
-    NntpFile(NgPost *ngPost, const QFileInfo &file, int num, int nbFiles, const QList<QString> &grpList);
+    NntpFile(PostingJob *postingJob, const QFileInfo &file, int num, int nbFiles, const QList<QString> &grpList);
     ~NntpFile();
 
     inline void addArticle(NntpArticle *article);
@@ -65,7 +65,7 @@ public slots:
 
 
 private:
-    NgPost           *const _ngPost;
+    PostingJob       *const _postingJob;
     const QFileInfo         _file;      //!< original file
     const int               _num;       //!< file number
     const int               _nbFiles;   //!< total number of file

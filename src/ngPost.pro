@@ -1,7 +1,7 @@
 QT += network gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-DEFINES += "APP_VERSION=\"2.3\""
+DEFINES += "APP_VERSION=\"3.1\""
 
 
 INCLUDEPATH += $$PWD
@@ -31,9 +31,9 @@ DEFINES += __USE_MUTEX__
 CONFIG(debug, debug|release) :{
     DEFINES += __DEBUG__
 
-    DEFINES -= LOG_CONNECTION_STEPS
+    DEFINES += LOG_CONNECTION_STEPS
     DEFINES -= LOG_CONNECTION_ERRORS_BEFORE_EMIT_SIGNALS
-    DEFINES -= LOG_NEWS_AUTH
+    DEFINES += LOG_NEWS_AUTH
     DEFINES -= LOG_NEWS_DATA
     DEFINES += LOG_CONSTRUCTORS
 
@@ -60,6 +60,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         NgPost.cpp \
         NntpConnection.cpp \
+        PostingJob.cpp \
         hmi/AboutNgPost.cpp \
         hmi/CheckBoxCenterWidget.cpp \
         hmi/PostingWidget.cpp \
@@ -80,6 +81,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 HEADERS += \
     NgPost.h \
     NntpConnection.h \
+    PostingJob.h \
     hmi/AboutNgPost.h \
     hmi/CheckBoxCenterWidget.h \
     hmi/PostingWidget.h \
