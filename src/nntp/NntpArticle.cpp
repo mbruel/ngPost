@@ -28,7 +28,7 @@
 
 ushort NntpArticle::sNbMaxTrySending = 5;
 
-NntpArticle::NntpArticle(NntpFile *file, int part, const char data[], qint64 pos, qint64 bytes,
+NntpArticle::NntpArticle(NntpFile *file, uint part, const char data[], qint64 pos, qint64 bytes,
                          const std::string &from, const std::string &groups, bool obfuscation) :
     _nntpFile(file), _part(part),
     _id(QUuid::createUuid()),

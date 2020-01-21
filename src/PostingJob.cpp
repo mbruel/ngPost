@@ -1,3 +1,24 @@
+//========================================================================
+//
+// Copyright (C) 2020 Matthieu Bruel <Matthieu.Bruel@gmail.com>
+//
+// This file is a part of ngPost : https://github.com/mbruel/ngPost
+//
+// ngPost is free software; you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation; version 3.0 of the License.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+// You should have received a copy of the GNU Lesser General Public
+// License along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301,
+// USA.
+//
+//========================================================================
+
 #include "PostingJob.h"
 #include "NgPost.h"
 #include "NntpConnection.h"
@@ -47,8 +68,8 @@ PostingJob::PostingJob(NgPost *ngPost,
 
 
     _nzbPath(nzbPath), _nzb(nullptr), _nzbStream(),
-    _nntpFile(nullptr), _file(nullptr), _buffer(nullptr), _part(0), _secureFile(),
-    _articles(), _secureArticlesQueue(),
+    _nntpFile(nullptr), _file(nullptr), _buffer(nullptr), _part(0),
+    _secureArticles(), _articles(),
     _timeStart(), _totalSize(0),
 
     _nbConnections(0), _nbThreads(QThread::idealThreadCount()),
@@ -82,10 +103,11 @@ PostingJob::~PostingJob()
     qDebug() << "[PostingJob] <<<< Destruction " << this;
 #endif
 
-//    _ngPost->onPostingJobFinished();
-    // 6.: free all resources
     if (_compressDir)
         _cleanCompressDir();
+
+    if (_extProc)
+        _cleanExtProc();
 
     qDeleteAll(_filesInProgress);
     qDeleteAll(_filesToUpload);
@@ -105,28 +127,20 @@ NntpArticle *PostingJob::getNextArticle(const QString &threadName)
     if (_stopPosting.load())
         return nullptr;
 
-#ifdef __USE_MUTEX__
-    _secureArticlesQueue.lock();
-#endif
+    QMutexLocker lock(&_secureArticles); // thread safety (coming from a posting thread)
+    if (_ngPost->debugMode())
+        _log(tr("[%1][PostingJob::getNextArticle] _articles.size() = %2").arg(threadName).arg(_articles.size()));
 
     NntpArticle *article = nullptr;
     if (_articles.size())
-    {
-#ifdef __DEBUG__
-        _log(tr("[%1][NgPost::getNextArticle] _articles.size() = %2").arg(threadName).arg(_articles.size()));
-#endif
-        article = _articles.dequeue();
-        _secureArticlesQueue.unlock();
-    }
+        article = _articles.dequeue();    
     else
     {
-        _secureArticlesQueue.unlock();
         if (!_noMoreFiles.load())
         {
             // we should never come here as the goal is to have articles prepared in advance in the queue
-
             if (_ngPost->debugMode())
-                _log(tr("[%1][NgPost::getNextArticle] no article prepared...").arg(threadName));
+                _log(tr("[%1][PostingJob::getNextArticle] no article prepared...").arg(threadName));
 
             article = _prepareNextArticle(threadName, false);
         }
@@ -138,6 +152,7 @@ NntpArticle *PostingJob::getNextArticle(const QString &threadName)
     return article;
 }
 
+
 void PostingJob::onStartPosting()
 {
     if (_postWidget)
@@ -147,32 +162,38 @@ void PostingJob::onStartPosting()
 
     if (_doCompress)
     {
-        if (compressFiles() == 0)
-        {
-            QStringList archiveNames;
-            _files.clear();
-            for (const QFileInfo & file : _compressDir->entryInfoList(QDir::Files, QDir::Name))
-            {
-                _files << file;
-                archiveNames << file.absoluteFilePath();
-                if (_ngPost->debugMode())
-                    _ngPost->_log(QString("  - %1").arg(file.fileName()));
-            }
-            emit archiveFileNames(archiveNames);
-        }
-        else
-        {
+#ifdef __DEBUG__
+        _log("[PostingJob::onStartPosting] Starting compression...");
+#endif
+        if (!startCompressFiles(_rarPath, _tmpPath, _rarName, _rarPass, _rarSize))
             emit postingFinished();
-            return;
+    }
+    else
+        _postFiles();
+
+}
+
+
+void PostingJob::_postFiles()
+{
+    if (_postWidget) // in case we were in Pending mode
+        _postWidget->setPosting();
+
+    if (_doCompress)
+    {
+        QStringList archiveNames;
+        _files.clear();
+        for (const QFileInfo & file : _compressDir->entryInfoList(QDir::Files, QDir::Name))
+        {
+            _files << file;
+            archiveNames << file.absoluteFilePath();
+            if (_ngPost->debugMode())
+                _ngPost->_log(QString("  - %1").arg(file.fileName()));
         }
+        emit archiveFileNames(archiveNames);
     }
 
-    emit postingFinished();
-    return ;
-
-
     _initPosting();
-
 
     if (_nbThreads < 1)
         _nbThreads = 1;
@@ -214,6 +235,8 @@ void PostingJob::onStartPosting()
 
     _timeStart.start();
 
+    QMutexLocker lock(&_secureArticles); // start the connections but they must wait _prepareArticles
+
     if (nbTh > nbCon)
         nbTh = nbCon; // we can't have more thread than available connections
 
@@ -249,16 +272,19 @@ void PostingJob::onStartPosting()
     emit postingStarted();
 }
 
+
 void PostingJob::onStopPosting()
 {
     if (_extProc)
     {
-        _extProc->kill();
-        _extProc->waitForFinished(-1);
+        _log("killing external process...");
+        _extProc->terminate();
     }
     else
+    {
         _finishPosting();
-    emit postingFinished();
+        emit postingFinished();
+    }
 }
 
 
@@ -280,6 +306,7 @@ void PostingJob::onDisconnectedConnection(NntpConnection *con)
 
 void PostingJob::onPrepareNextArticle()
 {
+    QMutexLocker lock(&_secureArticles); // thread safety (coming from PostingJob)
     _prepareNextArticle(_ngPost->sMainThreadName);
 }
 
@@ -292,7 +319,7 @@ void PostingJob::onNntpFileStartPosting()
 void PostingJob::onNntpFilePosted()
 {
     NntpFile *nntpFile = static_cast<NntpFile*>(sender());
-    _totalSize += nntpFile->fileSize();
+    _totalSize += static_cast<quint64>(nntpFile->fileSize());
     ++_nbPosted;
     if (_postWidget)
         emit filePosted(nntpFile->path(), nntpFile->nbArticles(), nntpFile->nbFailedArticles());
@@ -343,9 +370,6 @@ int PostingJob::_createNntpConnections()
             connect(nntpCon, &NntpConnection::error, _ngPost, &NgPost::onError, Qt::QueuedConnection);
             connect(nntpCon, &NntpConnection::errorConnecting, _ngPost, &NgPost::onErrorConnecting, Qt::QueuedConnection);
             connect(nntpCon, &NntpConnection::disconnected, this, &PostingJob::onDisconnectedConnection, Qt::QueuedConnection);
-#ifndef __USE_MUTEX__
-            connect(nntpCon, &NntpConnection::requestArticle, this, &NgPost::onRequestArticle, Qt::QueuedConnection);
-#endif
             _nntpConnections.append(nntpCon);
         }
     }
@@ -365,7 +389,6 @@ void PostingJob::_startConnectionInThread(int conIdx, QThread *thread, const QSt
 void PostingJob::_prepareArticles()
 {
 
-#ifdef __USE_MUTEX__
     int nbArticlesToPrepare = _ngPost->nbPreparedArticlePerConnection * _nntpConnections.size();
   #ifdef __DEBUG__
     _log(QString("[PostingJob::_prepareArticles] >>>> preparing %1 articles for each connections. Nb cons = %2 => should prepare %3 articles!").arg(
@@ -384,26 +407,11 @@ void PostingJob::_prepareArticles()
   #ifdef __DEBUG__
     _log(QString("[NgPost::_prepareArticles] <<<<< finish preparing, current article queue size:  %1").arg(_articles.size()));
   #endif
-#else
-    for (int i = 0 ; i < _ngPost->nbPreparedArticlePerConnection ; ++i)
-    {
-        for (NntpConnection *con : _nntpConnections)
-        {
-            NntpArticle *article = getNextArticle();
-            if (article)
-                emit con->pushArticle(article);
-            else
-                return;
-
-        }
-    }
-#endif
 }
 
 
 NntpArticle *PostingJob::_getNextArticle(const QString &threadName)
 {
-    _secureFile.lock();
     if (!_nntpFile)
     {
         _nntpFile = _getNextFile();
@@ -413,7 +421,6 @@ NntpArticle *PostingJob::_getNextArticle(const QString &threadName)
 #ifdef __DEBUG__
             _log(tr("[%1] No more file to post...").arg(threadName));
 #endif
-            _secureFile.unlock();
             return nullptr;
         }
     }
@@ -436,7 +443,6 @@ NntpArticle *PostingJob::_getNextArticle(const QString &threadName)
             delete _file;
             _file = nullptr;
             _nntpFile = nullptr;
-            _secureFile.unlock();
             return _getNextArticle(threadName); // Check if we have more files
         }
     }
@@ -459,7 +465,6 @@ NntpArticle *PostingJob::_getNextArticle(const QString &threadName)
 #ifdef __SAVE_ARTICLES__
             article->dumpToFile("/tmp", _articleIdSignature);
 #endif
-            _secureFile.unlock();
             return article;
         }
         else
@@ -474,7 +479,6 @@ NntpArticle *PostingJob::_getNextArticle(const QString &threadName)
         }
     }
 
-    _secureFile.unlock();
     return _getNextArticle(threadName); // if we didn't have an Article, check next file
 }
 
@@ -482,23 +486,20 @@ NntpArticle *PostingJob::_prepareNextArticle(const QString &threadName, bool fil
 {
     NntpArticle *article = _getNextArticle(threadName);
     if (article && fillQueue)
-    {
-        QMutexLocker lock(&_secureArticlesQueue);
-        _articles.enqueue(article);
-    }
+        _articles.enqueue(article);   
     return article;
 }
 
 void PostingJob::_initPosting()
 {
     // initialize buffer and nzb file
-    _buffer  = new char[_ngPost->articleSize()+1];
+    _buffer  = new char[static_cast<quint64>(_ngPost->articleSize())+1];
     _nzb     = new QFile(_nzbPath);
-    _nbFiles = _files.size();
+    _nbFiles = static_cast<uint>(_files.size());
 
     // initialize the NntpFiles (active objects)
-    _filesToUpload.reserve(_nbFiles);
-    int fileNum = 0;
+    _filesToUpload.reserve(static_cast<int>(_nbFiles));
+    uint fileNum = 0;
     for (const QFileInfo &file : _files)
     {
         NntpFile *nntpFile = new NntpFile(this, file, ++fileNum, _nbFiles, _ngPost->_grpList);
@@ -635,38 +636,42 @@ void PostingJob::_printStats() const
 
 
 
-int PostingJob::compressFiles()
+//int PostingJob::compressFiles()
+//{
+//    if (!_canCompress() || (_doPar2 && !_canGenPar2()))
+//        return -1;
+
+//    // 1.: Compress
+//    int exitCode = _compressFiles(_rarPath, _tmpPath, _rarName, _rarPass, _rarSize);
+
+
+//    if (exitCode == 0 && _doPar2)
+//        exitCode = _genPar2(_tmpPath, _rarName, _par2Pct);
+
+//    if (exitCode == 0)
+//        _log("Ready to post!");
+
+//    return exitCode;
+//}
+
+bool PostingJob::startCompressFiles(const QString &cmdRar,
+                                   const QString &tmpFolder,
+                                   const QString &archiveName,
+                                   const QString &pass,
+                                   uint volSize)
 {
-    if (!_canCompress() || (_doPar2 && !_canGenPar2()))
-        return -1;
+    if (!_canCompress())
+        return false;
 
-    // 1.: Compress
-    int exitCode = _compressFiles(_rarPath, _tmpPath, _rarName, _rarPass, _rarSize);
-
-
-    if (exitCode == 0 && _doPar2)
-        exitCode = _genPar2(_tmpPath, _rarName, _par2Pct);
-
-    if (exitCode == 0)
-        _log("Ready to post!");
-
-    return exitCode;
-}
-
-int PostingJob::_compressFiles(const QString &cmdRar,
-                           const QString &tmpFolder,
-                           const QString &archiveName,
-                           const QString &pass,
-                           uint volSize)
-{
     // 1.: create archive temporary folder
     QString archiveTmpFolder = _createArchiveFolder(tmpFolder, archiveName);
     if (archiveTmpFolder.isEmpty())
-        return -1;
+        return false;
 
     _extProc = new QProcess(this);
     connect(_extProc, &QProcess::readyReadStandardOutput, this, &PostingJob::onExtProcReadyReadStandardOutput, Qt::DirectConnection);
     connect(_extProc, &QProcess::readyReadStandardError,  this, &PostingJob::onExtProcReadyReadStandardError,  Qt::DirectConnection);
+    connect(_extProc, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished), this, &PostingJob::onCompressionFinished);
 
     bool is7z = false;
     if (_rarPath.contains("7z"))
@@ -716,33 +721,56 @@ int PostingJob::_compressFiles(const QString &cmdRar,
         _log("Compressing files...\n");
     _limitProcDisplay = false;
     _extProc->start(cmdRar, args);
-    _extProc->waitForFinished(-1);
-    int exitCode = _extProc->exitCode();
+
+    _log("[PostingJob::_compressFiles] compression started...");
+
+    return true;
+}
+
+
+void PostingJob::onCompressionFinished(int exitCode)
+{
     if (_ngPost->debugMode())
         _log(tr("=> rar exit code: %1\n").arg(exitCode));
     else
         _log("");
 
 
-    // 4.: free process if no par2 after
-    if (!_doPar2)
-        _cleanExtProc();
+
+    _log("[PostingJob::_compressFiles] compression finished...");
 
     if (exitCode != 0)
     {
         _error(tr("Error during compression: %1").arg(exitCode));
         _cleanCompressDir();
+        emit postingFinished();
     }
-
-    return exitCode;
+    else
+    {
+        if (_doPar2)
+        {
+            disconnect(_extProc, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+                       this, &PostingJob::onCompressionFinished);
+            if (!startGenPar2(_tmpPath, _rarName, _par2Pct))
+            {
+                _cleanCompressDir();
+                emit postingFinished();
+            }
+        }
+        else
+        {
+            _cleanExtProc();
+            _postFiles();
+        }
+    }
 }
 
-int PostingJob::_genPar2(const QString &tmpFolder,
+bool PostingJob::startGenPar2(const QString &tmpFolder,
                      const QString &archiveName,
-                     uint redundancy,
-                     const QStringList &files)
+                     uint redundancy)
 {
-    Q_UNUSED(files)
+    if (!_canGenPar2())
+        return false;
 
     QString archiveTmpFolder;
     QStringList args;
@@ -777,7 +805,7 @@ int PostingJob::_genPar2(const QString &tmpFolder,
         // otherwise we get this error: Ignoring out of basepath source file
         // exitcode: 3
         _error("ngPost can't generate par2 without compression cause we'd have to copy all the files in a temporary folder...");
-        return -1;
+        return false;
 
 //        _extProc = new QProcess(this);
 //        connect(_extProc, &QProcess::readyReadStandardOutput, this, &NgPost::onExtProcReadyReadStandardOutput, Qt::DirectConnection);
@@ -793,6 +821,7 @@ int PostingJob::_genPar2(const QString &tmpFolder,
 //            args << file;
     }
 
+    connect(_extProc, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished), this, &PostingJob::onGenPar2Finished);
 
     if (_ngPost->debugMode() || !_postWidget)
         _log(tr("Generating par2: %1 %2\n").arg(_ngPost->_par2Path).arg(args.join(" ")));
@@ -800,44 +829,37 @@ int PostingJob::_genPar2(const QString &tmpFolder,
         _log("Generating par2...\n");
     _limitProcDisplay = true;
     _nbProcDisp = 0;
-    _extProc->start(_ngPost->_par2Path, args);
-    _extProc->waitForFinished(-1);
-    int exitCode = _extProc->exitCode();
+    _extProc->start(_ngPost->_par2Path, args);    
+
+    return true;
+}
+
+void PostingJob::onGenPar2Finished(int exitCode)
+{
     if (_ngPost->debugMode())
         _log(tr("=> par2 exit code: %1\n").arg(exitCode));
     else
         _log("");
 
+    _cleanExtProc();
 
     if (exitCode != 0)
     {
         _error(tr("Error during par2 generation: %1").arg(exitCode));
-
-        // parpar hack: it can abort after managing to create the par2 (apparently with node v10)
-        if (_ngPost->_par2Path.toLower().contains("parpar"))
-        {
-            QFileInfo fi(QString("%1/%2.par2").arg(archiveTmpFolder).arg(archiveName));
-            if (fi.exists())
-            {
-                _log(tr("=> parpar aborted but the par2 are generated!"));
-                exitCode = 0;
-            }
-        }
-    }
-
-    // 4.: free process if no par2 after
-    _cleanExtProc();
-
-    if (exitCode != 0)
         _cleanCompressDir();
-
-    return exitCode;
+        emit postingFinished();
+    }
+    else
+        _postFiles();
 }
+
 
 void PostingJob::_cleanExtProc()
 {
     delete _extProc;
     _extProc = nullptr;
+    if (_ngPost->debugMode())
+        _log("External process deleted.");
 }
 
 void PostingJob::_cleanCompressDir()

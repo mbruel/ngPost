@@ -44,9 +44,9 @@ class NntpArticle : public QObject
     static ushort sNbMaxTrySending;
 
 private:
-    NntpFile *_nntpFile; //!< original file
-    const int _part;     //!< part of the original file
-    QUuid     _id;       //!< to generate a unique Message-ID for the Header
+    NntpFile  *_nntpFile; //!< original file
+    const uint _part;     //!< part of the original file
+    QUuid      _id;       //!< to generate a unique Message-ID for the Header
 
     const std::string _from;    //!< NNTP header From
     const std::string _groups;  //!< NNTP header Newsgroups
@@ -68,7 +68,7 @@ signals:
     void failed(quint64 size); //!< to warn the main thread (async upload)
 
 public:
-    NntpArticle(NntpFile *file, int part, const char data[], qint64 pos, qint64 bytes,
+    NntpArticle(NntpFile *file, uint part, const char data[], qint64 pos, qint64 bytes,
                 const std::string &from, const std::string &groups, bool obfuscation);
 
     NntpArticle(const std::string &from, const std::string &groups, const std::string &subject,
@@ -87,7 +87,7 @@ public:
     std::string header(const std::string &idSignature) const;
     inline std::string body() const;
     inline QString id() const;
-    inline int part() const;
+    inline uint part() const;
     inline NntpFile *nntpFile() const;
 
     inline bool isFirstArticle() const;
@@ -107,7 +107,7 @@ QString NntpArticle::id() const { return _id.toString(sMsgIdFormat); }
 #else
 QString NntpArticle::id() const { return _id.toString(); }
 #endif
-int NntpArticle::part() const{ return _part; }
+uint NntpArticle::part() const{ return _part; }
 NntpFile *NntpArticle::nntpFile() const { return _nntpFile; }
 
 bool NntpArticle::isFirstArticle() const { return _part == 1; }

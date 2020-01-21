@@ -1,3 +1,24 @@
+//========================================================================
+//
+// Copyright (C) 2020 Matthieu Bruel <Matthieu.Bruel@gmail.com>
+//
+// This file is a part of ngPost : https://github.com/mbruel/ngPost
+//
+// ngPost is free software; you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation; version 3.0 of the License.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+// You should have received a copy of the GNU Lesser General Public
+// License along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301,
+// USA.
+//
+//========================================================================
+
 #include "PostingWidget.h"
 #include "ui_PostingWidget.h"
 #include "MainWindow.h"
@@ -45,7 +66,7 @@ PostingWidget::~PostingWidget()
     delete _ui;
 }
 
-void PostingWidget::onFilePosted(QString filePath, int nbArticles, int nbFailed)
+void PostingWidget::onFilePosted(QString filePath, uint nbArticles, uint nbFailed)
 {
     int nbFiles = _ui->filesList->count();
     for (int i = 0 ; i < nbFiles ; ++i)
@@ -85,10 +106,15 @@ void PostingWidget::onArticlesNumber(int nbArticles)
 
 void PostingWidget::onPostingJobDone()
 {
-    if (_postingJob->_nbArticlesFailed > 0)
-        _hmi->updateJobTab(this, sDoneKOColor, QIcon(sDoneKOIcon));
+    if (_postingJob->nbArticlesTotal() > 0)
+    {
+        if (_postingJob->nbArticlesFailed() > 0)
+            _hmi->updateJobTab(this, sDoneKOColor, QIcon(sDoneKOIcon));
+        else
+            _hmi->updateJobTab(this, sDoneOKColor, QIcon(sDoneOKIcon));
+    }
     else
-        _hmi->updateJobTab(this, sDoneOKColor, QIcon(sDoneOKIcon));
+        _hmi->clearJobTab(this);
 
     _postingJob = nullptr; //!< we don't own it, NgPost will delete it
     setIDLE();
@@ -164,7 +190,7 @@ void PostingWidget::onPostFiles()
             tabIcon   = sPendingIcon;
         }
         _ui->postButton->setText(buttonTxt);
-        _hmi->updateJobTab(this, tabColor, QIcon(tabIcon), _postingJob->_nzbName);
+        _hmi->updateJobTab(this, tabColor, QIcon(tabIcon), _postingJob->nzbName());
     }
     else  if (_state == STATE::POSTING)
     {
@@ -509,4 +535,10 @@ void PostingWidget::setIDLE()
 {
     _ui->postButton->setText(tr("Post Files"));
     _state = STATE::IDLE;
+}
+
+void PostingWidget::setPosting()
+{
+    _ui->postButton->setText(tr("Stop Posting"));
+    _state = STATE::POSTING;
 }

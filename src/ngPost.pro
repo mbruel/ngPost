@@ -26,8 +26,6 @@ macx: {
     QMAKE_BUNDLE_DATA += ExtraFiles
 } 
 
-DEFINES += __USE_MUTEX__
-
 CONFIG(debug, debug|release) :{
     DEFINES += __DEBUG__
 

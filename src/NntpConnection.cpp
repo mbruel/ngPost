@@ -45,9 +45,6 @@ NntpConnection::NntpConnection(NgPost *ngPost, int id, const NntpServerParams &s
     _currentArticle(nullptr),
     _nbErrors(0),
     _threadName()
-#ifndef __USE_MUTEX__
-    ,_articles()
-#endif
 {
 #if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
     qDebug() << QString("Creation %1 %2 ssl").arg(_logPrefix).arg(_srvParams.useSSL ? "with" : "no");
@@ -55,10 +52,6 @@ NntpConnection::NntpConnection(NgPost *ngPost, int id, const NntpServerParams &s
 
     connect(this, &NntpConnection::startConnection, this, &NntpConnection::onStartConnection, Qt::QueuedConnection);
     connect(this, &NntpConnection::killConnection,  this, &NntpConnection::onKillConnection,  Qt::QueuedConnection);
-
-#ifndef __USE_MUTEX__
-    connect(this, &NntpConnection::pushArticle, this, &NntpConnection::onPushArtice,  Qt::QueuedConnection);
-#endif
 }
 
 
@@ -70,14 +63,6 @@ NntpConnection::~NntpConnection()
     _closeConnection(); // this should already have been triggered as the sockets lives in another thread
 }
 
-#ifndef __USE_MUTEX__
-void NntpConnection::onPushArtice(NntpArticle *article)
-{
-    _articles.enqueue(article);
-    if (_postingState == PostingState::IDLE)
-        _sendNextArticle();
-}
-#endif
 
 void NntpConnection::onStartConnection()
 {
@@ -373,8 +358,7 @@ void NntpConnection::onReadyRead()
 
 void NntpConnection::_sendNextArticle()
 {
-#ifdef __USE_MUTEX__
-    _currentArticle = _ngPost->getNextArticle(_threadName);
+    _currentArticle = _ngPost->getNextArticle(QString("%1 {%2}").arg(_threadName).arg(_logPrefix));
     if (_currentArticle)
     {
         _postingState = PostingState::SENDING_ARTICLE;
@@ -385,21 +369,4 @@ void NntpConnection::_sendNextArticle()
     }
     else
         _postingState = PostingState::IDLE;
-#else
-    if (_articles.isEmpty())
-    {
-        _postingState = PostingState::IDLE;
-    }
-    else
-    {
-        _postingState = PostingState::SENDING_ARTICLE;
-        _currentArticle = _articles.dequeue();
-#if defined(__DEBUG__) && defined(LOG_POSTING_STEPS)
-        _log(tr("start sending article: %1").arg(_currentArticle->id()));
-#endif
-        _socket->write(Nntp::POST);
-    }
-
-    emit requestArticle(this);
-#endif
 }

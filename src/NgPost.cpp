@@ -21,20 +21,21 @@
 
 #include "NgPost.h"
 #include "PostingJob.h"
-#include "NntpConnection.h"
-#include "nntp/NntpFile.h"
 #include "nntp/NntpArticle.h"
 #include "nntp/NntpServerParams.h"
+#include "hmi/MainWindow.h"
+#include "hmi/PostingWidget.h"
+
 #include <cmath>
 #include <QApplication>
 #include <QThread>
 #include <QTextStream>
 #include <QCommandLineParser>
-#include <QDir>
 #include <QDebug>
 #include <iostream>
-#include "hmi/MainWindow.h"
-
+#include <QNetworkReply>
+#include <QMessageBox>
+#include <QRegularExpression>
 
 const QString NgPost::sAppName     = "ngPost";
 const QString NgPost::sVersion     = QString::number(APP_VERSION);
@@ -158,27 +159,15 @@ NgPost::NgPost(int &argc, char *argv[]):
     _dispprogressbarBar(false),
     _dispFilesPosting(false),
     _nzbName(),
-//    _filesToUpload(), _filesInprogressbar(),
     _nbFiles(0),
-//    _nbPosted(0),
-//    _threadPool(), _nntpConnections(),
     _nntpServers(),
     _obfuscateArticles(false), _from(),
     _groups(sDefaultGroups),
     _articleIdSignature(sDefaultMsgIdSignature),
-//    _nzb(nullptr), _nzbStream(),
-//    _nntpFile(nullptr), _file(nullptr), _buffer(nullptr), _part(0), _secureFile(),
-//    _articles(), _secureArticlesQueue(),
-//    _timeStart(), _totalSize(0),
     _meta(), _grpList(),
-//    _nbConnections(sDefaultNumberOfConnections),
     _nbThreads(QThread::idealThreadCount()),
     _socketTimeOut(sDefaultSocketTimeOut), _nzbPath(sDefaultNzbPath), _nzbPathConf(sDefaultNzbPath),
-//    _nbArticlesUploaded(0), _nbArticlesFailed(0),
-//    _uploadedSize(0), _nbArticlesTotal(0),
     _progressbarTimer(), _refreshRate(sDefaultRefreshRate),
-//    _stopPosting(0x0), _noMoreFiles(0x0),
-//    _extProc(nullptr), _compressDir(nullptr),
     _tmpPath(), _rarPath(), _rarArgs(), _rarSize(0), _par2Pct(0), _par2Path(), _par2Args(),
     _doCompress(false), _doPar2(false), _genName(), _genPass(),
     _lengthName(sDefaultLengthName), _lengthPass(sDefaultLengthPass),
@@ -186,6 +175,8 @@ NgPost::NgPost(int &argc, char *argv[]):
     _inputDir(),
     _activeJob(nullptr), _pendingJobs()
 {
+    QThread::currentThread()->setObjectName(sMainThreadName);
+
     if (_mode == AppMode::CMD)
         _app =  new QCoreApplication(argc, argv);
     else
@@ -193,10 +184,7 @@ NgPost::NgPost(int &argc, char *argv[]):
         _app = new QApplication(argc, argv);
         _hmi = new MainWindow(this);
         _hmi->setWindowTitle(QString("%1_v%2").arg(sAppName).arg(sVersion));
-    }
-
-    QThread::currentThread()->setObjectName(sMainThreadName);
-//    connect(this, &NgPost::scheduleNextArticle, this, &NgPost::onPrepareNextArticle, Qt::QueuedConnection);
+    }    
 
     // in case we want to generate random uploader (_from not provided)
     std::srand(static_cast<uint>(QDateTime::currentMSecsSinceEpoch()));
@@ -236,7 +224,7 @@ void NgPost::_finishPosting()
     if (_hmi || _dispprogressbarBar)
         disconnect(&_progressbarTimer, &QTimer::timeout, this, &NgPost::onRefreshprogressbarBar);
 
-    if (_activeJob && !_activeJob->_timeStart.isNull())
+    if (_activeJob && _activeJob->hasUploaded())
     {
         if (_hmi || _dispprogressbarBar)
         {
@@ -246,181 +234,6 @@ void NgPost::_finishPosting()
         }
     }
 }
-
-//void NgPost::stopPosting()
-//{
-//    _stopPosting = 0x1;
-
-//    // 0.: close all the connections (they're living in the _threadPool)
-//    for (NntpConnection *con : _nntpConnections)
-//        emit con->killConnection();
-
-//    qApp->processEvents();
-
-
-//    if (_hmi || _dispprogressbarBar)
-//    {
-//        disconnect(&_progressbarTimer, &QTimer::timeout, this, &NgPost::onRefreshprogressbarBar);
-//        if (!_timeStart.isNull())
-//        {
-//            onRefreshprogressbarBar();
-//            if (!_hmi)
-//                std::cout << std::endl;
-//        }
-//    }
-
-//#ifdef __DEBUG__
-//    _log("Stop posting...");
-//#endif
-
-//    // 1.: print stats
-//    if (!_timeStart.isNull())
-//        _printStats();
-
-
-//    // 2.: close nzb file
-//    _closeNzb();
-
-
-//    // 4.: stop and wait for all threads
-//    for (QThread *th : _threadPool)
-//    {
-//#ifdef __DEBUG__
-//        _log(tr("Stopping thread %1").arg(th->objectName()));
-//#endif
-//        th->quit();
-//        th->wait();
-//    }
-
-//#ifdef __DEBUG__
-//    _log("All connections are closed...");
-//    _log(tr("prepared articles queue size: %1").arg(_articles.size()));
-//#endif
-
-//    // 5.: print out the list of files that havn't been posted
-//    // (in case of disconnection)
-//    int nbPendingFiles = _filesToUpload.size() + _filesInprogressbar.size();
-//    if (nbPendingFiles)
-//    {
-//        _error(QString("There were %1 on %2 that havn't been posted:").arg(
-//                   nbPendingFiles).arg(_nbFiles));
-//        for (NntpFile *file : _filesInprogressbar)
-//            _error(QString("  - %1").arg(file->path()));
-//        for (NntpFile *file : _filesToUpload)
-//            _error(QString("  - %1").arg(file->path()));
-
-//        _error(tr("you can try to repost only those and concatenate the nzb with the current one ;)"));
-//    }
-
-//    // 6.: free all resources
-//    qDeleteAll(_filesInprogressbar); _filesInprogressbar.clear();
-//    qDeleteAll(_filesToUpload);   _filesToUpload.clear();
-//    qDeleteAll(_nntpConnections); _nntpConnections.clear();
-//    qDeleteAll(_threadPool);      _threadPool.clear();
-//    if (_file)
-//    {
-//        _file->close();
-//        delete _file;
-//        _file = nullptr;
-//    }
-
-//    if (_hmi)
-//        _hmi->setIDLE();
-//}
-
-//bool NgPost::startPosting()
-//{
-//    qDebug() << "start posting... nzb: " << nzbPath();
-
-//    _stopPosting        = 0x0;
-//    _noMoreFiles        = 0x0;
-//    _nbPosted           = 0;
-//    _nbArticlesUploaded = 0;
-//    _nbArticlesFailed   = 0;
-//    _uploadedSize       = 0;
-//    _totalSize          = 0;
-//    _nntpFile           = nullptr;
-//    _file               = nullptr;
-//    _articles.clear();
-
-//    if (_nbThreads < 1)
-//        _nbThreads = 1;
-//    else if (_nbThreads > QThread::idealThreadCount())
-//        _nbThreads = QThread::idealThreadCount();
-
-
-//    if (!_nzb->open(QIODevice::WriteOnly))
-//    {
-//        _error(QString("Error: Can't create nzb output file: %1").arg(nzbPath()));
-//        return false;
-//    }
-//    else
-//    {
-//        QString tab = space();
-//        _nzbStream.setDevice(_nzb);
-//        _nzbStream << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-//                   << "<!DOCTYPE nzb PUBLIC \"-//newzBin//DTD NZB 1.1//EN\" \"http://www.newzbin.com/DTD/nzb/nzb-1.1.dtd\">\n"
-//                   << "<nzb xmlns=\"http://www.newzbin.com/DTD/2003/nzb\">\n";
-
-//        if (_meta.size())
-//        {
-//            _nzbStream << tab << "<head>\n";
-//            for (auto itMeta = _meta.cbegin(); itMeta != _meta.cend() ; ++itMeta)
-//                _nzbStream << tab << tab << "<meta type=\"" << itMeta.key() << "\">" << itMeta.value() << "</meta>\n";
-//            _nzbStream << tab << "</head>\n\n";
-//        }
-//        _nzbStream << flush;
-//    }
-
-//    int  nbTh = _nbThreads, nbCon = _createNntpConnections();
-//    if (!nbCon)
-//    {
-//        _error("Error: there are no NntpConnection...");
-//        return false;
-//    }
-
-//    _timeStart.start();
-
-//    if (nbTh > nbCon)
-//        nbTh = nbCon; // we can't have more thread than available connections
-
-
-//    _threadPool.reserve(nbTh);
-//    int nbConPerThread = static_cast<int>(std::floor(nbCon / nbTh));
-//    int nbExtraCon     = nbCon - nbConPerThread * nbTh;
-//    qDebug() << "[NgPost::startPosting] nbFiles: " << _filesToUpload.size()
-//             << ", nbThreads: " << nbTh
-//             << ", nbCons: " << nbCon
-//             << " => nbCon per Threads: " << nbConPerThread
-//             << " (nbExtraCon: " << nbExtraCon << ")";
-
-//    int conIdx = 0;
-//    for (int threadIdx = 0; threadIdx < nbTh ; ++threadIdx)
-//    {
-//        QThread *thread = new QThread();
-//        QString threadName = QString("Thread #%1").arg(threadIdx+1);
-//        thread->setObjectName(threadName);
-//        _threadPool.append(thread);
-
-//        for (int i = 0 ; i < nbConPerThread ; ++i)
-//            _startConnectionInThread(conIdx++, thread, threadName);
-
-//        if (nbExtraCon-- > 0)
-//            _startConnectionInThread(conIdx++, thread, threadName);
-//        thread->start();
-//    }
-
-//    // Prepare 2 Articles for each connections
-//    _prepareArticles();
-
-//    if (_hmi || _dispprogressbarBar)
-//    {
-//        connect(&_progressbarTimer, &QTimer::timeout, this, &NgPost::onRefreshprogressbarBar, Qt::DirectConnection);
-//        _progressbarTimer.start(_refreshRate);
-//    }
-
-//    return true;
-//}
 
 void NgPost::updateGroups(const QString &groups)
 {
@@ -477,16 +290,14 @@ void NgPost::onErrorConnecting(QString err)
 }
 
 
-
-#include <iostream>
 void NgPost:: onRefreshprogressbarBar()
 {
-    int nbArticlesUploaded = 0,  nbArticlesTotal = 0;
+    uint nbArticlesUploaded = 0,  nbArticlesTotal = 0;
     QString avgSpeed;
     if (_activeJob)
     {
-        nbArticlesTotal    = _activeJob->_nbArticlesTotal;
-        nbArticlesUploaded = _activeJob->_nbArticlesUploaded;
+        nbArticlesTotal    = _activeJob->nbArticlesTotal();
+        nbArticlesUploaded = _activeJob->nbArticlesUploaded();
         avgSpeed           = _activeJob->avgSpeed();
     }
     if (_hmi)
@@ -518,9 +329,7 @@ void NgPost:: onRefreshprogressbarBar()
 
 
 
-#include <QNetworkReply>
-#include <QMessageBox>
-#include <QRegularExpression>
+
 void NgPost::onCheckForNewVersion()
 {
     QNetworkReply      *reply = static_cast<QNetworkReply*>(sender());
@@ -577,35 +386,34 @@ void NgPost::onPostingJobStarted()
 
 void NgPost::onPostingJobFinished()
 {
-    _finishPosting();
-
-    _activeJob->deleteLater();
-    _activeJob = nullptr;
-    if (_pendingJobs.size())
+    PostingJob *job = static_cast<PostingJob*>(sender());
+    if (job == _activeJob)
     {
-        _activeJob = _pendingJobs.dequeue();
-        emit _activeJob->startPosting();
+        _finishPosting();
+
+        _activeJob->deleteLater();
+        _activeJob = nullptr;
+        if (_pendingJobs.size())
+        {
+            _activeJob = _pendingJobs.dequeue();
+            if (_hmi)
+                _hmi->setTab(_activeJob->widget());
+            emit _activeJob->startPosting();
+        }
+
+        if (!_hmi)
+        {
+            _error(tr(" => closing application"));
+            qApp->quit();
+        }
     }
-
-    if (!_hmi)
+    else
     {
-        _error(tr(" => closing application"));
-        qApp->quit();
+        // it was a Pending job that has been cancelled
+        _pendingJobs.removeOne(job);
+        job->deleteLater();
     }
 }
-
-
-
-
-#ifndef __USE_MUTEX__
-void NgPost::onRequestArticle(NntpConnection *con)
-{
-    NntpArticle * article = getNextArticle();
-    if (article)
-        emit con->pushArticle(article);
-}
-#endif
-
 
 
 void NgPost::_log(const QString &aMsg, bool newline) const

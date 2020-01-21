@@ -62,11 +62,12 @@ public:
 
 
     void setProgressBarRange(int start, int end);
-    void updateProgressBar(int nbArticlesTotal, int nbArticlesUploaded, const QString &avgSpeed);
+    void updateProgressBar(uint nbArticlesTotal, uint nbArticlesUploaded, const QString &avgSpeed);
 
     void updateServers();
     void updateParams();
 
+    void setTab(QWidget *postWidget);
     void clearJobTab(QWidget *postWidget);
     void updateJobTab(QWidget *postWidget, const QColor &color, const QIcon &icon, const QString &tooltip = "");
 
