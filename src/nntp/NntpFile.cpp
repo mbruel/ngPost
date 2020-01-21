@@ -27,11 +27,11 @@
 #include <QTextStream>
 #include <QDebug>
 
-NntpFile::NntpFile(PostingJob *postingJob, const QFileInfo &file, int num, int nbFiles, const QList<QString> &grpList):
+NntpFile::NntpFile(PostingJob *postingJob, const QFileInfo &file, uint num, uint nbFiles, const QList<QString> &grpList):
     QObject(),
     _postingJob(postingJob),
     _file(file), _num(num), _nbFiles(nbFiles), _grpList(grpList),
-    _nbAticles((int)std::ceil((float)file.size()/NgPost::articleSize())),
+    _nbAticles(static_cast<uint>(std::ceil(static_cast<float>(file.size())/NgPost::articleSize()))),
     _articles(),
     _posted(), _failed()
 {
@@ -41,7 +41,7 @@ NntpFile::NntpFile(PostingJob *postingJob, const QFileInfo &file, int num, int n
              << " article size: " << NgPost::articleSize()
              << " => nbArticles: " << _nbAticles;
 #endif
-    _articles.reserve(_nbAticles);
+    _articles.reserve(static_cast<int>(_nbAticles));
     connect(this, &NntpFile::scheduleDeletion, this, &QObject::deleteLater, Qt::QueuedConnection);
 }
 
@@ -57,7 +57,7 @@ void NntpFile::onArticlePosted(quint64 size)
 {
     _postingJob->articlePosted(size);
     NntpArticle *article = static_cast<NntpArticle*>(sender());
-    int part = article->_part;
+    uint part = article->_part;
 #ifdef __DEBUG__
     if (_posted.contains(part) || _failed.contains(part))
         qCritical() << "[NntpFile::onArticlePosted] DUPLICATE article #" << part
@@ -72,7 +72,7 @@ void NntpFile::onArticlePosted(quint64 size)
     _posted.insert(part);
     article->_body.clear(); // free resources
 
-    if (_posted.size() + _failed.size() == _nbAticles)
+    if (_posted.size() + _failed.size() == static_cast<int>(_nbAticles))
         emit allArticlesArePosted();
 }
 
@@ -80,7 +80,7 @@ void NntpFile::onArticleFailed(quint64 size)
 {
     _postingJob->articleFailed(size);
     NntpArticle *article = static_cast<NntpArticle*>(sender());
-    int part = article->_part;
+    uint part = article->_part;
 #ifdef __DEBUG__
     if (_posted.contains(part) || _failed.contains(part))
         qCritical() << "[NntpFile::onArticleFailed] DUPLICATE article #" << part
@@ -95,7 +95,7 @@ void NntpFile::onArticleFailed(quint64 size)
     _failed.insert(part);
     article->_body.clear(); // free resources
 
-    if (_posted.size() + _failed.size() == _nbAticles)
+    if (_posted.size() + _failed.size() == static_cast<int>(_nbAticles))
         emit allArticlesArePosted();
 }
 

@@ -130,10 +130,10 @@ void MainWindow::setProgressBarRange(int start, int end)
 }
 
 
-void MainWindow::updateProgressBar(int nbArticlesTotal, int nbArticlesUploaded, const QString &avgSpeed)
+void MainWindow::updateProgressBar(uint nbArticlesTotal, uint nbArticlesUploaded, const QString &avgSpeed)
 {
     qDebug() << "[MainWindow::updateProgressBar] _nbArticlesUploaded: " << nbArticlesUploaded;
-    _ui->progressBar->setValue(nbArticlesUploaded);
+    _ui->progressBar->setValue(static_cast<int>(nbArticlesUploaded));
     _ui->uploadLbl->setText(QString("(%1 / %2) avg speed: %3").arg(
                                 nbArticlesUploaded).arg(
                                 nbArticlesTotal).arg(
@@ -295,6 +295,19 @@ void MainWindow::updateParams()
     _ngPost->_nbThreads = _ui->threadEdit->text().toInt();
     if (_ngPost->_nbThreads < 1)
         _ngPost->_nbThreads = 1;
+}
+
+void MainWindow::setTab(QWidget *postWidget)
+{
+    int nbJob = _ui->postTabWidget->count() -1;
+    for (int i = 0 ; i < nbJob ; ++i)
+    {
+        if (_ui->postTabWidget->widget(i) == postWidget)
+        {
+            _ui->postTabWidget->setCurrentIndex(i);
+            break;
+        }
+    }
 }
 
 void MainWindow::clearJobTab(QWidget *postWidget)

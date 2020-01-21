@@ -1,3 +1,24 @@
+//========================================================================
+//
+// Copyright (C) 2020 Matthieu Bruel <Matthieu.Bruel@gmail.com>
+//
+// This file is a part of ngPost : https://github.com/mbruel/ngPost
+//
+// ngPost is free software; you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation; version 3.0 of the License.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+// You should have received a copy of the GNU Lesser General Public
+// License along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301,
+// USA.
+//
+//========================================================================
+
 #ifndef POSTINGJOB_H
 #define POSTINGJOB_H
 #include <QFileInfoList>
@@ -27,9 +48,6 @@ using QAtomicBool = QAtomicInteger<unsigned short>; // 16 bit only (faster than 
 class PostingJob : public QObject
 {
     Q_OBJECT
-    friend class NgPost;
-    friend class PostingWidget;
-
 private:
     NgPost *const _ngPost; //!< handle on the application to access global configs
     QFileInfoList _files; //!< populated on constuction using a QStringList of paths
@@ -64,8 +82,8 @@ private:
     QString               _nzbName; //!< name of nzb that we'll write (without the extension)
     QQueue<NntpFile*>     _filesToUpload;  //!< list of files to upload (that we didn't start)
     QSet<NntpFile*>       _filesInProgress;//!< files in queue to be uploaded (Articles have been produced)
-    int                   _nbFiles;  //!< number of files to post in this iteration
-    int                   _nbPosted; //!< number of files posted
+    uint                  _nbFiles;  //!< number of files to post in this iteration
+    uint                  _nbPosted; //!< number of files posted
 
 
     const QString _nzbPath;
@@ -75,11 +93,10 @@ private:
     NntpFile    *_nntpFile; //!< current file that is getting processed
     QFile       *_file;     //!< file handler on the file getting processed
     char        *_buffer;   //!< buffer to read the current file
-    int          _part;     //!< part number (Article) on the current file
-    QMutex       _secureFile;
+    uint         _part;     //!< part number (Article) on the current file
+    QMutex       _secureArticles;
 
     QQueue<NntpArticle*> _articles; //!< prepared articles that are yEnc encoded
-    QMutex               _secureArticlesQueue; //!< mutex to protect the Article stack (as the NntpConnection will pop from the ThreadPool)
 
     QTime       _timeStart; //!< to get some stats (upload time and avg speed)
     quint64     _totalSize; //!< total size (in Bytes) to be uploaded
@@ -87,10 +104,10 @@ private:
     int     _nbConnections; //!< available number of NntpConnection (we may loose some)
     int     _nbThreads;     //!< size of the ThreadPool
 
-    int       _nbArticlesUploaded; //!< number of Articles that have been uploaded (+ failed ones)
-    int       _nbArticlesFailed;   //!< number of Articles that failed to be uploaded
+    uint      _nbArticlesUploaded; //!< number of Articles that have been uploaded (+ failed ones)
+    uint      _nbArticlesFailed;   //!< number of Articles that failed to be uploaded
     quint64   _uploadedSize;       //!< bytes posted (to compute the avg speed)
-    int       _nbArticlesTotal;    //!< number of Articles of all the files to post
+    uint      _nbArticlesTotal;    //!< number of Articles of all the files to post
 
 
     QAtomicBool _stopPosting;
@@ -125,7 +142,14 @@ public:
     inline void articlePosted(quint64 size);
     inline void articleFailed(quint64 size);
 
-    int compressFiles();
+    inline uint nbArticlesTotal() const;
+    inline uint nbArticlesUploaded() const;
+    inline uint nbArticlesFailed() const;
+    inline bool hasUploaded() const;
+
+    inline QString nzbName() const;
+
+    inline PostingWidget *widget() const;
 
 
 signals:
@@ -137,11 +161,11 @@ signals:
     void postingFinished();
 
     void archiveFileNames(QStringList paths);
-    void articlesNumber(int nbArticles);
+    void articlesNumber(uint nbArticles);
 
     void scheduleNextArticle();
 
-    void filePosted(QString filePath, int nbArticles, int nbFailed);
+    void filePosted(QString filePath, uint nbArticles, uint nbFailed);
 
 
 
@@ -158,6 +182,8 @@ private slots:
     void onExtProcReadyReadStandardOutput();
     void onExtProcReadyReadStandardError();
 
+    void onCompressionFinished(int exitCode);
+    void onGenPar2Finished(int exitCode);
 
 
 
@@ -177,6 +203,7 @@ private:
 
 
     void _initPosting();
+    void _postFiles();
     void _finishPosting();
 
     void _closeNzb();
@@ -184,15 +211,14 @@ private:
 
 
 
-    int _compressFiles(const QString &cmdRar,
-                       const QString &tmpFolder,
-                       const QString &archiveName,
-                       const QString &pass,
-                       uint volSize = 0);
-    int _genPar2(const QString &tmpFolder,
-                 const QString &archiveName,
-                 uint redundancy = 0,
-                 const QStringList &files = QStringList());
+    bool startCompressFiles(const QString &cmdRar,
+                            const QString &tmpFolder,
+                            const QString &archiveName,
+                            const QString &pass,
+                            uint volSize = 0);
+    bool startGenPar2(const QString &tmpFolder,
+                      const QString &archiveName,
+                      uint redundancy = 0);
 
     bool _canCompress() const;
     bool _canGenPar2() const;
@@ -257,5 +283,12 @@ void PostingJob::articleFailed(quint64 size)
     ++_nbArticlesFailed;
 }
 
+uint PostingJob::nbArticlesTotal() const { return _nbArticlesTotal; }
+uint PostingJob::nbArticlesUploaded() const { return _nbArticlesUploaded; }
+uint PostingJob::nbArticlesFailed() const{ return _nbArticlesFailed; }
+bool PostingJob::hasUploaded() const{ return _nbArticlesTotal > 0; }
+
+QString PostingJob::nzbName() const { return _nzbName; }
+PostingWidget *PostingJob::widget() const { return _postWidget; }
 
 #endif // POSTINGJOB_H

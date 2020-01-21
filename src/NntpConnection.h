@@ -23,9 +23,6 @@
 #define NNTPCONNECTION_H
 
 #include <QTcpSocket>
-#ifndef __USE_MUTEX__
-#include <QQueue>
-#endif
 
 class NntpServerParams;
 class NntpArticle;
@@ -66,10 +63,6 @@ private:
 
     QString        _threadName;
 
-#ifndef __USE_MUTEX__
-    QQueue<NntpArticle*> _articles;
-#endif
-
     static int sSocketTimeoutMs;
 
 public:
@@ -107,12 +100,6 @@ signals:
     void error(QString msg) const;
 
 
-#ifndef __USE_MUTEX__
-    void pushArticle(NntpArticle *article);
-    void requestArticle(NntpConnection *con);
-#endif
-
-
 public slots:
     void onStartConnection();
     void onKillConnection();
@@ -127,9 +114,6 @@ public slots:
     void onSslErrors(const QList<QSslError> &errors); //!< SSL errors handler
     void onErrors(QAbstractSocket::SocketError);      //!< Socket errors handler
 
-#ifndef __USE_MUTEX__
-    void onPushArtice(NntpArticle *article);
-#endif
 
 private:
     inline void _log(const QString     &aMsg) const; //!< log function for QString
@@ -154,28 +138,28 @@ void NntpConnection::write(const char *aBuffer){_socket->write(aBuffer);}
 void NntpConnection::setThreadName(const QString &threadName) { _threadName = threadName; }
 void NntpConnection::_log(const char *aMsg) const
 {
-    emit log(QString("[%1][%2] %3").arg(_threadName).arg(_logPrefix).arg(aMsg));
+    emit log(QString("[%1 {%2}] %3").arg(_threadName).arg(_logPrefix).arg(aMsg));
 }
 void NntpConnection::_log(const QString &aMsg) const
 {
-    emit log(QString("[%1][%2] %3").arg(_threadName).arg(_logPrefix).arg(aMsg));
+    emit log(QString("[%1 {%2}] %3").arg(_threadName).arg(_logPrefix).arg(aMsg));
 }
 void NntpConnection::_log(const std::string &aMsg) const
 {
-    emit log(QString("[%1][%2] %3").arg(_threadName).arg(_logPrefix).arg(QString::fromStdString(aMsg)));
+    emit log(QString("[%1 {%2}] %3").arg(_threadName).arg(_logPrefix).arg(QString::fromStdString(aMsg)));
 }
 
 void NntpConnection::_error(const char *aMsg) const
 {
-    emit error(QString("[%1][%2] %3").arg(_threadName).arg(_logPrefix).arg(aMsg));
+    emit error(QString("[%1 {%2}] %3").arg(_threadName).arg(_logPrefix).arg(aMsg));
 }
 void NntpConnection::_error(const QString &aMsg) const
 {
-    emit error(QString("[%1][%2] %3").arg(_threadName).arg(_logPrefix).arg(aMsg));
+    emit error(QString("[%1 {%2}] %3").arg(_threadName).arg(_logPrefix).arg(aMsg));
 }
 void NntpConnection::_error(const std::string &aMsg) const
 {
-    emit error(QString("[%1][%2] %3").arg(_threadName).arg(_logPrefix).arg(QString::fromStdString(aMsg)));
+    emit error(QString("[%1 {%2}] %3").arg(_threadName).arg(_logPrefix).arg(QString::fromStdString(aMsg)));
 }
 
 #endif // NNTPCONNECTION_H

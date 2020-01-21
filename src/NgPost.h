@@ -94,13 +94,7 @@ private:
     bool                  _dispFilesPosting;
 
     QString               _nzbName; //!< name of nzb that we'll write (without the extension)
-//    QQueue<NntpFile*>     _filesToUpload;  //!< list of files to upload (that we didn't start)
-//    QSet<NntpFile*>       _filesInprogressbar;//!< files in queue to be uploaded (Articles have been produced)
     int                   _nbFiles;  //!< number of files to post in this iteration
-//    int                   _nbPosted; //!< number of files posted
-
-//    QVector<QThread*>        _threadPool;      //!< the connections are distributed among several threads
-//    QVector<NntpConnection*> _nntpConnections; //!< the NNTP connections (owning the TCP sockets)
 
     QList<NntpServerParams*> _nntpServers; //!< the servers parameters
 
@@ -110,46 +104,16 @@ private:
     std::string          _groups;             //!< Newsgroup where to post
     std::string          _articleIdSignature; //!< signature for Article message id (must be as a email address)
 
-//    QFile      *_nzb;       //!< nzb file that will be filled on the fly when a file is fully posted
-//    QTextStream _nzbStream; //!< txt stream for the nzb file
-
-//    NntpFile    *_nntpFile; //!< current file that is getting processed
-//    QFile       *_file;     //!< file handler on the file getting processed
-//    char        *_buffer;   //!< buffer to read the current file
-//    int          _part;     //!< part number (Article) on the current file
-//    QMutex       _secureFile;
-
-//    QQueue<NntpArticle*> _articles; //!< prepared articles that are yEnc encoded
-//    QMutex               _secureArticlesQueue; //!< mutex to protect the Article stack (as the NntpConnection will pop from the ThreadPool)
-
-
-//    QTime       _timeStart; //!< to get some stats (upload time and avg speed)
-//    quint64     _totalSize; //!< total size (in Bytes) to be uploaded
-
     QMap<QString, QString> _meta;    //!< list of meta to add in the nzb header (typically a password)
     QList<QString>         _grpList; //!< Newsgroup where we're posting in a list format to write in the nzb file
 
-//    int     _nbConnections; //!< available number of NntpConnection (we may loose some)
     int     _nbThreads;     //!< size of the ThreadPool
     int     _socketTimeOut; //!< socket timeout
     QString _nzbPath;       //!< default path where to write the nzb files
     QString _nzbPathConf;       //!< default path where to write the nzb files
 
-//    int       _nbArticlesUploaded; //!< number of Articles that have been uploaded (+ failed ones)
-//    int       _nbArticlesFailed;   //!< number of Articles that failed to be uploaded
-//    quint64   _uploadedSize;       //!< bytes posted (to compute the avg speed)
-//    int       _nbArticlesTotal;    //!< number of Articles of all the files to post
     QTimer    _progressbarTimer;      //!< timer to refresh the upload information (progressbar bar, avg. speed)
     const int _refreshRate;        //!< refresh rate
-
-//    QAtomicBool _stopPosting;
-//    QAtomicBool _noMoreFiles;
-
-
-//    QProcess   *_extProc;
-//    QDir       *_compressDir;
-//    bool        _limitProcDisplay;
-//    ushort      _nbProcDisp;
 
     QString     _tmpPath;
     QString     _rarPath;
@@ -231,10 +195,7 @@ public:
 
     bool startPostingJob(PostingJob *job);
 
-
     void updateGroups(const QString &groups);
-
-//    inline QString avgSpeed() const;
 
     NntpArticle *getNextArticle(const QString &threadName);
 
@@ -264,10 +225,6 @@ public:
 
     inline bool dispPostingFile() const;
 
-//    inline void articlePosted(quint64 size);
-//    inline void articleFailed(quint64 size);
-
-
     void saveConfig();
 
 signals:
@@ -285,11 +242,6 @@ private slots:
     void onLog(QString msg, bool newline);
     void onError(QString msg);
     void onErrorConnecting(QString err);
-
-#ifndef __USE_MUTEX__
-    void onRequestArticle(NntpConnection *con);
-#endif
-
     void onRefreshprogressbarBar();
 
 
@@ -323,57 +275,7 @@ public:
 
 };
 
-//NntpFile *NgPost::_getNextFile()
-//{
-//    if (_filesToUpload.size())
-//    {
-//        NntpFile *file = _filesToUpload.dequeue();
-//        _filesInprogressbar.insert(file);
-//        return file;
-//    }
-//    else
-//        return nullptr;
-//}
-
 bool NgPost::useHMI() const { return _mode == AppMode::HMI; }
-
-//QString NgPost::avgSpeed() const
-//{
-//    QString power = " ";
-//    double bandwidth = 0.;
-
-//    if (!_timeStart.isNull())
-//    {
-//        double sec = _timeStart.elapsed()/1000.;
-//        bandwidth = _uploadedSize / sec;
-
-//        if (bandwidth > 1024)
-//        {
-//            bandwidth /= 1024;
-//            power = "k";
-//        }
-//        if (bandwidth > 1024)
-//        {
-//            bandwidth /= 1024;
-//            power = "M";
-//        }
-//    }
-
-//    return QString("%1 %2B/s").arg(bandwidth, 6, 'f', 2).arg(power);
-//}
-
-//void NgPost::articlePosted(quint64 size)
-//{
-//    _uploadedSize += size;
-//    ++_nbArticlesUploaded;
-//}
-
-//void NgPost::articleFailed(quint64 size)
-//{
-//    _uploadedSize += size;
-//    ++_nbArticlesUploaded;
-//    ++_nbArticlesFailed;
-//}
 
 const std::string &NgPost::aticleSignature() const { return _articleIdSignature; }
 

@@ -62,7 +62,7 @@ const std::map<unsigned short, const char *>  Nntp::sResponses = {
 const char * Nntp::getResponse(unsigned short aCode){
     try {
         return sResponses.at(aCode);
-    } catch (std::out_of_range ex) {
+    } catch (const std::out_of_range &ex) {
         return sResponses.at(0);
     }
 }
