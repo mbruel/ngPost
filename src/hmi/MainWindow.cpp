@@ -51,7 +51,6 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
     _state(STATE::IDLE),
     _quickJobTab(new PostingWidget(ngPost, this, 1))
 {
-    qApp->installEventFilter(this);
     setAcceptDrops(true);
 
     _ui->setupUi(this);
@@ -118,7 +117,11 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
     connect(_ui->postTabWidget->tabBar(), &QTabBar::tabBarClicked,     this, &MainWindow::onJobTabClicked);
     connect(_ui->postTabWidget->tabBar(), &QTabBar::tabCloseRequested, this, &MainWindow::onCloseJob);
 
+
+    _ui->postTabWidget->installEventFilter(this);
     _ui->postTabWidget->setCurrentIndex(1);
+
+
     setJobLabel(1);
 }
 
@@ -168,6 +171,32 @@ void MainWindow::log(const QString &aMsg, bool newline) const
 void MainWindow::logError(const QString &error) const
 {
     _ui->logBrowser->append(QString("<font color='red'>%1</font><br/>\n").arg(error));
+}
+
+#include <QKeyEvent>
+bool MainWindow::eventFilter(QObject *obj, QEvent *event)
+{
+    if (event->type() == QEvent::KeyPress && obj == _ui->postTabWidget)
+    {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+        qDebug() << "[MainWindow] getting key event: " << keyEvent->key();
+        if (_ui->postTabWidget->currentIndex() > 0)
+            static_cast<PostingWidget*>(_ui->postTabWidget->currentWidget())->handleKeyEvent(keyEvent);
+    }
+    return QObject::eventFilter(obj, event);
+}
+
+#include <QMimeData>
+void MainWindow::dragEnterEvent(QDragEnterEvent *e)
+{
+    if (e->mimeData()->hasUrls())
+        e->acceptProposedAction();
+}
+
+void MainWindow::dropEvent(QDropEvent *e)
+{
+    if (_ui->postTabWidget->currentIndex() > 0)
+        static_cast<PostingWidget*>(_ui->postTabWidget->currentWidget())->handleDropEvent(e);
 }
 
 

@@ -67,6 +67,10 @@ public:
     void init();
     inline uint jobNumber() const;
 
+    void handleDropEvent(QDropEvent *e);
+    void handleKeyEvent(QKeyEvent *keyEvent);
+
+
 public slots: // for PostingJob
     void onFilePosted(QString filePath, uint nbArticles, uint nbFailed);
     void onArchiveFileNames(QStringList paths);
@@ -90,11 +94,6 @@ private slots: // for the HMI
     void onNzbFileClicked();
     void onRarPathClicked();
 
-
-protected:
-    bool eventFilter(QObject *obj, QEvent *event) override;
-    void dragEnterEvent(QDragEnterEvent *e) override;
-    void dropEvent(QDropEvent *e) override;
 
 private:
     void _buildFilesList(QFileInfoList &files, bool &hasFolder);

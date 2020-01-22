@@ -77,6 +77,12 @@ public:
     void logError(const QString &error) const; //!< log function for QString
 
 
+protected:
+    bool eventFilter(QObject *obj, QEvent *event) override;
+    void dragEnterEvent(QDragEnterEvent *e) override;
+    void dropEvent(QDropEvent *e) override;
+
+
 private slots:
     void onAddServer();
     void onDelServer();
