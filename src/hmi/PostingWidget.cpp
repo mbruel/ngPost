@@ -459,11 +459,6 @@ void PostingWidget::_udatePostingParams()
         _ngPost->_nzbName = nzb.completeBaseName();
     }
 
-    if (_ui->nzbPassEdit->text().isEmpty())
-        _ngPost->_meta.remove("password");
-    else
-        _ngPost->_meta["password"] = _ui->nzbPassEdit->text();
-
     // fetch compression settings
     _ngPost->_tmpPath    = _ui->compressPathEdit->text();
     _ngPost->_doCompress = _ui->compressCB->isChecked();

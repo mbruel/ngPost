@@ -12,6 +12,17 @@ TODO: bandwidth optimization:
 	check if we can play on the SSL protocol paramaters
 
 ####################################################
+###       Release: ngPost v3.2                   ###
+###       date:    2020/01/23                    ###
+####################################################
+
+- Fix bug of wrong password in nzb file when using Auto Posting generation...
+
+- display post size in GB as nowadays people post HD or 4K videos...
+
+
+
+####################################################
 ###       Release: ngPost v3.1                   ###
 ###       date:    2020/01/22                    ###
 ####################################################
