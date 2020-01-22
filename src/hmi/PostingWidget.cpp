@@ -169,8 +169,7 @@ void PostingWidget::onPostFiles()
         _state = STATE::POSTING;
         _postingJob = new PostingJob(_ngPost, nzbPath, files, this,
                                      _ngPost->_tmpPath, _ngPost->_rarPath, _ngPost->_rarSize,  _ngPost->_par2Pct,
-                                     _ngPost->_doCompress, _ngPost->_doPar2, false, false,
-                                     _ngPost->_lengthName, _ngPost->_lengthPass, _ngPost->_rarName, _ngPost->_rarPass);
+                                     _ngPost->_doCompress, _ngPost->_doPar2, _ngPost->_rarName, _ngPost->_rarPass);
 
         bool hasStarted = _ngPost->startPostingJob(_postingJob);
 

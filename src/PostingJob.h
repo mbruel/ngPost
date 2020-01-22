@@ -67,11 +67,6 @@ private:
 
     bool        _doCompress;
     bool        _doPar2;
-    bool        _genName;
-    bool        _genPass;
-
-    uint        _lengthName;
-    uint        _lengthPass;
     QString     _rarName;
     QString     _rarPass;
 
@@ -127,10 +122,6 @@ public:
                uint par2Pct,
                bool doCompress,
                bool doPar2,
-               bool genName,
-               bool genPass,
-               uint lengthName,
-               uint lengthPass,
                const QString &rarName,
                const QString &rarPass,
                QObject *parent = nullptr);
