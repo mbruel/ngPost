@@ -110,12 +110,15 @@ private:
 
     bool _postSucceed;
 
+    bool _obfuscateArticles;
+
 
 public:
     PostingJob(NgPost *ngPost,
                const QString &nzbFilePath,
                const QFileInfoList &files,
                PostingWidget *postWidget,
+               bool obfuscateArticles,
                const QString &tmpPath,
                const QString &rarPath,
                uint rarSize,

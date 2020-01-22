@@ -167,7 +167,7 @@ void PostingWidget::onPostFiles()
         }
 
         _state = STATE::POSTING;
-        _postingJob = new PostingJob(_ngPost, nzbPath, files, this,
+        _postingJob = new PostingJob(_ngPost, nzbPath, files, this, _ngPost->_obfuscateArticles,
                                      _ngPost->_tmpPath, _ngPost->_rarPath, _ngPost->_rarSize,  _ngPost->_par2Pct,
                                      _ngPost->_doCompress, _ngPost->_doPar2, _ngPost->_rarName, _ngPost->_rarPass);
 
