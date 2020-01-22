@@ -709,7 +709,9 @@ bool PostingJob::startCompressFiles(const QString &cmdRar,
     _limitProcDisplay = false;
     _extProc->start(cmdRar, args);
 
+#ifdef __DEBUG__
     _log("[PostingJob::_compressFiles] compression started...");
+#endif
 
     return true;
 }
@@ -723,8 +725,9 @@ void PostingJob::onCompressionFinished(int exitCode)
         _log("");
 
 
-
+#ifdef __DEBUG__
     _log("[PostingJob::_compressFiles] compression finished...");
+#endif
 
     if (exitCode != 0)
     {

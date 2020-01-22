@@ -13,11 +13,11 @@ TODO: bandwidth optimization:
 
 ####################################################
 ###       Release: ngPost v3.1                   ###
-###       date:    2020/01/??                    ###
+###       date:    2020/01/22                    ###
 ####################################################
 
 - implement PostingJob to get the posting out of NgPost and thus be able to handle several
-- PostingJob queue implemented for the HMI
+- PostingJob queue implemented for both HMI and CMD
 - QProcess are now handled asynchronously => no HMI freeze and possible to kill the external processes (rar or par2)
 
 - fix Issue #9: use only one Mutex and make sure we wait the expected Articles are prepared before the Connections start posting
@@ -25,6 +25,8 @@ TODO: bandwidth optimization:
 - introduce new config POST_HISTORY where all successful post will add a line with the date, nzb name, rar name and password (cvs format)
 
 - add --auto to the command line
+- AutoPostWidget to automate Quick Post creation and start them
+
 
 
 ####################################################
