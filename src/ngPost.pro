@@ -60,6 +60,7 @@ SOURCES += \
         NntpConnection.cpp \
         PostingJob.cpp \
         hmi/AboutNgPost.cpp \
+        hmi/AutoPostWidget.cpp \
         hmi/CheckBoxCenterWidget.cpp \
         hmi/PostingWidget.cpp \
         hmi/SignedListWidget.cpp \
@@ -81,6 +82,7 @@ HEADERS += \
     NntpConnection.h \
     PostingJob.h \
     hmi/AboutNgPost.h \
+    hmi/AutoPostWidget.h \
     hmi/CheckBoxCenterWidget.h \
     hmi/PostingWidget.h \
     hmi/SignedListWidget.h \
@@ -95,6 +97,7 @@ HEADERS += \
 
 FORMS += \
     hmi/AboutNgPost.ui \
+    hmi/AutoPostWidget.ui \
     hmi/MainWindow.ui \
     hmi/PostingWidget.ui
 

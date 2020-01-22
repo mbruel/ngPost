@@ -22,6 +22,7 @@
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
 #include "PostingWidget.h"
+#include "AutoPostWidget.h"
 #include "NgPost.h"
 #include "nntp/NntpServerParams.h"
 #include "nntp/NntpArticle.h"
@@ -49,7 +50,8 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
     _ui(new Ui::MainWindow),
     _ngPost(ngPost),
     _state(STATE::IDLE),
-    _quickJobTab(new PostingWidget(ngPost, this, 1))
+    _quickJobTab(new PostingWidget(ngPost, this, 1)),
+    _autoPostTab(new AutoPostWidget(ngPost, this))
 {
     setAcceptDrops(true);
 
@@ -94,22 +96,9 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
     _ui->debugBox->setChecked(_ngPost->debugMode());
 
 
-    QString autoPostingInfo("<h1>To be implemented...</h1>");
-    autoPostingInfo += "Here you would be able to create automatically some Quick Post tabs:";
-    autoPostingInfo += "<ul>";
-    autoPostingInfo += "<li>you define a root folder from where you post stuff</li>";
-    autoPostingInfo += "<li>it will scan the folder and post all files/folders individually</li>";
-    autoPostingInfo += "<li>everything will be compressed (recursively for folders)</li>";
-    autoPostingInfo += "<li>you can set up if you want a random name for the archive</li>";
-    autoPostingInfo += "<li>you can set up if you want a random password for the archive</li>";
-    autoPostingInfo += "<li>you can set up if you want to generate the par2</li>";
-    autoPostingInfo += "<li>as a results, Quick Post tabs will be created</li>";
-    autoPostingInfo += "<li>you can choose if you want to start them all (using the queue)</li>";
-    autoPostingInfo += "</ul>";
     _ui->postTabWidget->clear();
-    _ui->postTabWidget->setTabsClosable(true);
-    _ui->postTabWidget->addTab(new QLabel(autoPostingInfo), _ngPost->sFolderMonitoringName);
-    _ui->postTabWidget->addTab(_quickJobTab, QString("%1 #%2").arg(_ngPost->sQuickJobName).arg(1));
+    _ui->postTabWidget->addTab(_quickJobTab, QIcon(":/icons/quick.png"), QString("%1").arg(_ngPost->sQuickJobName));
+    _ui->postTabWidget->addTab(_autoPostTab, QIcon(":/icons/auto.png"), _ngPost->sFolderMonitoringName);
     _ui->postTabWidget->addTab(new QWidget(_ui->postTabWidget), QIcon(":/icons/plus.png"), "New");
     _ui->postTabWidget->tabBar()->setTabToolTip(2, QString("Create a new %1").arg(_ngPost->sQuickJobName));
 
@@ -117,9 +106,9 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
     connect(_ui->postTabWidget->tabBar(), &QTabBar::tabBarClicked,     this, &MainWindow::onJobTabClicked);
     connect(_ui->postTabWidget->tabBar(), &QTabBar::tabCloseRequested, this, &MainWindow::onCloseJob);
 
-
+    _ui->postTabWidget->setTabsClosable(true);
     _ui->postTabWidget->installEventFilter(this);
-    _ui->postTabWidget->setCurrentIndex(1);
+//    _ui->postTabWidget->setCurrentIndex(1);
 
 
     setJobLabel(1);
@@ -135,6 +124,7 @@ void MainWindow::init()
     _initServerBox();
     _initPostingBox();
     _quickJobTab->init();
+    _autoPostTab->init();
 }
 
 
@@ -180,7 +170,10 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
     {
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
         qDebug() << "[MainWindow] getting key event: " << keyEvent->key();
-        if (_ui->postTabWidget->currentIndex() > 0)
+        int currentTabIdx = _ui->postTabWidget->currentIndex();
+        if (currentTabIdx == 1)
+            static_cast<AutoPostWidget*>(_ui->postTabWidget->currentWidget())->handleKeyEvent(keyEvent);
+        else if (currentTabIdx < _ui->postTabWidget->count() - 1)
             static_cast<PostingWidget*>(_ui->postTabWidget->currentWidget())->handleKeyEvent(keyEvent);
     }
     return QObject::eventFilter(obj, event);
@@ -195,7 +188,8 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *e)
 
 void MainWindow::dropEvent(QDropEvent *e)
 {
-    if (_ui->postTabWidget->currentIndex() > 0)
+    int currentTabIdx = _ui->postTabWidget->currentIndex();
+    if (currentTabIdx != 1 && currentTabIdx < _ui->postTabWidget->count() - 1)
         static_cast<PostingWidget*>(_ui->postTabWidget->currentWidget())->handleDropEvent(e);
 }
 
@@ -253,7 +247,6 @@ void MainWindow::_initServerBox()
 
 void MainWindow::_initPostingBox()
 {
-    //MB_TODO
     connect(_ui->saveButton,        &QAbstractButton::clicked, this, &MainWindow::onSaveConfig);
 
     connect(_ui->genPoster,         &QAbstractButton::clicked, this, &MainWindow::onGenPoster);
@@ -339,6 +332,23 @@ void MainWindow::updateParams()
         _ngPost->_nbThreads = 1;
 }
 
+PostingWidget *MainWindow::addNewQuickTab(int lastTabIdx, const QFileInfoList &files)
+{
+    if (!lastTabIdx)
+        lastTabIdx = _ui->postTabWidget->count() -1;
+    PostingWidget *newPostingWidget = new PostingWidget(_ngPost, this, static_cast<uint>(lastTabIdx));
+    newPostingWidget->init();
+    _ui->postTabWidget->insertTab(lastTabIdx,
+                                  newPostingWidget ,
+                                  QIcon(":/icons/quick.png"),
+                                  QString("%1 #%2").arg(_ngPost->sQuickJobName).arg(lastTabIdx));
+
+    for (const QFileInfo &file : files)
+        newPostingWidget->addPath(file.absoluteFilePath(), 0, file.isDir());
+
+    return newPostingWidget;
+}
+
 void MainWindow::setTab(QWidget *postWidget)
 {
     int nbJob = _ui->postTabWidget->count() -1;
@@ -362,7 +372,7 @@ void MainWindow::clearJobTab(QWidget *postWidget)
             QTabBar *bar = _ui->postTabWidget->tabBar();
             bar->setTabToolTip(i, "");
             bar->setTabTextColor(i, Qt::black);
-            bar->setTabIcon(i, QIcon());
+            bar->setTabIcon(i, QIcon(":/icons/quick.png"));
         }
     }
 }
@@ -498,13 +508,7 @@ void MainWindow::onJobTabClicked(int index)
     int nbJob = _ui->postTabWidget->count() -1;
     qDebug() << "Click on tab: " << index << ", count: " << nbJob;
     if (index == nbJob) // click on the last tab
-    {
-        PostingWidget *newPostingWidget = new PostingWidget(_ngPost, this, static_cast<uint>(nbJob));
-        newPostingWidget->init();
-        _ui->postTabWidget->insertTab(nbJob, newPostingWidget , QString("%1 #%2").arg(_ngPost->sQuickJobName).arg(nbJob));
-//        _ui->postTabWidget->tabBar()->setTabTextColor(nbJob, Qt::darkBlue);
-//        _ui->postTabWidget->tabBar()->setTabToolTip(nbJob, "my tooltip");
-    }
+        addNewQuickTab(nbJob);
 }
 
 void MainWindow::onCloseJob(int index)

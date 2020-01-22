@@ -385,6 +385,13 @@ void NgPost::onDonation()
     QDesktopServices::openUrl(sDonationURL);
 }
 
+#include "hmi/AboutNgPost.h"
+void NgPost::onAboutClicked()
+{
+    AboutNgPost about(this);
+    about.exec();
+}
+
 void NgPost::onPostingJobStarted()
 {
     if (_hmi || _dispprogressbarBar)

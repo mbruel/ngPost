@@ -23,10 +23,12 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QFileInfoList>
 class NgPost;
 class NntpServerParams;
 class NntpFile;
 class PostingWidget;
+class AutoPostWidget;
 
 namespace Ui {
 class MainWindow;
@@ -43,6 +45,7 @@ private:
     NgPost         *_ngPost;
     STATE           _state;
     PostingWidget  *_quickJobTab;
+    AutoPostWidget *_autoPostTab;
 
     static const bool sDefaultServerSSL   = true;
     static const int  sDefaultConnections = 5;
@@ -66,6 +69,8 @@ public:
 
     void updateServers();
     void updateParams();
+
+    PostingWidget *addNewQuickTab(int lastTabIdx, const QFileInfoList &files = QFileInfoList());
 
     void setTab(QWidget *postWidget);
     void clearJobTab(QWidget *postWidget);
