@@ -38,6 +38,7 @@ PostingJob::PostingJob(NgPost *ngPost,
                        const QString &nzbFilePath,
                        const QFileInfoList &files,
                        PostingWidget *postWidget,
+                       bool obfuscateArticles,
                        const QString &tmpPath,
                        const QString &rarPath,
                        uint rarSize,
@@ -71,7 +72,8 @@ PostingJob::PostingJob(NgPost *ngPost,
     _nbArticlesUploaded(0), _nbArticlesFailed(0),
     _uploadedSize(0), _nbArticlesTotal(0),
     _stopPosting(0x0), _noMoreFiles(0x0),
-    _postSucceed(false)
+    _postSucceed(false),
+    _obfuscateArticles(obfuscateArticles)
 {
 #ifdef __DEBUG__
     qDebug() << "[PostingJob] >>>> Construct " << this;
@@ -456,8 +458,8 @@ NntpArticle *PostingJob::_getNextArticle(const QString &threadName)
                 _log(tr("[%1] we've read %2 bytes from %3 (=> new pos: %4)").arg(threadName).arg(bytes).arg(pos).arg(_file->pos()));
             ++_part;
             NntpArticle *article = new NntpArticle(_nntpFile, _part, _buffer, pos, bytes,
-                                                   _ngPost->_obfuscateArticles ? _ngPost->_randomFrom() : _ngPost->_from,
-                                                   _ngPost->_groups, _ngPost->_obfuscateArticles);
+                                                   _obfuscateArticles ? _ngPost->_randomFrom() : _ngPost->_from,
+                                                   _ngPost->_groups, _obfuscateArticles);
 
 #ifdef __SAVE_ARTICLES__
             article->dumpToFile("/tmp", _articleIdSignature);

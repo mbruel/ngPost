@@ -897,8 +897,8 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         QString nzbFilePath = nzbPath();
         if (!nzbFilePath.endsWith(".nzb"))
             nzbFilePath += ".nzb";
-        startPostingJob(new PostingJob(this, nzbFilePath, filesToUpload,
-                                       nullptr, _tmpPath, _rarPath, _rarSize, _par2Pct,
+        startPostingJob(new PostingJob(this, nzbFilePath, filesToUpload, nullptr, _obfuscateArticles,
+                                       _tmpPath, _rarPath, _rarSize, _par2Pct,
                                        _doCompress, _doPar2, _rarName, _rarPass));
     }
 
@@ -928,8 +928,8 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
                 qDebug() << "Start posting job for " << _nzbName
                          << " with rar_name: " << _rarName << " and pass: " << _rarPass;
 
-                startPostingJob(new PostingJob(this, nzbFilePath, {file},
-                                               nullptr, _tmpPath, _rarPath, _rarSize, _par2Pct,
+                startPostingJob(new PostingJob(this, nzbFilePath, {file}, nullptr, _obfuscateArticles,
+                                               _tmpPath, _rarPath, _rarSize, _par2Pct,
                                                _doCompress, _doPar2, _rarName, _rarPass));
             }
         }
