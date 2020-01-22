@@ -108,7 +108,7 @@ const QList<QCommandLineOption> NgPost::sCmdOptions = {
     {{"d", sOptionNames[Opt::DEBUG]},         tr( "display some debug logs")},
 
     {{"i", sOptionNames[Opt::INPUT]},         tr("input file to upload (single file or directory), you can use it multiple times"), sOptionNames[Opt::INPUT]},
-    { sOptionNames[Opt::AUTO_DIR],            tr("auto dir: the folder will be parsed and every file/folder will be posted separetely. You must use --compress. Feel free to add --gen_par2, --gen_name and --gen_rar."), sOptionNames[Opt::AUTO_DIR]},
+    { sOptionNames[Opt::AUTO_DIR],            tr("auto directory that will be parsed to post every file/folder separately. You must use --compress. Feel free to add --gen_par2, --gen_name and --gen_rar"), sOptionNames[Opt::AUTO_DIR]},
     {{"o", sOptionNames[Opt::OUTPUT]},        tr("output file path (nzb)"), sOptionNames[Opt::OUTPUT]},
     {{"t", sOptionNames[Opt::THREAD]},        tr("number of Threads (the connections will be distributed amongs them)"), sOptionNames[Opt::THREAD]},
     {{"x", sOptionNames[Opt::OBFUSCATE]},     tr("obfuscate the subjects of the articles (CAREFUL you won't find your post if you lose the nzb file)")},
@@ -1191,6 +1191,7 @@ void NgPost::_syntax(char *appName)
     }
 
     _cout << "\nExamples:\n"
+          << "  - with auto post: ngPost --auto /Downloads/testNgPost --compress --gen_par2 --gen_name --gen_pass --rar_size 42 --disp_progress files\n"
           << "  - with compression, filename obfuscation, random password and par2: " << app << " -i /tmp/file1 -i /tmp/folder1 -o /nzb/myPost.nzb --compress --gen_name --gen_pass --gen_par2\n"
           << "  - with config file: " << app << " -c ~/.ngPost -m \"password=qwerty42\" -f ngPost@nowhere.com -i /tmp/file1 -i /tmp/file2 -i /tmp/folderToPost1 -i /tmp/folderToPost2\n"
           << "  - with all params:  " << app << " -t 1 -m \"password=qwerty42\" -m \"metaKey=someValue\" -h news.newshosting.com -P 443 -s -u user -p pass -n 30 -f ngPost@nowhere.com \
