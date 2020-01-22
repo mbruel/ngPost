@@ -883,7 +883,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         if (_genPass)
         {
             _rarPass = randomPass(_lengthPass);
-            _meta.insert("password", _rarPass);
+            _meta.remove("password");
         }
     }
 
@@ -923,7 +923,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
                 if (_genPass)
                 {
                     _rarPass = randomPass(_lengthPass);
-                    _meta.insert("password", _rarPass);
+                    _meta.remove("password");
                 }
                 qDebug() << "Start posting job for " << _nzbName
                          << " with rar_name: " << _rarName << " and pass: " << _rarPass;

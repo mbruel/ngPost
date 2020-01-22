@@ -306,6 +306,11 @@ QString PostingJob::postSize() const
         size /= 1024;
         unit = "MB";
     }
+    if (size > 1024)
+    {
+        size /= 1024;
+        unit = "GB";
+    }
     return QString("%1 %2").arg(size, 0, 'f', 2).arg(unit);
 }
 
