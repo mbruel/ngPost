@@ -48,6 +48,7 @@ private:
     STATE              _state;
 
 
+
     static const QColor  sPostingColor;
     static const QString sPostingIcon;
     static const QColor  sPendingColor;
@@ -65,10 +66,14 @@ public:
     void setPosting();
 
     void init();
+    void genNameAndPassword(bool genName, bool genPass, bool doPar2);
     inline uint jobNumber() const;
 
     void handleDropEvent(QDropEvent *e);
     void handleKeyEvent(QKeyEvent *keyEvent);
+
+    void addPath(const QString &path, int currentNbFiles, int isDir = false);
+
 
 
 public slots: // for PostingJob
@@ -77,9 +82,9 @@ public slots: // for PostingJob
     void onArticlesNumber(int nbArticles);
     void onPostingJobDone();
 
+    void onPostFiles(); //!< for the post button but also can be used by the AutoPostWidget
+
 private slots: // for the HMI
-    void onPostFiles();
-    void onAboutClicked();
 
     void onNzbPassToggled(bool checked);
     void onGenNzbPassword();
@@ -101,7 +106,6 @@ private:
     void _udatePostingParams();
 
 
-    void _addPath(const QString &path, int currentNbFiles, int isDir = false);
     bool _fileAlreadyInList(const QString &fileName, int currentNbFiles) const;
 
 

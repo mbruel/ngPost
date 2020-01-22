@@ -890,13 +890,13 @@ void PostingJob::onExtProcReadyReadStandardOutput()
         if (!_limitProcDisplay || ++_nbProcDisp%42 == 0)
             _log("*", false);
     }
-    qApp->processEvents();
+//    qApp->processEvents();
 }
 
 void PostingJob::onExtProcReadyReadStandardError()
 {
     _error(_extProc->readAllStandardError());
-    qApp->processEvents();
+//    qApp->processEvents();
 }
 
 

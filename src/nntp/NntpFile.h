@@ -1,4 +1,3 @@
-#ifndef NntpFile_H
 //========================================================================
 //
 // Copyright (C) 2019 Matthieu Bruel <Matthieu.Bruel@gmail.com>
@@ -20,6 +19,7 @@
 //
 //========================================================================
 
+#ifndef NntpFile_H
 #define NntpFile_H
 #include <QObject>
 #include <QVector>

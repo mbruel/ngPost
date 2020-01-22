@@ -36,7 +36,7 @@
 #include <QMimeData>
 
 
-const QColor  PostingWidget::sPostingColor = QColor(255,215,0); // gold (#FFD700)
+const QColor  PostingWidget::sPostingColor = QColor(255,162, 0); // gold (#FFA200)
 const QString PostingWidget::sPostingIcon  = ":/icons/uploading.png";
 const QColor  PostingWidget::sPendingColor = Qt::darkBlue;
 const QString PostingWidget::sPendingIcon  = ":/icons/pending.png";
@@ -198,11 +198,6 @@ void PostingWidget::onPostFiles()
     }
 }
 
-void PostingWidget::onAboutClicked()
-{
-    AboutNgPost about(_ngPost);
-    about.exec();
-}
 
 void PostingWidget::onNzbPassToggled(bool checked)
 {
@@ -224,8 +219,8 @@ void PostingWidget::onSelectFilesClicked()
                 _ngPost->_inputDir);
 
     int currentNbFiles = _ui->filesList->count();
-    for (QString &file : files)
-        _addPath(file, currentNbFiles);
+    for (const QString &file : files)
+        addPath(file, currentNbFiles);
 }
 
 void PostingWidget::onSelectFolderClicked()
@@ -237,7 +232,7 @@ void PostingWidget::onSelectFolderClicked()
                 QFileDialog::ShowDirsOnly);
 
     if (!folder.isEmpty())
-        _addPath(folder, _ui->filesList->count(), true);
+        addPath(folder, _ui->filesList->count(), true);
 }
 
 void PostingWidget::onClearFilesClicked()
@@ -266,7 +261,7 @@ void PostingWidget::onCompressPathClicked()
     QString path = QFileDialog::getExistingDirectory(
                 this,
                 tr("Select a Folder"),
-                _ngPost->_tmpPath,
+                _ui->compressPathEdit->text(),
                 QFileDialog::ShowDirsOnly);
 
     if (!path.isEmpty())
@@ -306,38 +301,36 @@ void PostingWidget::onRarPathClicked()
 
 void PostingWidget::handleKeyEvent(QKeyEvent *keyEvent)
 {
-    if (keyEvent->type() == QEvent::KeyPress)
-    {
-        qDebug() << "[PostingWidget::handleKeyEvent] key event: " << keyEvent->key();
+    qDebug() << "[PostingWidget::handleKeyEvent] key event: " << keyEvent->key();
 
-        if(keyEvent->key() == Qt::Key_Delete || keyEvent->key() == Qt::Key_Backspace)
+    if(keyEvent->key() == Qt::Key_Delete || keyEvent->key() == Qt::Key_Backspace)
+    {
+        for (QListWidgetItem *item : _ui->filesList->selectedItems())
         {
-            for (QListWidgetItem *item : _ui->filesList->selectedItems())
-            {
-                qDebug() << "[PostingWidget::handleKeyEvent] remove item: " << item->text();
-                _ui->filesList->removeItemWidget2(item);
-                delete item;
-            }
+            qDebug() << "[PostingWidget::handleKeyEvent] remove item: " << item->text();
+            _ui->filesList->removeItemWidget2(item);
+            delete item;
         }
-        else if (keyEvent->matches(QKeySequence::Paste))
-        {
-            const QClipboard *clipboard = QApplication::clipboard();
-            const QMimeData *mimeData = clipboard->mimeData();
-            if (mimeData->hasImage()) {
-                qDebug() << "[PostingWidget::handleKeyEvent] try to paste image...";
-            } else if (mimeData->hasHtml()) {
-                qDebug() << "[PostingWidget::handleKeyEvent] try to paste html: ";
-            } else if (mimeData->hasText()) {
-                QString txt = mimeData->text();
-                qDebug() << "[PostingWidget::handleKeyEvent] paste text: " << txt;
-                int currentNbFiles = _ui->filesList->count();
-                for (const QString &path : txt.split(QRegularExpression("\n|\r|\r\n")))
-                {
-                    QFileInfo fileInfo(path);
-                    if (!fileInfo.exists())
-                        qDebug() << "[PostingWidget::handleKeyEvent] NOT A FILE: " << path;
-                    else
-                        _addPath(path, currentNbFiles, fileInfo.isDir());
+    }
+    else if (keyEvent->matches(QKeySequence::Paste))
+    {
+        const QClipboard *clipboard = QApplication::clipboard();
+        const QMimeData *mimeData = clipboard->mimeData();
+        if (mimeData->hasImage()) {
+            qDebug() << "[PostingWidget::handleKeyEvent] try to paste image...";
+        } else if (mimeData->hasHtml()) {
+            qDebug() << "[PostingWidget::handleKeyEvent] try to paste html: ";
+        } else if (mimeData->hasText()) {
+            QString txt = mimeData->text();
+            qDebug() << "[PostingWidget::handleKeyEvent] paste text: " << txt;
+            int currentNbFiles = _ui->filesList->count();
+            for (const QString &path : txt.split(QRegularExpression("\n|\r|\r\n")))
+            {
+                QFileInfo fileInfo(path);
+                if (!fileInfo.exists())
+                    qDebug() << "[PostingWidget::handleKeyEvent] NOT A FILE: " << path;
+                else
+                    addPath(path, currentNbFiles, fileInfo.isDir());
 //                        else if (fileInfo.isDir())
 //                        {
 //                            QDir dir(fileInfo.absoluteFilePath());
@@ -347,16 +340,16 @@ void PostingWidget::handleKeyEvent(QKeyEvent *keyEvent)
 //                                    _addFile(subFile.absoluteFilePath(), currentNbFiles);
 //                            }
 //                        }
-                }
-
-            } else if (mimeData->hasUrls()) {
-                qDebug() << "[PostingWidget::handleKeyEvent] paste urls...";
-
-            } else {
-                qDebug() << "[PostingWidget::handleKeyEvent] unknown type...";
             }
+
+        } else if (mimeData->hasUrls()) {
+            qDebug() << "[PostingWidget::handleKeyEvent] paste urls...";
+
+        } else {
+            qDebug() << "[PostingWidget::handleKeyEvent] unknown type...";
         }
     }
+
 }
 
 
@@ -366,7 +359,7 @@ void PostingWidget::handleDropEvent(QDropEvent *e)
     for (const QUrl &url : e->mimeData()->urls())
     {
         QString fileName = url.toLocalFile();
-        _addPath(fileName, currentNbFiles, QFileInfo(fileName).isDir());
+        addPath(fileName, currentNbFiles, QFileInfo(fileName).isDir());
     }
 }
 
@@ -386,6 +379,8 @@ void PostingWidget::_buildFilesList(QFileInfoList &files, bool &hasFolder)
 
 void PostingWidget::init()
 {
+    _ui->donateButton->setToolTip(_ngPost->sDonationTooltip);
+
     _ui->nzbPassCB->setChecked(false);
     onNzbPassToggled(false);
 
@@ -425,18 +420,31 @@ void PostingWidget::init()
     connect(_ui->genCompressName,   &QAbstractButton::clicked, this, &PostingWidget::onGenCompressName);
 
 
-    // MB_TODO
     connect(_ui->compressPathButton,&QAbstractButton::clicked, this, &PostingWidget::onCompressPathClicked);
     connect(_ui->rarPathButton,     &QAbstractButton::clicked, this, &PostingWidget::onRarPathClicked);
 
     connect(_ui->nzbFileButton,     &QAbstractButton::clicked, this, &PostingWidget::onNzbFileClicked);
 
-    connect(_ui->aboutButton,       &QAbstractButton::clicked, this,    &PostingWidget::onAboutClicked);
+    connect(_ui->aboutButton,       &QAbstractButton::clicked, _ngPost, &NgPost::onAboutClicked);
     connect(_ui->donateButton,      &QAbstractButton::clicked, _ngPost, &NgPost::onDonation);
 
 
-
     onCompressCB(false);
+}
+
+void PostingWidget::genNameAndPassword(bool genName, bool genPass, bool doPar2)
+{
+    _ui->compressCB->setChecked(true);
+    if (genName)
+        onGenCompressName();
+    if (genPass)
+    {
+        _ui->nzbPassCB->setChecked(true);
+        onGenNzbPassword();
+    }
+
+    if (doPar2)
+        _ui->par2CB->setChecked(true);
 }
 
 
@@ -488,7 +496,7 @@ void PostingWidget::_udatePostingParams()
     }
 }
 
-void PostingWidget::_addPath(const QString &path, int currentNbFiles, int isDir)
+void PostingWidget::addPath(const QString &path, int currentNbFiles, int isDir)
 {
     for (int i = 0 ; i < currentNbFiles ; ++i)
     {
@@ -500,14 +508,14 @@ void PostingWidget::_addPath(const QString &path, int currentNbFiles, int isDir)
     }
     _ui->filesList->addPath(path, isDir);
 
+    QFileInfo fileInfo(path);
     if (_ui->nzbFileEdit->text().isEmpty())
     {
-        QFileInfo fileInfo(path);
         _ngPost->_nzbName = QString("%1.nzb").arg(fileInfo.completeBaseName());
         _ui->nzbFileEdit->setText(_ngPost->nzbPath());
     }
     if (_ui->compressNameEdit->text().isEmpty())
-        _ui->compressNameEdit->setText(_ngPost->_nzbName);
+        _ui->compressNameEdit->setText(fileInfo.completeBaseName());
 }
 
 bool PostingWidget::_fileAlreadyInList(const QString &fileName, int currentNbFiles) const
@@ -528,6 +536,7 @@ void PostingWidget::setIDLE()
 
 void PostingWidget::setPosting()
 {
+    _hmi->updateJobTab(this, sPostingColor, QIcon(sPostingIcon), _postingJob->nzbName());
     _ui->postButton->setText(tr("Stop Posting"));
     _state = STATE::POSTING;
 }

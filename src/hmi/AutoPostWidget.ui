@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>PostingWidget</class>
- <widget class="QWidget" name="PostingWidget">
+ <class>AutoPostWidget</class>
+ <widget class="QWidget" name="AutoPostWidget">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1103</width>
+    <width>1040</width>
     <height>480</height>
    </rect>
   </property>
@@ -198,7 +198,52 @@
     <widget class="SignedListWidget" name="filesList"/>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_4">
+    <layout class="QHBoxLayout" name="autoDirLayout">
+     <item>
+      <widget class="QLabel" name="autoDirLbl">
+       <property name="text">
+        <string>&lt;b&gt;Auto Dir&lt;/b&gt; path: </string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="autoDirEdit">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>200</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Auto Dir path</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="autoDirButton">
+       <property name="maximumSize">
+        <size>
+         <width>30</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>select the Auto Directory</string>
+       </property>
+       <property name="text">
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
      <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
@@ -213,170 +258,49 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="selectFilesButton">
+      <widget class="QCheckBox" name="autoDirSelectAllCB">
        <property name="toolTip">
-        <string>Select the files to post (they may be compressed if needed) you can also right click on the files area just above</string>
+        <string>select all files</string>
        </property>
        <property name="text">
-        <string>Select Files</string>
-       </property>
-       <property name="icon">
-        <iconset resource="../resources/resources.qrc">
-         <normaloff>:/icons/file.png</normaloff>:/icons/file.png</iconset>
+        <string>select All</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="clearFilesButton">
+      <widget class="QPushButton" name="scanAutoDirButton">
        <property name="toolTip">
-        <string>remove all files</string>
+        <string>Scan the Auto directory. Delete manually the files/folder you don't want to post (using DEL)</string>
        </property>
        <property name="text">
-        <string>Remove All</string>
+        <string> Scan</string>
        </property>
        <property name="icon">
         <iconset resource="../resources/resources.qrc">
-         <normaloff>:/icons/clear.png</normaloff>:/icons/clear.png</iconset>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="selectFolderButton">
-       <property name="toolTip">
-        <string>select a folder (only if you use compression)</string>
-       </property>
-       <property name="text">
-        <string>Select Folder</string>
-       </property>
-       <property name="icon">
-        <iconset resource="../resources/resources.qrc">
-         <normaloff>:/icons/folder.png</normaloff>:/icons/folder.png</iconset>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Expanding</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QLabel" name="fileListLbl">
-       <property name="text">
-        <string>(press DEL on selected files to remove them)</string>
+         <normaloff>:/icons/scanFolder.png</normaloff>:/icons/scanFolder.png</iconset>
        </property>
       </widget>
      </item>
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_9">
+    <layout class="QHBoxLayout" name="optionsLayout">
      <item>
-      <layout class="QHBoxLayout" name="nzbFileLayout">
+      <layout class="QHBoxLayout" name="genNameLayout">
        <item>
-        <widget class="QLabel" name="nzbFileLbl">
-         <property name="text">
-          <string>nzb file: </string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="nzbFileEdit">
+        <widget class="QCheckBox" name="genNameCB">
          <property name="toolTip">
-          <string>full path of the nzb file that would be created (check the nzbPath keyword in the config file to set the default directory)</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="nzbFileButton">
-         <property name="maximumSize">
-          <size>
-           <width>30</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="toolTip">
-          <string>select the nzb file absolute file name</string>
+          <string>generate a random name for the archive</string>
          </property>
          <property name="text">
-          <string> ... </string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer_6">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Preferred</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="nzbPassLayout">
-       <item>
-        <widget class="QCheckBox" name="nzbPassCB">
-         <property name="toolTip">
-          <string>This should be the password of the archive you're posting</string>
-         </property>
-         <property name="text">
-          <string>nzb password:</string>
+          <string>generate random name</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="nzbPassEdit">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
+        <widget class="QSpinBox" name="nameLengthSB">
          <property name="toolTip">
-          <string>password used in your archive that would also be added in the header of the nzb file</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QSpinBox" name="passLengthSB">
-         <property name="toolTip">
-          <string>length of the password</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="genPass">
-         <property name="maximumSize">
-          <size>
-           <width>24</width>
-           <height>24</height>
-          </size>
-         </property>
-         <property name="toolTip">
-          <string>generate random password</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-         <property name="icon">
-          <iconset resource="../resources/resources.qrc">
-           <normaloff>:/icons/genKey.png</normaloff>:/icons/genKey.png</iconset>
+          <string>length of the random archive name</string>
          </property>
         </widget>
        </item>
@@ -401,69 +325,88 @@
      <item>
       <layout class="QHBoxLayout" name="compressOptionsLayout">
        <item>
-        <widget class="QCheckBox" name="compressCB">
+        <widget class="QCheckBox" name="genPassCB">
          <property name="toolTip">
-          <string>compress the selected files using rar before posting</string>
+          <string>generate a random password for the archive</string>
          </property>
          <property name="text">
-          <string>compress</string>
+          <string>generate random password</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="compressNameEdit">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>0</height>
-          </size>
-         </property>
+        <widget class="QSpinBox" name="passLengthSB">
          <property name="toolTip">
-          <string>archive name (file name obfuscation)</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QSpinBox" name="nameLengthSB">
-         <property name="toolTip">
-          <string>length of the archive name</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="genCompressName">
-         <property name="maximumSize">
-          <size>
-           <width>24</width>
-           <height>24</height>
-          </size>
-         </property>
-         <property name="toolTip">
-          <string>generate random archive name</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-         <property name="icon">
-          <iconset resource="../resources/resources.qrc">
-           <normaloff>:/icons/genKey.png</normaloff>:/icons/genKey.png</iconset>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="par2CB">
-         <property name="toolTip">
-          <string>generate the par2 (the compress option must be selected)</string>
-         </property>
-         <property name="text">
-          <string>gen par2</string>
+          <string>length of the random archive password</string>
          </property>
         </widget>
        </item>
       </layout>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Preferred</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="par2CB">
+       <property name="toolTip">
+        <string>generate par2</string>
+       </property>
+       <property name="text">
+        <string>generate par2</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Preferred</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="delFilesCB">
+       <property name="toolTip">
+        <string>delete files/folders once they have been successfully posted</string>
+       </property>
+       <property name="text">
+        <string>delete files once posted</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_4">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
      </item>
     </layout>
    </item>
@@ -510,12 +453,25 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="postButton">
+      <widget class="QCheckBox" name="startJobsCB">
        <property name="toolTip">
-        <string>Let's Post!</string>
+        <string>start all posts when generating them</string>
        </property>
        <property name="text">
-        <string>Post Files</string>
+        <string>start all Posts</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="postButton">
+       <property name="toolTip">
+        <string>Generate Quick Posting Tabs for each file/folder</string>
+       </property>
+       <property name="toolTipDuration">
+        <number>-5</number>
+       </property>
+       <property name="text">
+        <string>Generate Posts</string>
        </property>
        <property name="icon">
         <iconset resource="../resources/resources.qrc">

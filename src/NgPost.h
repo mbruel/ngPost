@@ -64,6 +64,7 @@ class NgPost : public QObject
 
     friend class MainWindow; //!< so it can access all parameters
     friend class PostingWidget;
+    friend class AutoPostWidget;
     friend class PostingJob;
 
     enum class Opt {HELP = 0, VERSION, CONF, DISP_PROGRESS, DEBUG, POST_HISTORY,
@@ -185,6 +186,8 @@ private:
 
     static const int sNbPreparedArticlePerConnection = NB_ARTICLES_TO_PREPARE_PER_CONNECTION;
 
+    static constexpr const char *sDonationTooltip = "Donations are welcome, I spent quite some time to develop this app and make a sexy GUI although I'm not using it ;)";
+
 public:
     NgPost(int &argc, char *argv[]);
     ~NgPost();
@@ -236,6 +239,8 @@ signals:
 public slots:
     void onCheckForNewVersion();
     void onDonation();
+    void onAboutClicked();
+
 
     void onPostingJobStarted();
     void onPostingJobFinished();

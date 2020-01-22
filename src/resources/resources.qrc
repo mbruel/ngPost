@@ -13,5 +13,8 @@
         <file>icons/pending.png</file>
         <file>icons/ok.png</file>
         <file>icons/ko.png</file>
+        <file>icons/auto.png</file>
+        <file>icons/scanFolder.png</file>
+        <file>icons/quick.png</file>
     </qresource>
 </RCC>

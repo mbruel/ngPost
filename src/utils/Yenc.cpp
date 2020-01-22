@@ -82,7 +82,7 @@ qint64 Yenc::encode(const char data[], qint64 dataSize, uchar encbuffer[], quint
 
     for(int i = 0; i < dataSize; ++i)
     {
-        c = (uchar) data[i];
+        c = static_cast<uchar>(data[i]);
         crc32 = crc32_tab[(crc32 ^ c) & 0xFF] ^ (crc32 >> 8);
         c = (c + 42) & 0xFF;
 
