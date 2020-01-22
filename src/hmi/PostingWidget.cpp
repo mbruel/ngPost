@@ -158,10 +158,10 @@ void PostingWidget::onPostFiles()
         if (fiNzb.exists())
         {
             int overwrite = QMessageBox::question(nullptr,
-                                              tr("Overwrite existing nzb file?"),
-                                              tr("The nzb file '%1' already exists.\nWould you like to overwrite it ?").arg(nzbPath),
-                                              QMessageBox::Yes,
-                                              QMessageBox::No);
+                                                  tr("Overwrite existing nzb file?"),
+                                                  tr("The nzb file '%1' already exists.\nWould you like to overwrite it ?").arg(nzbPath),
+                                                  QMessageBox::Yes,
+                                                  QMessageBox::No);
             if (overwrite == QMessageBox::No)
                 return;
         }
@@ -305,41 +305,40 @@ void PostingWidget::onRarPathClicked()
     }
 }
 
-bool PostingWidget::eventFilter(QObject *obj, QEvent *event)
+void PostingWidget::handleKeyEvent(QKeyEvent *keyEvent)
 {
-    if (event->type() == QEvent::KeyPress)
+    if (keyEvent->type() == QEvent::KeyPress)
     {
-        if(obj == _ui->filesList)
+        qDebug() << "[PostingWidget::handleKeyEvent] key event: " << keyEvent->key();
+
+        if(keyEvent->key() == Qt::Key_Delete || keyEvent->key() == Qt::Key_Backspace)
         {
-            QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
-            if(keyEvent->key() == Qt::Key_Delete || keyEvent->key() == Qt::Key_Backspace)
+            for (QListWidgetItem *item : _ui->filesList->selectedItems())
             {
-                for (QListWidgetItem *item : _ui->filesList->selectedItems())
-                {
-                    qDebug() << "[MainWindow::eventFilter] remove item: " << item->text();
-                    _ui->filesList->removeItemWidget2(item);
-                    delete item;
-                }
+                qDebug() << "[PostingWidget::handleKeyEvent] remove item: " << item->text();
+                _ui->filesList->removeItemWidget2(item);
+                delete item;
             }
-            else if (keyEvent->matches(QKeySequence::Paste))
-            {
-                const QClipboard *clipboard = QApplication::clipboard();
-                const QMimeData *mimeData = clipboard->mimeData();
-                if (mimeData->hasImage()) {
-                    qDebug() << "[MainWindow::eventFilter] try to paste image...";
-                } else if (mimeData->hasHtml()) {
-                    qDebug() << "[MainWindow::eventFilter] try to paste html: ";
-                } else if (mimeData->hasText()) {
-                    QString txt = mimeData->text();
-                    qDebug() << "[MainWindow::eventFilter] paste text: " << txt;
-                    int currentNbFiles = _ui->filesList->count();
-                    for (const QString &path : txt.split(QRegularExpression("\n|\r|\r\n")))
-                    {
-                        QFileInfo fileInfo(path);
-                        if (!fileInfo.exists())
-                            qDebug() << "[MainWindow::eventFilter] NOT A FILE: " << path;
-                        else
-                            _addPath(path, currentNbFiles, fileInfo.isDir());
+        }
+        else if (keyEvent->matches(QKeySequence::Paste))
+        {
+            const QClipboard *clipboard = QApplication::clipboard();
+            const QMimeData *mimeData = clipboard->mimeData();
+            if (mimeData->hasImage()) {
+                qDebug() << "[PostingWidget::handleKeyEvent] try to paste image...";
+            } else if (mimeData->hasHtml()) {
+                qDebug() << "[PostingWidget::handleKeyEvent] try to paste html: ";
+            } else if (mimeData->hasText()) {
+                QString txt = mimeData->text();
+                qDebug() << "[PostingWidget::handleKeyEvent] paste text: " << txt;
+                int currentNbFiles = _ui->filesList->count();
+                for (const QString &path : txt.split(QRegularExpression("\n|\r|\r\n")))
+                {
+                    QFileInfo fileInfo(path);
+                    if (!fileInfo.exists())
+                        qDebug() << "[PostingWidget::handleKeyEvent] NOT A FILE: " << path;
+                    else
+                        _addPath(path, currentNbFiles, fileInfo.isDir());
 //                        else if (fileInfo.isDir())
 //                        {
 //                            QDir dir(fileInfo.absoluteFilePath());
@@ -349,28 +348,20 @@ bool PostingWidget::eventFilter(QObject *obj, QEvent *event)
 //                                    _addFile(subFile.absoluteFilePath(), currentNbFiles);
 //                            }
 //                        }
-                    }
-
-                } else if (mimeData->hasUrls()) {
-                    qDebug() << "[MainWindow::eventFilter] paste urls...";
-
-                } else {
-                    qDebug() << "[MainWindow::eventFilter] unknown type...";
                 }
+
+            } else if (mimeData->hasUrls()) {
+                qDebug() << "[PostingWidget::handleKeyEvent] paste urls...";
+
+            } else {
+                qDebug() << "[PostingWidget::handleKeyEvent] unknown type...";
             }
         }
-
     }
-    return QObject::eventFilter(obj, event);
 }
 
-void PostingWidget::dragEnterEvent(QDragEnterEvent *e)
-{
-    if (e->mimeData()->hasUrls())
-        e->acceptProposedAction();
-}
 
-void PostingWidget::dropEvent(QDropEvent *e)
+void PostingWidget::handleDropEvent(QDropEvent *e)
 {
     int currentNbFiles = _ui->filesList->count();
     for (const QUrl &url : e->mimeData()->urls())
@@ -379,8 +370,7 @@ void PostingWidget::dropEvent(QDropEvent *e)
         _addPath(fileName, currentNbFiles, QFileInfo(fileName).isDir());
     }
 }
-#include <QList>
-#include <QFileInfoList>
+
 void PostingWidget::_buildFilesList(QFileInfoList &files, bool &hasFolder)
 {
     for (int i = 0 ; i < _ui->filesList->count() ; ++i)
