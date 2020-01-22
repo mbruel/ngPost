@@ -35,7 +35,7 @@
 #include <QDir>
 
 PostingJob::PostingJob(NgPost *ngPost,
-                       const QString &nzbPath,
+                       const QString &nzbFilePath,
                        const QFileInfoList &files,
                        PostingWidget *postWidget,
                        const QString &tmpPath,
@@ -62,12 +62,12 @@ PostingJob::PostingJob(NgPost *ngPost,
 
     _threadPool(), _nntpConnections(),
 
-    _nzbName(QFileInfo(nzbPath).fileName()),
+    _nzbName(QFileInfo(nzbFilePath).fileName()),
     _filesToUpload(), _filesInProgress(),
     _nbFiles(), _nbPosted(),
 
 
-    _nzbPath(nzbPath), _nzb(nullptr), _nzbStream(),
+    _nzbFilePath(nzbFilePath), _nzb(nullptr), _nzbStream(),
     _nntpFile(nullptr), _file(nullptr), _buffer(nullptr), _part(0),
     _secureArticles(), _articles(),
     _timeStart(), _totalSize(0),
@@ -75,7 +75,8 @@ PostingJob::PostingJob(NgPost *ngPost,
     _nbConnections(0), _nbThreads(QThread::idealThreadCount()),
     _nbArticlesUploaded(0), _nbArticlesFailed(0),
     _uploadedSize(0), _nbArticlesTotal(0),
-    _stopPosting(0x0), _noMoreFiles(0x0)
+    _stopPosting(0x0), _noMoreFiles(0x0),
+    _postSucceed(false)
 {
 #ifdef __DEBUG__
     qDebug() << "[PostingJob] >>>> Construct " << this;
@@ -203,7 +204,7 @@ void PostingJob::_postFiles()
 
     if (!_nzb->open(QIODevice::WriteOnly))
     {
-        _error(tr("Error: Can't create nzb output file: %1").arg(_nzbPath));
+        _error(tr("Error: Can't create nzb output file: %1").arg(_nzbFilePath));
         emit postingFinished();
         return ;
     }
@@ -337,6 +338,7 @@ void PostingJob::onNntpFilePosted()
                  _nbArticlesUploaded).arg(_nbArticlesFailed));
 #endif
 
+        _postSucceed = true;
         _finishPosting();
 
         emit postingFinished();
@@ -389,10 +391,10 @@ void PostingJob::_startConnectionInThread(int conIdx, QThread *thread, const QSt
 void PostingJob::_prepareArticles()
 {
 
-    int nbArticlesToPrepare = _ngPost->nbPreparedArticlePerConnection * _nntpConnections.size();
+    int nbArticlesToPrepare = _ngPost->sNbPreparedArticlePerConnection * _nntpConnections.size();
   #ifdef __DEBUG__
     _log(QString("[PostingJob::_prepareArticles] >>>> preparing %1 articles for each connections. Nb cons = %2 => should prepare %3 articles!").arg(
-             _ngPost->nbPreparedArticlePerConnection).arg(_nntpConnections.size()).arg(nbArticlesToPrepare));
+             _ngPost->sNbPreparedArticlePerConnection).arg(_nntpConnections.size()).arg(nbArticlesToPrepare));
   #endif
     for (int i = 0; i < nbArticlesToPrepare ; ++i)
     {
@@ -494,7 +496,7 @@ void PostingJob::_initPosting()
 {
     // initialize buffer and nzb file
     _buffer  = new char[static_cast<quint64>(_ngPost->articleSize())+1];
-    _nzb     = new QFile(_nzbPath);
+    _nzb     = new QFile(_nzbFilePath);
     _nbFiles = static_cast<uint>(_files.size());
 
     // initialize the NntpFiles (active objects)
@@ -592,25 +594,13 @@ void PostingJob::_closeNzb()
 
 void PostingJob::_printStats() const
 {
-    QString unit = "B";
-    double size = _totalSize;
-    if (size > 1024)
-    {
-        size /= 1024;
-        unit = "kB";
-    }
-    if (size > 1024)
-    {
-        size /= 1024;
-        unit = "MB";
-    }
+    QString size = postSize();
 
     int duration = _timeStart.elapsed();
     double sec = duration/1000;
 
-    QString msgEnd = tr("\nUpload size: %1 %2 in %3 (%4 sec) \
-=> average speed: %5 (%6 connections on %7 threads)\n").arg(
-                size).arg(unit).arg(
+    QString msgEnd = tr("\nUpload size: %1 in %2 (%3 sec) \
+=> average speed: %4 (%5 connections on %6 threads)\n").arg(size).arg(
                 QTime::fromMSecsSinceStartOfDay(duration).toString("hh:mm:ss.zzz")).arg(sec).arg(
                 avgSpeed()).arg(_nntpConnections.size()).arg(_threadPool.size());
 
@@ -620,7 +610,7 @@ void PostingJob::_printStats() const
 
     if (_nzb)
     {
-        msgEnd += QString("nzb file: %1\n").arg(_nzbPath);
+        msgEnd += QString("nzb file: %1\n").arg(_nzbFilePath);
         if (_doCompress)
         {
             msgEnd += QString("file: %1, rar name: %2").arg(_nzbName).arg(_rarName);

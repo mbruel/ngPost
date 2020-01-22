@@ -11,6 +11,20 @@ TODO: bandwidth optimization:
 	test with no threads and no article preparation
 	check if we can play on the SSL protocol paramaters
 
+####################################################
+###       Release: ngPost v3.1                   ###
+###       date:    2020/01/??                    ###
+####################################################
+
+- implement PostingJob to get the posting out of NgPost and thus be able to handle several
+- PostingJob queue implemented for the HMI
+- QProcess are now handled asynchronously => no HMI freeze and possible to kill the
+
+- fix Issue #9: use only one Mutex and make sure we wait the expected Articles are prepared before the Connections start posting
+
+- introduce new config POST_HISTORY where all successful post will add a line with the date, nzb name, rar name and password (cvs format)
+
+
 
 ####################################################
 ###       Release: ngPost v2.3                   ###

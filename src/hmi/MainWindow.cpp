@@ -95,9 +95,21 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
     _ui->debugBox->setChecked(_ngPost->debugMode());
 
 
+    QString autoPostingInfo("<h1>To be implemented...</h1>");
+    autoPostingInfo += "Here you would be able to create automatically some Quick Post tabs:";
+    autoPostingInfo += "<ul>";
+    autoPostingInfo += "<li>you define a root folder from where you post stuff</li>";
+    autoPostingInfo += "<li>it will scan the folder and post all files/folders individually</li>";
+    autoPostingInfo += "<li>everything will be compressed (recursively for folders)</li>";
+    autoPostingInfo += "<li>you can set up if you want a random name for the archive</li>";
+    autoPostingInfo += "<li>you can set up if you want a random password for the archive</li>";
+    autoPostingInfo += "<li>you can set up if you want to generate the par2</li>";
+    autoPostingInfo += "<li>as a results, Quick Post tabs will be created</li>";
+    autoPostingInfo += "<li>you can choose if you want to start them all (using the queue)</li>";
+    autoPostingInfo += "</ul>";
     _ui->postTabWidget->clear();
     _ui->postTabWidget->setTabsClosable(true);
-    _ui->postTabWidget->addTab(new QLabel("<h1>To be implemented...</h1>"), _ngPost->sFolderMonitoringName);
+    _ui->postTabWidget->addTab(new QLabel(autoPostingInfo), _ngPost->sFolderMonitoringName);
     _ui->postTabWidget->addTab(_quickJobTab, QString("%1 #%2").arg(_ngPost->sQuickJobName).arg(1));
     _ui->postTabWidget->addTab(new QWidget(_ui->postTabWidget), QIcon(":/icons/plus.png"), "New");
     _ui->postTabWidget->tabBar()->setTabToolTip(2, QString("Create a new %1").arg(_ngPost->sQuickJobName));
@@ -106,6 +118,7 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
     connect(_ui->postTabWidget->tabBar(), &QTabBar::tabBarClicked,     this, &MainWindow::onJobTabClicked);
     connect(_ui->postTabWidget->tabBar(), &QTabBar::tabCloseRequested, this, &MainWindow::onCloseJob);
 
+    _ui->postTabWidget->setCurrentIndex(1);
     setJobLabel(1);
 }
 

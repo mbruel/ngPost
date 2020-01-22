@@ -39,7 +39,7 @@ class QCoreApplication;
 class MainWindow;
 class PostingJob;
 
-#define NB_ARTICLES_TO_PREPARE_PER_CONNECTION 2
+#define NB_ARTICLES_TO_PREPARE_PER_CONNECTION 3
 
 //using QAtomicBool = QAtomicInteger<unsigned short>; // 16 bit only (faster than using 8 bit variable...)
 
@@ -66,7 +66,7 @@ class NgPost : public QObject
     friend class PostingWidget;
     friend class PostingJob;
 
-    enum class Opt {HELP = 0, VERSION, CONF, DISP_progressbar, DEBUG,
+    enum class Opt {HELP = 0, VERSION, CONF, DISP_PROGRESS, DEBUG, POST_HISTORY,
                     INPUT, OUTPUT, NZB_PATH, THREAD,
                     MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY,
                     OBFUSCATE, INPUT_DIR,
@@ -138,6 +138,7 @@ private:
     PostingJob         *_activeJob;
     QQueue<PostingJob*> _pendingJobs;
 
+    QString _postHistoryFile;
 
 
     static qint64 sArticleSize;
@@ -178,10 +179,10 @@ private:
     static constexpr const char *sDefaultRarExtraOptions = "-ep1 -m0";
     static constexpr const char *sDefault7zOptions = "-mx0 -mhe=on";
 
-    static constexpr const char *sFolderMonitoringName = "Folder Parsing";
+    static constexpr const char *sFolderMonitoringName = "Auto Posting";
     static constexpr const char *sQuickJobName = "Quick Post";
 
-    static const int nbPreparedArticlePerConnection = NB_ARTICLES_TO_PREPARE_PER_CONNECTION;
+    static const int sNbPreparedArticlePerConnection = NB_ARTICLES_TO_PREPARE_PER_CONNECTION;
 
 public:
     NgPost(int &argc, char *argv[]);
