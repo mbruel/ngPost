@@ -36,6 +36,7 @@
 #include <QNetworkReply>
 #include <QMessageBox>
 #include <QRegularExpression>
+#include <QDir>
 
 const QString NgPost::sAppName     = "ngPost";
 const QString NgPost::sVersion     = QString::number(APP_VERSION);
@@ -52,8 +53,9 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::HELP,         "help"},
     {Opt::VERSION,      "version"},
     {Opt::CONF,         "conf"},
-    {Opt::DISP_progressbar,"disp_progressbar"},
+    {Opt::DISP_PROGRESS,"disp_progress"},
     {Opt::DEBUG,        "debug"},
+    {Opt::POST_HISTORY, "post_history"},
 
     {Opt::INPUT,        "input"},
     {Opt::OUTPUT,       "output"},
@@ -101,7 +103,7 @@ const QList<QCommandLineOption> NgPost::sCmdOptions = {
     { sOptionNames[Opt::HELP],                tr("Help: display syntax")},
     {{"v", sOptionNames[Opt::VERSION]},       tr( "app version")},
     {{"c", sOptionNames[Opt::CONF]},          tr( "use configuration file (if not provided, we try to load $HOME/.ngPost)"), sOptionNames[Opt::CONF]},
-    { sOptionNames[Opt::DISP_progressbar],       tr( "display cmd progressbar: NONE (default), BAR or FILES"), sOptionNames[Opt::DISP_progressbar]},
+    { sOptionNames[Opt::DISP_PROGRESS],       tr( "display cmd progressbar: NONE (default), BAR or FILES"), sOptionNames[Opt::DISP_PROGRESS]},
     {{"d", sOptionNames[Opt::DEBUG]},         tr( "display some debug logs")},
 
     {{"i", sOptionNames[Opt::INPUT]},         tr("input file to upload (single file or directory), you can use it multiple times"), sOptionNames[Opt::INPUT]},
@@ -173,7 +175,8 @@ NgPost::NgPost(int &argc, char *argv[]):
     _lengthName(sDefaultLengthName), _lengthPass(sDefaultLengthPass),
     _rarName(), _rarPass(),
     _inputDir(),
-    _activeJob(nullptr), _pendingJobs()
+    _activeJob(nullptr), _pendingJobs(),
+    _postHistoryFile()
 {
     QThread::currentThread()->setObjectName(sMainThreadName);
 
@@ -215,6 +218,10 @@ NgPost::~NgPost()
 #endif
 
     _finishPosting();
+    if (_activeJob)
+        delete _activeJob;
+    qDeleteAll(_pendingJobs);
+
     qDeleteAll(_nntpServers);
     delete _app;
 }
@@ -390,6 +397,25 @@ void NgPost::onPostingJobFinished()
     if (job == _activeJob)
     {
         _finishPosting();
+
+        if (_activeJob->hasPostSucceed() && !_postHistoryFile.isEmpty())
+        {
+            QFile hist(_postHistoryFile);
+            if (hist.open(QIODevice::WriteOnly|QIODevice::Append|QIODevice::Text))
+            {
+                QTextStream stream(&hist);
+                stream << QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss")
+                       << ", " << _activeJob->nzbName()
+                       << ", " << _activeJob->postSize();
+                if (_activeJob->hasCompressed())
+                    stream << ", " << _activeJob->rarName()
+                           << ", " << _activeJob->rarPass();
+                else
+                    stream << ",,";
+                stream << endl << flush;
+                hist.close();
+            }
+        }
 
         _activeJob->deleteLater();
         _activeJob = nullptr;
@@ -587,9 +613,9 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         _from = _randomFrom();
 
 
-    if (parser.isSet(sOptionNames[Opt::DISP_progressbar]))
+    if (parser.isSet(sOptionNames[Opt::DISP_PROGRESS]))
     {
-        QString val = parser.value(sOptionNames[Opt::DISP_progressbar]);
+        QString val = parser.value(sOptionNames[Opt::DISP_PROGRESS]);
         val = val.trimmed().toLower();
         if (val == "bar")
         {
@@ -767,116 +793,82 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         }
     }
 
-    // MB_TODO: create a PostingJob!
 
 
-//    QList<QFileInfo> filesToUpload;
-//    QStringList filesPath;
-//    for (const QString &filePath : parser.values(sOptionNames[Opt::INPUT]))
-//    {
-//        QFileInfo fileInfo(filePath);
-//        if (!fileInfo.exists() || !fileInfo.isReadable())
-//        {
-//            _error(tr("Error: the input file '%1' is not readable...").arg(parser.value("input")));
-//            return false;
-//        }
-//        else
-//        {
-//            if (_nzbName.isEmpty())
-//                _nzbName = fileInfo.fileName(); // The first file will be used
-//            if (fileInfo.isFile())
-//            {
-//                filesToUpload << fileInfo;
-//                filesPath     << fileInfo.absoluteFilePath();
-//            }
-//            else
-//            {
-//                QDir dir(fileInfo.absoluteFilePath());
-//                for (const QFileInfo &subFile : dir.entryInfoList(QDir::Files, QDir::Name))
-//                {
-//                    if (subFile.isReadable())
-//                    {
-//                        filesToUpload << subFile;
-//                        filesPath     << subFile.absoluteFilePath();
-//                    }
-//                    else
-//                    {
-//                        _error(tr("Error: the input file '%1' is not readable...").arg(subFile.absoluteFilePath()));
-//                        return false;
-//                    }
-//                }
-//            }
-//        }
-//    }
+    QList<QFileInfo> filesToUpload;
+    QStringList filesPath;
+    for (const QString &filePath : parser.values(sOptionNames[Opt::INPUT]))
+    {
+        QFileInfo fileInfo(filePath);
+        if (!fileInfo.exists() || !fileInfo.isReadable())
+        {
+            _error(tr("Error: the input file '%1' is not readable...").arg(parser.value("input")));
+            return false;
+        }
+        else
+        {
+            if (_nzbName.isEmpty())
+                _nzbName = fileInfo.fileName(); // The first file will be used
+            if (fileInfo.isFile())
+            {
+                filesToUpload << fileInfo;
+                filesPath     << fileInfo.absoluteFilePath();
+            }
+            else
+            {
+                QDir dir(fileInfo.absoluteFilePath());
+                for (const QFileInfo &subFile : dir.entryInfoList(QDir::Files, QDir::Name))
+                {
+                    if (subFile.isReadable())
+                    {
+                        filesToUpload << subFile;
+                        filesPath     << subFile.absoluteFilePath();
+                    }
+                    else
+                    {
+                        _error(tr("Error: the input file '%1' is not readable...").arg(subFile.absoluteFilePath()));
+                        return false;
+                    }
+                }
+            }
+        }
+    }
 
 
-//    if (_rarName.isEmpty())
-//        _rarName = _nzbName;
-//    if (_doCompress)
-//    {
-//        if (!_canCompress())
-//            return false;
+    if (parser.isSet("o"))
+    {
+        QFileInfo nzb(parser.value(sOptionNames[Opt::OUTPUT]));
+        _nzbName = nzb.fileName();
+        _nzbPath = nzb.absolutePath();
+    }
 
-//        if (_genName)
-//            _rarName = randomPass(_lengthName);
+    if (_rarName.isEmpty())
+        _rarName = _nzbName;
 
-//        if (_genPass)
-//        {
-//            _rarPass = randomPass(_lengthPass);
-//            _meta.insert("password", _rarPass);
-//        }
+    if (_doCompress)
+    {
+        if (_genName)
+            _rarName = randomPass(_lengthName);
 
-//        if (_compressFiles(_rarPath, _tmpPath, _rarName, filesPath, _rarPass, _rarSize) !=0 )
-//            return false;
-//    }
-//    if (_doPar2)
-//    {
-//        if (!_canGenPar2())
-//            return false;
-
-//        if (_genPar2(_tmpPath, _rarName, _par2Pct, filesPath) != 0)
-//            return false;
-//    }
-
-//    if (_compressDir)
-//    {
-//        filesToUpload.clear();
-//        if (_debug)
-//            _cout << "Files to upload:\n";
-//        for (const QFileInfo & file : _compressDir->entryInfoList(QDir::Files, QDir::Name))
-//        {
-//            filesToUpload << file;
-//            if (_debug)
-//                _cout << "    - " << file.fileName() << "\n";
-
-//        }
-
-//        if (!_doCompress && _doPar2)
-//        {
-//            for (const QString &path : filesPath)
-//            {
-//                filesToUpload << path;
-//                if (_debug)
-//                    _cout << "    - " << path << "\n";
-//            }
-//        }
-//        _cout << "\n" << flush;
-//    }
-
-
-//    if (parser.isSet("o"))
-//    {
-//        QFileInfo nzb(parser.value(sOptionNames[Opt::OUTPUT]));
-//        _nzbName = nzb.fileName();
-//        _nzbPath = nzb.absolutePath();
-//    }
-
-//    _initPosting(filesToUpload);
+        if (_genPass)
+        {
+            _rarPass = randomPass(_lengthPass);
+            _meta.insert("password", _rarPass);
+        }
+    }
 
 #ifdef __DEBUG__
     _dumpParams();
 #endif
 
+    QString nzbFilePath = nzbPath();
+    if (!nzbFilePath.endsWith(".nzb"))
+        nzbFilePath += ".nzb";
+    _activeJob = new PostingJob(this, nzbFilePath, filesToUpload,
+                                nullptr, _tmpPath, _rarPath, _rarSize, _par2Pct,
+                                _doCompress, _doPar2, false, false, _lengthName, _lengthPass,
+                                _rarName, _rarPass);
+    emit _activeJob->startPosting();
     return true;
 }
 
@@ -941,7 +933,7 @@ QString NgPost::_parseConfig(const QString &configPath)
                             qDebug() << "Do article obfuscation (the subject of each Article will be a UUID)\n";
                         }
                     }
-                    else if (opt == sOptionNames[Opt::DISP_progressbar])
+                    else if (opt == sOptionNames[Opt::DISP_PROGRESS])
                     {
                         val = val.trimmed().toLower();
                         if (val == "bar")
@@ -988,7 +980,36 @@ QString NgPost::_parseConfig(const QString &configPath)
                     else if (opt == sOptionNames[Opt::INPUT_DIR])
                         _inputDir = val;
 
-
+                    else if (opt == sOptionNames[Opt::POST_HISTORY])
+                    {
+                        _postHistoryFile = val;
+                        QFileInfo fi(val);
+                        if (fi.isDir())
+                            err += tr("the post history '%1' can't be a directory...\n").arg(val);
+                        else
+                        {
+                            if (fi.exists())
+                            {
+                                if (!fi.isWritable())
+                                    err += tr("the post history file '%1' is not writable...\n").arg(val);
+                            }
+                            else
+                            {
+                                if (!QFileInfo(fi.absolutePath()).isWritable())
+                                    err += tr("the post history file '%1' is not writable...\n").arg(val);
+                                else
+                                {
+                                    QFile file(val);
+                                    if (file.open(QIODevice::WriteOnly|QIODevice::Text))
+                                    {
+                                        QTextStream stream(&file);
+                                        stream << "date, nzb name, size, archive name, archive pass\n";
+                                        file.close();
+                                    }
+                                }
+                            }
+                        }
+                    }
 
                     // compression section
                     else if (opt == sOptionNames[Opt::TMP_DIR])

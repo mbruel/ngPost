@@ -86,7 +86,7 @@ private:
     uint                  _nbPosted; //!< number of files posted
 
 
-    const QString _nzbPath;
+    const QString _nzbFilePath;
     QFile        *_nzb;       //!< nzb file that will be filled on the fly when a file is fully posted
     QTextStream  _nzbStream; //!< txt stream for the nzb file
 
@@ -113,10 +113,12 @@ private:
     QAtomicBool _stopPosting;
     QAtomicBool _noMoreFiles;
 
+    bool _postSucceed;
+
 
 public:
     PostingJob(NgPost *ngPost,
-               const QString &nzbPath,
+               const QString &nzbFilePath,
                const QFileInfoList &files,
                PostingWidget *postWidget,
                const QString &tmpPath,
@@ -129,8 +131,8 @@ public:
                bool genPass,
                uint lengthName,
                uint lengthPass,
-               const QString &rarName = "",
-               const QString &rarPass = "",
+               const QString &rarName,
+               const QString &rarPass,
                QObject *parent = nullptr);
     ~PostingJob();
 
@@ -148,6 +150,12 @@ public:
     inline bool hasUploaded() const;
 
     inline QString nzbName() const;
+    inline QString rarName() const;
+    inline QString rarPass() const;
+    inline QString postSize() const;
+
+    inline bool hasCompressed() const;
+    inline bool hasPostSucceed() const;
 
     inline PostingWidget *widget() const;
 
@@ -207,8 +215,7 @@ private:
     void _finishPosting();
 
     void _closeNzb();
-    void _printStats() const;
-
+    void _printStats() const;    
 
 
     bool startCompressFiles(const QString &cmdRar,
@@ -289,6 +296,28 @@ uint PostingJob::nbArticlesFailed() const{ return _nbArticlesFailed; }
 bool PostingJob::hasUploaded() const{ return _nbArticlesTotal > 0; }
 
 QString PostingJob::nzbName() const { return _nzbName; }
+QString PostingJob::rarName() const { return _rarName; }
+QString PostingJob::rarPass() const { return _rarPass; }
+QString PostingJob::postSize() const
+{
+    QString unit = "B";
+    double size = static_cast<double>(_totalSize);
+    if (size > 1024)
+    {
+        size /= 1024;
+        unit = "kB";
+    }
+    if (size > 1024)
+    {
+        size /= 1024;
+        unit = "MB";
+    }
+    return QString("%1 %2").arg(size, 0, 'f', 2).arg(unit);
+}
+
+bool PostingJob::hasCompressed() const { return _doCompress; }
+bool PostingJob::hasPostSucceed() const { return _postSucceed; }
+
 PostingWidget *PostingJob::widget() const { return _postWidget; }
 
 #endif // POSTINGJOB_H

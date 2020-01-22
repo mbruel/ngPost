@@ -1,8 +1,10 @@
+#include <csignal>
+#include <iostream>
 #include <QCoreApplication>
 #include <QLoggingCategory>
 #include <QNetworkAccessManager>
-#include <csignal>
-#include <iostream>
+#include <QNetworkReply>
+
 #include "NgPost.h"
 
 #if defined( Q_OS_WIN )
@@ -16,7 +18,6 @@ void handleShutdown(int signal)
     qApp->quit();
 }
 
-#include <QNetworkReply>
 int main(int argc, char *argv[])
 {
     // disable SSL warnings
@@ -45,8 +46,6 @@ int main(int argc, char *argv[])
     }
     else if (ngPost.parseCommandLine(argc, argv))
     {
-        // MB_TODO create the posting job here!
-//        ngPost.startPosting();
         return ngPost.startEventLoop();
     }
     else
