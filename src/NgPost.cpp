@@ -58,6 +58,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::POST_HISTORY, "post_history"},
 
     {Opt::INPUT,        "input"},
+    {Opt::AUTO_DIR,     "auto"},
     {Opt::OUTPUT,       "output"},
     {Opt::NZB_PATH,     "nzbpath"},
     {Opt::THREAD,       "thread"},
@@ -107,6 +108,7 @@ const QList<QCommandLineOption> NgPost::sCmdOptions = {
     {{"d", sOptionNames[Opt::DEBUG]},         tr( "display some debug logs")},
 
     {{"i", sOptionNames[Opt::INPUT]},         tr("input file to upload (single file or directory), you can use it multiple times"), sOptionNames[Opt::INPUT]},
+    { sOptionNames[Opt::AUTO_DIR],            tr("auto dir: the folder will be parsed and every file/folder will be posted separetely. You must use --compress. Feel free to add --gen_par2, --gen_name and --gen_rar."), sOptionNames[Opt::AUTO_DIR]},
     {{"o", sOptionNames[Opt::OUTPUT]},        tr("output file path (nzb)"), sOptionNames[Opt::OUTPUT]},
     {{"t", sOptionNames[Opt::THREAD]},        tr("number of Threads (the connections will be distributed amongs them)"), sOptionNames[Opt::THREAD]},
     {{"x", sOptionNames[Opt::OBFUSCATE]},     tr("obfuscate the subjects of the articles (CAREFUL you won't find your post if you lose the nzb file)")},
@@ -176,7 +178,8 @@ NgPost::NgPost(int &argc, char *argv[]):
     _rarName(), _rarPass(),
     _inputDir(),
     _activeJob(nullptr), _pendingJobs(),
-    _postHistoryFile()
+    _postHistoryFile(),
+    _autoDirs()
 {
     QThread::currentThread()->setObjectName(sMainThreadName);
 
@@ -314,9 +317,9 @@ void NgPost:: onRefreshprogressbarBar()
         float progressbar = static_cast<float>(nbArticlesUploaded);
         progressbar /= nbArticlesTotal;
 
-        qDebug() << "[NgPost::onRefreshprogressbarBar] uploaded: " << nbArticlesUploaded
-                 << " / " << nbArticlesTotal
-                 << " => progressbar: " << progressbar << "\n";
+//        qDebug() << "[NgPost::onRefreshprogressbarBar] uploaded: " << nbArticlesUploaded
+//                 << " / " << nbArticlesTotal
+//                 << " => progressbar: " << progressbar << "\n";
 
         std::cout << "\r[";
         int pos = static_cast<int>(std::floor(progressbar * sprogressbarBarWidth));
@@ -406,7 +409,8 @@ void NgPost::onPostingJobFinished()
                 QTextStream stream(&hist);
                 stream << QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss")
                        << ", " << _activeJob->nzbName()
-                       << ", " << _activeJob->postSize();
+                       << ", " << _activeJob->postSize()
+                       << ", " << _activeJob->avgSpeed();
                 if (_activeJob->hasCompressed())
                     stream << ", " << _activeJob->rarName()
                            << ", " << _activeJob->rarPass();
@@ -426,8 +430,7 @@ void NgPost::onPostingJobFinished()
                 _hmi->setTab(_activeJob->widget());
             emit _activeJob->startPosting();
         }
-
-        if (!_hmi)
+        else if (!_hmi)
         {
             _error(tr(" => closing application"));
             qApp->quit();
@@ -536,10 +539,30 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         return false;
     }
 
-    if (!parser.isSet(sOptionNames[Opt::INPUT]))
+    if (!parser.isSet(sOptionNames[Opt::INPUT]) && !parser.isSet(sOptionNames[Opt::AUTO_DIR]))
     {
-        _error("Error syntax: you should provide at least one input file or directory using the option -i");
+        _error("Error syntax: you should provide at least one input file or directory using the option -i or --auto");
         return false;
+    }
+
+    if (parser.isSet(sOptionNames[Opt::AUTO_DIR]))
+    {
+        if (!parser.isSet(sOptionNames[Opt::COMPRESS]))
+        {
+            _error("Error syntax: --auto only works with --compress");
+            return false;
+        }
+        for (const QString &filePath : parser.values(sOptionNames[Opt::AUTO_DIR]))
+        {
+            QFileInfo fi(filePath);
+            if (!fi.exists() || !fi.isDir())
+            {
+                _error("Error syntax: --auto only uses folders as argument...");
+                return false;
+            }
+            else
+                _autoDirs << QDir(filePath);
+        }
     }
 
     if (parser.isSet(sOptionNames[Opt::CONF]))
@@ -838,7 +861,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     if (parser.isSet("o"))
     {
         QFileInfo nzb(parser.value(sOptionNames[Opt::OUTPUT]));
-        _nzbName = nzb.fileName();
+        _nzbName = nzb.completeBaseName();
         _nzbPath = nzb.absolutePath();
     }
 
@@ -861,14 +884,51 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     _dumpParams();
 #endif
 
-    QString nzbFilePath = nzbPath();
-    if (!nzbFilePath.endsWith(".nzb"))
-        nzbFilePath += ".nzb";
-    _activeJob = new PostingJob(this, nzbFilePath, filesToUpload,
-                                nullptr, _tmpPath, _rarPath, _rarSize, _par2Pct,
-                                _doCompress, _doPar2, false, false, _lengthName, _lengthPass,
-                                _rarName, _rarPass);
-    emit _activeJob->startPosting();
+
+    if (filesToUpload.size())
+    { // input files provided with -i
+        QString nzbFilePath = nzbPath();
+        if (!nzbFilePath.endsWith(".nzb"))
+            nzbFilePath += ".nzb";
+        startPostingJob(new PostingJob(this, nzbFilePath, filesToUpload,
+                                       nullptr, _tmpPath, _rarPath, _rarSize, _par2Pct,
+                                       _doCompress, _doPar2, _rarName, _rarPass));
+    }
+
+    if (_autoDirs.size())
+    {
+        for (const QDir &dir : _autoDirs)
+        {
+            _cout << "===> Auto dir: " << dir.absolutePath() << endl << flush;
+            for (const QFileInfo & file : dir.entryInfoList(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot, QDir::Name))
+            {
+                _nzbName = file.completeBaseName();
+//                _nzbPath = file.absolutePath();
+                QString nzbFilePath = nzbPath();
+                if (!nzbFilePath.endsWith(".nzb"))
+                    nzbFilePath += ".nzb";
+
+                _rarName = _nzbName;
+                if (_genName)
+                    _rarName = randomPass(_lengthName);
+
+                _rarPass = "";
+                if (_genPass)
+                {
+                    _rarPass = randomPass(_lengthPass);
+                    _meta.insert("password", _rarPass);
+                }
+                qDebug() << "Start posting job for " << _nzbName
+                         << " with rar_name: " << _rarName << " and pass: " << _rarPass;
+
+                startPostingJob(new PostingJob(this, nzbFilePath, {file},
+                                               nullptr, _tmpPath, _rarPath, _rarSize, _par2Pct,
+                                               _doCompress, _doPar2, _rarName, _rarPass));
+            }
+        }
+    }
+
+
     return true;
 }
 
@@ -1003,7 +1063,7 @@ QString NgPost::_parseConfig(const QString &configPath)
                                     if (file.open(QIODevice::WriteOnly|QIODevice::Text))
                                     {
                                         QTextStream stream(&file);
-                                        stream << "date, nzb name, size, archive name, archive pass\n";
+                                        stream << "date, nzb name, size, avg. speed, archive name, archive pass\n";
                                         file.close();
                                     }
                                 }
@@ -1109,7 +1169,7 @@ void NgPost::_syntax(char *appName)
 //    QString appVersion = QString("%1_v%2").arg(sAppName).arg(sVersion);
     QString app = QFileInfo(appName).fileName();
     _cout << sNgPostDesc << "\n"
-          << "Syntax: " << app << " (options)? (-i <file or directory to upload>)+\n";
+          << "Syntax: " << app << " (options)* (-i <file or folder> | --auto <folder>)+\n";
     for (const QCommandLineOption & opt : sCmdOptions)
     {
         if (opt.valueName() == sOptionNames[Opt::HOST])

@@ -44,10 +44,6 @@ PostingJob::PostingJob(NgPost *ngPost,
                        uint par2Pct,
                        bool doCompress,
                        bool doPar2,
-                       bool genName,
-                       bool genPass,
-                       uint lengthName,
-                       uint lengthPass,
                        const QString &rarName,
                        const QString &rarPass,
                        QObject *parent) :
@@ -57,8 +53,7 @@ PostingJob::PostingJob(NgPost *ngPost,
     _extProc(nullptr), _compressDir(nullptr), _limitProcDisplay(false), _nbProcDisp(42),
 
     _tmpPath(tmpPath), _rarPath(rarPath), _rarSize(rarSize), _par2Pct(par2Pct),
-    _doCompress(doCompress), _doPar2(doPar2), _genName(genName), _genPass(genPass),
-    _lengthName(lengthName), _lengthPass(lengthPass), _rarName(rarName), _rarPass(rarPass),
+    _doCompress(doCompress), _doPar2(doPar2), _rarName(rarName), _rarPass(rarPass),
 
     _threadPool(), _nntpConnections(),
 

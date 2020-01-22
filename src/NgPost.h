@@ -69,7 +69,7 @@ class NgPost : public QObject
     enum class Opt {HELP = 0, VERSION, CONF, DISP_PROGRESS, DEBUG, POST_HISTORY,
                     INPUT, OUTPUT, NZB_PATH, THREAD,
                     MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY,
-                    OBFUSCATE, INPUT_DIR,
+                    OBFUSCATE, INPUT_DIR, AUTO_DIR,
                     TMP_DIR, RAR_PATH, RAR_EXTRA, RAR_SIZE, PAR2_PCT, PAR2_PATH, PAR2_ARGS,
                     COMPRESS, GEN_PAR2, GEN_NAME, GEN_PASS, LENGTH_NAME, LENGTH_PASS,
                     RAR_NAME, RAR_PASS,
@@ -138,7 +138,8 @@ private:
     PostingJob         *_activeJob;
     QQueue<PostingJob*> _pendingJobs;
 
-    QString _postHistoryFile;
+    QString     _postHistoryFile;
+    QList<QDir> _autoDirs;
 
 
     static qint64 sArticleSize;
