@@ -151,7 +151,7 @@ By default:
 
 
 ### MacOS release built on High Sierra (v10.13)
-- download [ngPost_v3.2.dmg](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v3.1.dmg)
+- download [ngPost_v3.2.dmg](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v3.2.dmg)
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
