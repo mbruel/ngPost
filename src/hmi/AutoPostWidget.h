@@ -37,6 +37,8 @@ private:
     void _addPath(const QString &path, int currentNbFiles, int isDir = false);
     bool _fileAlreadyInList(const QString &fileName, int currentNbFiles) const;
 
+    void _udatePostingParams();
+
 
 };
 

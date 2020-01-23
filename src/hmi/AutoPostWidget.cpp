@@ -74,9 +74,6 @@ void AutoPostWidget::init()
 
 void AutoPostWidget::onGenQuickPosts()
 {
-    _hmi->updateServers();
-    _hmi->updateParams();
-
     QFileInfoList files;
     for (int i = 0 ; i < _ui->filesList->count() ; ++i)
     {
@@ -93,6 +90,10 @@ Press the Scan button and remove what you don't want to post ;)\n\
 (To remove files, select in the list and press DEL or BackSpace)"));
         return;
     }
+
+    _hmi->updateServers();
+    _hmi->updateParams();
+    _udatePostingParams();
 
     bool genName = _ui->genNameCB->isChecked(),
          genPass = _ui->genPassCB->isChecked(),
@@ -189,6 +190,33 @@ bool AutoPostWidget::_fileAlreadyInList(const QString &fileName, int currentNbFi
             return true;
     }
     return false;
+}
+
+void AutoPostWidget::_udatePostingParams()
+{
+    // fetch compression settings
+    _ngPost->_tmpPath    = _ui->compressPathEdit->text();
+    _ngPost->_rarPath    = _ui->rarEdit->text();
+    _ngPost->_lengthName = static_cast<uint>(_ui->nameLengthSB->value());
+    _ngPost->_lengthPass = static_cast<uint>(_ui->passLengthSB->value());
+    uint val = 0;
+    bool ok  = true;
+    _ngPost->_rarSize = 0;
+    if (!_ui->rarSizeEdit->text().isEmpty())
+    {
+        val = _ui->rarSizeEdit->text().toUInt(&ok);
+        if (ok)
+            _ngPost->_rarSize = val;
+    }
+
+    // fetch par2 settings
+    _ngPost->_par2Pct = 0;
+    if (_ui->par2CB->isChecked() && !_ui->redundancyEdit->text().isEmpty())
+    {
+        val = _ui->redundancyEdit->text().toUInt(&ok);
+        if (ok)
+            _ngPost->_par2Pct = val;
+    }
 }
 
 
