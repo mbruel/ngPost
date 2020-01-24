@@ -28,7 +28,9 @@ AboutNgPost::AboutNgPost(NgPost *ngPost, QWidget *parent) :
     ui(new Ui::AboutNgPost)
 {
     ui->setupUi(this);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 9, 0)
     setWindowFlag(Qt::FramelessWindowHint);
+#endif
     setStyleSheet("QDialog {border:2px solid black}");
 
     ui->titleLbl->setText(QString("<pre>%1</pre>").arg(ngPost->escapeXML(ngPost->asciiArtWithVersion())));
