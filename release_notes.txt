@@ -11,6 +11,19 @@ TODO: bandwidth optimization:
 	test with no threads and no article preparation
 	check if we can play on the SSL protocol paramaters
 
+
+####################################################
+###       Release: ngPost v3.3                   ###
+###       date:    2020/01/??                    ###
+####################################################
+
+- Use Auto Post parameters when creating the Quick Posts
+(par2 redundancy, rar size...)
+
+- fix compilation for Qt < 5.9 (QWidget::setWindowFlag)
+
+
+
 ####################################################
 ###       Release: ngPost v3.2                   ###
 ###       date:    2020/01/23                    ###
