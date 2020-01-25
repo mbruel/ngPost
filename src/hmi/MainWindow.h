@@ -87,6 +87,9 @@ protected:
     void dragEnterEvent(QDragEnterEvent *e) override;
     void dropEvent(QDropEvent *e) override;
 
+    void closeEvent(QCloseEvent *event) override;
+
+
 
 private slots:
     void onAddServer();

@@ -194,6 +194,29 @@ void MainWindow::dropEvent(QDropEvent *e)
 }
 
 
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    if (_ngPost->hasPostingJobs())
+    {
+        int res = QMessageBox::question(this,
+                                        tr("close while still posting?"),
+                                        tr("ngPost is currently posting.\nAre you sure you want to quit?"),
+                                        QMessageBox::Yes,
+                                        QMessageBox::No);
+        if (res == QMessageBox::Yes)
+        {
+            _ngPost->closeAllPostingJobs();
+            event->accept();
+        }
+        else
+            event->ignore();
+
+    }
+    else
+        event->accept();
+}
+
+
 
 #include "CheckBoxCenterWidget.h"
 void MainWindow::onAddServer()

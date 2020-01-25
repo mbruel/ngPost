@@ -415,14 +415,14 @@ void NgPost::onPostingJobFinished()
             {
                 QTextStream stream(&hist);
                 stream << QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss")
-                       << ", " << _activeJob->nzbName()
-                       << ", " << _activeJob->postSize()
-                       << ", " << _activeJob->avgSpeed();
+                       << sHistoryLogFieldSeparator << _activeJob->nzbName()
+                       << sHistoryLogFieldSeparator << _activeJob->postSize()
+                       << sHistoryLogFieldSeparator << _activeJob->avgSpeed();
                 if (_activeJob->hasCompressed())
-                    stream << ", " << _activeJob->rarName()
-                           << ", " << _activeJob->rarPass();
+                    stream << sHistoryLogFieldSeparator << _activeJob->rarName()
+                           << sHistoryLogFieldSeparator << _activeJob->rarPass();
                 else
-                    stream << ",,";
+                    stream << sHistoryLogFieldSeparator << sHistoryLogFieldSeparator;
                 stream << endl << flush;
                 hist.close();
             }
@@ -505,6 +505,14 @@ QString NgPost::randomPass(uint length) const
         pass.append(alphabet.at(std::rand()%nbLetters));
 
     return pass;
+}
+
+void NgPost::closeAllPostingJobs()
+{
+    qDeleteAll(_pendingJobs);
+    _pendingJobs.clear();
+    if (_activeJob)
+        _activeJob->onStopPosting();
 }
 
 
@@ -1070,7 +1078,12 @@ QString NgPost::_parseConfig(const QString &configPath)
                                     if (file.open(QIODevice::WriteOnly|QIODevice::Text))
                                     {
                                         QTextStream stream(&file);
-                                        stream << "date, nzb name, size, avg. speed, archive name, archive pass\n";
+                                        stream << "date"
+                                               << sHistoryLogFieldSeparator << "nzb name"
+                                               << sHistoryLogFieldSeparator << "size"
+                                               << sHistoryLogFieldSeparator << "avg. speed"
+                                               << sHistoryLogFieldSeparator << "archive name"
+                                               << sHistoryLogFieldSeparator << "archive pass\n";
                                         file.close();
                                     }
                                 }

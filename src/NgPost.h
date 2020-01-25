@@ -188,6 +188,8 @@ private:
 
     static constexpr const char *sDonationTooltip = "Donations are welcome, I spent quite some time to develop this app and make a sexy GUI although I'm not using it ;)";
 
+    static const char sHistoryLogFieldSeparator = ';';
+
 public:
     NgPost(int &argc, char *argv[]);
     ~NgPost();
@@ -223,6 +225,8 @@ public:
     inline static QString asciiArtWithVersion();
     inline static const QString & desc();
 
+    inline bool hasPostingJobs() const;
+    void closeAllPostingJobs();
 
 
     inline bool debugMode() const;
@@ -312,6 +316,8 @@ QString NgPost::asciiArtWithVersion()
 }
 
 const QString &NgPost::desc() { return sNgPostDesc; }
+
+bool NgPost::hasPostingJobs() const { return (_activeJob || _pendingJobs.size()) ? true : false;}
 
 bool NgPost::debugMode() const { return _debug; }
 void NgPost::setDebug(bool isDebug){ _debug = isDebug; }
