@@ -701,7 +701,12 @@ bool PostingJob::startCompressFiles(const QString &cmdRar,
         args << "-r";
 
     for (const QFileInfo &fileInfo : _files)
-        args << fileInfo.absoluteFilePath();
+    {
+        if (fileInfo.isDir())
+            args << QString("%1/").arg(fileInfo.absoluteFilePath());
+        else
+            args << fileInfo.absoluteFilePath();
+    }
 
     // 3.: launch rar
     if (_ngPost->debugMode() || !_postWidget)
