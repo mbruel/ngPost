@@ -170,10 +170,11 @@ signals:
     void filePosted(QString filePath, uint nbArticles, uint nbFailed);
 
 
+public slots:
+    void onStopPosting(); //!< for HMI
 
 private slots:
     void onStartPosting();
-    void onStopPosting(); //!< for HMI
     void onDisconnectedConnection(NntpConnection *con);
 
     void onPrepareNextArticle();
