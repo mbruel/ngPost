@@ -819,7 +819,8 @@ bool PostingJob::startGenPar2(const QString &tmpFolder,
         _log(tr("Generating par2: %1 %2\n").arg(_ngPost->_par2Path).arg(args.join(" ")));
     else
         _log("Generating par2...\n");
-    _limitProcDisplay = true;
+    if (!_ngPost->_par2Path.toLower().contains("parpar"))
+        _limitProcDisplay = true;
     _nbProcDisp = 0;
     _extProc->start(_ngPost->_par2Path, args);    
 
