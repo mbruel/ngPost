@@ -128,7 +128,11 @@ void NntpFile::writeToNZB(QTextStream &stream, const char *articleIdSignature)
         QString tab = NgPost::space();
 
         stream << tab << "<file poster=\"" << _articles.first()->_from.c_str()<< "\""
+#if QT_VERSION >= QT_VERSION_CHECK(5, 8, 0)
                << " date=\"" << QDateTime::currentSecsSinceEpoch() << "\""
+#else
+               << " date=\"" << QDateTime::currentMSecsSinceEpoch()/1000 << "\""
+#endif
                << " subject=\""  << "[" << _num << "/" << _nbFiles << "] - &quot;"
                << NgPost::escapeXML(_file.fileName())
                << "&quot; yEnc (1/"<< _nbAticles << ") " << _file.size() << "\">\n";
