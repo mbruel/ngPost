@@ -19,48 +19,38 @@
 //
 //========================================================================
 
-#ifndef AUTOPOSTWIDGET_H
-#define AUTOPOSTWIDGET_H
+#ifndef FOLDERMONITOR_H
+#define FOLDERMONITOR_H
 
-#include <QWidget>
-class NgPost;
-class MainWindow;
-namespace Ui {
-class AutoPostWidget;
-}
-
-class AutoPostWidget : public QWidget
+#include <QFileSystemWatcher>
+#include <QDateTime>
+class QFileInfo;
+class FolderMonitor : public QObject
 {
     Q_OBJECT
-private:
-    Ui::AutoPostWidget *_ui;
-    MainWindow         *_hmi;
-    NgPost             *_ngPost;
 
+private:
+    QFileSystemWatcher _monitor;        //!< monitor
+    QDateTime          _lastCheck;      //!< last check date
+    QStringList        _processedFiles; //!< track files processed (their date might be > _lastCheck)
+
+    static const ulong sMSleep = 100;
 
 public:
-    explicit AutoPostWidget(NgPost *ngPost, MainWindow *hmi);
-    ~AutoPostWidget();
+    FolderMonitor(const QString &folderPath, QObject *parent = nullptr);
+    inline void addFolderToMonitor(const QString &folderPath);
 
-    void init();
-
-    void handleKeyEvent(QKeyEvent *keyEvent);
-
-private slots:
-    void onGenQuickPosts();
-    void onCompressPathClicked();
-    void onRarPathClicked();
-    void onSelectAutoDirClicked();
-    void onScanAutoDirClicked();
+signals:
+    void newFileToProcess(const QFileInfo &fileInfo);
 
 
-private:    
-    void _addPath(const QString &path, int currentNbFiles, int isDir = false);
-    bool _fileAlreadyInList(const QString &fileName, int currentNbFiles) const;
-
-    void _udatePostingParams();
-
-
+public slots:
+    void onDirectoryChanged(const QString &folderPath);
 };
 
-#endif // AUTOPOSTWIDGET_H
+void FolderMonitor::addFolderToMonitor(const QString &folderPath)
+{
+    _monitor.addPath(folderPath);
+}
+
+#endif // FOLDERMONITOR_H

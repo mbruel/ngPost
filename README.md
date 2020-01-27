@@ -1,12 +1,14 @@
 <img align="left" width="80" height="80" src="https://raw.githubusercontent.com/mbruel/ngPost/master/src/resources/icons/ngPost.png" alt="ngPost">
 
-# ngPost v3.2
+# ngPost v4.1
 
 **Command Line and sexy GUI Usenet poster** for binaries developped in **C++11/Qt5**</br>
-it is designed to be **as fast as possible** and offer all the main features **to post data easily and safely**.</br>
-since v2.1 it can **compress** (using your external rar binary) and **generate the par2** before posting!<br/>
-since v3.1 a **posting queue** has been implemented to allow you to prepare several posts.<br/>
-since v3.1 an **automatic post creator** is also available: it will **scan a folder** and post each file/folder individually after having compressed (with a potential random archive name and password) and generated the par2!<br/>
+it is designed to be **as fast as possible** and offer ALL the main features **to post data easily and safely**.</br>
+it can **compress** (using your external rar binary) and **generate the par2** before posting!<br/>
+it has a **posting queue** to allow you to prepare several posts (especially using the GUI using Tabs).<br/>
+it can **automate posts** by **scanning folder(s)** and posting each file/folder individually after having them compressed (with a potential random archive name and password) and generated the par2!<br/>
+it can **monitor folder(s) to post each new file/folder** individually after having them compressed.<br/>
+it can **auto delete files/folders once posted** (only in command line with --auto or --monitor)<br/>
 
 ![ngPost_v3.1](https://raw.githubusercontent.com/mbruel/ngPost/master/pics/ngPost_v3.1.png)
 
@@ -56,16 +58,21 @@ in order to build on other OS, the easiest way would be to [install QT](https://
 
 ### How to use it in command line
 <pre>
-Syntax: ngPost (options)? (-i &lt;file or directory to upload&gt;)+
+Syntax: ngPost (options)* (-i <file or folder> | --auto <folder> | --monitor <folder>)+
 	--help             : Help: display syntax
 	-v or --version    : app version
 	-c or --conf       : use configuration file (if not provided, we try to load $HOME/.ngPost)
-	--disp_progress    : display cmd progress: NONE (default), BAR or FILES
-	-d or --debug      : display some debug logs
+	--disp_progress    : display cmd progressbar: NONE (default), BAR or FILES
+	-d or --debug      : display debug information
+
+// automated posting (scanning and/or monitoring)
+	--auto             : parse directory and post every file/folder separately. You must use --compress, should add --gen_par2, --gen_name and --gen_rar
+	--monitor          : monitor directory and post every new file/folder. You must use --compress, should add --gen_par2, --gen_name and --gen_rar
+	--del              : delete file/folder once posted. You must use --auto or --monitor with this option.
+
+// quick posting (several files/folders)
 	-i or --input      : input file to upload (single file or directory), you can use it multiple times
-	--auto             : auto directory that will be parsed to post every file/folder separately. You must use --compress. Feel free to add --gen_par2, --gen_name and --gen_rar
 	-o or --output     : output file path (nzb)
-	-t or --thread     : number of Threads (the connections will be distributed amongs them)
 	-x or --obfuscate  : obfuscate the subjects of the articles (CAREFUL you won't find your post if you lose the nzb file)
 	-g or --groups     : newsgroups where to post the files (coma separated without space)
 	-m or --meta       : extra meta data in header (typically "password=qwerty42")
@@ -73,11 +80,13 @@ Syntax: ngPost (options)? (-i &lt;file or directory to upload&gt;)+
 	-a or --article_size: article size (default one: 716800)
 	-z or --msg_id     : msg id signature, after the @ (default one: ngPost)
 	-r or --retry      : number of time we retry to an Article that failed (default: 5)
+	-t or --thread     : number of Threads (the connections will be distributed amongs them)
 
 // for compression and par2 support
 	--tmp_dir          : temporary folder where the compressed files and par2 will be stored
 	--rar_path         : RAR absolute file path (external application)
 	--rar_size         : size in MB of the RAR volumes (0 by default meaning NO split)
+	--rar_max          : maximum number of archive volumes
 	--par2_pct         : par2 redundancy percentage (0 by default meaning NO par2 generation)
 	--par2_path        : par2 absolute file path (in case of self compilation of ngPost)
 	--compress         : compress inputs using RAR
@@ -96,6 +105,7 @@ Syntax: ngPost (options)? (-i &lt;file or directory to upload&gt;)+
 	-u or --user       : NNTP server username
 	-p or --pass       : NNTP server password
 	-n or --connection : number of NNTP connections
+
 
 Examples:
   - with auto post: ngPost --auto /Downloads/testNgPost --compress --gen_par2 --gen_name --gen_pass --rar_size 42 --disp_progress files
@@ -125,21 +135,21 @@ The following ones are for experimented posters:
 
 ### Linux 64bit portable release
 if you don't want to build it and install the dependencies, you can also the portable release that includes everything.<br/>
-- download [ngPost_v3.2-x86_64.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v3.2-x86_64.AppImage)
-- chmod 755 ngPost_v3.2-x86_64.AppImage
+- download [ngPost_v4.1-x86_64.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.1-x86_64.AppImage)
+- chmod 755 ngPost_v4.1-x86_64.AppImage
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
 
 ### Raspbian release (armhf for Raspberry PI)
-- download [ngPost_v3.2-armhf.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v3.2-armhf.AppImage)
-- chmod 755 ngPost_v3.2-armhf.AppImage
+- download [ngPost_v4.1-armhf.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v3.2-armhf.AppImage)
+- chmod 755 ngPost_v4.1-armhf.AppImage
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
 
 ### Windows installer
-- just use the packager [ngPost_v3.2_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v3.2_x64_setup.exe) or [ngPost_v3.2_x86_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v3.2_x86_setup.exe) for the 32bit version
+- just use the packager [ngPost_v4.1_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.1_x64_setup.exe) or [ngPost_v4.1_x86_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.1_x86_setup.exe) for the 32bit version
 - edit **ngPost.conf** (in the installation folder) to add your server settings (you can put several). 
 - launch **ngPost.exe** (GUI version)
 - or you can use it with the command line: **ngPost.exe** -i "your file or directory"
@@ -149,9 +159,11 @@ By default:
 - ngPost will load the configuration file 'ngPost.conf' that is in the directory
 - it will write the nzb file inside this directory too. (it's name will be the one of the latest input file in the command line)
 
+**Know Issue with non SSL support:** you may need to install [msvc2015 redistribuables](https://www.microsoft.com/en-us/download/details.aspx?id=48145) as libssl depends on its APIs<br/>
+
 
 ### MacOS release built on High Sierra (v10.13)
-- download [ngPost_v3.2.dmg](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v3.2.dmg)
+- download [ngPost_v4.1.dmg](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.1.dmg)
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
@@ -196,6 +208,7 @@ Here is my email: Matthieu.Bruel@gmail.com
 
 ### Thanks
 - Uukrull for his intensive testing, providing crash logs and backtraces when needed, suggesting nice features to add to the app and also finally building all the MacOS packages
+- awsms for its testing on big a proper server (more than 20 cores) with a 10Gb/s connection that helped to improve ngPost's upload speed and the multi-threading support
 - animetosho for having developped ParPar, the fasted par2 generator ever!
 - demanuel for the dev of NewsUP that was my first poster
 - all ngPost users ;)

@@ -167,8 +167,8 @@ void PostingWidget::onPostFiles()
         }
 
         _state = STATE::POSTING;
-        _postingJob = new PostingJob(_ngPost, nzbPath, files, this, _ngPost->_obfuscateArticles,
-                                     _ngPost->_tmpPath, _ngPost->_rarPath, _ngPost->_rarSize,  _ngPost->_par2Pct,
+        _postingJob = new PostingJob(_ngPost, nzbPath, files, this, _ngPost->_obfuscateArticles, _ngPost->_tmpPath,
+                                     _ngPost->_rarPath, _ngPost->_rarSize, _ngPost->_useRarMax, _ngPost->_par2Pct,
                                      _ngPost->_doCompress, _ngPost->_doPar2, _ngPost->_rarName, _ngPost->_rarPass);
 
         bool hasStarted = _ngPost->startPostingJob(_postingJob);
@@ -380,6 +380,8 @@ void PostingWidget::_buildFilesList(QFileInfoList &files, bool &hasFolder)
 void PostingWidget::init()
 {
     _ui->donateButton->setToolTip(_ngPost->sDonationTooltip);
+    _ui->rarMaxCB->setToolTip(tr("limit the number of archive volume to %1 (cf config RAR_MAX)").arg(_ngPost->_rarMax));
+    _ui->rarMaxCB->setChecked(_ngPost->_useRarMax);
 
     _ui->nzbPassCB->setChecked(false);
     onNzbPassToggled(false);
@@ -396,13 +398,13 @@ void PostingWidget::init()
 
     if (_ngPost->_par2Args.isEmpty())
     {
-        _ui->redundancyEdit->setText(QString::number(_ngPost->_par2Pct));
-        _ui->redundancyEdit->setValidator(new QIntValidator(1, 100, _ui->redundancyEdit));
+        _ui->redundancySB->setRange(0, 100);
+        _ui->redundancySB->setValue(static_cast<int>(_ngPost->_par2Pct));
     }
     else
     {
-        _ui->redundancyEdit->setEnabled(false);
-        _ui->redundancyEdit->setToolTip(tr("Using PAR2_ARGS from config file: %1").arg(_ngPost->_par2Args));
+        _ui->redundancySB->setEnabled(false);
+        _ui->redundancySB->setToolTip(tr("Using PAR2_ARGS from config file: %1").arg(_ngPost->_par2Args));
     }
 
     _ui->nameLengthSB->setRange(5, 50);
@@ -432,7 +434,7 @@ void PostingWidget::init()
     onCompressCB(false);
 }
 
-void PostingWidget::genNameAndPassword(bool genName, bool genPass, bool doPar2)
+void PostingWidget::genNameAndPassword(bool genName, bool genPass, bool doPar2, bool useRarMax)
 {
     _ui->compressCB->setChecked(true);
     if (genName)
@@ -442,6 +444,7 @@ void PostingWidget::genNameAndPassword(bool genName, bool genPass, bool doPar2)
         _ui->nzbPassCB->setChecked(true);
         onGenNzbPassword();
     }
+    _ui->rarMaxCB->setChecked(useRarMax);
 
     if (doPar2)
         _ui->par2CB->setChecked(true);
@@ -479,16 +482,13 @@ void PostingWidget::_udatePostingParams()
         if (ok)
             _ngPost->_rarSize = val;
     }
+    _ngPost->_useRarMax = _ui->rarMaxCB->isChecked();
 
     // fetch par2 settings
     _ngPost->_doPar2  = _ui->par2CB->isChecked();
     _ngPost->_par2Pct = 0;
-    if (_ui->par2CB->isChecked() && !_ui->redundancyEdit->text().isEmpty())
-    {
-        val = _ui->redundancyEdit->text().toUInt(&ok);
-        if (ok)
-            _ngPost->_par2Pct = val;
-    }
+    if (_ui->par2CB->isChecked())
+        _ngPost->_par2Pct = static_cast<uint>(_ui->redundancySB->value());
 }
 
 void PostingWidget::addPath(const QString &path, int currentNbFiles, int isDir)

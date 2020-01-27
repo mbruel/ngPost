@@ -1,3 +1,24 @@
+//========================================================================
+//
+// Copyright (C) 2020 Matthieu Bruel <Matthieu.Bruel@gmail.com>
+//
+// This file is a part of ngPost : https://github.com/mbruel/ngPost
+//
+// ngPost is free software; you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation; version 3.0 of the License.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+// You should have received a copy of the GNU Lesser General Public
+// License along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301,
+// USA.
+//
+//========================================================================
+
 #include "AutoPostWidget.h"
 #include "ui_AutoPostWidget.h"
 #include "PostingWidget.h"
@@ -25,6 +46,9 @@ AutoPostWidget::~AutoPostWidget()
 void AutoPostWidget::init()
 {
     _ui->donateButton->setToolTip(_ngPost->sDonationTooltip);
+    _ui->rarMaxCB->setToolTip(tr("limit the number of archive volume to %1 (cf config RAR_MAX)").arg(_ngPost->_rarMax));
+    _ui->rarMaxCB->setChecked(_ngPost->_useRarMax);
+
 
     _ui->compressPathEdit->setText(_ngPost->_tmpPath);
     _ui->rarEdit->setText(_ngPost->_rarPath);
@@ -34,13 +58,13 @@ void AutoPostWidget::init()
 
     if (_ngPost->_par2Args.isEmpty())
     {
-        _ui->redundancyEdit->setText(QString::number(_ngPost->_par2Pct));
-        _ui->redundancyEdit->setValidator(new QIntValidator(1, 100, _ui->redundancyEdit));
+        _ui->redundancySB->setRange(0, 100);
+        _ui->redundancySB->setValue(static_cast<int>(_ngPost->_par2Pct));
     }
     else
     {
-        _ui->redundancyEdit->setEnabled(false);
-        _ui->redundancyEdit->setToolTip(tr("Using PAR2_ARGS from config file: %1").arg(_ngPost->_par2Args));
+        _ui->redundancySB->setEnabled(false);
+        _ui->redundancySB->setToolTip(tr("Using PAR2_ARGS from config file: %1").arg(_ngPost->_par2Args));
     }
 
 
@@ -63,7 +87,7 @@ void AutoPostWidget::init()
     _ui->delFilesCB->setEnabled(false);
     _ui->startJobsCB->setChecked(true);
 
-    _ui->autoDirSelectAllCB->hide();
+    _ui->latestFilesFirstCB->setChecked(true);
 
     connect(_ui->postButton,   &QAbstractButton::clicked, this,    &AutoPostWidget::onGenQuickPosts);
     connect(_ui->aboutButton,  &QAbstractButton::clicked, _ngPost, &NgPost::onAboutClicked);
@@ -98,12 +122,13 @@ Press the Scan button and remove what you don't want to post ;)\n\
     bool genName = _ui->genNameCB->isChecked(),
          genPass = _ui->genPassCB->isChecked(),
           doPar2 = _ui->par2CB->isChecked(),
-       startPost = _ui->startJobsCB->isChecked();
+       startPost = _ui->startJobsCB->isChecked(),
+       useRarMax = _ui->rarMaxCB->isChecked();
     for (const QFileInfo &file : files)
     {
         PostingWidget *quickPostWidget = _hmi->addNewQuickTab(0, {file});
         quickPostWidget->init();
-        quickPostWidget->genNameAndPassword(genName, genPass, doPar2);
+        quickPostWidget->genNameAndPassword(genName, genPass, doPar2, useRarMax);
 
         if (startPost)
             quickPostWidget->onPostFiles();
@@ -159,7 +184,8 @@ void AutoPostWidget::onScanAutoDirClicked()
     if (autoDir.exists())
     {
         _ui->filesList->clear2();
-        for (const QFileInfo &file : autoDir.entryInfoList(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot, QDir::Name))
+        QDir::SortFlags sort = _ui->latestFilesFirstCB->isChecked() ? QDir::Time : QDir::Name;
+        for (const QFileInfo &file : autoDir.entryInfoList(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot, sort))
             _addPath(file.absoluteFilePath(), 0, file.isDir());
     }
     else
@@ -211,12 +237,8 @@ void AutoPostWidget::_udatePostingParams()
 
     // fetch par2 settings
     _ngPost->_par2Pct = 0;
-    if (_ui->par2CB->isChecked() && !_ui->redundancyEdit->text().isEmpty())
-    {
-        val = _ui->redundancyEdit->text().toUInt(&ok);
-        if (ok)
-            _ngPost->_par2Pct = val;
-    }
+    if (_ui->par2CB->isChecked())
+        _ngPost->_par2Pct = static_cast<uint>(_ui->redundancySB->value());
 }
 
 

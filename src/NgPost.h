@@ -38,6 +38,7 @@ class NntpArticle;
 class QCoreApplication;
 class MainWindow;
 class PostingJob;
+class FolderMonitor;
 
 #define NB_ARTICLES_TO_PREPARE_PER_CONNECTION 3
 
@@ -70,8 +71,9 @@ class NgPost : public QObject
     enum class Opt {HELP = 0, VERSION, CONF, DISP_PROGRESS, DEBUG, POST_HISTORY,
                     INPUT, OUTPUT, NZB_PATH, THREAD,
                     MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY,
-                    OBFUSCATE, INPUT_DIR, AUTO_DIR,
-                    TMP_DIR, RAR_PATH, RAR_EXTRA, RAR_SIZE, PAR2_PCT, PAR2_PATH, PAR2_ARGS,
+                    OBFUSCATE, INPUT_DIR, AUTO_DIR, MONITOR_DIR, DEL_AUTO,
+                    TMP_DIR, RAR_PATH, RAR_EXTRA, RAR_SIZE, RAR_MAX,
+                    PAR2_PCT, PAR2_PATH, PAR2_ARGS,
                     COMPRESS, GEN_PAR2, GEN_NAME, GEN_PASS, LENGTH_NAME, LENGTH_PASS,
                     RAR_NAME, RAR_PASS,
                     HOST, PORT, SSL, USER, PASS, CONNECTION,
@@ -120,6 +122,8 @@ private:
     QString     _rarPath;
     QString     _rarArgs;
     uint        _rarSize;
+    uint        _rarMax;
+    bool        _useRarMax;
     uint        _par2Pct;
     QString     _par2Path;
     QString     _par2Args;
@@ -141,6 +145,9 @@ private:
 
     QString     _postHistoryFile;
     QList<QDir> _autoDirs;
+
+    FolderMonitor *_folderMonitor;
+    bool           _delAuto;
 
 
     static qint64 sArticleSize;
@@ -178,6 +185,7 @@ private:
 
     static const uint sDefaultLengthName = 17;
     static const uint sDefaultLengthPass = 13;
+    static const uint sDefaultRarMax     = 99;
     static constexpr const char *sDefaultRarExtraOptions = "-ep1 -m0";
     static constexpr const char *sDefault7zOptions = "-mx0 -mhe=on";
 
@@ -255,8 +263,12 @@ private slots:
     void onErrorConnecting(QString err);
     void onRefreshprogressbarBar();
 
+    void onNewFileToProcess(const QFileInfo &fileInfo);
+
+
 
 private:
+    void _post(const QFileInfo &fileInfo);
     void _finishPosting();
 
     void _log(const QString &aMsg, bool newline = true) const; //!< log function for QString

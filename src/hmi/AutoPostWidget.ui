@@ -145,6 +145,13 @@
            </property>
           </widget>
          </item>
+         <item>
+          <widget class="QCheckBox" name="rarMaxCB">
+           <property name="text">
+            <string>limit rar number</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </item>
       </layout>
@@ -175,20 +182,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="redundancyEdit">
-         <property name="maximumSize">
-          <size>
-           <width>50</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="toolTip">
-          <string>percentage of par2 redundancy</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
+        <widget class="QSpinBox" name="redundancySB"/>
        </item>
       </layout>
      </item>
@@ -258,12 +252,12 @@
       </spacer>
      </item>
      <item>
-      <widget class="QCheckBox" name="autoDirSelectAllCB">
+      <widget class="QCheckBox" name="latestFilesFirstCB">
        <property name="toolTip">
-        <string>select all files</string>
+        <string>Show latest files first (otherwise it'll be sorted by names)</string>
        </property>
        <property name="text">
-        <string>select All</string>
+        <string>latest files first</string>
        </property>
       </widget>
      </item>
@@ -391,7 +385,7 @@
         <string>delete files/folders once they have been successfully posted</string>
        </property>
        <property name="text">
-        <string>delete files once posted</string>
+        <string>delete files once posted (only available in command line for your own sake ;))</string>
        </property>
       </widget>
      </item>

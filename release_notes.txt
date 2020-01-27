@@ -11,16 +11,33 @@ TODO: bandwidth optimization:
 	test with no threads and no article preparation
 	check if we can play on the SSL protocol paramaters
 
+TODO: proper multi-threading support with several Article Producer (one per Thread)
+	otherwise issue and potential Producer event loop overflow on big stations (> 20 cores and 10Gbps connection)
+	Soluce: create ArticleProducer object and make PosterThread that would own ArticleProducer in a Thread and several NntpConnection in another
+
+TODO: --nfo option (cf github issue #10 and NewsUp dev)
+
 
 ####################################################
-###       Release: ngPost v3.3                   ###
+###       Release: ngPost v4.1                   ###
 ###       date:    2020/01/??                    ###
 ####################################################
 
-- Use Auto Post parameters when creating the Quick Posts
-(par2 redundancy, rar size...)
+- add Folder Monitoring (--monitor) and auto delete features (--del)
+
+- add RAR_MAX config and "limit rar option" in th GUI
+
+- Use Auto Post parameters when creating the Quick Posts (par2 redundancy, rar size...)
+
+- fix GUI wrong state and crash if Posting failed due to no SSL support or no connection
 
 - fix compilation for Qt < 5.9 (QWidget::setWindowFlag)
+
+- add macro __FORMAT_ARTICLE_BODY_IN_PRODUCER__ for future multi-threaded tests with awsms
+
+- update file separator of the post history file to be a semicolon rather than a coma.
+
+- add latest files first option for GUI Auto Posting scan.
 
 
 

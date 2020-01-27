@@ -283,12 +283,11 @@ void MainWindow::_initPostingBox()
     _ui->articleSizeEdit->setText(QString::number(_ngPost->articleSize()));
     _ui->articleSizeEdit->setValidator(new QIntValidator(100000, 10000000, _ui->articleSizeEdit));
 
-    _ui->nbRetryEdit->setText(QString::number(NntpArticle::nbMaxTrySending()));
-    _ui->nbRetryEdit->setValidator(new QIntValidator(0, 100, _ui->nbRetryEdit));
+    _ui->nbRetrySB->setRange(0, 15);
+    _ui->nbRetrySB->setValue(NntpArticle::nbMaxTrySending());
 
-    _ui->threadEdit->setText(QString::number(_ngPost->_nbThreads));
-    _ui->threadEdit->setValidator(new QIntValidator(1, 100, _ui->threadEdit));
-
+    _ui->threadSB->setRange(0, 50);
+    _ui->threadSB->setValue(_ngPost->_nbThreads);
 }
 
 void MainWindow::updateServers()
@@ -346,11 +345,9 @@ void MainWindow::updateParams()
     if (ok)
         NgPost::sArticleSize = articleSize;
 
-    ushort nbMaxRetry = _ui->nbRetryEdit->text().toUShort(&ok);
-    if (ok)
-        NntpArticle::setNbMaxRetry(nbMaxRetry);
+    NntpArticle::setNbMaxRetry(static_cast<ushort>(_ui->nbRetrySB->value()));
 
-    _ngPost->_nbThreads = _ui->threadEdit->text().toInt();
+    _ngPost->_nbThreads = _ui->threadSB->value();
     if (_ngPost->_nbThreads < 1)
         _ngPost->_nbThreads = 1;
 }

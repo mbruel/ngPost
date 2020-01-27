@@ -42,18 +42,20 @@ PostingJob::PostingJob(NgPost *ngPost,
                        const QString &tmpPath,
                        const QString &rarPath,
                        uint rarSize,
+                       bool useRarMax,
                        uint par2Pct,
                        bool doCompress,
                        bool doPar2,
                        const QString &rarName,
                        const QString &rarPass,
+                       bool delFilesAfterPost,
                        QObject *parent) :
     QObject (parent),
     _ngPost(ngPost), _files(files), _postWidget(postWidget),
 
     _extProc(nullptr), _compressDir(nullptr), _limitProcDisplay(false), _nbProcDisp(42),
 
-    _tmpPath(tmpPath), _rarPath(rarPath), _rarSize(rarSize), _par2Pct(par2Pct),
+    _tmpPath(tmpPath), _rarPath(rarPath), _rarSize(rarSize), _useRarMax(useRarMax), _par2Pct(par2Pct),
     _doCompress(doCompress), _doPar2(doPar2), _rarName(rarName), _rarPass(rarPass),
 
     _threadPool(), _nntpConnections(),
@@ -73,7 +75,9 @@ PostingJob::PostingJob(NgPost *ngPost,
     _uploadedSize(0), _nbArticlesTotal(0),
     _stopPosting(0x0), _noMoreFiles(0x0),
     _postSucceed(false),
-    _obfuscateArticles(obfuscateArticles)
+    _obfuscateArticles(obfuscateArticles),
+    _delFilesAfterPost(delFilesAfterPost),
+    _originalFiles(delFilesAfterPost ? files : QFileInfoList())
 {
 #ifdef __DEBUG__
     qDebug() << "[PostingJob] >>>> Construct " << this;
@@ -92,6 +96,7 @@ PostingJob::PostingJob(NgPost *ngPost,
         connect(this, &PostingJob::archiveFileNames, _postWidget, &PostingWidget::onArchiveFileNames,  Qt::QueuedConnection);
         connect(this, &PostingJob::articlesNumber,   _postWidget, &PostingWidget::onArticlesNumber,    Qt::QueuedConnection);
         connect(this, &PostingJob::postingFinished,  _postWidget, &PostingWidget::onPostingJobDone,    Qt::QueuedConnection);
+        connect(this, &PostingJob::noMoreConnection, _postWidget, &PostingWidget::onPostingJobDone,    Qt::QueuedConnection);
     }
 }
 
@@ -340,6 +345,9 @@ void PostingJob::onNntpFilePosted()
         _postSucceed = true;
         _finishPosting();
 
+        if (_delFilesAfterPost)
+            _delOriginalFiles();
+
         emit postingFinished();
     }
 }
@@ -407,7 +415,23 @@ void PostingJob::_prepareArticles()
     }
   #ifdef __DEBUG__
     _log(QString("[NgPost::_prepareArticles] <<<<< finish preparing, current article queue size:  %1").arg(_articles.size()));
-  #endif
+#endif
+}
+
+void PostingJob::_delOriginalFiles()
+{
+    for (const QFileInfo &fi : _originalFiles)
+    {
+        QString path = fi.absoluteFilePath();
+        _log(tr("Deleting posted %1: %2").arg(fi.isDir()?tr("folder"):tr("file")).arg(path));
+        if (fi.isDir())
+        {
+            QDir dir(path);
+            dir.removeRecursively();
+        }
+        else
+            QFile::remove(path);
+    }
 }
 
 
@@ -693,20 +717,52 @@ bool PostingJob::startCompressFiles(const QString &cmdRar,
         else
             args << QString("-hp%1").arg(pass);
     }
-    if (volSize > 0)
+    if (volSize > 0 || _useRarMax)
+    {
+        if (_useRarMax)
+        {
+            qint64 postSize = 0;
+            for (const QFileInfo &fileInfo : _files)
+            {
+                if (fileInfo.isDir())
+                    postSize += _dirSize(fileInfo.absoluteFilePath());
+                else
+                    postSize += fileInfo.size();
+            }
+            postSize /= 1024*1024; // to get it in MB
+            if (volSize > 0)
+            {
+                if (postSize / volSize > _ngPost->_rarMax)
+                    volSize = static_cast<uint>(postSize / _ngPost->_rarMax) + 1;
+            }
+            else
+                volSize = static_cast<uint>(postSize / _ngPost->_rarMax) + 1;
+
+#ifdef __DEBUG__
+            qDebug() << tr("postSize: %1 MB => volSize: %2").arg(postSize).arg(volSize);
+#endif
+            if (_ngPost->debugMode())
+                _log(tr("postSize: %1 MB => volSize: %2").arg(postSize).arg(volSize));
+        }
         args << QString("-v%1m").arg(volSize);
+    }
 
     args << QString("%1/%2.%3").arg(archiveTmpFolder).arg(archiveName).arg(is7z ? "7z" : "rar");
-    if (!args.contains("-r"))
-        args << "-r";
 
+    bool hasDir = false;
     for (const QFileInfo &fileInfo : _files)
     {
         if (fileInfo.isDir())
+        {
+            hasDir = true;
             args << QString("%1/").arg(fileInfo.absoluteFilePath());
+        }
         else
             args << fileInfo.absoluteFilePath();
     }
+
+    if (hasDir && !args.contains("-r"))
+        args << "-r";
 
     // 3.: launch rar
     if (_ngPost->debugMode() || !_postWidget)
@@ -729,7 +785,7 @@ void PostingJob::onCompressionFinished(int exitCode)
     if (_ngPost->debugMode())
         _log(tr("=> rar exit code: %1\n").arg(exitCode));
     else
-        _log("");
+        _log("\n");
 
 
 #ifdef __DEBUG__
@@ -837,7 +893,7 @@ void PostingJob::onGenPar2Finished(int exitCode)
     if (_ngPost->debugMode())
         _log(tr("=> par2 exit code: %1\n").arg(exitCode));
     else
-        _log("");
+        _log("\n");
 
     _cleanExtProc();
 
@@ -929,6 +985,19 @@ bool PostingJob::_checkTmpFolder() const
     }
 
     return true;
+}
+
+qint64 PostingJob::_dirSize(const QString &path)
+{
+    qint64 size = 0;
+    QDir dir(path);
+    for(const QFileInfo &fi: dir.entryInfoList(QDir::Files|QDir::Hidden|QDir::System|QDir::Dirs|QDir::NoDotAndDotDot)) {
+        if (fi.isDir())
+            size += _dirSize(fi.absoluteFilePath());
+        else
+            size+= fi.size();
+    }
+    return size;
 }
 
 
