@@ -68,7 +68,7 @@ Syntax: ngPost (options)* (-i <file or folder> | --auto <folder> | --monitor <fo
 // automated posting (scanning and/or monitoring)
 	--auto             : parse directory and post every file/folder separately. You must use --compress, should add --gen_par2, --gen_name and --gen_rar
 	--monitor          : monitor directory and post every new file/folder. You must use --compress, should add --gen_par2, --gen_name and --gen_rar
-	--del              : delete file/folder once posted. You must use --auto or --monitor with this option.
+	--rm_posted        : delete file/folder once posted. You must use --auto or --monitor with this option.
 
 // quick posting (several files/folders)
 	-i or --input      : input file to upload (single file or directory), you can use it multiple times
@@ -108,6 +108,7 @@ Syntax: ngPost (options)* (-i <file or folder> | --auto <folder> | --monitor <fo
 
 
 Examples:
+  - with monitoring: ngPost --monitor --rm_posted /Downloads/testNgPost --compress --gen_par2 --gen_name --gen_pass --rar_size 42 --disp_progress files
   - with auto post: ngPost --auto /Downloads/testNgPost --compress --gen_par2 --gen_name --gen_pass --rar_size 42 --disp_progress files
   - with compression, filename obfuscation, random password and par2: ngPost -i /tmp/file1 -i /tmp/folder1 -o /nzb/myPost.nzb --compress --gen_name --gen_pass --gen_par2
   - with config file: ngPost -c ~/.ngPost.other -m "password=qwerty42" -f ngPost@nowhere.com -i /tmp/file1 -i /tmp/file2 -i /tmp/folderToPost1 -i /tmp/folderToPost2

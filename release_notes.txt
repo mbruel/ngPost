@@ -17,13 +17,15 @@ TODO: proper multi-threading support with several Article Producer (one per Thre
 
 TODO: --nfo option (cf github issue #10 and NewsUp dev)
 
+TODO: multi-language support (French and Spanish to start with)
+
 
 ####################################################
 ###       Release: ngPost v4.1                   ###
 ###       date:    2020/01/??                    ###
 ####################################################
 
-- add Folder Monitoring (--monitor) and auto delete features (--del)
+- add Folder Monitoring (--monitor) and auto delete the posted files and folders (--rm_posted)
 
 - add RAR_MAX config and "limit rar option" in th GUI
 
