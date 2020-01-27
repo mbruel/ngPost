@@ -61,7 +61,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::INPUT,        "input"},
     {Opt::AUTO_DIR,     "auto"},
     {Opt::MONITOR_DIR,  "monitor"},
-    {Opt::DEL_AUTO,     "del"},
+    {Opt::DEL_AUTO,     "rm_posted"},
     {Opt::OUTPUT,       "output"},
     {Opt::NZB_PATH,     "nzbpath"},
     {Opt::THREAD,       "thread"},
@@ -841,9 +841,9 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     if (parser.isSet(sOptionNames[Opt::GEN_PAR2]))
     {
         _doPar2 = true;
-        if (_par2Pct == 0)
+        if (_par2Pct == 0 && _par2Args.isEmpty())
         {
-            _error(tr("Error: can't generate par2 if the redundancy percentage is null...\nEither use --par2_pct or set PAR2_PCT in the config file."));
+            _error(tr("Error: can't generate par2 if the redundancy percentage is null or PAR2_ARGS is not provided...\nEither use --par2_pct or set PAR2_PCT or PAR2_ARGS in the config file."));
             return false;
         }
     }
@@ -1292,6 +1292,7 @@ void NgPost::_syntax(char *appName)
     }
 
     _cout << "\nExamples:\n"
+          << "  - with monitoring: ngPost --monitor --rm_posted /Downloads/testNgPost --compress --gen_par2 --gen_name --gen_pass --rar_size 42 --disp_progress files\n"
           << "  - with auto post: ngPost --auto /Downloads/testNgPost --compress --gen_par2 --gen_name --gen_pass --rar_size 42 --disp_progress files\n"
           << "  - with compression, filename obfuscation, random password and par2: " << app << " -i /tmp/file1 -i /tmp/folder1 -o /nzb/myPost.nzb --compress --gen_name --gen_pass --gen_par2\n"
           << "  - with config file: " << app << " -c ~/.ngPost -m \"password=qwerty42\" -f ngPost@nowhere.com -i /tmp/file1 -i /tmp/file2 -i /tmp/folderToPost1 -i /tmp/folderToPost2\n"
