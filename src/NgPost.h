@@ -147,6 +147,7 @@ private:
     QList<QDir> _autoDirs;
 
     FoldersMonitorForNewFiles *_folderMonitor;
+    QThread                   *_monitorThread;
     bool                       _delAuto;
 
 

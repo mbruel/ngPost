@@ -25,7 +25,7 @@
 #include <QDateTime>
 #include <QThread>
 FoldersMonitorForNewFiles::FoldersMonitorForNewFiles(const QString &folderPath, QObject *parent) :
-    QObject(parent), _monitor()
+    QObject(parent), _monitor(), _stopListening(0x0)
 {
     connect(&_monitor, &QFileSystemWatcher::directoryChanged, this, &FoldersMonitorForNewFiles::onDirectoryChanged);
     addFolder(folderPath);
@@ -50,10 +50,20 @@ bool FoldersMonitorForNewFiles::addFolder(const QString &folderPath)
         return false;
 }
 
+void FoldersMonitorForNewFiles::stopListening()
+{
+    qDebug() << "[FoldersMonitorForNewFiles::stopListening] stop monitoring!";
+
+    _stopListening.testAndSetOrdered(0x0, 0x1);
+    disconnect(&_monitor, &QFileSystemWatcher::directoryChanged, this, &FoldersMonitorForNewFiles::onDirectoryChanged);
+}
+
 void FoldersMonitorForNewFiles::onDirectoryChanged(const QString &folderPath)
 {
-    FolderScan *folderScan = _folders[folderPath];
+    if (_stopListening.load())
+        return;
 
+    FolderScan *folderScan  = _folders[folderPath];
     QDateTime currentUpdate = QFileInfo(folderPath).lastModified();
 
     qDebug() << "[directoryChanged] " << folderPath
@@ -66,6 +76,9 @@ void FoldersMonitorForNewFiles::onDirectoryChanged(const QString &folderPath)
     newFiles.subtract(folderScan->previousScan);
     for (const QString &fileName : newFiles)
     {
+        if (_stopListening.load())
+            break;
+
         QString filePath = QString("%1/%2").arg(folderPath).arg(fileName);
         QFileInfo fi(filePath);
         fi.setCaching(false); // really important to be able to check if the file is finished to be written
@@ -96,7 +109,8 @@ void FoldersMonitorForNewFiles::onDirectoryChanged(const QString &folderPath)
                      << "ready to process file: " << filePath
                      << ", size: " << size << ", lastModif: " << fi.lastModified();
 
-            emit newFileToProcess(fi);
+            if (!_stopListening.load())
+                emit newFileToProcess(fi);
 #ifdef __DEBUG__
             if (fi.isDir())
             {
