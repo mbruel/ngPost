@@ -53,7 +53,7 @@ private:
     QFileSystemWatcher          _monitor;        //!< monitor
     QMap<QString, FolderScan*>   _folders; //!< track files processed (their date might be > _lastCheck)
 
-    static const ulong sMSleep = 100;
+    static const ulong sMSleep = 200;
 
 
 public:
@@ -68,6 +68,11 @@ signals:
 
 public slots:
     void onDirectoryChanged(const QString &folderPath);
+
+
+private:
+    qint64 _pathSize(QFileInfo &fileInfo) const;
+    qint64 _dirSize(const QString &path) const;
 };
 
 #endif // FOLDERSMONITORFORNEWFILES_H
