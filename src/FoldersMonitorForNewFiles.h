@@ -28,7 +28,7 @@
 #include <QFileInfoList>
 #include <QMap>
 #include <QSet>
-
+using QAtomicBool = QAtomicInteger<unsigned short>; // 16 bit only (faster than using 8 bit variable...)
 using PathSet = QSet<QString>;
 
 class FolderScan
@@ -51,9 +51,10 @@ class FoldersMonitorForNewFiles : public QObject
 
 private:
     QFileSystemWatcher          _monitor;        //!< monitor
-    QMap<QString, FolderScan*>   _folders; //!< track files processed (their date might be > _lastCheck)
+    QMap<QString, FolderScan*>  _folders; //!< track files processed (their date might be > _lastCheck)
+    QAtomicBool                 _stopListening;
 
-    static const ulong sMSleep = 200;
+    static const ulong sMSleep = 1000; //!< 1sec in case we move file from samba or unrar when the system is quite loaded
 
 
 public:
@@ -61,6 +62,7 @@ public:
     ~FoldersMonitorForNewFiles();
 
     bool addFolder(const QString &folderPath);
+    void stopListening();
 
 signals:
     void newFileToProcess(const QFileInfo &fileInfo);

@@ -235,7 +235,13 @@ NgPost::~NgPost()
     _finishPosting();
 
     if (_folderMonitor)
+    {
+        _folderMonitor->stopListening();
+        _monitorThread->quit();
+        _monitorThread->wait();
         delete _folderMonitor;
+        delete _monitorThread;
+    }
 
     if (_activeJob)
         delete _activeJob;
@@ -662,8 +668,12 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
                     _folderMonitor->addFolder(fi.absoluteFilePath());
                 else
                 {
+                    _monitorThread = new QThread();
+                    _monitorThread->setObjectName("Monitoring");
                     _folderMonitor = new FoldersMonitorForNewFiles(fi.absoluteFilePath());
-                    connect(_folderMonitor, &FoldersMonitorForNewFiles::newFileToProcess, this, &NgPost::onNewFileToProcess, Qt::DirectConnection);
+                    _folderMonitor->moveToThread(_monitorThread);
+                    connect(_folderMonitor, &FoldersMonitorForNewFiles::newFileToProcess, this, &NgPost::onNewFileToProcess, Qt::QueuedConnection);
+                    _monitorThread->start();
                 }
             }
         }
