@@ -21,6 +21,7 @@
 
 #include "NgPost.h"
 #include "PostingJob.h"
+#include "FolderMonitor.h"
 #include "nntp/NntpArticle.h"
 #include "nntp/NntpServerParams.h"
 #include "hmi/MainWindow.h"
@@ -59,6 +60,8 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
 
     {Opt::INPUT,        "input"},
     {Opt::AUTO_DIR,     "auto"},
+    {Opt::MONITOR_DIR,  "monitor"},
+    {Opt::DEL_AUTO,     "del"},
     {Opt::OUTPUT,       "output"},
     {Opt::NZB_PATH,     "nzbpath"},
     {Opt::THREAD,       "thread"},
@@ -78,6 +81,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::RAR_PATH,     "rar_path"},
     {Opt::RAR_EXTRA,    "rar_extra"},
     {Opt::RAR_SIZE,     "rar_size"},
+    {Opt::RAR_MAX,      "rar_max"},
     {Opt::PAR2_PCT,     "par2_pct"},
     {Opt::PAR2_PATH,    "par2_path"},
     {Opt::PAR2_ARGS,    "par2_args"},
@@ -105,25 +109,33 @@ const QList<QCommandLineOption> NgPost::sCmdOptions = {
     {{"v", sOptionNames[Opt::VERSION]},       tr( "app version")},
     {{"c", sOptionNames[Opt::CONF]},          tr( "use configuration file (if not provided, we try to load $HOME/.ngPost)"), sOptionNames[Opt::CONF]},
     { sOptionNames[Opt::DISP_PROGRESS],       tr( "display cmd progressbar: NONE (default), BAR or FILES"), sOptionNames[Opt::DISP_PROGRESS]},
-    {{"d", sOptionNames[Opt::DEBUG]},         tr( "display some debug logs")},
+    {{"d", sOptionNames[Opt::DEBUG]},         tr( "display debug information")},
 
+// automated posting (scanning and/or monitoring)
+    { sOptionNames[Opt::AUTO_DIR],            tr("parse directory and post every file/folder separately. You must use --compress, should add --gen_par2, --gen_name and --gen_rar"), sOptionNames[Opt::AUTO_DIR]},
+    { sOptionNames[Opt::MONITOR_DIR],         tr("monitor directory and post every new file/folder. You must use --compress, should add --gen_par2, --gen_name and --gen_rar"), sOptionNames[Opt::MONITOR_DIR]},
+    { sOptionNames[Opt::DEL_AUTO],            tr("delete file/folder once posted. You must use --auto or --monitor with this option.")},
+
+// quick posting (several files/folders)
     {{"i", sOptionNames[Opt::INPUT]},         tr("input file to upload (single file or directory), you can use it multiple times"), sOptionNames[Opt::INPUT]},
-    { sOptionNames[Opt::AUTO_DIR],            tr("auto directory that will be parsed to post every file/folder separately. You must use --compress. Feel free to add --gen_par2, --gen_name and --gen_rar"), sOptionNames[Opt::AUTO_DIR]},
-    {{"o", sOptionNames[Opt::OUTPUT]},        tr("output file path (nzb)"), sOptionNames[Opt::OUTPUT]},
-    {{"t", sOptionNames[Opt::THREAD]},        tr("number of Threads (the connections will be distributed amongs them)"), sOptionNames[Opt::THREAD]},
-    {{"x", sOptionNames[Opt::OBFUSCATE]},     tr("obfuscate the subjects of the articles (CAREFUL you won't find your post if you lose the nzb file)")},
+    {{"o", sOptionNames[Opt::OUTPUT]},        tr("output file path (nzb)"), sOptionNames[Opt::OUTPUT]},   
 
+// general options
+    {{"x", sOptionNames[Opt::OBFUSCATE]},     tr("obfuscate the subjects of the articles (CAREFUL you won't find your post if you lose the nzb file)")},
     {{"g", sOptionNames[Opt::GROUPS]},        tr("newsgroups where to post the files (coma separated without space)"), sOptionNames[Opt::GROUPS]},
     {{"m", sOptionNames[Opt::META]},          tr("extra meta data in header (typically \"password=qwerty42\")"), sOptionNames[Opt::META]},
     {{"f", sOptionNames[Opt::FROM]},          tr("poster email (random one if not provided)"), sOptionNames[Opt::FROM]},
     {{"a", sOptionNames[Opt::ARTICLE_SIZE]},  tr("article size (default one: %1)").arg(sDefaultArticleSize), sOptionNames[Opt::ARTICLE_SIZE]},
     {{"z", sOptionNames[Opt::MSG_ID]},        tr("msg id signature, after the @ (default one: %1)").arg(sDefaultMsgIdSignature), sOptionNames[Opt::MSG_ID]},
     {{"r", sOptionNames[Opt::NB_RETRY]},      tr("number of time we retry to an Article that failed (default: %1)").arg(NntpArticle::nbMaxTrySending()), sOptionNames[Opt::NB_RETRY]},
+    {{"t", sOptionNames[Opt::THREAD]},        tr("number of Threads (the connections will be distributed amongs them)"), sOptionNames[Opt::THREAD]},
 
-//    TMP_PATH, RAR_PATH, RAR_SIZE, PAR2_PCT, PAR2_PATH,
+
+// for compression and par2 support
     { sOptionNames[Opt::TMP_DIR],             tr( "temporary folder where the compressed files and par2 will be stored"), sOptionNames[Opt::TMP_DIR]},
     { sOptionNames[Opt::RAR_PATH],            tr( "RAR absolute file path (external application)"), sOptionNames[Opt::RAR_PATH]},
     { sOptionNames[Opt::RAR_SIZE],            tr( "size in MB of the RAR volumes (0 by default meaning NO split)"), sOptionNames[Opt::RAR_SIZE]},
+    { sOptionNames[Opt::RAR_MAX],             tr( "maximum number of archive volumes"), sOptionNames[Opt::RAR_MAX]},
     { sOptionNames[Opt::PAR2_PCT],            tr( "par2 redundancy percentage (0 by default meaning NO par2 generation)"), sOptionNames[Opt::PAR2_PCT]},
     { sOptionNames[Opt::PAR2_PATH],           tr( "par2 absolute file path (in case of self compilation of ngPost)"), sOptionNames[Opt::PAR2_PCT]},
     { sOptionNames[Opt::COMPRESS],            tr( "compress inputs using RAR")},
@@ -136,14 +148,13 @@ const QList<QCommandLineOption> NgPost::sCmdOptions = {
     { sOptionNames[Opt::LENGTH_PASS],         tr( "length of the random RAR password (to be used with --gen_pass), default: %1").arg(sDefaultLengthPass), sOptionNames[Opt::LENGTH_PASS]},
 
 
-    // for a single server...
+// without config file, you can provide all the parameters to connect to ONE SINGLE server
     {{"h", sOptionNames[Opt::HOST]},          tr("NNTP server hostname (or IP)"), sOptionNames[Opt::HOST]},
     {{"P", sOptionNames[Opt::PORT]},          tr("NNTP server port"), sOptionNames[Opt::PORT]},
     {{"s", sOptionNames[Opt::SSL]},           tr("use SSL")},
     {{"u", sOptionNames[Opt::USER]},          tr("NNTP server username"), sOptionNames[Opt::USER]},
     {{"p", sOptionNames[Opt::PASS]},          tr("NNTP server password"), sOptionNames[Opt::PASS]},
     {{"n", sOptionNames[Opt::CONNECTION]},    tr("number of NNTP connections"), sOptionNames[Opt::CONNECTION]},
-
 };
 
 
@@ -172,14 +183,15 @@ NgPost::NgPost(int &argc, char *argv[]):
     _nbThreads(QThread::idealThreadCount()),
     _socketTimeOut(sDefaultSocketTimeOut), _nzbPath(sDefaultNzbPath), _nzbPathConf(sDefaultNzbPath),
     _progressbarTimer(), _refreshRate(sDefaultRefreshRate),
-    _tmpPath(), _rarPath(), _rarArgs(), _rarSize(0), _par2Pct(0), _par2Path(), _par2Args(),
+    _tmpPath(), _rarPath(), _rarArgs(), _rarSize(0), _rarMax(sDefaultRarMax), _useRarMax(false),
+    _par2Pct(0), _par2Path(), _par2Args(),
     _doCompress(false), _doPar2(false), _genName(), _genPass(),
     _lengthName(sDefaultLengthName), _lengthPass(sDefaultLengthPass),
     _rarName(), _rarPass(),
     _inputDir(),
     _activeJob(nullptr), _pendingJobs(),
     _postHistoryFile(),
-    _autoDirs()
+    _autoDirs(), _folderMonitor(nullptr), _delAuto(false)
 {
     QThread::currentThread()->setObjectName(sMainThreadName);
 
@@ -221,6 +233,10 @@ NgPost::~NgPost()
 #endif
 
     _finishPosting();
+
+    if (_folderMonitor)
+        delete _folderMonitor;
+
     if (_activeJob)
         delete _activeJob;
     qDeleteAll(_pendingJobs);
@@ -337,6 +353,40 @@ void NgPost:: onRefreshprogressbarBar()
         _progressbarTimer.start(_refreshRate);
 }
 
+void NgPost::onNewFileToProcess(const QFileInfo & fileInfo)
+{
+    _cout << "Processing new incoming file: " << fileInfo.absoluteFilePath() << endl << flush;
+    _post(fileInfo);
+}
+
+void NgPost::_post(const QFileInfo &fileInfo)
+{
+    _nzbName = fileInfo.completeBaseName();
+//                _nzbPath = file.absolutePath();
+    QString nzbFilePath = nzbPath();
+    if (!nzbFilePath.endsWith(".nzb"))
+        nzbFilePath += ".nzb";
+
+    _rarName = _nzbName;
+    if (_genName)
+        _rarName = randomPass(_lengthName);
+
+    _rarPass = "";
+    if (_genPass)
+    {
+        _rarPass = randomPass(_lengthPass);
+        _meta.remove("password");
+    }
+    qDebug() << "Start posting job for " << _nzbName
+             << " with rar_name: " << _rarName << " and pass: " << _rarPass
+             << " (auto delete: " << _delAuto << ")";
+
+    startPostingJob(new PostingJob(this, nzbFilePath, {fileInfo}, nullptr,
+                                   _obfuscateArticles, _tmpPath,
+                                   _rarPath, _rarSize, _useRarMax, _par2Pct,
+                                   _doCompress, _doPar2, _rarName, _rarPass,
+                                   _delAuto));
+}
 
 
 
@@ -437,7 +487,7 @@ void NgPost::onPostingJobFinished()
                 _hmi->setTab(_activeJob->widget());
             emit _activeJob->startPosting();
         }
-        else if (!_hmi)
+        else if (!_folderMonitor && !_hmi)
         {
             _error(tr(" => closing application"));
             qApp->quit();
@@ -554,10 +604,20 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         return false;
     }
 
-    if (!parser.isSet(sOptionNames[Opt::INPUT]) && !parser.isSet(sOptionNames[Opt::AUTO_DIR]))
+    if (!parser.isSet(sOptionNames[Opt::INPUT]) && !parser.isSet(sOptionNames[Opt::AUTO_DIR]) && !parser.isSet(sOptionNames[Opt::MONITOR_DIR]))
     {
-        _error("Error syntax: you should provide at least one input file or directory using the option -i or --auto");
+        _error("Error syntax: you should provide at least one input file or directory using the option -i, --auto or --monitor");
         return false;
+    }
+    if (parser.isSet(sOptionNames[Opt::DEL_AUTO]))
+    {
+        if ( !parser.isSet(sOptionNames[Opt::AUTO_DIR]) && !parser.isSet(sOptionNames[Opt::MONITOR_DIR]))
+        {
+            _error("Error syntax: --del option is only available with --auto or --monitor");
+            return false;
+        }
+        else
+            _delAuto = true;
     }
 
     if (parser.isSet(sOptionNames[Opt::AUTO_DIR]))
@@ -576,7 +636,36 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
                 return false;
             }
             else
-                _autoDirs << QDir(filePath);
+                _autoDirs << QDir(fi.absoluteFilePath());
+        }
+    }
+
+    if (parser.isSet(sOptionNames[Opt::MONITOR_DIR]))
+    {
+        if (!parser.isSet(sOptionNames[Opt::COMPRESS]))
+        {
+            _error("Error syntax: --monitor only works with --compress");
+            return false;
+        }
+        for (const QString &filePath : parser.values(sOptionNames[Opt::MONITOR_DIR]))
+        {
+            QFileInfo fi(filePath);
+            if (!fi.exists() || !fi.isDir())
+            {
+                _error("Error syntax: --monitor only uses folders as argument...");
+                return false;
+            }
+            else
+            {
+                _cout << "[FolderMonitor] start monitoring: " << fi.absoluteFilePath() << endl << flush;
+                if (_folderMonitor)
+                    _folderMonitor->addFolderToMonitor(fi.absoluteFilePath());
+                else
+                {
+                    _folderMonitor = new FolderMonitor(fi.absoluteFilePath());
+                    connect(_folderMonitor, &FolderMonitor::newFileToProcess, this, &NgPost::onNewFileToProcess, Qt::DirectConnection);
+                }
+            }
         }
     }
 
@@ -716,6 +805,14 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         uint nb = parser.value(sOptionNames[Opt::RAR_SIZE]).toUInt(&ok);
         if (ok)
             _rarSize = nb;
+    }
+    if (parser.isSet(sOptionNames[Opt::RAR_MAX]))
+    {
+        _useRarMax = true;
+        bool ok;
+        uint nb = parser.value(sOptionNames[Opt::RAR_MAX]).toUInt(&ok);
+        if (ok)
+            _rarMax = nb;
     }
     if (parser.isSet(sOptionNames[Opt::PAR2_PCT]))
     {
@@ -905,8 +1002,9 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         QString nzbFilePath = nzbPath();
         if (!nzbFilePath.endsWith(".nzb"))
             nzbFilePath += ".nzb";
-        startPostingJob(new PostingJob(this, nzbFilePath, filesToUpload, nullptr, _obfuscateArticles,
-                                       _tmpPath, _rarPath, _rarSize, _par2Pct,
+        startPostingJob(new PostingJob(this, nzbFilePath, filesToUpload, nullptr,
+                                       _obfuscateArticles, _tmpPath,
+                                       _rarPath, _rarSize, _useRarMax, _par2Pct,
                                        _doCompress, _doPar2, _rarName, _rarPass));
     }
 
@@ -915,31 +1013,8 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         for (const QDir &dir : _autoDirs)
         {
             _cout << "===> Auto dir: " << dir.absolutePath() << endl << flush;
-            for (const QFileInfo & file : dir.entryInfoList(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot, QDir::Name))
-            {
-                _nzbName = file.completeBaseName();
-//                _nzbPath = file.absolutePath();
-                QString nzbFilePath = nzbPath();
-                if (!nzbFilePath.endsWith(".nzb"))
-                    nzbFilePath += ".nzb";
-
-                _rarName = _nzbName;
-                if (_genName)
-                    _rarName = randomPass(_lengthName);
-
-                _rarPass = "";
-                if (_genPass)
-                {
-                    _rarPass = randomPass(_lengthPass);
-                    _meta.remove("password");
-                }
-                qDebug() << "Start posting job for " << _nzbName
-                         << " with rar_name: " << _rarName << " and pass: " << _rarPass;
-
-                startPostingJob(new PostingJob(this, nzbFilePath, {file}, nullptr, _obfuscateArticles,
-                                               _tmpPath, _rarPath, _rarSize, _par2Pct,
-                                               _doCompress, _doPar2, _rarName, _rarPass));
-            }
+            for (const QFileInfo & fileInfo : dir.entryInfoList(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot, QDir::Name))
+                _post(fileInfo);
         }
     }
 
@@ -1104,6 +1179,13 @@ QString NgPost::_parseConfig(const QString &configPath)
                         if (ok)
                             _rarSize = nb;
                     }
+                    else if (opt == sOptionNames[Opt::RAR_MAX])
+                    {
+                        _useRarMax = true;
+                        uint nb = val.toUInt(&ok);
+                        if (ok)
+                            _rarMax = nb;
+                    }
                     else if (opt == sOptionNames[Opt::PAR2_PCT])
                     {
                         uint nb = val.toUInt(&ok);
@@ -1189,13 +1271,19 @@ void NgPost::_syntax(char *appName)
 //    QString appVersion = QString("%1_v%2").arg(sAppName).arg(sVersion);
     QString app = QFileInfo(appName).fileName();
     _cout << sNgPostDesc << "\n"
-          << "Syntax: " << app << " (options)* (-i <file or folder> | --auto <folder>)+\n";
+          << "Syntax: " << app << " (options)* (-i <file or folder> | --auto <folder> | --monitor <folder>)+\n";
     for (const QCommandLineOption & opt : sCmdOptions)
     {
         if (opt.valueName() == sOptionNames[Opt::HOST])
             _cout << "\n// without config file, you can provide all the parameters to connect to ONE SINGLE server\n";
         else if (opt.valueName() == sOptionNames[Opt::TMP_DIR])
             _cout << "\n// for compression and par2 support\n";
+        else if (opt.valueName() == sOptionNames[Opt::AUTO_DIR])
+            _cout << "\n// automated posting (scanning and/or monitoring)\n";
+        else if (opt.valueName() == sOptionNames[Opt::INPUT])
+            _cout << "\n// quick posting (several files/folders)\n";
+        else if (opt.valueName() == sOptionNames[Opt::OBFUSCATE])
+            _cout << "\n// general options\n";
 
         if (opt.names().size() == 1)
             _cout << QString("\t--%1: %2\n").arg(opt.names().first(), -17).arg(opt.description());
@@ -1258,7 +1346,7 @@ void NgPost::_dumpParams() const
     qDebug() << "[NgPost::_dumpParams]>>>>>>>>>>>>>>>>>>\n"
              << "nbThreads: " << _nbThreads << " nb Inputs: " << _nbFiles
              << ", nzbPath: " << _nzbPath << ", nzbName" << _nzbName
-             << ", inputDir: " << _inputDir
+             << ", inputDir: " << _inputDir << ", autoDelete: " << _delAuto
              << "\nnb Servers: " << _nntpServers.size() << ": " << servers
              << "\nfrom: " << _from.c_str() << ", groups: " << _groups.c_str()
              << "\narticleSize: " << sArticleSize
@@ -1448,9 +1536,10 @@ const QString NgPost::sNgPostASCII = QString("\
 const QString NgPost::sNgPostDesc = QString("%1 is a CMD/GUI Usenet binary poster developped in C++11/Qt5:\n\
 It is designed to be as fast as possible and offer all the main features to post data easily and safely.\n\n\
 Here are the main features and advantages of ngPost:\n\
-    - spread multiple connections (from multiple servers) on several threads\n\
-    - post several files and/or directories\n\
-    - automate rar compression with obfuscation and par2 generation\n\
+    - compress (using your external rar binary) and generate the par2 before posting!\n\
+    - scan folder(s) and post each file/folder individually after having them compressed\n\
+    - monitor folder(s) to post each new file/folder individually after having them compressed\n\
+    - auto delete files/folders once posted (only in command line with --auto or --monitor)\n\
     - generate the nzb\n\
     - full Article obfuscation: unique feature making all Aricles completely unrecognizable without the nzb\n\
     - ... \n\

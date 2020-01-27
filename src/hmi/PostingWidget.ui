@@ -145,6 +145,16 @@
            </property>
           </widget>
          </item>
+         <item>
+          <widget class="QCheckBox" name="rarMaxCB">
+           <property name="toolTip">
+            <string/>
+           </property>
+           <property name="text">
+            <string>limit rar number</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </item>
       </layout>
@@ -175,20 +185,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="redundancyEdit">
-         <property name="maximumSize">
-          <size>
-           <width>50</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="toolTip">
-          <string>percentage of par2 redundancy</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
+        <widget class="QSpinBox" name="redundancySB"/>
        </item>
       </layout>
      </item>

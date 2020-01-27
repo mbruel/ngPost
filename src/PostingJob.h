@@ -63,6 +63,7 @@ private:
     QString     _rarPath;
     QString     _rarArgs;
     uint        _rarSize;
+    bool        _useRarMax;
     uint        _par2Pct;
 
     bool        _doCompress;
@@ -113,6 +114,10 @@ private:
     bool _obfuscateArticles;
 
 
+    const bool _delFilesAfterPost;
+    const QFileInfoList _originalFiles;
+
+
 public:
     PostingJob(NgPost *ngPost,
                const QString &nzbFilePath,
@@ -122,11 +127,13 @@ public:
                const QString &tmpPath,
                const QString &rarPath,
                uint rarSize,
+               bool useRarMax,
                uint par2Pct,
                bool doCompress,
                bool doPar2,
                const QString &rarName,
                const QString &rarPass,
+               bool delFilesAfterPost = false,
                QObject *parent = nullptr);
     ~PostingJob();
 
@@ -199,6 +206,8 @@ private:
 
     void _prepareArticles();
 
+    void _delOriginalFiles();
+
     inline NntpFile *_getNextFile();
     NntpArticle *_getNextArticle(const QString &threadName);
 
@@ -231,6 +240,10 @@ private:
     QString _createArchiveFolder(const QString &tmpFolder, const QString &archiveName);
 
     bool _checkTmpFolder() const;
+
+
+    qint64 _dirSize(const QString &path);
+
 
 };
 

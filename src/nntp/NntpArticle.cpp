@@ -47,6 +47,7 @@ NntpArticle::NntpArticle(NntpFile *file, uint part, const char data[], qint64 po
 
     _yencSize = Yenc::encode(data, bytes, _yencBody, _crc32);
 
+#ifdef __FORMAT_ARTICLE_BODY_IN_PRODUCER__
     std::stringstream ss;
     ss << "=ybegin part=" << _part << " total=" << _nntpFile->nbArticles() << " line=128"
        << " size=" << _nntpFile->fileSize() << " name=" << _nntpFile->fileName() << Nntp::ENDLINE
@@ -58,6 +59,7 @@ NntpArticle::NntpArticle(NntpFile *file, uint part, const char data[], qint64 po
 
     delete [] _yencBody;
     _yencBody = nullptr;
+#endif
 }
 
 NntpArticle::NntpArticle(const std::string &from, const std::string &groups, const std::string &subject, const std::string &body):
@@ -98,6 +100,23 @@ bool NntpArticle::tryResend()
 
 void NntpArticle::write(NntpConnection *con, const std::string &idSignature)
 {
+#ifndef __FORMAT_ARTICLE_BODY_IN_PRODUCER__
+    if (_body.empty())
+    {
+        std::stringstream ss;
+        ss << "=ybegin part=" << _part << " total=" << _nntpFile->nbArticles() << " line=128"
+           << " size=" << _nntpFile->fileSize() << " name=" << _nntpFile->fileName() << Nntp::ENDLINE
+           << "=ypart begin=" << _filePos + 1 << " end=" << _filePos + _fileBytes << Nntp::ENDLINE
+           << _yencBody << Nntp::ENDLINE
+           << "=yend size=" << _fileBytes << " pcrc32=" << std::hex << _crc32 << Nntp::ENDLINE
+           << "." << Nntp::ENDLINE;
+        _body = ss.str();
+
+        delete [] _yencBody;
+        _yencBody = nullptr;
+    }
+#endif
+
     ++_nbTrySending;
     con->write(header(idSignature).c_str());
     con->write(_body.c_str());

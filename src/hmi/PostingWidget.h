@@ -66,7 +66,7 @@ public:
     void setPosting();
 
     void init();
-    void genNameAndPassword(bool genName, bool genPass, bool doPar2);
+    void genNameAndPassword(bool genName, bool genPass, bool doPar2, bool useRarMax);
     inline uint jobNumber() const;
 
     void handleDropEvent(QDropEvent *e);

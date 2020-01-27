@@ -213,20 +213,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="nbRetryEdit">
-             <property name="maximumSize">
-              <size>
-               <width>50</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="toolTip">
-              <string>number of retry in case of error on the connection or if an article is rejected (we would try with another UUID)</string>
-             </property>
-             <property name="text">
-              <string>5</string>
-             </property>
-            </widget>
+            <widget class="QSpinBox" name="nbRetrySB"/>
            </item>
            <item>
             <spacer name="horizontalSpacer_5">
@@ -252,20 +239,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="threadEdit">
-             <property name="maximumSize">
-              <size>
-               <width>50</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="toolTip">
-              <string>number of posting threads (all the connections are spread between them)</string>
-             </property>
-             <property name="text">
-              <string>1</string>
-             </property>
-            </widget>
+            <widget class="QSpinBox" name="threadSB"/>
            </item>
           </layout>
          </item>
