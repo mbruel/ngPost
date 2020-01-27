@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1040</width>
+    <width>1214</width>
     <height>480</height>
    </rect>
   </property>
@@ -382,10 +382,10 @@
      <item>
       <widget class="QCheckBox" name="delFilesCB">
        <property name="toolTip">
-        <string>delete files/folders once they have been successfully posted</string>
+        <string>delete files/folders once they have been successfully posted (only available in command line for your own sake ;) cf --rm_posted)</string>
        </property>
        <property name="text">
-        <string>delete files once posted (only available in command line for your own sake ;))</string>
+        <string>delete files once posted</string>
        </property>
       </widget>
      </item>

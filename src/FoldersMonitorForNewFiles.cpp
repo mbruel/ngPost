@@ -100,7 +100,7 @@ void FoldersMonitorForNewFiles::onDirectoryChanged(const QString &folderPath)
 #ifdef __DEBUG__
             if (fi.isDir())
             {
-                for(const QFileInfo &subFile: QDir(fi.absoluteFilePath()).entryInfoList(
+                for(QFileInfo &subFile: QDir(fi.absoluteFilePath()).entryInfoList(
                         QDir::Files|QDir::Hidden|QDir::System|QDir::Dirs|QDir::NoDotAndDotDot))
                     qDebug() << "\t- " << subFile.fileName() << ": size: " << _pathSize(subFile);
 
