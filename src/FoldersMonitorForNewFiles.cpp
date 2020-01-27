@@ -75,28 +75,37 @@ void FoldersMonitorForNewFiles::onDirectoryChanged(const QString &folderPath)
             continue;
         }
 
-        QDateTime modif = fi.lastModified();
+        qint64 size = _pathSize(fi);
         qDebug() << "[directoryChanged] processing new file: " << filePath
-                 << ", size: " << fi.size() << ", lastModif: " << modif;
+                 << ", size: " << size << ", lastModif: " << fi.lastModified();
 
 
         // wait the file is fully written
         ushort nbWait = 0;
         do
         {
-            modif = fi.lastModified();
+            size = _pathSize(fi);
             QThread::msleep(sMSleep);
             ++nbWait;
-        } while (modif != fi.lastModified() && fi.exists());
+        } while (fi.exists() && size != _pathSize(fi));
 
 
         if (fi.exists())
         {
             qDebug() << "[directoryChanged] after " << nbWait*sMSleep << " msec, "
                      << "ready to process file: " << filePath
-                     << ", size: " << fi.size() << ", lastModif: " << modif;
+                     << ", size: " << size << ", lastModif: " << fi.lastModified();
 
             emit newFileToProcess(fi);
+#ifdef __DEBUG__
+            if (fi.isDir())
+            {
+                for(const QFileInfo &subFile: QDir(fi.absoluteFilePath()).entryInfoList(
+                        QDir::Files|QDir::Hidden|QDir::System|QDir::Dirs|QDir::NoDotAndDotDot))
+                    qDebug() << "\t- " << subFile.fileName() << ": size: " << _pathSize(subFile);
+
+            }
+#endif
         }
         else
             qDebug() << "[directoryChanged] ignoring temporary file: " << filePath;
@@ -105,6 +114,28 @@ void FoldersMonitorForNewFiles::onDirectoryChanged(const QString &folderPath)
     folderScan->lastUpdate   = currentUpdate;
     folderScan->previousScan = newScan;
 
+}
+
+qint64 FoldersMonitorForNewFiles::_pathSize(QFileInfo &fileInfo) const
+{
+    fileInfo.refresh();
+    if (fileInfo.isDir())
+        return _dirSize(fileInfo.absoluteFilePath());
+    else
+        return fileInfo.size();
+}
+
+qint64 FoldersMonitorForNewFiles::_dirSize(const QString &path) const
+{
+    qint64 size = 0;
+    QDir dir(path);
+    for(const QFileInfo &fi: dir.entryInfoList(QDir::Files|QDir::Hidden|QDir::System|QDir::Dirs|QDir::NoDotAndDotDot)) {
+        if (fi.isDir())
+            size += _dirSize(fi.absoluteFilePath());
+        else
+            size+= fi.size();
+    }
+    return size;
 }
 
 FolderScan::FolderScan(const QString &folderPath) :
