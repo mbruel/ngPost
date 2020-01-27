@@ -21,7 +21,7 @@
 
 #include "NgPost.h"
 #include "PostingJob.h"
-#include "FolderMonitor.h"
+#include "FoldersMonitorForNewFiles.h"
 #include "nntp/NntpArticle.h"
 #include "nntp/NntpServerParams.h"
 #include "hmi/MainWindow.h"
@@ -659,11 +659,11 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
             {
                 _cout << "[FolderMonitor] start monitoring: " << fi.absoluteFilePath() << endl << flush;
                 if (_folderMonitor)
-                    _folderMonitor->addFolderToMonitor(fi.absoluteFilePath());
+                    _folderMonitor->addFolder(fi.absoluteFilePath());
                 else
                 {
-                    _folderMonitor = new FolderMonitor(fi.absoluteFilePath());
-                    connect(_folderMonitor, &FolderMonitor::newFileToProcess, this, &NgPost::onNewFileToProcess, Qt::DirectConnection);
+                    _folderMonitor = new FoldersMonitorForNewFiles(fi.absoluteFilePath());
+                    connect(_folderMonitor, &FoldersMonitorForNewFiles::newFileToProcess, this, &NgPost::onNewFileToProcess, Qt::DirectConnection);
                 }
             }
         }

@@ -38,7 +38,7 @@ class NntpArticle;
 class QCoreApplication;
 class MainWindow;
 class PostingJob;
-class FolderMonitor;
+class FoldersMonitorForNewFiles;
 
 #define NB_ARTICLES_TO_PREPARE_PER_CONNECTION 3
 
@@ -146,8 +146,8 @@ private:
     QString     _postHistoryFile;
     QList<QDir> _autoDirs;
 
-    FolderMonitor *_folderMonitor;
-    bool           _delAuto;
+    FoldersMonitorForNewFiles *_folderMonitor;
+    bool                       _delAuto;
 
 
     static qint64 sArticleSize;
