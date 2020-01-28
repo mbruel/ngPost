@@ -25,6 +25,12 @@ TODO: multi-language support (French and Spanish to start with)
 ###       date:    2020/01/28                    ###
 ####################################################
 
+- new architecture design to support properly multi-threading:
+introducing the Poster class that holds 2 threads, one for an ArticleBuilder and the other one for Posters (NntpConnections)
+This way we ensure that there is the same number of Producer threads than Posters ones (consummers)
+The PostingJob::_secureDiskAccess mutex is also taken less time as it is only protecting the reading and not creating the yEnc body anymore
+It seems to be stable. To be tested on 10Gbps connection to see if there is a bandwidth improvement and if it's not crashing anymore
+
 - add Folder Monitoring (--monitor) and auto delete the posted files and folders (--rm_posted)
 
 - add RAR_MAX config and "limit rar option" in th GUI

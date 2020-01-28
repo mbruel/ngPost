@@ -25,6 +25,7 @@
 #include "nntp/NntpArticle.h"
 #include "nntp/NntpFile.h"
 #include "NgPost.h"
+#include "Poster.h"
 
 #include <QByteArray>
 #include <QSslSocket>
@@ -37,14 +38,15 @@
 int NntpConnection::sSocketTimeoutMs = 5000;
 
 NntpConnection::NntpConnection(NgPost *ngPost, int id, const NntpServerParams &srvParams):
-    QObject(), _ngPost(ngPost),
+    QObject(),
     _id(id), _srvParams(srvParams),
     _socket(nullptr), _isConnected(false),
     _logPrefix(QString("NntpCon #%1").arg(_id)),
     _postingState(PostingState::NOT_CONNECTED),
     _currentArticle(nullptr),
     _nbErrors(0),
-    _threadName()
+    _ngPost(ngPost),
+    _poster(nullptr)
 {
 #if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
     qDebug() << QString("Creation %1 %2 ssl").arg(_logPrefix).arg(_srvParams.useSSL ? "with" : "no");
@@ -358,7 +360,7 @@ void NntpConnection::onReadyRead()
 
 void NntpConnection::_sendNextArticle()
 {
-    _currentArticle = _ngPost->getNextArticle(QString("%1 {%2}").arg(_threadName).arg(_logPrefix));
+    _currentArticle = _poster->getNextArticle(_logPrefix);
     if (_currentArticle)
     {
         _postingState = PostingState::SENDING_ARTICLE;
@@ -369,4 +371,12 @@ void NntpConnection::_sendNextArticle()
     }
     else
         _postingState = PostingState::IDLE;
+}
+
+
+
+void NntpConnection::setPoster(Poster *poster)
+{
+    _poster = poster;
+    _logPrefix = QString("%1 {%2}").arg(poster->name()).arg(_logPrefix);
 }

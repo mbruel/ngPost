@@ -296,14 +296,6 @@ int NgPost::startHMI()
     return _app->exec();
 }
 
-NntpArticle *NgPost::getNextArticle(const QString &threadName)
-{
-    if (_activeJob)
-        return _activeJob->getNextArticle(threadName);
-    else
-        return nullptr;
-}
-
 
 void NgPost::onLog(QString msg, bool newline)
 {
