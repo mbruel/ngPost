@@ -61,7 +61,7 @@ PostingJob::PostingJob(NgPost *ngPost,
     _nntpConnections(),
 
     _nzbName(QFileInfo(nzbFilePath).fileName()),
-    _filesToUpload(), _filesInProgress(),
+    _filesToUpload(), _filesInProgress(), _filesFailed(),
     _nbFiles(), _nbPosted(),
 
 
@@ -73,7 +73,7 @@ PostingJob::PostingJob(NgPost *ngPost,
     _nbArticlesUploaded(0), _nbArticlesFailed(0),
     _uploadedSize(0), _nbArticlesTotal(0),
     _stopPosting(0x0), _noMoreFiles(0x0),
-    _postSucceed(false),
+    _postFinished(false),
     _obfuscateArticles(obfuscateArticles),
     _delFilesAfterPost(delFilesAfterPost),
     _originalFiles(delFilesAfterPost ? files : QFileInfoList()),
@@ -113,6 +113,7 @@ PostingJob::~PostingJob()
     if (_extProc)
         _cleanExtProc();
 
+    qDeleteAll(_filesFailed);
     qDeleteAll(_filesInProgress);
     qDeleteAll(_filesToUpload);
     qDeleteAll(_nntpConnections);
@@ -313,11 +314,8 @@ void PostingJob::onNntpFilePosted()
                  _nbArticlesUploaded).arg(_nbArticlesFailed));
 #endif
 
-        _postSucceed = true;
+        _postFinished = true;
         _finishPosting();
-
-        if (_delFilesAfterPost)
-            _delOriginalFiles();
 
         emit postingFinished();
     }
@@ -334,7 +332,7 @@ void PostingJob::onNntpErrorReading()
         _log(QString("[avg. speed: %1] <<<<< %2").arg(avgSpeed()).arg(nntpFile->name()));
 
     _filesInProgress.remove(nntpFile);
-    emit nntpFile->scheduleDeletion();
+    _filesFailed.insert(nntpFile);
     if (_nbPosted == _nbFiles)
     {
 #ifdef __DEBUG__
@@ -342,11 +340,8 @@ void PostingJob::onNntpErrorReading()
                  _nbArticlesUploaded).arg(_nbArticlesFailed));
 #endif
 
-        _postSucceed = true;
+        _postFinished = true;
         _finishPosting();
-
-        if (_delFilesAfterPost)
-            _delOriginalFiles();
 
         emit postingFinished();
     }
@@ -558,7 +553,7 @@ qDebug() << "[MB_TRACE][PostingJob::_finishPosting]";
 
     // 5.: print out the list of files that havn't been posted
     // (in case of disconnection)
-    int nbPendingFiles = _filesToUpload.size() + _filesInProgress.size();
+    int nbPendingFiles = _filesToUpload.size() + _filesInProgress.size() + _filesFailed.size();
     if (nbPendingFiles)
     {
         _error(QString("ERROR: there were %1 on %2 that havn't been posted:").arg(
@@ -567,9 +562,13 @@ qDebug() << "[MB_TRACE][PostingJob::_finishPosting]";
             _error(QString("  - %1").arg(file->path()));
         for (NntpFile *file : _filesToUpload)
             _error(QString("  - %1").arg(file->path()));
+        for (NntpFile *file : _filesFailed)
+            _error(QString("  - %1").arg(file->path()));
 
         _error(tr("you can try to repost only those and concatenate the nzb with the current one ;)"));
     }
+    else if (_postFinished && _delFilesAfterPost)
+        _delOriginalFiles();
 }
 
 void PostingJob::_closeNzb()
