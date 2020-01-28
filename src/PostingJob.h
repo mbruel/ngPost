@@ -81,6 +81,7 @@ private:
     QString               _nzbName; //!< name of nzb that we'll write (without the extension)
     QQueue<NntpFile*>     _filesToUpload;  //!< list of files to upload (that we didn't start)
     QSet<NntpFile*>       _filesInProgress;//!< files in queue to be uploaded (Articles have been produced)
+    QSet<NntpFile*>       _filesFailed;//!< files that couldn't be read
     uint                  _nbFiles;  //!< number of files to post in this iteration
     uint                  _nbPosted; //!< number of files posted
 
@@ -108,7 +109,7 @@ private:
     QAtomicBool _stopPosting;
     QAtomicBool _noMoreFiles;
 
-    bool _postSucceed;
+    bool _postFinished;
 
     bool _obfuscateArticles;
 
@@ -157,7 +158,7 @@ public:
     inline QString postSize() const;
 
     inline bool hasCompressed() const;
-    inline bool hasPostSucceed() const;
+    inline bool hasPostFinished() const;
 
     inline PostingWidget *widget() const;
 
@@ -323,7 +324,7 @@ QString PostingJob::postSize() const
 }
 
 bool PostingJob::hasCompressed() const { return _doCompress; }
-bool PostingJob::hasPostSucceed() const { return _postSucceed; }
+bool PostingJob::hasPostFinished() const { return _postFinished; }
 
 PostingWidget *PostingJob::widget() const { return _postWidget; }
 #endif // POSTINGJOB_H

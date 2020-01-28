@@ -456,7 +456,7 @@ void NgPost::onPostingJobFinished()
     {
         _finishPosting();
 
-        if (_activeJob->hasPostSucceed() && !_postHistoryFile.isEmpty())
+        if (_activeJob->hasPostFinished() && !_postHistoryFile.isEmpty())
         {
             QFile hist(_postHistoryFile);
             if (hist.open(QIODevice::WriteOnly|QIODevice::Append|QIODevice::Text))
