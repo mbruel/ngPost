@@ -323,6 +323,35 @@ void PostingJob::onNntpFilePosted()
     }
 }
 
+void PostingJob::onNntpErrorReading()
+{
+    NntpFile *nntpFile = static_cast<NntpFile*>(sender());
+    ++_nbPosted;
+    if (_postWidget)
+        emit filePosted(nntpFile->path(), nntpFile->nbArticles(), nntpFile->nbArticles());
+
+    if (_ngPost->_dispFilesPosting)
+        _log(QString("[avg. speed: %1] <<<<< %2").arg(avgSpeed()).arg(nntpFile->name()));
+
+    _filesInProgress.remove(nntpFile);
+    emit nntpFile->scheduleDeletion();
+    if (_nbPosted == _nbFiles)
+    {
+#ifdef __DEBUG__
+        _log(QString("All files have been posted => closing Job (nb article uploaded: %1, failed: %2)").arg(
+                 _nbArticlesUploaded).arg(_nbArticlesFailed));
+#endif
+
+        _postSucceed = true;
+        _finishPosting();
+
+        if (_delFilesAfterPost)
+            _delOriginalFiles();
+
+        emit postingFinished();
+    }
+}
+
 void PostingJob::_log(const QString &aMsg, bool newline) const
 {
     emit _ngPost->log(aMsg, newline);
@@ -424,6 +453,7 @@ NntpArticle *PostingJob::_readNextArticleIntoBufferPtr(const QString &threadName
                 _error(tr("[%1] Error: couldn't open file %2").arg(threadName).arg(_nntpFile->path()));
             else
                 _error(tr("Error: couldn't open file %1").arg(_nntpFile->path()));
+            emit _nntpFile->errorReadingFile();
             delete _file;
             _file = nullptr;
             _nntpFile = nullptr;
@@ -476,6 +506,7 @@ void PostingJob::_initPosting()
     {
         NntpFile *nntpFile = new NntpFile(this, file, ++fileNum, _nbFiles, _ngPost->_grpList);
         connect(nntpFile, &NntpFile::allArticlesArePosted, this, &PostingJob::onNntpFilePosted, Qt::QueuedConnection);
+        connect(nntpFile, &NntpFile::errorReadingFile,     this, &PostingJob::onNntpErrorReading, Qt::QueuedConnection);
         if (_ngPost->_dispFilesPosting && _ngPost->debugMode())
             connect(nntpFile, &NntpFile::startPosting, this, &PostingJob::onNntpFileStartPosting, Qt::QueuedConnection);
 
