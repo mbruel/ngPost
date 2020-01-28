@@ -184,6 +184,7 @@ private slots:
 
     void onNntpFileStartPosting();
     void onNntpFilePosted();
+    void onNntpErrorReading();
 
     void onExtProcReadyReadStandardOutput();
     void onExtProcReadyReadStandardError();

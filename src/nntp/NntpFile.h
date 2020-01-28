@@ -58,6 +58,7 @@ signals:
     void allArticlesArePosted();
     void startPosting();
     void scheduleDeletion();
+    void errorReadingFile();
 
 public slots:
     void onArticlePosted(quint64 size);
