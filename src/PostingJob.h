@@ -34,6 +34,7 @@ class NntpConnection;
 class NntpFile;
 class NntpArticle;
 class PostingWidget;
+class Poster;
 
 using QAtomicBool = QAtomicInteger<unsigned short>; // 16 bit only (faster than using 8 bit variable...)
 
@@ -48,6 +49,9 @@ using QAtomicBool = QAtomicInteger<unsigned short>; // 16 bit only (faster than 
 class PostingJob : public QObject
 {
     Q_OBJECT
+    friend class Poster;
+    friend class ArticleBuilder;
+
 private:
     NgPost *const _ngPost; //!< handle on the application to access global configs
     QFileInfoList _files; //!< populated on constuction using a QStringList of paths
@@ -72,7 +76,6 @@ private:
     QString     _rarPass;
 
 
-    QVector<QThread*>        _threadPool;      //!< the connections are distributed among several threads
     QVector<NntpConnection*> _nntpConnections; //!< the NNTP connections (owning the TCP sockets)
 
     QString               _nzbName; //!< name of nzb that we'll write (without the extension)
@@ -88,11 +91,7 @@ private:
 
     NntpFile    *_nntpFile; //!< current file that is getting processed
     QFile       *_file;     //!< file handler on the file getting processed
-    char        *_buffer;   //!< buffer to read the current file
     uint         _part;     //!< part number (Article) on the current file
-    QMutex       _secureArticles;
-
-    QQueue<NntpArticle*> _articles; //!< prepared articles that are yEnc encoded
 
     QTime       _timeStart; //!< to get some stats (upload time and avg speed)
     quint64     _totalSize; //!< total size (in Bytes) to be uploaded
@@ -118,6 +117,11 @@ private:
     const QFileInfoList _originalFiles;
 
 
+    QMutex _secureDiskAccess;
+
+    QVector<Poster*> _posters;
+
+
 public:
     PostingJob(NgPost *ngPost,
                const QString &nzbFilePath,
@@ -139,9 +143,6 @@ public:
 
     inline QString avgSpeed() const;
 
-    NntpArticle *getNextArticle(const QString &threadName);
-
-
     inline void articlePosted(quint64 size);
     inline void articleFailed(quint64 size);
 
@@ -160,7 +161,6 @@ public:
 
     inline PostingWidget *widget() const;
 
-
 signals:
     void startPosting();    //!< connected to onStartPosting (to be able to run on a different Thread)
     void stopPosting();
@@ -172,8 +172,6 @@ signals:
     void archiveFileNames(QStringList paths);
     void articlesNumber(uint nbArticles);
 
-    void scheduleNextArticle();
-
     void filePosted(QString filePath, uint nbArticles, uint nbFailed);
 
 
@@ -183,8 +181,6 @@ public slots:
 private slots:
     void onStartPosting();
     void onDisconnectedConnection(NntpConnection *con);
-
-    void onPrepareNextArticle();
 
     void onNntpFileStartPosting();
     void onNntpFilePosted();
@@ -202,17 +198,14 @@ private:
     void _error(const QString &error) const;
 
     int  _createNntpConnections();
-    void _startConnectionInThread(int conIdx, QThread *thread, const QString &threadName);
+    void _preparePostersArticles();
 
-    void _prepareArticles();
+    NntpArticle *_readNextArticleIntoBufferPtr(const QString &threadName, char **bufferPtr);
+
 
     void _delOriginalFiles();
 
     inline NntpFile *_getNextFile();
-    NntpArticle *_getNextArticle(const QString &threadName);
-
-    NntpArticle *_prepareNextArticle(const QString &threadName, bool fillQueue = true);
-
 
     void _initPosting();
     void _postFiles();
@@ -332,5 +325,4 @@ bool PostingJob::hasCompressed() const { return _doCompress; }
 bool PostingJob::hasPostSucceed() const { return _postSucceed; }
 
 PostingWidget *PostingJob::widget() const { return _postWidget; }
-
 #endif // POSTINGJOB_H

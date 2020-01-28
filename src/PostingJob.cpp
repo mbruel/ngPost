@@ -58,7 +58,7 @@ PostingJob::PostingJob(NgPost *ngPost,
     _tmpPath(tmpPath), _rarPath(rarPath), _rarSize(rarSize), _useRarMax(useRarMax), _par2Pct(par2Pct),
     _doCompress(doCompress), _doPar2(doPar2), _rarName(rarName), _rarPass(rarPass),
 
-    _threadPool(), _nntpConnections(),
+    _nntpConnections(),
 
     _nzbName(QFileInfo(nzbFilePath).fileName()),
     _filesToUpload(), _filesInProgress(),
@@ -66,18 +66,19 @@ PostingJob::PostingJob(NgPost *ngPost,
 
 
     _nzbFilePath(nzbFilePath), _nzb(nullptr), _nzbStream(),
-    _nntpFile(nullptr), _file(nullptr), _buffer(nullptr), _part(0),
-    _secureArticles(), _articles(),
+    _nntpFile(nullptr), _file(nullptr), _part(0),
     _timeStart(), _totalSize(0),
 
-    _nbConnections(0), _nbThreads(QThread::idealThreadCount()),
+    _nbConnections(0), _nbThreads(_ngPost->_nbThreads),
     _nbArticlesUploaded(0), _nbArticlesFailed(0),
     _uploadedSize(0), _nbArticlesTotal(0),
     _stopPosting(0x0), _noMoreFiles(0x0),
     _postSucceed(false),
     _obfuscateArticles(obfuscateArticles),
     _delFilesAfterPost(delFilesAfterPost),
-    _originalFiles(delFilesAfterPost ? files : QFileInfoList())
+    _originalFiles(delFilesAfterPost ? files : QFileInfoList()),
+    _secureDiskAccess(), _posters()
+
 {
 #ifdef __DEBUG__
     qDebug() << "[PostingJob] >>>> Construct " << this;
@@ -88,7 +89,7 @@ PostingJob::PostingJob(NgPost *ngPost,
     connect(this, &PostingJob::postingFinished,  _ngPost, &NgPost::onPostingJobFinished, Qt::QueuedConnection);
     connect(this, &PostingJob::noMoreConnection, _ngPost, &NgPost::onPostingJobFinished, Qt::QueuedConnection);
 
-    connect(this, &PostingJob::scheduleNextArticle, this, &PostingJob::onPrepareNextArticle, Qt::QueuedConnection);
+//    connect(this, &PostingJob::scheduleNextArticle, this, &PostingJob::onPrepareNextArticle, Qt::QueuedConnection);
 
     if (_postWidget)
     {
@@ -115,44 +116,12 @@ PostingJob::~PostingJob()
     qDeleteAll(_filesInProgress);
     qDeleteAll(_filesToUpload);
     qDeleteAll(_nntpConnections);
-    qDeleteAll(_threadPool);
+    qDeleteAll(_posters);
 
-    if (_buffer)
-        delete _buffer;
     if (_nzb)
         delete _nzb;
     if (_file)
         delete _file;
-}
-
-NntpArticle *PostingJob::getNextArticle(const QString &threadName)
-{
-    if (_stopPosting.load())
-        return nullptr;
-
-    QMutexLocker lock(&_secureArticles); // thread safety (coming from a posting thread)
-    if (_ngPost->debugMode())
-        _log(tr("[%1][PostingJob::getNextArticle] _articles.size() = %2").arg(threadName).arg(_articles.size()));
-
-    NntpArticle *article = nullptr;
-    if (_articles.size())
-        article = _articles.dequeue();    
-    else
-    {
-        if (!_noMoreFiles.load())
-        {
-            // we should never come here as the goal is to have articles prepared in advance in the queue
-            if (_ngPost->debugMode())
-                _log(tr("[%1][PostingJob::getNextArticle] no article prepared...").arg(threadName));
-
-            article = _prepareNextArticle(threadName, false);
-        }
-    }
-
-    if (article)
-        emit scheduleNextArticle(); // schedule the preparation of another Article in main thread
-
-    return article;
 }
 
 
@@ -177,6 +146,7 @@ void PostingJob::onStartPosting()
 }
 
 
+#include "Poster.h"
 void PostingJob::_postFiles()
 {
     if (_postWidget) // in case we were in Pending mode
@@ -198,11 +168,18 @@ void PostingJob::_postFiles()
 
     _initPosting();
 
-    if (_nbThreads < 1)
-        _nbThreads = 1;
-    else if (_nbThreads > QThread::idealThreadCount())
+    if (_nbThreads > QThread::idealThreadCount())
         _nbThreads = QThread::idealThreadCount();
 
+    int  nbPosters = _nbThreads/2, nbCon = _createNntpConnections();
+    if (nbPosters < 1)
+        nbPosters = 1;
+    if (!nbCon)
+    {
+        _error("Error: there are no NntpConnection...");
+        emit postingFinished();
+        return;
+    }
 
     if (!_nzb->open(QIODevice::WriteOnly))
     {
@@ -230,52 +207,52 @@ void PostingJob::_postFiles()
         _nzbStream << flush;
     }
 
-    int  nbTh = _nbThreads, nbCon = _createNntpConnections();
-    if (!nbCon)
-    {
-        _error("Error: there are no NntpConnection...");
-        emit postingFinished();
-        return;
-    }
+
 
     _timeStart.start();
 
-    QMutexLocker lock(&_secureArticles); // start the connections but they must wait _prepareArticles
+//    QMutexLocker lock(&_secureArticles); // start the connections but they must wait _prepareArticles
 
-    if (nbTh > nbCon)
-        nbTh = nbCon; // we can't have more thread than available connections
+    if (nbPosters > nbCon)
+        nbPosters = nbCon; // we can't have more thread than available connections
 
 
-    _threadPool.reserve(nbTh);
-    int nbConPerThread = static_cast<int>(std::floor(nbCon / nbTh));
-    int nbExtraCon     = nbCon - nbConPerThread * nbTh;
-    qDebug() << "[NgPost::startPosting] nbFiles: " << _filesToUpload.size()
-             << ", nbThreads: " << nbTh
+    _posters.reserve(nbPosters);
+    int nbConPerPoster = static_cast<int>(std::floor(nbCon / nbPosters));
+    int nbExtraCon     = nbCon - nbConPerPoster * nbPosters;
+    qDebug() << "[PostingJob::_postFiles] nbFiles: " << _filesToUpload.size()
+             << ", nbPosters: " << nbPosters
              << ", nbCons: " << nbCon
-             << " => nbCon per Threads: " << nbConPerThread
+             << " => nbCon per Poster: " << nbConPerPoster
              << " (nbExtraCon: " << nbExtraCon << ")";
 
-    int conIdx = 0;
-    for (int threadIdx = 0; threadIdx < nbTh ; ++threadIdx)
-    {
-        QThread *thread = new QThread();
-        QString threadName = QString("Thread #%1").arg(threadIdx+1);
-        thread->setObjectName(threadName);
-        _threadPool.append(thread);
 
-        for (int i = 0 ; i < nbConPerThread ; ++i)
-            _startConnectionInThread(conIdx++, thread, threadName);
+
+    int conIdx = 0;
+    for (ushort posterIdx = 0; posterIdx < nbPosters ; ++posterIdx)
+    {
+        Poster *poster = new Poster(this, posterIdx);
+        _posters.append(poster);
+        poster->lockQueue(); // lock queue so the connection will wait before starting building Articles
+
+        for (int i = 0 ; i < nbConPerPoster ; ++i)
+            poster->addConnection(_nntpConnections.at(conIdx++));
 
         if (nbExtraCon-- > 0)
-            _startConnectionInThread(conIdx++, thread, threadName);
-        thread->start();
+            poster->addConnection(_nntpConnections.at(conIdx++));
+
+        poster->startThreads();
     }
 
     // Prepare 2 Articles for each connections
-    _prepareArticles();
+    _preparePostersArticles();
+
+    for (Poster *poster : _posters)
+        poster->unlockQueue();
 
     emit postingStarted();
 }
+
 
 
 void PostingJob::onStopPosting()
@@ -307,12 +284,6 @@ void PostingJob::onDisconnectedConnection(NntpConnection *con)
         _finishPosting();
         emit noMoreConnection();
     }
-}
-
-void PostingJob::onPrepareNextArticle()
-{
-    QMutexLocker lock(&_secureArticles); // thread safety (coming from PostingJob)
-    _prepareNextArticle(_ngPost->sMainThreadName);
 }
 
 void PostingJob::onNntpFileStartPosting()
@@ -387,35 +358,21 @@ int PostingJob::_createNntpConnections()
     return _nbConnections;
 }
 
-void PostingJob::_startConnectionInThread(int conIdx, QThread *thread, const QString &threadName)
+void PostingJob::_preparePostersArticles()
 {
-    NntpConnection *con = _nntpConnections.at(conIdx);
-    con->setThreadName(threadName);
-    con->moveToThread(thread);
-    emit con->startConnection();
-}
+    if (_ngPost->debugMode())
+        _log("PostingJob::_prepareArticles");
 
-void PostingJob::_prepareArticles()
-{
-
-    int nbArticlesToPrepare = _ngPost->sNbPreparedArticlePerConnection * _nntpConnections.size();
-  #ifdef __DEBUG__
-    _log(QString("[PostingJob::_prepareArticles] >>>> preparing %1 articles for each connections. Nb cons = %2 => should prepare %3 articles!").arg(
-             _ngPost->sNbPreparedArticlePerConnection).arg(_nntpConnections.size()).arg(nbArticlesToPrepare));
-  #endif
-    for (int i = 0; i < nbArticlesToPrepare ; ++i)
+    for (int i = 0 ; i < _ngPost->sNbPreparedArticlePerConnection ; ++i)
     {
-        if (!_prepareNextArticle(_ngPost->sMainThreadName))
-        {
-  #ifdef __DEBUG__
-            _log(QString("[PostingJob::_prepareArticles] No more Articles to produce after i = %1").arg(i));
-  #endif
+        if (_noMoreFiles.load())
             break;
+        for (Poster *poster : _posters)
+        {
+            if (!poster->prepareArticlesInAdvance())
+                break;
         }
     }
-  #ifdef __DEBUG__
-    _log(QString("[NgPost::_prepareArticles] <<<<< finish preparing, current article queue size:  %1").arg(_articles.size()));
-#endif
 }
 
 void PostingJob::_delOriginalFiles()
@@ -435,8 +392,10 @@ void PostingJob::_delOriginalFiles()
 }
 
 
-NntpArticle *PostingJob::_getNextArticle(const QString &threadName)
+
+NntpArticle *PostingJob::_readNextArticleIntoBufferPtr(const QString &threadName, char **bufferPtr)
 {
+//qDebug() << "[PostingJob::readNextArticleIntoBufferPtr] " << threadName;
     if (!_nntpFile)
     {
         _nntpFile = _getNextFile();
@@ -468,28 +427,24 @@ NntpArticle *PostingJob::_getNextArticle(const QString &threadName)
             delete _file;
             _file = nullptr;
             _nntpFile = nullptr;
-            return _getNextArticle(threadName); // Check if we have more files
+            return _readNextArticleIntoBufferPtr(threadName, bufferPtr); // Check if we have more files
         }
     }
 
 
     if (_file)
     {
-        qint64 pos   = _file->pos();
-        qint64 bytes = _file->read(_buffer, _ngPost->articleSize());
-        if (bytes > 0)
+        qint64 pos       = _file->pos();
+        qint64 bytesRead = _file->read(*bufferPtr, _ngPost->articleSize());
+        if (bytesRead > 0)
         {
-            _buffer[bytes] = '\0';
+            (*bufferPtr)[bytesRead] = '\0';
             if (_ngPost->debugMode())
-                _log(tr("[%1] we've read %2 bytes from %3 (=> new pos: %4)").arg(threadName).arg(bytes).arg(pos).arg(_file->pos()));
+                _log(tr("[%1] we've read %2 bytes from %3 (=> new pos: %4)").arg(threadName).arg(bytesRead).arg(pos).arg(_file->pos()));
             ++_part;
-            NntpArticle *article = new NntpArticle(_nntpFile, _part, _buffer, pos, bytes,
+            NntpArticle *article = new NntpArticle(_nntpFile, _part, pos, bytesRead,
                                                    _obfuscateArticles ? _ngPost->_randomFrom() : _ngPost->_from,
                                                    _ngPost->_groups, _obfuscateArticles);
-
-#ifdef __SAVE_ARTICLES__
-            article->dumpToFile("/tmp", _articleIdSignature);
-#endif
             return article;
         }
         else
@@ -504,21 +459,13 @@ NntpArticle *PostingJob::_getNextArticle(const QString &threadName)
         }
     }
 
-    return _getNextArticle(threadName); // if we didn't have an Article, check next file
+    return _readNextArticleIntoBufferPtr(threadName, bufferPtr); // if we didn't have an Article, check next file
 }
 
-NntpArticle *PostingJob::_prepareNextArticle(const QString &threadName, bool fillQueue)
-{
-    NntpArticle *article = _getNextArticle(threadName);
-    if (article && fillQueue)
-        _articles.enqueue(article);   
-    return article;
-}
 
 void PostingJob::_initPosting()
 {
     // initialize buffer and nzb file
-    _buffer  = new char[static_cast<quint64>(_ngPost->articleSize())+1];
     _nzb     = new QFile(_nzbFilePath);
     _nbFiles = static_cast<uint>(_files.size());
 
@@ -540,6 +487,7 @@ void PostingJob::_initPosting()
 
 void PostingJob::_finishPosting()
 {
+qDebug() << "[MB_TRACE][PostingJob::_finishPosting]";
     _stopPosting = 0x1;
 
     if (!_timeStart.isNull())
@@ -570,18 +518,11 @@ void PostingJob::_finishPosting()
 
 
     // 3.: close all the connections (they're living in the _threadPool)
-    for (QThread *th : _threadPool)
-    {
-#ifdef __DEBUG__
-        _log(tr("Stopping thread %1").arg(th->objectName()));
-#endif
-        th->quit();
-        th->wait();
-    }
+    for (Poster *poster : _posters)
+        poster->stopThreads();
 
 #ifdef __DEBUG__
     _log("All connections are closed...");
-    _log(tr("prepared articles queue size: %1").arg(_articles.size()));
 #endif
 
     // 5.: print out the list of files that havn't been posted
@@ -625,7 +566,7 @@ void PostingJob::_printStats() const
     QString msgEnd = tr("\nUpload size: %1 in %2 (%3 sec) \
 => average speed: %4 (%5 connections on %6 threads)\n").arg(size).arg(
                 QTime::fromMSecsSinceStartOfDay(duration).toString("hh:mm:ss.zzz")).arg(sec).arg(
-                avgSpeed()).arg(_nntpConnections.size()).arg(_threadPool.size());
+                avgSpeed()).arg(_nntpConnections.size()).arg(_posters.size()*2);
 
     if (_nbArticlesFailed > 0)
         msgEnd += tr("%1 / %2 articles FAILED to be uploaded (even with %3 retries)...\n").arg(
@@ -647,25 +588,6 @@ void PostingJob::_printStats() const
 }
 
 
-
-
-//int PostingJob::compressFiles()
-//{
-//    if (!_canCompress() || (_doPar2 && !_canGenPar2()))
-//        return -1;
-
-//    // 1.: Compress
-//    int exitCode = _compressFiles(_rarPath, _tmpPath, _rarName, _rarPass, _rarSize);
-
-
-//    if (exitCode == 0 && _doPar2)
-//        exitCode = _genPar2(_tmpPath, _rarName, _par2Pct);
-
-//    if (exitCode == 0)
-//        _log("Ready to post!");
-
-//    return exitCode;
-//}
 
 bool PostingJob::startCompressFiles(const QString &cmdRar,
                                    const QString &tmpFolder,

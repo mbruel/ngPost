@@ -27,6 +27,7 @@
 class NntpServerParams;
 class NntpArticle;
 class NgPost;
+class Poster;
 
 class QSslSocket;
 class QSslError;
@@ -47,21 +48,21 @@ private:
                              AUTH_USER, AUTH_PASS,
                              IDLE, SENDING_ARTICLE, WAITING_ANSWER};
 
-    NgPost                 *_ngPost;
     const int               _id;        //!< connection id
     const NntpServerParams &_srvParams; //!< server parameters
 
     QTcpSocket   *_socket;         //!< Real TCP socket
     bool          _isConnected;    //!< to avoid to rely on iSocket && iSocket->isOpen()
 
-    const QString _logPrefix;      //!< log prefix: NntpConnection[<iSocketDescriptor>]
+    QString       _logPrefix;      //!< log prefix: NntpConnection[<iSocketDescriptor>]
 
 
     PostingState   _postingState;
     NntpArticle   *_currentArticle;
     ushort         _nbErrors;
 
-    QString        _threadName;
+    NgPost        *_ngPost;
+    Poster        *_poster;
 
     static int sSocketTimeoutMs;
 
@@ -86,7 +87,8 @@ public:
     inline void write(const QByteArray & aBuffer); //!< write on the socket
     inline void write(const char *aBuffer); //!< write on the socket
 
-    inline void setThreadName(const QString &threadName);
+
+    void setPoster(Poster *poster);
 
 signals:
     void startConnection();
@@ -135,31 +137,30 @@ int NntpConnection::getId() const { return _id;}
 void NntpConnection::write(const QByteArray &aBuffer){_socket->write(aBuffer);}
 void NntpConnection::write(const char *aBuffer){_socket->write(aBuffer);}
 
-void NntpConnection::setThreadName(const QString &threadName) { _threadName = threadName; }
 void NntpConnection::_log(const char *aMsg) const
 {
-    emit log(QString("[%1 {%2}] %3").arg(_threadName).arg(_logPrefix).arg(aMsg));
+    emit log(QString("[%1] %2").arg(_logPrefix).arg(aMsg));
 }
 void NntpConnection::_log(const QString &aMsg) const
 {
-    emit log(QString("[%1 {%2}] %3").arg(_threadName).arg(_logPrefix).arg(aMsg));
+    emit log(QString("[%1] %2").arg(_logPrefix).arg(aMsg));
 }
 void NntpConnection::_log(const std::string &aMsg) const
 {
-    emit log(QString("[%1 {%2}] %3").arg(_threadName).arg(_logPrefix).arg(QString::fromStdString(aMsg)));
+    emit log(QString("[%1] %2").arg(_logPrefix).arg(QString::fromStdString(aMsg)));
 }
 
 void NntpConnection::_error(const char *aMsg) const
 {
-    emit error(QString("[%1 {%2}] %3").arg(_threadName).arg(_logPrefix).arg(aMsg));
+    emit error(QString("[%1] %2").arg(_logPrefix).arg(aMsg));
 }
 void NntpConnection::_error(const QString &aMsg) const
 {
-    emit error(QString("[%1 {%2}] %3").arg(_threadName).arg(_logPrefix).arg(aMsg));
+    emit error(QString("[%1] %2").arg(_logPrefix).arg(aMsg));
 }
 void NntpConnection::_error(const std::string &aMsg) const
 {
-    emit error(QString("[%1 {%2}] %3").arg(_threadName).arg(_logPrefix).arg(QString::fromStdString(aMsg)));
+    emit error(QString("[%1] %2").arg(_logPrefix).arg(QString::fromStdString(aMsg)));
 }
 
 #endif // NNTPCONNECTION_H

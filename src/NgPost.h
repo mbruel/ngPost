@@ -213,8 +213,6 @@ public:
 
     void updateGroups(const QString &groups);
 
-    NntpArticle *getNextArticle(const QString &threadName);
-
     bool parseCommandLine(int argc, char *argv[]);
 
     inline const std::string &aticleSignature() const;
