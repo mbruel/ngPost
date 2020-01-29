@@ -1025,7 +1025,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
 
 void NgPost::setNzbName(const QFileInfo &fileInfo)
 {
-    _nzbName = fileInfo.isDir() ? fileInfo.fileName() : fileInfo.completeBaseName();
+    _nzbName = fileInfo.isDir() ? QDir(fileInfo.absoluteFilePath()).dirName() : fileInfo.completeBaseName();
     _nzbName.replace(QRegExp("[ÀÁÂÃÄÅ]"), "A");
     _nzbName.replace(QRegExp("[àáâãäå]"), "a");
     _nzbName.replace("Ç","C");
