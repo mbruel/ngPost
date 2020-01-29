@@ -219,4 +219,4 @@ Here is my email: Matthieu.Bruel@gmail.com
 I'm Freelance nowadays, working on several personal projects, so if you use the app and would like to contribute to the effort, feel free to donate what you can.<br/>
 <br/>
 [![](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=W2C236U6JNTUA&item_name=ngPost&currency_code=EUR)
-<br/> or in Bitcoin on this address: **3BGbnvnnBCCqrGuq1ytRqUMciAyMXjXAv6** ![](https://raw.githubusercontent.com/mbruel/ngPost/master/pics/btc_qr.gif)
+ or in Bitcoin on this address: **3BGbnvnnBCCqrGuq1ytRqUMciAyMXjXAv6** ![](https://raw.githubusercontent.com/mbruel/ngPost/master/pics/btc_qr.gif)
