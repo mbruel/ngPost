@@ -1041,7 +1041,7 @@ void NgPost::setNzbName(const QFileInfo &fileInfo)
     _nzbName.replace(QRegExp("[ÙÚÛÜ]"),   "U");
     _nzbName.replace(QRegExp("[ùúûü]"),   "u");
     _nzbName.replace(QRegExp("[ÿý]"),     "y");
-    _nzbName.replace(QRegExp("[^A-Za-z0-9\\.,_-]"), "");
+    _nzbName.replace(QRegExp("[^A-Za-z0-9\\.,_\\-\\(\\)\\[\\]\\{\\}]"), "");
 }
 
 
