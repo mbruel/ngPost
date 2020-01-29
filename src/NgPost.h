@@ -220,6 +220,8 @@ public:
     inline int nbThreads() const;
     inline int getSocketTimeout() const;
     inline QString nzbPath() const;
+    void setNzbName(const QFileInfo &fileInfo);
+
 
     inline bool removeNntpServer(NntpServerParams *server);
 

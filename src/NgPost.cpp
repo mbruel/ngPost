@@ -359,8 +359,7 @@ void NgPost::onNewFileToProcess(const QFileInfo & fileInfo)
 
 void NgPost::_post(const QFileInfo &fileInfo)
 {
-    _nzbName = fileInfo.completeBaseName();
-//                _nzbPath = file.absolutePath();
+    setNzbName(fileInfo);
     QString nzbFilePath = nzbPath();
     if (!nzbFilePath.endsWith(".nzb"))
         nzbFilePath += ".nzb";
@@ -945,7 +944,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         else
         {
             if (_nzbName.isEmpty())
-                _nzbName = fileInfo.fileName(); // The first file will be used
+                setNzbName(fileInfo); // The first file will be used
             if (fileInfo.isFile())
             {
                 filesToUpload << fileInfo;
@@ -975,7 +974,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     if (parser.isSet("o"))
     {
         QFileInfo nzb(parser.value(sOptionNames[Opt::OUTPUT]));
-        _nzbName = nzb.completeBaseName();
+        setNzbName(nzb);
         _nzbPath = nzb.absolutePath();
     }
 
@@ -1022,6 +1021,26 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
 
 
     return true;
+}
+
+void NgPost::setNzbName(const QFileInfo &fileInfo)
+{
+    _nzbName = fileInfo.isDir() ? fileInfo.fileName() : fileInfo.completeBaseName();
+    _nzbName.replace(QRegExp("[ÀÁÂÃÄÅ]"), "A");
+    _nzbName.replace(QRegExp("[àáâãäå]"), "a");
+    _nzbName.replace("Ç","C");
+    _nzbName.replace("ç","c");
+    _nzbName.replace(QRegExp("[ÈÉÊË]"),   "E");
+    _nzbName.replace(QRegExp("[èéêë]"),   "e");
+    _nzbName.replace(QRegExp("[ÌÍÎÏ]"),   "I");
+    _nzbName.replace(QRegExp("[ìíîï]"),   "i");
+    _nzbName.replace("Ñ","N");
+    _nzbName.replace("ñ","n");
+    _nzbName.replace(QRegExp("[ÒÓÔÕÖØ]"), "O");
+    _nzbName.replace(QRegExp("[òóôõöø]"), "o");
+    _nzbName.replace(QRegExp("[ÙÚÛÜ]"),   "U");
+    _nzbName.replace(QRegExp("[ùúûü]"),   "u");
+    _nzbName.replace(QRegExp("[ÿý]"),     "y");
 }
 
 
