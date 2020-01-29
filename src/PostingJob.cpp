@@ -699,6 +699,10 @@ bool PostingJob::startCompressFiles(const QString &cmdRar,
         args << QString("-v%1m").arg(volSize);
     }
 
+#if defined( Q_OS_WIN )
+    if (archiveTmpFolder.startsWith("//"))
+        archiveTmpFolder.replace(QRegExp("^//"), "\\\\");
+#endif
     args << QString("%1/%2.%3").arg(archiveTmpFolder).arg(archiveName).arg(is7z ? "7z" : "rar");
 
     bool hasDir = false;
@@ -707,7 +711,14 @@ bool PostingJob::startCompressFiles(const QString &cmdRar,
         if (fileInfo.isDir())
         {
             hasDir = true;
+#if defined( Q_OS_WIN )
+            QString path = QString("%1/").arg(fileInfo.absoluteFilePath());
+            if (path.startsWith("//"))
+                path.replace(QRegExp("^//"), "\\\\");
+            args << path;
+#else
             args << QString("%1/").arg(fileInfo.absoluteFilePath());
+#endif
         }
         else
 #if defined( Q_OS_WIN )
@@ -715,7 +726,7 @@ bool PostingJob::startCompressFiles(const QString &cmdRar,
 
             QString path = fileInfo.absoluteFilePath();
             if (path.startsWith("//"))
-                path.replace(QRegExp("^//"), "\\");
+                path.replace(QRegExp("^//"), "\\\\");
             args << path;
         }
 #else
