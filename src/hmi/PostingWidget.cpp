@@ -459,7 +459,7 @@ void PostingWidget::_udatePostingParams()
         QFileInfo nzb(_ui->nzbFileEdit->text());
         if (!nzb.absolutePath().isEmpty())
             _ngPost->_nzbPath = nzb.absolutePath();
-        _ngPost->_nzbName = nzb.completeBaseName();
+        _ngPost->setNzbName(nzb);
     }
 
     // fetch compression settings
@@ -506,11 +506,11 @@ void PostingWidget::addPath(const QString &path, int currentNbFiles, int isDir)
     QFileInfo fileInfo(path);
     if (_ui->nzbFileEdit->text().isEmpty())
     {
-        _ngPost->_nzbName = QString("%1.nzb").arg(fileInfo.completeBaseName());
-        _ui->nzbFileEdit->setText(_ngPost->nzbPath());
+        _ngPost->setNzbName(fileInfo);
+        _ui->nzbFileEdit->setText(QString("%1.nzb").arg(_ngPost->nzbPath()));
     }
     if (_ui->compressNameEdit->text().isEmpty())
-        _ui->compressNameEdit->setText(fileInfo.completeBaseName());
+        _ui->compressNameEdit->setText(_ngPost->_nzbName);
 }
 
 bool PostingWidget::_fileAlreadyInList(const QString &fileName, int currentNbFiles) const
