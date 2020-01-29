@@ -710,7 +710,17 @@ bool PostingJob::startCompressFiles(const QString &cmdRar,
             args << QString("%1/").arg(fileInfo.absoluteFilePath());
         }
         else
+#if defined( Q_OS_WIN )
+        {
+
+            QString path = fileInfo.absoluteFilePath();
+            if (path.startsWith("//"))
+                path.replace(QRegExp("^//"), "\\");
+            args << path;
+        }
+#else
             args << fileInfo.absoluteFilePath();
+#endif
     }
 
     if (hasDir && !args.contains("-r"))
