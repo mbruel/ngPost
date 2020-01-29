@@ -143,7 +143,7 @@ if you don't want to build it and install the dependencies, you can also the por
 
 
 ### Raspbian release (armhf for Raspberry PI)
-- download [ngPost_v4.1-armhf.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v3.2-armhf.AppImage)
+- download [ngPost_v4.1-armhf.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.1-armhf.AppImage)
 - chmod 755 ngPost_v4.1-armhf.AppImage
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
