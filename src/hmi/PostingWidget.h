@@ -78,6 +78,8 @@ public:
     inline bool isPosting() const;
     inline bool isPostingFinished() const;
 
+    void udatePostingParams();
+
 
 public slots: // for PostingJob
     void onFilePosted(QString filePath, uint nbArticles, uint nbFailed);
@@ -105,10 +107,6 @@ private slots: // for the HMI
 
 private:
     void _buildFilesList(QFileInfoList &files, bool &hasFolder);
-
-    void _udatePostingParams();
-
-
     bool _fileAlreadyInList(const QString &fileName, int currentNbFiles) const;
 
 

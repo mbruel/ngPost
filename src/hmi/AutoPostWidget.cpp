@@ -117,7 +117,7 @@ Press the Scan button and remove what you don't want to post ;)\n\
 
     _hmi->updateServers();
     _hmi->updateParams();
-    _udatePostingParams();
+    udatePostingParams();
 
     bool genName = _ui->genNameCB->isChecked(),
          genPass = _ui->genPassCB->isChecked(),
@@ -218,7 +218,7 @@ bool AutoPostWidget::_fileAlreadyInList(const QString &fileName, int currentNbFi
     return false;
 }
 
-void AutoPostWidget::_udatePostingParams()
+void AutoPostWidget::udatePostingParams()
 {
     // fetch compression settings
     _ngPost->_tmpPath    = _ui->compressPathEdit->text();
