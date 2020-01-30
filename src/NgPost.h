@@ -272,6 +272,9 @@ private:
     void _post(const QFileInfo &fileInfo);
     void _finishPosting();
 
+    void _startMonitoring(const QString &folderPath);
+    void _stopMonitoring();
+
     void _log(const QString &aMsg, bool newline = true) const; //!< log function for QString
     void _error(const QString &error) const;
 

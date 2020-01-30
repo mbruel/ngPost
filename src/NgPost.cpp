@@ -223,8 +223,30 @@ NgPost::NgPost(int &argc, char *argv[]):
     connect(this, &NgPost::error, this, &NgPost::onError, Qt::QueuedConnection);  
 }
 
+void NgPost::_startMonitoring(const QString &folderPath)
+{
+    qDebug() << "Start Monitoring " << folderPath;
+    _monitorThread = new QThread();
+    _monitorThread->setObjectName("Monitoring");
+    _folderMonitor = new FoldersMonitorForNewFiles(folderPath);
+    _folderMonitor->moveToThread(_monitorThread);
+    connect(_folderMonitor, &FoldersMonitorForNewFiles::newFileToProcess, this, &NgPost::onNewFileToProcess, Qt::QueuedConnection);
+    _monitorThread->start();
+}
 
-
+void NgPost::_stopMonitoring()
+{
+    if (_folderMonitor)
+    {
+        _folderMonitor->stopListening();
+        _monitorThread->quit();
+        _monitorThread->wait();
+        delete _folderMonitor;
+        delete _monitorThread;
+        _folderMonitor = nullptr;
+        _monitorThread = nullptr;
+    }
+}
 
 NgPost::~NgPost()
 {
@@ -234,14 +256,7 @@ NgPost::~NgPost()
 
     _finishPosting();
 
-    if (_folderMonitor)
-    {
-        _folderMonitor->stopListening();
-        _monitorThread->quit();
-        _monitorThread->wait();
-        delete _folderMonitor;
-        delete _monitorThread;
-    }
+    _stopMonitoring();
 
     if (_activeJob)
         delete _activeJob;
@@ -353,7 +368,12 @@ void NgPost:: onRefreshprogressbarBar()
 
 void NgPost::onNewFileToProcess(const QFileInfo & fileInfo)
 {
-    _cout << "Processing new incoming file: " << fileInfo.absoluteFilePath() << endl << flush;
+    if (_hmi)
+    {
+        _hmi->updateAutoPostingParams();
+        _hmi->setJobLabel(-1);
+    }
+    _log(tr("Processing new incoming file: %1").arg(fileInfo.absoluteFilePath()));
     _post(fileInfo);
 }
 
@@ -658,14 +678,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
                 if (_folderMonitor)
                     _folderMonitor->addFolder(fi.absoluteFilePath());
                 else
-                {
-                    _monitorThread = new QThread();
-                    _monitorThread->setObjectName("Monitoring");
-                    _folderMonitor = new FoldersMonitorForNewFiles(fi.absoluteFilePath());
-                    _folderMonitor->moveToThread(_monitorThread);
-                    connect(_folderMonitor, &FoldersMonitorForNewFiles::newFileToProcess, this, &NgPost::onNewFileToProcess, Qt::QueuedConnection);
-                    _monitorThread->start();
-                }
+                    _startMonitoring(fi.absoluteFilePath());
             }
         }
     }
@@ -1347,6 +1360,9 @@ QString NgPost::parseDefaultConfig()
 
 bool NgPost::startPostingJob(PostingJob *job)
 {
+    if (_hmi)
+        connect(job, &PostingJob::articlesNumber, _hmi, &MainWindow::onSetProgressBarRange,  Qt::QueuedConnection);
+
     if (_activeJob)
     {
         _pendingJobs << job;

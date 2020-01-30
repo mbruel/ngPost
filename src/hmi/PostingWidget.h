@@ -77,6 +77,7 @@ public:
 
     inline bool isPosting() const;
     inline bool isPostingFinished() const;
+    inline MainWindow *hmi() const;
 
     void udatePostingParams();
 
@@ -115,5 +116,7 @@ private:
 uint PostingWidget::jobNumber() const { return _jobNumber; }
 bool PostingWidget::isPosting() const { return _postingJob != nullptr; }
 bool PostingWidget::isPostingFinished() const { return _postingFinished; }
+
+MainWindow *PostingWidget::hmi() const { return _hmi; }
 
 #endif // POSTINGWIDGET_H

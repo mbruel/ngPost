@@ -63,12 +63,11 @@ public:
 
     void init();
 
-
-    void setProgressBarRange(int start, int end);
     void updateProgressBar(uint nbArticlesTotal, uint nbArticlesUploaded, const QString &avgSpeed);
 
     void updateServers();
     void updateParams();
+    void updateAutoPostingParams();
 
     PostingWidget *addNewQuickTab(int lastTabIdx, const QFileInfoList &files = QFileInfoList());
 
@@ -76,7 +75,7 @@ public:
     void clearJobTab(QWidget *postWidget);
     void updateJobTab(QWidget *postWidget, const QColor &color, const QIcon &icon, const QString &tooltip = "");
 
-    void setJobLabel(uint jobNumber);
+    void setJobLabel(int jobNumber);
 
     void log(const QString &aMsg, bool newline = true) const; //!< log function for QString
     void logError(const QString &error) const; //!< log function for QString
@@ -91,6 +90,8 @@ protected:
 
     void closeEvent(QCloseEvent *event) override;
 
+public slots:
+    void onSetProgressBarRange(int nbArticles);
 
 
 private slots:

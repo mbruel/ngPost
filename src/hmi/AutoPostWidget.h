@@ -25,6 +25,9 @@
 #include <QWidget>
 class NgPost;
 class MainWindow;
+class QFileInfo;
+
+
 namespace Ui {
 class AutoPostWidget;
 }
@@ -36,7 +39,7 @@ private:
     Ui::AutoPostWidget *_ui;
     MainWindow         *_hmi;
     NgPost             *_ngPost;
-
+    bool                _isMonitoring;
 
 public:
     explicit AutoPostWidget(NgPost *ngPost, MainWindow *hmi);
@@ -54,6 +57,9 @@ private slots:
     void onRarPathClicked();
     void onSelectAutoDirClicked();
     void onScanAutoDirClicked();
+    void onMonitoringClicked();
+    void onNewFileToProcess(const QFileInfo &fileInfo);
+
 
 
 private:    

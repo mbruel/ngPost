@@ -15,7 +15,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_6">
+    <layout class="QHBoxLayout" name="postingParamsLayout">
      <item>
       <layout class="QHBoxLayout" name="compressPathLayout_2">
        <item>
@@ -189,7 +189,11 @@
     </layout>
    </item>
    <item>
-    <widget class="SignedListWidget" name="filesList"/>
+    <widget class="SignedListWidget" name="filesList">
+     <property name="toolTip">
+      <string>monitor folder and post all new incoming files/folders</string>
+     </property>
+    </widget>
    </item>
    <item>
     <layout class="QHBoxLayout" name="autoDirLayout">
@@ -237,6 +241,19 @@
         <string>...</string>
        </property>
       </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_5">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
      </item>
      <item>
       <spacer name="horizontalSpacer">
@@ -445,6 +462,17 @@
         </size>
        </property>
       </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="monitorButton">
+       <property name="text">
+        <string>Monitor Folder</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../resources/resources.qrc">
+         <normaloff>:/icons/monitor.png</normaloff>:/icons/monitor.png</iconset>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QCheckBox" name="startJobsCB">
