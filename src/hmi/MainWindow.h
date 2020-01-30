@@ -97,6 +97,10 @@ private slots:
 
     void onObfucateToggled(bool checked);
 
+    void onTabContextMenu(const QPoint &point);
+    void onCloseAllFinishedQuickTabs();
+
+
 
     void onGenPoster();
 
@@ -115,6 +119,8 @@ private:
 
     void _addServer(NntpServerParams *serverParam);
     int  _serverRow(QObject *delButton);
+    PostingWidget *_getPostWidget(int tabIndex) const;
+
 
 
 

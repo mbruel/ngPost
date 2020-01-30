@@ -52,7 +52,8 @@ PostingWidget::PostingWidget(NgPost *ngPost, MainWindow *hmi, uint jobNumber) :
     _ngPost(ngPost),
     _jobNumber(jobNumber),
     _postingJob(nullptr),
-    _state(STATE::IDLE)
+    _state(STATE::IDLE),
+    _postingFinished(false)
 {
     _ui->setupUi(this);
 
@@ -117,6 +118,7 @@ void PostingWidget::onPostingJobDone()
         _hmi->clearJobTab(this);
 
     _postingJob = nullptr; //!< we don't own it, NgPost will delete it
+    _postingFinished = true;
     setIDLE();
 }
 
@@ -166,6 +168,7 @@ void PostingWidget::onPostFiles()
                 return;
         }
 
+        _postingFinished = false;
         _state = STATE::POSTING;
         _postingJob = new PostingJob(_ngPost, nzbPath, files, this, _ngPost->_obfuscateArticles, _ngPost->_tmpPath,
                                      _ngPost->_rarPath, _ngPost->_rarSize, _ngPost->_useRarMax, _ngPost->_par2Pct,

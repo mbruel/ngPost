@@ -96,16 +96,19 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
     _ui->debugBox->setChecked(_ngPost->debugMode());
 
 
+    QTabBar *tabBar = _ui->postTabWidget->tabBar();
+    tabBar->setContextMenuPolicy(Qt::CustomContextMenu);
+
     _ui->postTabWidget->clear();
     _ui->postTabWidget->addTab(_quickJobTab, QIcon(":/icons/quick.png"), QString("%1").arg(_ngPost->sQuickJobName));
     _ui->postTabWidget->addTab(_autoPostTab, QIcon(":/icons/auto.png"), _ngPost->sFolderMonitoringName);
     _ui->postTabWidget->addTab(new QWidget(_ui->postTabWidget), QIcon(":/icons/plus.png"), "New");
-    _ui->postTabWidget->tabBar()->setTabToolTip(2, QString("Create a new %1").arg(_ngPost->sQuickJobName));
+    tabBar->setTabToolTip(2, QString("Create a new %1").arg(_ngPost->sQuickJobName));
 
 //    connect(_ui->postTabWidget,           &QTabWidget::currentChanged, this, &MainWindow::onJobTabClicked);
-    connect(_ui->postTabWidget->tabBar(), &QTabBar::tabBarClicked,     this, &MainWindow::onJobTabClicked);
-    connect(_ui->postTabWidget->tabBar(), &QTabBar::tabCloseRequested, this, &MainWindow::onCloseJob);
-
+    connect(tabBar, &QTabBar::tabBarClicked,              this, &MainWindow::onJobTabClicked);
+    connect(tabBar, &QWidget::customContextMenuRequested, this, &MainWindow::onTabContextMenu);
+    connect(tabBar, &QTabBar::tabCloseRequested,          this, &MainWindow::onCloseJob);
     _ui->postTabWidget->setTabsClosable(true);
     _ui->postTabWidget->installEventFilter(this);
 //    _ui->postTabWidget->setCurrentIndex(1);
@@ -245,6 +248,31 @@ void MainWindow::onObfucateToggled(bool checked)
     _ui->genPoster->setEnabled(!checked);
 }
 
+void MainWindow::onTabContextMenu(const QPoint &point)
+{
+    qDebug() << "MainWindow::onTabContextMenu: " << point;
+    QTabBar *tabBar = _ui->postTabWidget->tabBar();
+
+    if (point.isNull())
+        return;
+
+//    int tabIndex = tabBar->tabAt(point);
+//    PostingWidget *currentPostWidget = _getPostWidget(tabIndex);
+    QMenu menu(tr("Quick Tabs Menu"), this);
+    menu.addAction(QIcon(":/icons/clear.png"), tr("Close All finished Tabs"), this, &MainWindow::onCloseAllFinishedQuickTabs);
+    menu.exec(QCursor::pos());
+}
+
+void MainWindow::onCloseAllFinishedQuickTabs()
+{
+    // go backwards as we may delete the current tab ;)
+    for (int idx = _ui->postTabWidget->count() - 2 ; idx > 1  ; --idx)
+    {
+        PostingWidget *postWidget = _getPostWidget(idx);
+        if (postWidget && postWidget->isPostingFinished())
+            onCloseJob(idx);
+    }
+}
 
 
 void MainWindow::_initServerBox()
@@ -482,6 +510,14 @@ int MainWindow::_serverRow(QObject *delButton)
     return nbRows;
 }
 
+PostingWidget *MainWindow::_getPostWidget(int tabIndex) const
+{
+    if(tabIndex > 1 && tabIndex < _ui->postTabWidget->count() - 1)
+        return static_cast<PostingWidget*>(_ui->postTabWidget->widget(tabIndex));
+    else
+        return nullptr;
+}
+
 
 
 void MainWindow::onGenPoster()
@@ -537,12 +573,22 @@ void MainWindow::onCloseJob(int index)
     qDebug() << "onCloseJob on tab: " << index << ", count: " << nbJob;
     if (index > 1 && index < nbJob )
     {
-        QWidget *jobWidget = _ui->postTabWidget->widget(index);
-        _ui->postTabWidget->removeTab(index);
-        delete jobWidget;
+        PostingWidget *postWidget = _getPostWidget(index);
+        if (postWidget->isPosting())
+        {
+            QMessageBox::warning(this,
+                                 tr("Quick Post is working.."),
+                                 tr("The Quick post is currentling uploading.\n Please Stop it before closing it.."));
+        }
+        else
+        {
+            _ui->postTabWidget->removeTab(index);
+            delete postWidget;
+
+            if (index == nbJob - 1)
+                _ui->postTabWidget->setCurrentIndex(_ui->postTabWidget->count() - 2);
+        }
     }
-    if (index == nbJob - 1)
-        _ui->postTabWidget->setCurrentIndex(_ui->postTabWidget->count() - 2);
 }
 
 void MainWindow::toBeImplemented()
