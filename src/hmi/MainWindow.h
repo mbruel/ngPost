@@ -82,6 +82,8 @@ public:
     void logError(const QString &error) const; //!< log function for QString
 
 
+    bool hasFinishedPosts() const;
+
 protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
     void dragEnterEvent(QDragEnterEvent *e) override;
@@ -120,7 +122,6 @@ private:
     void _addServer(NntpServerParams *serverParam);
     int  _serverRow(QObject *delButton);
     PostingWidget *_getPostWidget(int tabIndex) const;
-
 
 
 
