@@ -150,7 +150,7 @@ void PostingWidget::onPostFiles()
 
         _hmi->updateServers();
         _hmi->updateParams();
-        _udatePostingParams();
+        udatePostingParams();
 
         // check if the nzb file name already exist
         QString nzbPath = _ngPost->nzbPath();
@@ -455,7 +455,7 @@ void PostingWidget::genNameAndPassword(bool genName, bool genPass, bool doPar2, 
 
 
 
-void PostingWidget::_udatePostingParams()
+void PostingWidget::udatePostingParams()
 {
     if (!_ui->nzbFileEdit->text().isEmpty())
     {

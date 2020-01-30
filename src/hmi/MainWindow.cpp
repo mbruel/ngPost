@@ -549,6 +549,17 @@ void MainWindow::onSaveConfig()
 {
     updateServers();
     updateParams();
+    int currentTabIdx = _ui->postTabWidget->currentIndex();
+    if (currentTabIdx == 0)
+        _quickJobTab->udatePostingParams();
+    else if (currentTabIdx == 1)
+        _autoPostTab->udatePostingParams();
+    else
+    {
+        PostingWidget *postWidget = _getPostWidget(currentTabIdx);
+        if (postWidget)
+            postWidget->udatePostingParams();
+    }
     _ngPost->saveConfig();
 }
 
