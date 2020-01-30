@@ -292,12 +292,20 @@ void NntpConnection::onReadyRead()
 #endif
 
                 // Start authentication : send user info
-                _postingState = PostingState::AUTH_USER;
+                if (_srvParams.user.empty())
+                {
+                    _postingState = PostingState::IDLE;
+                    _sendNextArticle();
+                }
+                else
+                {
+                    _postingState = PostingState::AUTH_USER;
 
-                std::string cmd(Nntp::AUTHINFO_USER);
-                cmd += _srvParams.user;
-                cmd += Nntp::ENDLINE;
-                _socket->write(cmd.c_str());
+                    std::string cmd(Nntp::AUTHINFO_USER);
+                    cmd += _srvParams.user;
+                    cmd += Nntp::ENDLINE;
+                    _socket->write(cmd.c_str());
+                }
             }
         }
         else if (_postingState == PostingState::AUTH_USER)

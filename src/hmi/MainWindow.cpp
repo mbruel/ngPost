@@ -250,17 +250,28 @@ void MainWindow::onObfucateToggled(bool checked)
 
 void MainWindow::onTabContextMenu(const QPoint &point)
 {
-    qDebug() << "MainWindow::onTabContextMenu: " << point;
-    QTabBar *tabBar = _ui->postTabWidget->tabBar();
-
+//    qDebug() << "MainWindow::onTabContextMenu: " << point;
     if (point.isNull())
         return;
 
+//    QTabBar *tabBar = _ui->postTabWidget->tabBar();
 //    int tabIndex = tabBar->tabAt(point);
 //    PostingWidget *currentPostWidget = _getPostWidget(tabIndex);
     QMenu menu(tr("Quick Tabs Menu"), this);
-    menu.addAction(QIcon(":/icons/clear.png"), tr("Close All finished Tabs"), this, &MainWindow::onCloseAllFinishedQuickTabs);
+    QAction *action = menu.addAction(QIcon(":/icons/clear.png"), tr("Close All finished Tabs"), this, &MainWindow::onCloseAllFinishedQuickTabs);
+    action->setEnabled(hasFinishedPosts());
     menu.exec(QCursor::pos());
+}
+
+bool MainWindow::hasFinishedPosts() const
+{
+    for (int idx = 2 ; idx < _ui->postTabWidget->count() - 2 ; ++idx)
+    {
+        PostingWidget *postWidget = _getPostWidget(idx);
+        if (postWidget && postWidget->isPostingFinished())
+            return true;
+    }
+    return false;
 }
 
 void MainWindow::onCloseAllFinishedQuickTabs()
