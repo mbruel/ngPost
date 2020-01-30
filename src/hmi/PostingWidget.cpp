@@ -101,8 +101,8 @@ void PostingWidget::onArchiveFileNames(QStringList paths)
 
 void PostingWidget::onArticlesNumber(int nbArticles)
 {
-    _hmi->setJobLabel(_jobNumber);
-    _hmi->setProgressBarRange(0, nbArticles);
+    Q_UNUSED(nbArticles);
+    _hmi->setJobLabel(static_cast<int>(_jobNumber));
 }
 
 void PostingWidget::onPostingJobDone()

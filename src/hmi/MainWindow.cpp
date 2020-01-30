@@ -131,14 +131,6 @@ void MainWindow::init()
 }
 
 
-
-
-void MainWindow::setProgressBarRange(int start, int end)
-{
-    _ui->progressBar->setRange(start, end);
-}
-
-
 void MainWindow::updateProgressBar(uint nbArticlesTotal, uint nbArticlesUploaded, const QString &avgSpeed)
 {
     qDebug() << "[MainWindow::updateProgressBar] _nbArticlesUploaded: " << nbArticlesUploaded;
@@ -285,6 +277,12 @@ void MainWindow::onCloseAllFinishedQuickTabs()
     }
 }
 
+void MainWindow::onSetProgressBarRange(int nbArticles)
+{
+    qDebug() << "MainWindow::onSetProgressBarRange: " << nbArticles;
+    _ui->progressBar->setRange(0, nbArticles);
+}
+
 
 void MainWindow::_initServerBox()
 {
@@ -391,6 +389,13 @@ void MainWindow::updateParams()
         _ngPost->_nbThreads = 1;
 }
 
+void MainWindow::updateAutoPostingParams()
+{
+    updateServers();
+    updateParams();
+    _autoPostTab->udatePostingParams();
+}
+
 PostingWidget *MainWindow::addNewQuickTab(int lastTabIdx, const QFileInfoList &files)
 {
     if (!lastTabIdx)
@@ -453,9 +458,9 @@ void MainWindow::updateJobTab(QWidget *postWidget, const QColor &color, const QI
     }
 }
 
-void MainWindow::setJobLabel(uint jobNumber)
+void MainWindow::setJobLabel(int jobNumber)
 {
-    _ui->jobLabel->setText(QString("<b><u>Post #%1</u></b>").arg(jobNumber));
+    _ui->jobLabel->setText(QString("<b><u>Post #%1</u></b>").arg(jobNumber > 0 ? QString::number(jobNumber) : "Auto"));
 }
 
 
