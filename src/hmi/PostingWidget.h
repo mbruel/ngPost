@@ -46,6 +46,7 @@ private:
     const uint         _jobNumber;
     PostingJob        *_postingJob;
     STATE              _state;
+    bool               _postingFinished;
 
 
 
@@ -74,6 +75,8 @@ public:
 
     void addPath(const QString &path, int currentNbFiles, int isDir = false);
 
+    inline bool isPosting() const;
+    inline bool isPostingFinished() const;
 
 
 public slots: // for PostingJob
@@ -112,5 +115,7 @@ private:
 };
 
 uint PostingWidget::jobNumber() const { return _jobNumber; }
+bool PostingWidget::isPosting() const { return _postingJob != nullptr; }
+bool PostingWidget::isPostingFinished() const { return _postingFinished; }
 
 #endif // POSTINGWIDGET_H
