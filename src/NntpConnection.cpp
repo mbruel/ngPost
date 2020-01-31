@@ -181,8 +181,9 @@ void NntpConnection::onSslErrors(const QList<QSslError> &errors)
         emit _currentArticle->failed(_currentArticle->size());
 
     emit killConnection();
-    if (++_nbErrors < NntpArticle::nbMaxTrySending())
-        emit startConnection();
+    // we can't restart the connection as the PostingJob will delete it on disconnection!
+//    if (++_nbErrors < NntpArticle::nbMaxTrySending())
+//        emit startConnection();
 }
 
 
@@ -194,8 +195,9 @@ void NntpConnection::onErrors(QAbstractSocket::SocketError)
         emit _currentArticle->failed(_currentArticle->size());
 
     emit killConnection();
-    if (++_nbErrors < NntpArticle::nbMaxTrySending())
-        emit startConnection();
+    // we can't restart the connection as the PostingJob will delete it on disconnection!
+//    if (++_nbErrors < NntpArticle::nbMaxTrySending())
+//        emit startConnection();
 }
 
 
