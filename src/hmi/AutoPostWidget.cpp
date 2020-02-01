@@ -34,7 +34,8 @@ AutoPostWidget::AutoPostWidget(NgPost *ngPost, MainWindow *hmi) :
     _ui(new Ui::AutoPostWidget),
     _hmi(hmi),
     _ngPost(ngPost),
-    _isMonitoring(false)
+    _isMonitoring(false),
+    _currentPostIdx(1)
 {
     _ui->setupUi(this);
     _ui->filesList->setSignature(QString("<pre>%1</pre>").arg(_ngPost->escapeXML(_ngPost->asciiArt())));
@@ -202,9 +203,17 @@ void AutoPostWidget::onMonitoringClicked()
         _ui->filesList->clear2();
         _ngPost->_stopMonitoring();
         _ui->monitorButton->setText(tr("Monitor Folder"));
+        if (_ngPost->hasMonitoringPostingJobs())
+        {
+            QMessageBox::question(this,
+                                  tr("Ongoing Monitoring post"),
+                                  tr("There are still ongoing Monitoring Posts.\n Shall we stop them?")
+                                  );
+        }
     }
     else
     {
+        _currentPostIdx = 1;
         _ui->filesList->clear2();
         QString folderPath = _ui->autoDirEdit->text();
         QFileInfo fi(folderPath);
@@ -249,9 +258,29 @@ void AutoPostWidget::onMonitoringClicked()
 
 void AutoPostWidget::onNewFileToProcess(const QFileInfo &fileInfo)
 {
-    _ui->filesList->addItem(new QListWidgetItem(
-                                QIcon(fileInfo.isDir()?":/icons/folder.png":":/icons/file.png"),
-                                QString("- %1").arg(fileInfo.absoluteFilePath())));
+    QListWidgetItem *newItem = new QListWidgetItem(
+                QIcon(fileInfo.isDir()?":/icons/folder.png":":/icons/file.png"),
+                QString("- %1").arg(fileInfo.absoluteFilePath()));
+    newItem->setForeground(_hmi->sPendingColor);
+    _ui->filesList->addItem(newItem);
+}
+
+#include "PostingJob.h"
+void AutoPostWidget::onMonitorJobStart()
+{
+    PostingJob *job = static_cast<PostingJob*>(sender());
+    QString srcPath = QString("- %1").arg(job->getFirstOriginalFile());
+    int nbFiles = _ui->filesList->count();
+    for (int i = _currentPostIdx; i < nbFiles; ++i)
+    {
+        QListWidgetItem *item = _ui->filesList->item(i);
+        if (item->text() == srcPath)
+        {
+            item->setForeground(_hmi->sPostingColor);
+            _currentPostIdx = i;
+            break;
+        }
+    }
 }
 
 
@@ -305,6 +334,33 @@ void AutoPostWidget::udatePostingParams()
     if (_ngPost->_doPar2)
         _ngPost->_par2Pct = static_cast<uint>(_ui->redundancySB->value());
 }
+
+void AutoPostWidget::updateFinishedJob(const QString &path, uint nbArticles, uint nbFailed)
+{
+    QString srcPath = QString("- %1").arg(path);
+    int nbFiles = _ui->filesList->count();
+    for (int i = 1; i < nbFiles; ++i)
+    {
+        QListWidgetItem *item = _ui->filesList->item(i);
+        if (item->text() == srcPath)
+        {
+            QColor color(_hmi->sDoneOKColor);
+            if (nbFailed == 0)
+                item->setText(QString("%1 [%2 ok]").arg(srcPath).arg(nbArticles));
+            else
+            {
+                item->setText(QString("%1 [%2 err / %3]").arg(srcPath).arg(nbFailed).arg(nbArticles));
+                if (nbFailed == nbArticles)
+                    color = _hmi->sDoneKOColor;
+                else
+                    color = _hmi->sArticlesFailedColor;
+            }
+            item->setForeground(color);
+            break;
+        }
+    }
+}
+
 
 
 void AutoPostWidget::handleKeyEvent(QKeyEvent *keyEvent)

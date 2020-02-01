@@ -162,6 +162,8 @@ public:
 
     inline PostingWidget *widget() const;
 
+    inline QString getFirstOriginalFile() const;
+
 signals:
     void startPosting();    //!< connected to onStartPosting (to be able to run on a different Thread)
     void stopPosting();
@@ -327,4 +329,12 @@ bool PostingJob::hasCompressed() const { return _doCompress; }
 bool PostingJob::hasPostFinished() const { return _postFinished; }
 
 PostingWidget *PostingJob::widget() const { return _postWidget; }
+
+QString PostingJob::getFirstOriginalFile() const
+{
+    if (_originalFiles.isEmpty())
+        return QString();
+    else
+        return _originalFiles.first().absoluteFilePath();
+}
 #endif // POSTINGJOB_H

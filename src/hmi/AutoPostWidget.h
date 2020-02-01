@@ -40,6 +40,7 @@ private:
     MainWindow         *_hmi;
     NgPost             *_ngPost;
     bool                _isMonitoring;
+    int                 _currentPostIdx;
 
 public:
     explicit AutoPostWidget(NgPost *ngPost, MainWindow *hmi);
@@ -50,6 +51,11 @@ public:
     void handleKeyEvent(QKeyEvent *keyEvent);
 
     void udatePostingParams();
+
+    void updateFinishedJob(const QString &path, uint nbArticles, uint nbFailed);
+
+public slots:
+    void onMonitorJobStart();
 
 private slots:
     void onGenQuickPosts();

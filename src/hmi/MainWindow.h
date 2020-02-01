@@ -83,6 +83,18 @@ public:
 
     bool hasFinishedPosts() const;
 
+    inline AutoPostWidget *autoWidget() const;
+
+    static const QColor  sPostingColor;
+    static const QString sPostingIcon;
+    static const QColor  sPendingColor;
+    static const QString sPendingIcon;
+    static const QColor  sDoneOKColor;
+    static const QString sDoneOKIcon;
+    static const QColor  sDoneKOColor;
+    static const QString sDoneKOIcon;
+    static const QColor  sArticlesFailedColor;
+
 protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
     void dragEnterEvent(QDragEnterEvent *e) override;
@@ -128,5 +140,7 @@ private:
 
     static const QString sGroupBoxStyle;
 };
+
+AutoPostWidget *MainWindow::autoWidget() const { return _autoPostTab; }
 
 #endif // MAINWINDOW_H

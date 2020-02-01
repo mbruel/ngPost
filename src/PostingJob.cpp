@@ -76,7 +76,7 @@ PostingJob::PostingJob(NgPost *ngPost,
     _postFinished(false),
     _obfuscateArticles(obfuscateArticles),
     _delFilesAfterPost(delFilesAfterPost),
-    _originalFiles(delFilesAfterPost ? files : QFileInfoList()),
+    _originalFiles(!postWidget || delFilesAfterPost ? files : QFileInfoList()),
     _secureDiskAccess(), _posters()
 
 {
