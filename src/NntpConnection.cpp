@@ -278,7 +278,10 @@ void NntpConnection::onReadyRead()
 
             }
             if (_postingState == PostingState::IDLE)
+            {
+                _currentArticle = nullptr;
                 _sendNextArticle();
+            }
         }
         else if (_postingState == PostingState::CONNECTED)
         {
