@@ -238,6 +238,7 @@ public:
     void closeAllPostingJobs();
 
     bool hasMonitoringPostingJobs() const;
+    void closeAllMonitoringJobs();
 
 
     inline bool debugMode() const;

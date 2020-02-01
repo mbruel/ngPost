@@ -580,9 +580,36 @@ QString NgPost::randomPass(uint length) const
 void NgPost::closeAllPostingJobs()
 {
     qDeleteAll(_pendingJobs);
-    _pendingJobs.clear();
     if (_activeJob)
+    {
         _activeJob->onStopPosting();
+        _finishPosting();
+    }
+}
+
+void NgPost::closeAllMonitoringJobs()
+{
+    auto it = _pendingJobs.begin();
+    while (it != _pendingJobs.end())
+    {
+        PostingJob *job = *it;
+        if (!job->widget())
+        {
+            it = _pendingJobs.erase(it);
+            if (_debug)
+                _error(tr("Cancelling monitoring job: %1").arg(job->getFirstOriginalFile()));
+            delete  job;
+        }
+        else
+            ++it;
+    }
+    if (_activeJob && !_activeJob->widget())
+    {
+        emit _activeJob->stopPosting();
+        if (_debug)
+            _error(tr("Stopping monitoring job: %1").arg(_activeJob->getFirstOriginalFile()));
+
+    }
 }
 
 bool NgPost::hasMonitoringPostingJobs() const

@@ -200,16 +200,20 @@ void AutoPostWidget::onMonitoringClicked()
 {
     if (_isMonitoring)
     {
+        if (_ngPost->hasMonitoringPostingJobs())
+        {
+            int res = QMessageBox::question(this,
+                                  tr("Ongoing Monitoring post"),
+                                  tr("There are still ongoing or pending Monitoring Posts.\n We're going to stop all of them.\nAre you sure you want to proceed?")
+                                  );
+            if (res == QMessageBox::No)
+                return;
+            else
+                _ngPost->closeAllMonitoringJobs();
+        }
         _ui->filesList->clear2();
         _ngPost->_stopMonitoring();
         _ui->monitorButton->setText(tr("Monitor Folder"));
-        if (_ngPost->hasMonitoringPostingJobs())
-        {
-            QMessageBox::question(this,
-                                  tr("Ongoing Monitoring post"),
-                                  tr("There are still ongoing Monitoring Posts.\n Shall we stop them?")
-                                  );
-        }
     }
     else
     {
