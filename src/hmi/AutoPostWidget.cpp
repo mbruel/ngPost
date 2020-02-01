@@ -87,7 +87,6 @@ void AutoPostWidget::init()
     _ui->genNameCB->setChecked(true);
     _ui->genPassCB->setChecked(true);
     _ui->par2CB->setChecked(true);
-    _ui->delFilesCB->setEnabled(false);
     _ui->startJobsCB->setChecked(true);
 
     _ui->latestFilesFirstCB->setChecked(true);
@@ -98,6 +97,7 @@ void AutoPostWidget::init()
 
     connect(_ui->monitorButton, &QAbstractButton::clicked, this, &AutoPostWidget::onMonitoringClicked);
 
+    connect(_ui->delFilesCB, &QAbstractButton::toggled, this, &AutoPostWidget::onDelFilesToggled);
 }
 
 
@@ -269,6 +269,14 @@ void AutoPostWidget::onNewFileToProcess(const QFileInfo &fileInfo)
     _ui->filesList->addItem(newItem);
 }
 
+void AutoPostWidget::onDelFilesToggled(bool checked)
+{
+    if (checked)
+        QMessageBox::warning(this,
+                         tr("Deleting files/folders once posted"),
+                         tr("You're about to delete files from your computer once they've been posted!\nUse it at your own risk!\nIt will be irreversible..."));
+}
+
 #include "PostingJob.h"
 void AutoPostWidget::onMonitorJobStart()
 {
@@ -364,6 +372,8 @@ void AutoPostWidget::updateFinishedJob(const QString &path, uint nbArticles, uin
         }
     }
 }
+
+bool AutoPostWidget::deleteFilesOncePosted() const { return _ui->delFilesCB->isChecked(); }
 
 
 

@@ -373,6 +373,7 @@ void NgPost::onNewFileToProcess(const QFileInfo & fileInfo)
     {
         _hmi->updateAutoPostingParams();
         _hmi->setJobLabel(-1);
+        _delAuto = _hmi->autoWidget()->deleteFilesOncePosted();
     }
     _log(tr("Processing new incoming file: %1").arg(fileInfo.absoluteFilePath()));
     _post(fileInfo);
