@@ -54,6 +54,8 @@ public:
 
     void updateFinishedJob(const QString &path, uint nbArticles, uint nbFailed);
 
+    bool deleteFilesOncePosted() const;
+
 public slots:
     void onMonitorJobStart();
 
@@ -65,6 +67,7 @@ private slots:
     void onScanAutoDirClicked();
     void onMonitoringClicked();
     void onNewFileToProcess(const QFileInfo &fileInfo);
+    void onDelFilesToggled(bool checked);
 
 
 

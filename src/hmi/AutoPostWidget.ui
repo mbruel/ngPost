@@ -399,10 +399,10 @@
      <item>
       <widget class="QCheckBox" name="delFilesCB">
        <property name="toolTip">
-        <string>delete files/folders once they have been successfully posted (only available in command line for your own sake ;) cf --rm_posted)</string>
+        <string>delete files/folders once they have been successfully posted (careful with that it's irreversible!!!)</string>
        </property>
        <property name="text">
-        <string>delete files once posted</string>
+        <string>delete files once posted (only for Monitoring)</string>
        </property>
       </widget>
      </item>
