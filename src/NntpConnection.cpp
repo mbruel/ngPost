@@ -46,7 +46,8 @@ NntpConnection::NntpConnection(NgPost *ngPost, int id, const NntpServerParams &s
     _currentArticle(nullptr),
     _nbErrors(0),
     _ngPost(ngPost),
-    _poster(nullptr)
+    _poster(nullptr),
+    _tryReconnect(false)
 {
 #if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
     qDebug() << QString("Creation %1 %2 ssl").arg(_logPrefix).arg(_srvParams.useSSL ? "with" : "no");
@@ -134,7 +135,13 @@ void NntpConnection::onDisconnected()
         _socket->deleteLater();
         _socket = nullptr;
     }
-    emit disconnected(this);
+    if (_tryReconnect)
+    {
+        _tryReconnect = false;
+        emit startConnection();
+    }
+    else
+        emit disconnected(this);
 }
 
 void NntpConnection::onConnected()
@@ -177,13 +184,13 @@ void NntpConnection::onSslErrors(const QList<QSslError> &errors)
         err += QString("\t- %1\n").arg(errors[i].errorString());
 
     _error(err);
-    if (_currentArticle)
+
+    if (++_nbErrors < NntpArticle::nbMaxTrySending())
+        _tryReconnect = true;
+    else  if (_currentArticle)
         emit _currentArticle->failed(_currentArticle->size());
 
     emit killConnection();
-    // we can't restart the connection as the PostingJob will delete it on disconnection!
-//    if (++_nbErrors < NntpArticle::nbMaxTrySending())
-//        emit startConnection();
 }
 
 
@@ -191,13 +198,12 @@ void NntpConnection::onSslErrors(const QList<QSslError> &errors)
 void NntpConnection::onErrors(QAbstractSocket::SocketError)
 {
     _error(QString("Error Socket: %1").arg(_socket->errorString()));
-    if (_currentArticle)
+
+    if (++_nbErrors < NntpArticle::nbMaxTrySending())
+        _tryReconnect = true;
+    else  if (_currentArticle)
         emit _currentArticle->failed(_currentArticle->size());
 
-    emit killConnection();
-    // we can't restart the connection as the PostingJob will delete it on disconnection!
-//    if (++_nbErrors < NntpArticle::nbMaxTrySending())
-//        emit startConnection();
 }
 
 
@@ -370,7 +376,9 @@ void NntpConnection::onReadyRead()
 
 void NntpConnection::_sendNextArticle()
 {
-    _currentArticle = _poster->getNextArticle(_logPrefix);
+    if (!_currentArticle) // in case of error and reconnection, we repost the _currentArticle
+        _currentArticle = _poster->getNextArticle(_logPrefix);
+
     if (_currentArticle)
     {
         _postingState = PostingState::SENDING_ARTICLE;

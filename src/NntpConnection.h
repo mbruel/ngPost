@@ -64,6 +64,8 @@ private:
     NgPost        *_ngPost;
     Poster        *_poster;
 
+    bool           _tryReconnect;
+
     static int sSocketTimeoutMs;
 
 public:
