@@ -26,6 +26,7 @@
 #include "nntp/NntpServerParams.h"
 #include "hmi/MainWindow.h"
 #include "hmi/PostingWidget.h"
+#include "hmi/AutoPostWidget.h"
 
 #include <cmath>
 #include <QApplication>
@@ -474,6 +475,8 @@ void NgPost::onPostingJobFinished()
     if (job == _activeJob)
     {
         _finishPosting();
+        if (_hmi && !job->widget())
+            _hmi->autoWidget()->updateFinishedJob(job->getFirstOriginalFile(), job->nbArticlesTotal(), job->nbArticlesFailed());
 
         if (_activeJob->hasPostFinished() && !_postHistoryFile.isEmpty())
         {
@@ -580,6 +583,24 @@ void NgPost::closeAllPostingJobs()
     _pendingJobs.clear();
     if (_activeJob)
         _activeJob->onStopPosting();
+}
+
+bool NgPost::hasMonitoringPostingJobs() const
+{
+    if (_activeJob)
+    {
+        if (!_activeJob->widget())
+            return true;
+    }
+    else if (_pendingJobs.size())
+    {
+        for (PostingJob *job : _pendingJobs)
+        {
+            if (!job->widget())
+                return true;
+        }
+    }
+    return false;
 }
 
 
@@ -1361,7 +1382,11 @@ QString NgPost::parseDefaultConfig()
 bool NgPost::startPostingJob(PostingJob *job)
 {
     if (_hmi)
+    {
         connect(job, &PostingJob::articlesNumber, _hmi, &MainWindow::onSetProgressBarRange,  Qt::QueuedConnection);
+        if (!job->widget())
+            connect(job, &PostingJob::postingStarted,  _hmi->autoWidget(), &AutoPostWidget::onMonitorJobStart);
+    }
 
     if (_activeJob)
     {
@@ -1501,6 +1526,11 @@ void NgPost::saveConfig()
                << "## size in MB of the RAR volumes (0 by default meaning NO split)\n"
                << "## feel free to change the value or to comment the next line if you don't want to split the archive\n"
                << "RAR_SIZE = " << _rarSize << "\n"
+               << "\n"
+               << "## maximum number of archive volumes\n"
+               << "## we'll use RAR_SIZE except if it genereates too many volumes\n"
+               << "## in that case we'll update rar_size to be <size of post> / rar_max\n"
+               << "RAR_MAX = " << _rarMax << "\n"
                << "\n"
                << "## par2 redundancy percentage (0 by default meaning NO par2 generation)\n"
                << "PAR2_PCT = " << _par2Pct << "\n"

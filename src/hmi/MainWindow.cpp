@@ -34,6 +34,17 @@
 #include <QMessageBox>
 
 
+const QColor  MainWindow::sPostingColor = QColor(255,162, 0); // gold (#FFA200)
+const QString MainWindow::sPostingIcon  = ":/icons/uploading.png";
+const QColor  MainWindow::sPendingColor = Qt::darkBlue;
+const QString MainWindow::sPendingIcon  = ":/icons/pending.png";
+const QColor  MainWindow::sDoneOKColor  = Qt::darkGreen;
+const QString MainWindow::sDoneOKIcon   = ":/icons/ok.png";
+const QColor  MainWindow::sDoneKOColor  = Qt::darkRed;
+const QString MainWindow::sDoneKOIcon   = ":/icons/ko.png";
+const QColor  MainWindow::sArticlesFailedColor  = Qt::darkYellow;
+
+
 const QStringList  MainWindow::sServerListHeaders = {
     tr("Host (name or IP)"),
     tr("Port"),

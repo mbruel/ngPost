@@ -48,17 +48,6 @@ private:
     STATE              _state;
     bool               _postingFinished;
 
-
-
-    static const QColor  sPostingColor;
-    static const QString sPostingIcon;
-    static const QColor  sPendingColor;
-    static const QString sPendingIcon;
-    static const QColor  sDoneOKColor;
-    static const QString sDoneOKIcon;
-    static const QColor  sDoneKOColor;
-    static const QString sDoneKOIcon;
-
 public:
     explicit PostingWidget(NgPost *ngPost, MainWindow *hmi, uint jobNumber);
     ~PostingWidget();

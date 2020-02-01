@@ -36,14 +36,6 @@
 #include <QMimeData>
 
 
-const QColor  PostingWidget::sPostingColor = QColor(255,162, 0); // gold (#FFA200)
-const QString PostingWidget::sPostingIcon  = ":/icons/uploading.png";
-const QColor  PostingWidget::sPendingColor = Qt::darkBlue;
-const QString PostingWidget::sPendingIcon  = ":/icons/pending.png";
-const QColor  PostingWidget::sDoneOKColor  = Qt::darkGreen;
-const QString PostingWidget::sDoneOKIcon   = ":/icons/ok.png";
-const QColor  PostingWidget::sDoneKOColor  = Qt::darkRed;
-const QString PostingWidget::sDoneKOIcon   = ":/icons/ko.png";
 
 PostingWidget::PostingWidget(NgPost *ngPost, MainWindow *hmi, uint jobNumber) :
     QWidget(hmi),
@@ -75,16 +67,16 @@ void PostingWidget::onFilePosted(QString filePath, uint nbArticles, uint nbFaile
         QListWidgetItem *item = _ui->filesList->item(i);
         if (item->text() == filePath)
         {
-            Qt::GlobalColor color = Qt::darkGreen;
+            QColor color(_hmi->sDoneOKColor);
             if (nbFailed == 0)
                 item->setText(QString("%1 [%2 ok]").arg(filePath).arg(nbArticles));
             else
             {
                 item->setText(QString("%1 [%2 err / %3]").arg(filePath).arg(nbFailed).arg(nbArticles));
                 if (nbFailed == nbArticles)
-                    color = Qt::darkRed;
+                    color = _hmi->sDoneKOColor;
                 else
-                    color = Qt::darkYellow;
+                    color = _hmi->sArticlesFailedColor;
             }
             item->setForeground(color);
             break;
@@ -110,9 +102,9 @@ void PostingWidget::onPostingJobDone()
     if (_postingJob->nbArticlesTotal() > 0)
     {
         if (_postingJob->nbArticlesFailed() > 0)
-            _hmi->updateJobTab(this, sDoneKOColor, QIcon(sDoneKOIcon));
+            _hmi->updateJobTab(this, _hmi->sDoneKOColor, QIcon(_hmi->sDoneKOIcon));
         else
-            _hmi->updateJobTab(this, sDoneOKColor, QIcon(sDoneOKIcon));
+            _hmi->updateJobTab(this, _hmi->sDoneOKColor, QIcon(_hmi->sDoneOKIcon));
     }
     else
         _hmi->clearJobTab(this);
@@ -182,14 +174,14 @@ void PostingWidget::onPostFiles()
         if (hasStarted)
         {
             buttonTxt = tr("Stop Posting");
-            tabColor  = sPostingColor;
-            tabIcon   = sPostingIcon;
+            tabColor  = _hmi->sPostingColor;
+            tabIcon   = _hmi->sPostingIcon;
         }
         else
         {
             buttonTxt = tr("Cancel Posting");
-            tabColor  = sPendingColor;
-            tabIcon   = sPendingIcon;
+            tabColor  = _hmi->sPendingColor;
+            tabIcon   = _hmi->sPendingIcon;
         }
         _ui->postButton->setText(buttonTxt);
         _hmi->updateJobTab(this, tabColor, QIcon(tabIcon), _postingJob->nzbName());
@@ -534,7 +526,7 @@ void PostingWidget::setIDLE()
 
 void PostingWidget::setPosting()
 {
-    _hmi->updateJobTab(this, sPostingColor, QIcon(sPostingIcon), _postingJob->nzbName());
+    _hmi->updateJobTab(this, _hmi->sPostingColor, QIcon(_hmi->sPostingIcon), _postingJob->nzbName());
     _ui->postButton->setText(tr("Stop Posting"));
     _state = STATE::POSTING;
 }
