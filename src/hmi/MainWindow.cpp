@@ -336,6 +336,9 @@ void MainWindow::_initPostingBox()
 
     _ui->threadSB->setRange(0, 50);
     _ui->threadSB->setValue(_ngPost->_nbThreads);
+
+    _ui->nzbPathEdit->setText(_ngPost->_nzbPath);
+    connect(_ui->nzbPathButton, &QAbstractButton::clicked, this, &MainWindow::onNzbPathClicked);
 }
 
 void MainWindow::updateServers()
@@ -398,6 +401,10 @@ void MainWindow::updateParams()
     _ngPost->_nbThreads = _ui->threadSB->value();
     if (_ngPost->_nbThreads < 1)
         _ngPost->_nbThreads = 1;
+
+    QFileInfo nzbPath(_ui->nzbPathEdit->text());
+    if (nzbPath.exists() && nzbPath.isDir() && nzbPath.isWritable())
+        _ngPost->_nzbPath = nzbPath.absoluteFilePath();
 }
 
 void MainWindow::updateAutoPostingParams()
@@ -632,6 +639,19 @@ void MainWindow::onCloseJob(int index)
 void MainWindow::toBeImplemented()
 {
     QMessageBox::information(nullptr, "To be implemented...", "To be implemented...", QMessageBox::Ok);
+}
+
+#include <QFileDialog>
+void MainWindow::onNzbPathClicked()
+{
+    QString path = QFileDialog::getExistingDirectory(
+                this,
+                tr("Select a Folder"),
+                _ui->nzbPathEdit->text(),
+                QFileDialog::ShowDirsOnly);
+
+    if (!path.isEmpty())
+        _ui->nzbPathEdit->setText(path);
 }
 
 

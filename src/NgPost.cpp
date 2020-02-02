@@ -66,6 +66,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::OUTPUT,       "output"},
     {Opt::NZB_PATH,     "nzbpath"},
     {Opt::THREAD,       "thread"},
+    {Opt::MONITOR_FOLDERS, "monitor_nzb_folders"},
 
     {Opt::MSG_ID,       "msg_id"},
     {Opt::META,         "meta"},
@@ -192,7 +193,10 @@ NgPost::NgPost(int &argc, char *argv[]):
     _inputDir(),
     _activeJob(nullptr), _pendingJobs(),
     _postHistoryFile(),
-    _autoDirs(), _folderMonitor(nullptr), _monitorThread(nullptr), _delAuto(false)
+    _autoDirs(),
+    _folderMonitor(nullptr), _monitorThread(nullptr),
+    _delAuto(false),
+    _monitor_nzb_folders(false)
 {
     QThread::currentThread()->setObjectName(sMainThreadName);
 
@@ -380,8 +384,7 @@ void NgPost::onNewFileToProcess(const QFileInfo & fileInfo)
         _delAuto = _hmi->autoWidget()->deleteFilesOncePosted();
     }
     _log(tr("Processing new incoming file: %1").arg(fileInfo.absoluteFilePath()));
-//    _post(fileInfo, _hmi ? QString() : QDir(fileInfo.absolutePath()).dirName());
-    _post(fileInfo, QDir(fileInfo.absolutePath()).dirName());
+    _post(fileInfo, _monitor_nzb_folders ? QDir(fileInfo.absolutePath()).dirName() : QString());
 }
 
 void NgPost::_post(const QFileInfo &fileInfo, const QString &monitorFolder)
@@ -1183,6 +1186,10 @@ QString NgPost::_parseConfig(const QString &configPath)
                         else
                             err += tr("the nzbPath '%1' is not writable...\n").arg(val);
                     }
+                    else if (opt == sOptionNames[Opt::MONITOR_FOLDERS])
+                    {
+                        _monitor_nzb_folders = true;
+                    }
                     else if (opt == sOptionNames[Opt::OBFUSCATE])
                     {
                         if (val.toLower().startsWith("article"))
@@ -1511,6 +1518,10 @@ void NgPost::saveConfig()
                << "## this will be overwritten if you use the option -o with the full path of the nzb\n"
                << "nzbPath  = " << (_nzbPath.isEmpty() ? _nzbPathConf : _nzbPath) << "\n"
                << "\n"
+               << "## nzb files are normally all created in nzbPath\n"
+               << "## but using this option, the nzb of each monitoring folder will be stored in their own folder (created in nzbPath)\n"
+               << (_monitor_nzb_folders  ? "" : "#") << "MONITOR_NZB_FOLDERS = true\n"
+               << "\n\n"
                << "## Default folder to open to select files from the HMI\n"
                << "inputDir = " << _inputDir << "\n"
                << "\n"

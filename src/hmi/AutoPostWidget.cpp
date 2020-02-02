@@ -345,6 +345,11 @@ void AutoPostWidget::udatePostingParams()
     _ngPost->_par2Pct = 0;
     if (_ngPost->_doPar2)
         _ngPost->_par2Pct = static_cast<uint>(_ui->redundancySB->value());
+
+    QFileInfo inputDir(_ui->autoDirEdit->text());
+    if (inputDir.exists() && inputDir.isDir() && inputDir.isWritable())
+        _ngPost->_inputDir = inputDir.absoluteFilePath();
+
 }
 
 void AutoPostWidget::updateFinishedJob(const QString &path, uint nbArticles, uint nbFailed)

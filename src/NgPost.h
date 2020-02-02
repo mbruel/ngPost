@@ -69,7 +69,7 @@ class NgPost : public QObject
     friend class PostingJob;
 
     enum class Opt {HELP = 0, VERSION, CONF, DISP_PROGRESS, DEBUG, POST_HISTORY,
-                    INPUT, OUTPUT, NZB_PATH, THREAD,
+                    INPUT, OUTPUT, NZB_PATH, THREAD, MONITOR_FOLDERS,
                     MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY,
                     OBFUSCATE, INPUT_DIR, AUTO_DIR, MONITOR_DIR, DEL_AUTO,
                     TMP_DIR, RAR_PATH, RAR_EXTRA, RAR_SIZE, RAR_MAX,
@@ -149,6 +149,8 @@ private:
     FoldersMonitorForNewFiles *_folderMonitor;
     QThread                   *_monitorThread;
     bool                       _delAuto;
+
+    bool                       _monitor_nzb_folders;
 
 
     static qint64 sArticleSize;
