@@ -20,6 +20,29 @@ TODO: --nfo option (cf github issue #10 and NewsUp dev)
 TODO: multi-language support (French and Spanish to start with)
 
 
+
+####################################################
+###       Release: ngPost v4.2                   ###
+###       date:    2020/02/02                    ###
+####################################################
+
+- Monitoring for the HMI \o/ (only one folder although you could use several in CMD)
+
+- correct crash when stopping CMD during rar or par2
+
+- add nzbPath to the HMI. (also inputDir)
+
+- new config MONITOR_NZB_FOLDERS (request/issue #15)
+
+- fix Article retry when error on connection (the current one was previously skipped)
+
+- limit characters allowed in nzb name
+
+- fix rar command on windows for shared folder
+
+
+
+
 ####################################################
 ###       Release: ngPost v4.1                   ###
 ###       date:    2020/01/28                    ###
