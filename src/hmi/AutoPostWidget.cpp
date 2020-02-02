@@ -275,6 +275,7 @@ void AutoPostWidget::onDelFilesToggled(bool checked)
         QMessageBox::warning(this,
                          tr("Deleting files/folders once posted"),
                          tr("You're about to delete files from your computer once they've been posted!\nUse it at your own risk!\nIt will be irreversible..."));
+    _ngPost->setDelFilesAfterPosted(checked);
 }
 
 #include "PostingJob.h"
