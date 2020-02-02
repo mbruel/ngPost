@@ -128,6 +128,8 @@ private slots:
 
     void toBeImplemented();
 
+    void onNzbPathClicked();
+
 private:
     void _initServerBox();
     void _initPostingBox();
