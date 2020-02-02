@@ -262,6 +262,7 @@ void PostingJob::onStopPosting()
     {
         _log("killing external process...");
         _extProc->terminate();
+        _extProc->waitForFinished();
     }
     else
     {
