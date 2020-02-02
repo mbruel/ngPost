@@ -140,6 +140,7 @@ private:
 
     QString     _inputDir;
 
+    // Thread safe, only main thread is using this (NgPost or HMI)
     PostingJob         *_activeJob;
     QQueue<PostingJob*> _pendingJobs;
 
@@ -250,6 +251,8 @@ public:
     inline bool dispPostingFile() const;
 
     void saveConfig();
+
+    void setDelFilesAfterPosted(bool delFiles);
 
 signals:
     void log(QString msg, bool newline); //!< in case we signal from another thread

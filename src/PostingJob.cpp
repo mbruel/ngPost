@@ -75,7 +75,7 @@ PostingJob::PostingJob(NgPost *ngPost,
     _stopPosting(0x0), _noMoreFiles(0x0),
     _postFinished(false),
     _obfuscateArticles(obfuscateArticles),
-    _delFilesAfterPost(delFilesAfterPost),
+    _delFilesAfterPost(delFilesAfterPost ? 0x1 : 0x0),
     _originalFiles(!postWidget || delFilesAfterPost ? files : QFileInfoList()),
     _secureDiskAccess(), _posters()
 
@@ -568,7 +568,7 @@ qDebug() << "[MB_TRACE][PostingJob::_finishPosting]";
 
         _error(tr("you can try to repost only those and concatenate the nzb with the current one ;)"));
     }
-    else if (_postFinished && _delFilesAfterPost)
+    else if (_postFinished && _delFilesAfterPost.load())
         _delOriginalFiles();
 }
 

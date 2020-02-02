@@ -1656,6 +1656,15 @@ void NgPost::saveConfig()
 
 }
 
+void NgPost::setDelFilesAfterPosted(bool delFiles)
+{
+    // Thread safe, only main thread is using this (NgPost or HMI)
+    if (_activeJob)
+        _activeJob->setDelFilesAfterPosted(delFiles);
+    for (PostingJob *job : _pendingJobs)
+        job->setDelFilesAfterPosted(delFiles);
+}
+
 const QString NgPost::sNgPostASCII = QString("\
                    __________               __\n\
        ____    ____\\______   \\____  _______/  |_\n\

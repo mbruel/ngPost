@@ -114,7 +114,7 @@ private:
     bool _obfuscateArticles;
 
 
-    const bool _delFilesAfterPost;
+    QAtomicBool _delFilesAfterPost;
     const QFileInfoList _originalFiles;
 
 
@@ -163,6 +163,8 @@ public:
     inline PostingWidget *widget() const;
 
     inline QString getFirstOriginalFile() const;
+
+    inline void setDelFilesAfterPosted(bool delFiles);
 
 signals:
     void startPosting();    //!< connected to onStartPosting (to be able to run on a different Thread)
@@ -336,5 +338,10 @@ QString PostingJob::getFirstOriginalFile() const
         return QString();
     else
         return _originalFiles.first().absoluteFilePath();
+}
+
+void PostingJob::setDelFilesAfterPosted(bool delFiles)
+{
+    _delFilesAfterPost = delFiles ? 0x1 : 0x0;
 }
 #endif // POSTINGJOB_H
