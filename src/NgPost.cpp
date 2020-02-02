@@ -192,7 +192,7 @@ NgPost::NgPost(int &argc, char *argv[]):
     _inputDir(),
     _activeJob(nullptr), _pendingJobs(),
     _postHistoryFile(),
-    _autoDirs(), _folderMonitor(nullptr), _delAuto(false)
+    _autoDirs(), _folderMonitor(nullptr), _monitorThread(nullptr), _delAuto(false)
 {
     QThread::currentThread()->setObjectName(sMainThreadName);
 
@@ -255,9 +255,13 @@ NgPost::~NgPost()
     _log("Destuction NgPost...");
 #endif
 
+    _stopMonitoring();
+
     _finishPosting();
 
-    _stopMonitoring();
+    _progressbarTimer.stop();
+
+    closeAllPostingJobs();
 
     if (_activeJob)
         delete _activeJob;
@@ -376,13 +380,14 @@ void NgPost::onNewFileToProcess(const QFileInfo & fileInfo)
         _delAuto = _hmi->autoWidget()->deleteFilesOncePosted();
     }
     _log(tr("Processing new incoming file: %1").arg(fileInfo.absoluteFilePath()));
-    _post(fileInfo);
+//    _post(fileInfo, _hmi ? QString() : QDir(fileInfo.absolutePath()).dirName());
+    _post(fileInfo, QDir(fileInfo.absolutePath()).dirName());
 }
 
-void NgPost::_post(const QFileInfo &fileInfo)
+void NgPost::_post(const QFileInfo &fileInfo, const QString &monitorFolder)
 {
     setNzbName(fileInfo);
-    QString nzbFilePath = nzbPath();
+    QString nzbFilePath = nzbPath(monitorFolder);
     if (!nzbFilePath.endsWith(".nzb"))
         nzbFilePath += ".nzb";
 
@@ -1103,7 +1108,26 @@ void NgPost::setNzbName(const QFileInfo &fileInfo)
     _nzbName.replace(QRegExp("[ÙÚÛÜ]"),   "U");
     _nzbName.replace(QRegExp("[ùúûü]"),   "u");
     _nzbName.replace(QRegExp("[ÿý]"),     "y");
-    _nzbName.replace(QRegExp("[^A-Za-z0-9\\.,_\\-\\(\\)\\[\\]\\{\\}]"), "");
+    _nzbName.replace(QRegExp("[^A-Za-z0-9\\.,_\\-\\(\\)\\[\\]\\{\\}!#&'\\+ ]"), "");
+}
+
+QString NgPost::nzbPath(const QString &monitorFolder)
+{
+    if (monitorFolder.isEmpty())
+        return nzbPath();
+    else
+    {
+        QString path;
+        if (_nzbPath.isEmpty())
+            path = monitorFolder;
+        else
+            path = QString("%1/%2").arg(_nzbPath).arg(monitorFolder);
+        QDir dir(path);
+        if (!dir.exists())
+            QDir().mkdir(path);
+
+        return QString("%1/%2").arg(path).arg(_nzbName);
+    }
 }
 
 

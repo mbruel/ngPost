@@ -221,6 +221,7 @@ public:
     inline int getSocketTimeout() const;
     inline QString nzbPath() const;
     void setNzbName(const QFileInfo &fileInfo);
+    QString nzbPath(const QString &monitorFolder);
 
 
     inline bool removeNntpServer(NntpServerParams *server);
@@ -272,7 +273,7 @@ private slots:
 
 
 private:
-    void _post(const QFileInfo &fileInfo);
+    void _post(const QFileInfo &fileInfo, const QString &monitorFolder = "");
     void _finishPosting();
 
     void _startMonitoring(const QString &folderPath);

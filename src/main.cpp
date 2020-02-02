@@ -46,7 +46,9 @@ int main(int argc, char *argv[])
     }
     else if (ngPost.parseCommandLine(argc, argv))
     {
-        return ngPost.startEventLoop();
+        ngPost.startEventLoop();
+        qCritical()<< "ngPost closed propertly!\n";
+        return 0;
     }
     else
     {
