@@ -527,7 +527,7 @@ void PostingJob::_finishPosting()
 qDebug() << "[MB_TRACE][PostingJob::_finishPosting]";
     _stopPosting = 0x1;
 
-    if (!_timeStart.isNull())
+    if (!_timeStart.isNull() && _postFinished)
     {
         _nbArticlesUploaded = _nbArticlesTotal; // we might not have processed the last onArticlePosted
         _uploadedSize       = _totalSize;

@@ -66,7 +66,10 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::OUTPUT,       "output"},
     {Opt::NZB_PATH,     "nzbpath"},
     {Opt::THREAD,       "thread"},
-    {Opt::MONITOR_FOLDERS, "monitor_nzb_folders"},
+
+    {Opt::MONITOR_FOLDERS,    "monitor_nzb_folders"},
+    {Opt::MONITOR_EXT,        "monitor_extensions"},
+    {Opt::MONITOR_IGNORE_DIR, "monitor_ignore_dir"},
 
     {Opt::MSG_ID,       "msg_id"},
     {Opt::META,         "meta"},
@@ -196,7 +199,7 @@ NgPost::NgPost(int &argc, char *argv[]):
     _autoDirs(),
     _folderMonitor(nullptr), _monitorThread(nullptr),
     _delAuto(false),
-    _monitor_nzb_folders(false)
+    _monitor_nzb_folders(false), _monitorExtensions(), _monitorIgnoreDir(false)
 {
     QThread::currentThread()->setObjectName(sMainThreadName);
 
@@ -377,11 +380,25 @@ void NgPost:: onRefreshprogressbarBar()
 
 void NgPost::onNewFileToProcess(const QFileInfo & fileInfo)
 {
+    if (_monitorIgnoreDir && fileInfo.isDir())
+    {
+        if (_debug)
+            _log(tr("MONITOR_IGNORE_DIR ON => Ignoring new incoming folder %1").arg(fileInfo.absoluteFilePath()));
+        return;
+    }
+    if (_monitorExtensions.size() && !_monitorExtensions.contains(fileInfo.suffix()))
+    {
+        if (_debug)
+            _log(tr("MONITOR_EXTENSIONS ON => Ignoring new incoming file %1").arg(fileInfo.absoluteFilePath()));
+        return;
+    }
+
     if (_hmi)
     {
         _hmi->updateAutoPostingParams();
         _hmi->setJobLabel(-1);
         _delAuto = _hmi->autoWidget()->deleteFilesOncePosted();
+        _hmi->autoWidget()->newFileToProcess(fileInfo);
     }
     _log(tr("Processing new incoming file: %1").arg(fileInfo.absoluteFilePath()));
     _post(fileInfo, _monitor_nzb_folders ? QDir(fileInfo.absolutePath()).dirName() : QString());
@@ -485,7 +502,10 @@ void NgPost::onPostingJobFinished()
     {
         _finishPosting();
         if (_hmi && !job->widget())
-            _hmi->autoWidget()->updateFinishedJob(job->getFirstOriginalFile(), job->nbArticlesTotal(), job->nbArticlesFailed());
+            _hmi->autoWidget()->updateFinishedJob(job->getFirstOriginalFile(),
+                                                  job->nbArticlesTotal(),
+                                                  job->nbArticlesUploaded(),
+                                                  job->nbArticlesFailed());
 
         if (_activeJob->hasPostFinished() && !_postHistoryFile.isEmpty())
         {
@@ -1167,6 +1187,15 @@ QString NgPost::_parseConfig(const QString &configPath)
                     {
                         _monitor_nzb_folders = true;
                     }
+                    else if (opt == sOptionNames[Opt::MONITOR_IGNORE_DIR])
+                    {
+                        _monitorIgnoreDir = true;
+                    }
+                    else if (opt == sOptionNames[Opt::MONITOR_EXT])
+                    {
+                        for (const QString &extension : val.split(","))
+                            _monitorExtensions << extension.trimmed();
+                    }
                     else if (opt == sOptionNames[Opt::OBFUSCATE])
                     {
                         if (val.toLower().startsWith("article"))
@@ -1498,6 +1527,13 @@ void NgPost::saveConfig()
                << "## nzb files are normally all created in nzbPath\n"
                << "## but using this option, the nzb of each monitoring folder will be stored in their own folder (created in nzbPath)\n"
                << (_monitor_nzb_folders  ? "" : "#") << "MONITOR_NZB_FOLDERS = true\n"
+               << "\n"
+               << "## for monitoring, extension file filter for new incoming files (coma separated, no dot)\n"
+               << (_monitorExtensions.isEmpty()  ? "#" : "") << "MONITOR_EXTENSIONS = "
+               << (_monitorExtensions.isEmpty() ? "mkv,mp4,avi,zip,tar,gz,iso" : _monitorExtensions.join(",")) << "\n"
+               << "\n"
+               << "## for monitoring, ignore new incoming folders\n"
+               << (_monitorIgnoreDir  ? "" : "#") << "MONITOR_IGNORE_DIR = true\n"
                << "\n\n"
                << "## Default folder to open to select files from the HMI\n"
                << "inputDir = " << _inputDir << "\n"

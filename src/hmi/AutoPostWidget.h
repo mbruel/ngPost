@@ -52,7 +52,8 @@ public:
 
     void udatePostingParams();
 
-    void updateFinishedJob(const QString &path, uint nbArticles, uint nbFailed);
+    void newFileToProcess(const QFileInfo &fileInfo);
+    void updateFinishedJob(const QString &path, uint nbArticles, uint nbUploaded, uint nbFailed);
 
     bool deleteFilesOncePosted() const;
 
@@ -66,8 +67,8 @@ private slots:
     void onSelectAutoDirClicked();
     void onScanAutoDirClicked();
     void onMonitoringClicked();
-    void onNewFileToProcess(const QFileInfo &fileInfo);
     void onDelFilesToggled(bool checked);
+    void onAddMonitoringFolder();
 
 
 

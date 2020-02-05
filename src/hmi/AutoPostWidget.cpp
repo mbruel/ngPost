@@ -98,6 +98,14 @@ void AutoPostWidget::init()
     connect(_ui->monitorButton, &QAbstractButton::clicked, this, &AutoPostWidget::onMonitoringClicked);
 
     connect(_ui->delFilesCB, &QAbstractButton::toggled, this, &AutoPostWidget::onDelFilesToggled);
+
+
+    _ui->addMonitoringFolderButton->setEnabled(false);
+    connect(_ui->addMonitoringFolderButton, &QAbstractButton::clicked, this, &AutoPostWidget::onAddMonitoringFolder);
+
+
+    _ui->extensionFilterEdit->setText(_ngPost->_monitorExtensions.join(","));
+    _ui->dirAllowedCB->setChecked(!_ngPost->_monitorIgnoreDir);
 }
 
 
@@ -228,7 +236,6 @@ void AutoPostWidget::onMonitoringClicked()
         }
         _ui->filesList->addItem(new QListWidgetItem(QIcon(":/icons/monitor.png"), tr("Monitoring %1").arg(folderPath)));
         _ngPost->_startMonitoring(folderPath);
-        connect(_ngPost->_folderMonitor, &FoldersMonitorForNewFiles::newFileToProcess, this, &AutoPostWidget::onNewFileToProcess, Qt::QueuedConnection);
         _ui->monitorButton->setText(tr("Stop Monitoring"));
     }
 
@@ -258,9 +265,10 @@ void AutoPostWidget::onMonitoringClicked()
 
 
     _isMonitoring = !_isMonitoring;
+    _ui->addMonitoringFolderButton->setEnabled(_isMonitoring);
 }
 
-void AutoPostWidget::onNewFileToProcess(const QFileInfo &fileInfo)
+void AutoPostWidget::newFileToProcess(const QFileInfo &fileInfo)
 {
     QListWidgetItem *newItem = new QListWidgetItem(
                 QIcon(fileInfo.isDir()?":/icons/folder.png":":/icons/file.png"),
@@ -278,10 +286,30 @@ void AutoPostWidget::onDelFilesToggled(bool checked)
     _ngPost->setDelFilesAfterPosted(checked);
 }
 
+void AutoPostWidget::onAddMonitoringFolder()
+{
+    QString path = QFileDialog::getExistingDirectory(
+                this,
+                tr("Select a Monitoring Folder to add"),
+                _ui->autoDirEdit->text(),
+                QFileDialog::ShowDirsOnly);
+
+    if (!path.isEmpty())
+    {
+        QFileInfo newDir(path);
+        if (newDir.exists() && newDir.isDir() && newDir.isReadable())
+        {
+            _ui->filesList->addItem(new QListWidgetItem(QIcon(":/icons/monitor.png"), tr("Monitoring %1").arg(newDir.absoluteFilePath())));
+            _ngPost->addMonitoringFolder(newDir.absoluteFilePath());
+        }
+    }
+}
+
 #include "PostingJob.h"
 void AutoPostWidget::onMonitorJobStart()
 {
     PostingJob *job = static_cast<PostingJob*>(sender());
+
     QString srcPath = QString("- %1").arg(job->getFirstOriginalFile());
     int nbFiles = _ui->filesList->count();
     for (int i = _currentPostIdx; i < nbFiles; ++i)
@@ -351,9 +379,16 @@ void AutoPostWidget::udatePostingParams()
     if (inputDir.exists() && inputDir.isDir() && inputDir.isWritable())
         _ngPost->_inputDir = inputDir.absoluteFilePath();
 
+
+    _ngPost->_monitorExtensions.clear();
+    for (const QString &extension : _ui->extensionFilterEdit->text().split(","))
+        _ngPost->_monitorExtensions << extension.trimmed();
+
+    _ngPost->_monitorIgnoreDir = !_ui->dirAllowedCB->isChecked();
+
 }
 
-void AutoPostWidget::updateFinishedJob(const QString &path, uint nbArticles, uint nbFailed)
+void AutoPostWidget::updateFinishedJob(const QString &path, uint nbArticles, uint nbUploaded, uint nbFailed)
 {
     QString srcPath = QString("- %1").arg(path);
     int nbFiles = _ui->filesList->count();
@@ -363,7 +398,7 @@ void AutoPostWidget::updateFinishedJob(const QString &path, uint nbArticles, uin
         if (item->text() == srcPath)
         {
             QColor color(_hmi->sDoneOKColor);
-            if (nbFailed == 0)
+            if (nbUploaded > 0 && nbFailed == 0)
                 item->setText(QString("%1 [%2 ok]").arg(srcPath).arg(nbArticles));
             else
             {
