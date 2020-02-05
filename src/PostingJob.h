@@ -86,8 +86,8 @@ private:
     uint                  _nbPosted; //!< number of files posted
 
 
-    const QString _nzbFilePath;
-    QFile        *_nzb;       //!< nzb file that will be filled on the fly when a file is fully posted
+    QString      _nzbFilePath;
+    QFile       *_nzb;       //!< nzb file that will be filled on the fly when a file is fully posted
     QTextStream  _nzbStream; //!< txt stream for the nzb file
 
     NntpFile    *_nntpFile; //!< current file that is getting processed
@@ -122,6 +122,8 @@ private:
 
     QVector<Poster*> _posters;
 
+    const bool  _overwriteNzb;
+
 
 public:
     PostingJob(NgPost *ngPost,
@@ -139,6 +141,7 @@ public:
                const QString &rarName,
                const QString &rarPass,
                bool delFilesAfterPost = false,
+               bool overwriteNzb = true,
                QObject *parent = nullptr);
     ~PostingJob();
 

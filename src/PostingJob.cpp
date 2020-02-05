@@ -49,6 +49,7 @@ PostingJob::PostingJob(NgPost *ngPost,
                        const QString &rarName,
                        const QString &rarPass,
                        bool delFilesAfterPost,
+                       bool overwriteNzb,
                        QObject *parent) :
     QObject (parent),
     _ngPost(ngPost), _files(files), _postWidget(postWidget),
@@ -77,8 +78,8 @@ PostingJob::PostingJob(NgPost *ngPost,
     _obfuscateArticles(obfuscateArticles),
     _delFilesAfterPost(delFilesAfterPost ? 0x1 : 0x0),
     _originalFiles(!postWidget || delFilesAfterPost ? files : QFileInfoList()),
-    _secureDiskAccess(), _posters()
-
+    _secureDiskAccess(), _posters(),
+    _overwriteNzb(overwriteNzb)
 {
 #ifdef __DEBUG__
     qDebug() << "[PostingJob] >>>> Construct " << this;
@@ -492,6 +493,15 @@ NntpArticle *PostingJob::_readNextArticleIntoBufferPtr(const QString &threadName
 void PostingJob::_initPosting()
 {
     // initialize buffer and nzb file
+    if (!_overwriteNzb)
+    {
+        QFileInfo fi(_nzbFilePath);
+        ushort nbDuplicates = 1;
+        while(fi.exists()){
+            _nzbFilePath = QString("%1/%2_%3.nzb").arg(fi.absolutePath()).arg(fi.completeBaseName()).arg(++nbDuplicates);
+            fi = QFileInfo(_nzbFilePath);
+        }
+    }
     _nzb     = new QFile(_nzbFilePath);
     _nbFiles = static_cast<uint>(_files.size());
 
