@@ -229,7 +229,7 @@ public:
 
     inline bool removeNntpServer(NntpServerParams *server);
 
-    QString randomFrom() const;
+    inline QString randomFrom(ushort length = 13) const;
     QString randomPass(uint length = 13) const;
 
     inline static const QString & proFileUrl();
@@ -253,6 +253,7 @@ public:
     void saveConfig();
 
     void setDelFilesAfterPosted(bool delFiles);
+    void addMonitoringFolder(const QString &dirPath);
 
 signals:
     void log(QString msg, bool newline); //!< in case we signal from another thread
@@ -287,7 +288,7 @@ private:
     void _log(const QString &aMsg, bool newline = true) const; //!< log function for QString
     void _error(const QString &error) const;
 
-    std::string _randomFrom() const;
+    inline std::string _randomFrom(ushort length = 13) const;
 
 
     void _syntax(char *appName);
@@ -395,6 +396,18 @@ QString NgPost::xml2txt(const QString &str)
     escaped.replace("&quot;", "\"");
     escaped.replace("&apos;", "'");
     return escaped;
+}
+
+QString NgPost::randomFrom(ushort length) const { return QString::fromStdString(_randomFrom(length));}
+
+std::string NgPost::_randomFrom(ushort length) const {
+    QString randomFrom, alphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
+    int nbLetters = alphabet.length();
+    for (ushort i = 0 ; i < length ; ++i)
+        randomFrom.append(alphabet.at(std::rand()%nbLetters));
+
+    randomFrom += QString("@%1.com").arg(_articleIdSignature.c_str());
+    return randomFrom.toStdString();
 }
 
 #endif // NGPOST_H

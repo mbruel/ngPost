@@ -412,7 +412,7 @@ void NgPost::_post(const QFileInfo &fileInfo, const QString &monitorFolder)
                                    _obfuscateArticles, _tmpPath,
                                    _rarPath, _rarSize, _useRarMax, _par2Pct,
                                    _doCompress, _doPar2, _rarName, _rarPass,
-                                   _delAuto));
+                                   _delAuto, false));
 }
 
 
@@ -552,29 +552,6 @@ void NgPost::_error(const QString &error) const
         _cerr << error << flush << "\n" << flush;
 }
 
-
-
-std::string NgPost::_randomFrom() const
-{
-    QString randomFrom, alphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.");
-    int nb = 8, nbLetters = alphabet.length();
-    for (int i = 0 ; i < nb ; ++i)
-        randomFrom.append(alphabet.at(std::rand()%nbLetters));
-
-    randomFrom += QString("@%1.com").arg(_articleIdSignature.c_str());
-    return randomFrom.toStdString();
-}
-
-QString NgPost::randomFrom() const
-{
-    QString randomFrom, alphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
-    int nb = 8, nbLetters = alphabet.length();
-    for (int i = 0 ; i < nb ; ++i)
-        randomFrom.append(alphabet.at(std::rand()%nbLetters));
-
-    randomFrom += QString("@%1.com").arg(_articleIdSignature.c_str());
-    return randomFrom;
-}
 
 QString NgPost::randomPass(uint length) const
 {
@@ -1663,6 +1640,12 @@ void NgPost::setDelFilesAfterPosted(bool delFiles)
         _activeJob->setDelFilesAfterPosted(delFiles);
     for (PostingJob *job : _pendingJobs)
         job->setDelFilesAfterPosted(delFiles);
+}
+
+void NgPost::addMonitoringFolder(const QString &dirPath)
+{
+    if (_folderMonitor)
+        _folderMonitor->addFolder(dirPath);
 }
 
 const QString NgPost::sNgPostASCII = QString("\
