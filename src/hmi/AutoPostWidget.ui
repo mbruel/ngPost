@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1214</width>
+    <width>1191</width>
     <height>480</height>
    </rect>
   </property>
@@ -243,6 +243,26 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="addMonitoringFolderButton">
+       <property name="maximumSize">
+        <size>
+         <width>35</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>add another folder to monitor (you must be in monitoring already)</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../resources/resources.qrc">
+         <normaloff>:/icons/plus.png</normaloff>:/icons/plus.png</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer_5">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -254,6 +274,34 @@
         </size>
        </property>
       </spacer>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLabel" name="extentionFilterLbl">
+         <property name="text">
+          <string>Monitor extension filter: </string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="extensionFilterEdit">
+         <property name="toolTip">
+          <string>Add monitoring extension filter (coma separated, not dot, no space, ex: mkv,mp4,avi,iso,tar)</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="dirAllowedCB">
+         <property name="toolTip">
+          <string>shall we post incoming folders</string>
+         </property>
+         <property name="text">
+          <string>post Folders</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
       <spacer name="horizontalSpacer">
