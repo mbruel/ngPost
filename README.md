@@ -134,12 +134,14 @@ The following ones are for experimented posters:
 - **PAR2_CMD**  : to change the par2 generator and be able to use [Parpar](https://github.com/animetosho/ParPar) or [Multipar](http://hp.vector.co.jp/authors/VA021385/) if you wish. (par2cmdline is the default embedded generator)
 - **PAR2_ARGS** : to customize the par2 command, especially if you choose to use another one than the default par2cmdline
 
-### Linux 64bit portable release
+### Linux 64bit portable release (compiled with Qt v5.12.6)
 if you don't want to build it and install the dependencies, you can also the portable release that includes everything.<br/>
 - download [ngPost_v4.2-x86_64.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.2-x86_64.AppImage)
 - chmod 755 ngPost_v4.2-x86_64.AppImage
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
+
+PS: for older system with GLIBC < 3.4, here is a version compiled on Debian8 with GLIBC 2.19 and Qt v5.8.0: [ngPost_v4.2-x86_64_debian8.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.2-x86_64_debian8.AppImage)
 
 
 ### Raspbian release (armhf for Raspberry PI)
