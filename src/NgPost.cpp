@@ -87,9 +87,13 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::RAR_EXTRA,    "rar_extra"},
     {Opt::RAR_SIZE,     "rar_size"},
     {Opt::RAR_MAX,      "rar_max"},
+    {Opt::KEEP_RAR,     "keep_rar"},
+
+
     {Opt::PAR2_PCT,     "par2_pct"},
     {Opt::PAR2_PATH,    "par2_path"},
     {Opt::PAR2_ARGS,    "par2_args"},
+
     {Opt::COMPRESS,     "compress"},
     {Opt::GEN_PAR2,     "gen_par2"},
     {Opt::GEN_NAME,     "gen_name"},
@@ -199,7 +203,8 @@ NgPost::NgPost(int &argc, char *argv[]):
     _autoDirs(),
     _folderMonitor(nullptr), _monitorThread(nullptr),
     _delAuto(false),
-    _monitor_nzb_folders(false), _monitorExtensions(), _monitorIgnoreDir(false)
+    _monitor_nzb_folders(false), _monitorExtensions(), _monitorIgnoreDir(false),
+    _keepRar(false)
 {
     QThread::currentThread()->setObjectName(sMainThreadName);
 
@@ -1307,6 +1312,10 @@ QString NgPost::_parseConfig(const QString &configPath)
                         if (ok)
                             _rarMax = nb;
                     }
+                    else if (opt == sOptionNames[Opt::KEEP_RAR])
+                    {
+                        _keepRar = true;
+                    }
                     else if (opt == sOptionNames[Opt::PAR2_PCT])
                     {
                         uint nb = val.toUInt(&ok);
@@ -1607,6 +1616,9 @@ void NgPost::saveConfig()
                << "## we'll use RAR_SIZE except if it genereates too many volumes\n"
                << "## in that case we'll update rar_size to be <size of post> / rar_max\n"
                << "RAR_MAX = " << _rarMax << "\n"
+               << "\n"
+               << "##  keep rar folder after posting (otherwise it is automatically deleted uppon successful post)\n"
+               << (_keepRar  ? "" : "#") << "KEEP_RAR = true\n"
                << "\n"
                << "## par2 redundancy percentage (0 by default meaning NO par2 generation)\n"
                << "PAR2_PCT = " << _par2Pct << "\n"
