@@ -73,7 +73,7 @@ class NgPost : public QObject
                     MONITOR_FOLDERS, MONITOR_EXT, MONITOR_IGNORE_DIR,
                     MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY,
                     OBFUSCATE, INPUT_DIR, AUTO_DIR, MONITOR_DIR, DEL_AUTO,
-                    TMP_DIR, RAR_PATH, RAR_EXTRA, RAR_SIZE, RAR_MAX,
+                    TMP_DIR, RAR_PATH, RAR_EXTRA, RAR_SIZE, RAR_MAX, KEEP_RAR,
                     PAR2_PCT, PAR2_PATH, PAR2_ARGS,
                     COMPRESS, GEN_PAR2, GEN_NAME, GEN_PASS, LENGTH_NAME, LENGTH_PASS,
                     RAR_NAME, RAR_PASS,
@@ -152,9 +152,11 @@ private:
     QThread                   *_monitorThread;
     bool                       _delAuto;
 
-    bool                       _monitor_nzb_folders;
-    QStringList                _monitorExtensions;
-    bool                       _monitorIgnoreDir;
+    bool          _monitor_nzb_folders;
+    QStringList   _monitorExtensions;
+    bool          _monitorIgnoreDir;
+
+    bool          _keepRar;
 
 
     static qint64 sArticleSize;
@@ -252,6 +254,8 @@ public:
     inline void setDebug(bool isDebug);
 
     inline bool dispPostingFile() const;
+
+    inline bool keepRar() const;
 
     void saveConfig();
 
@@ -352,6 +356,8 @@ bool NgPost::debugMode() const { return _debug; }
 void NgPost::setDebug(bool isDebug){ _debug = isDebug; }
 
 bool NgPost::dispPostingFile() const { return _dispFilesPosting; }
+
+bool NgPost::keepRar() const { return _keepRar; }
 
 
 qint64 NgPost::articleSize()  { return sArticleSize; }

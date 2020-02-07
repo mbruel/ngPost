@@ -902,7 +902,8 @@ void PostingJob::_cleanExtProc()
 
 void PostingJob::_cleanCompressDir()
 {
-    _compressDir->removeRecursively();
+    if (!_ngPost->keepRar())
+        _compressDir->removeRecursively();
     delete _compressDir;
     _compressDir = nullptr;
     if (_ngPost->debugMode())
