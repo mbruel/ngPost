@@ -9,7 +9,7 @@ TEMPLATE = app
 CONFIG += c++14
 CONFIG -= app_bundle
 
-DEFINES += __FORMAT_ARTICLE_BODY_IN_PRODUCER__
+TRANSLATIONS = lang/ngPost_fr.ts  lang/ngPost_es.ts lang/ngPost_de.ts
 
 win32: {
     RC_ICONS += ngPost.ico

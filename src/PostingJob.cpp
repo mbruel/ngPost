@@ -48,6 +48,7 @@ PostingJob::PostingJob(NgPost *ngPost,
                        bool doPar2,
                        const QString &rarName,
                        const QString &rarPass,
+                       bool keepRar,
                        bool delFilesAfterPost,
                        bool overwriteNzb,
                        QObject *parent) :
@@ -57,7 +58,7 @@ PostingJob::PostingJob(NgPost *ngPost,
     _extProc(nullptr), _compressDir(nullptr), _limitProcDisplay(false), _nbProcDisp(42),
 
     _tmpPath(tmpPath), _rarPath(rarPath), _rarSize(rarSize), _useRarMax(useRarMax), _par2Pct(par2Pct),
-    _doCompress(doCompress), _doPar2(doPar2), _rarName(rarName), _rarPass(rarPass),
+    _doCompress(doCompress), _doPar2(doPar2), _rarName(rarName), _rarPass(rarPass), _keepRar(keepRar),
 
     _nntpConnections(),
 
@@ -130,9 +131,9 @@ PostingJob::~PostingJob()
 void PostingJob::onStartPosting()
 {
     if (_postWidget)
-        _log(QString("<h3>Start Post #%1: %2</h3>").arg(_postWidget->jobNumber()).arg(_nzbName));
+        _log(tr("<h3>Start Post #%1: %2</h3>").arg(_postWidget->jobNumber()).arg(_nzbName));
     else
-        _log(QString("\n\nStart posting: %1").arg(_nzbName));
+        _log(tr("\n\nStart posting: %1").arg(_nzbName));
 
     if (_doCompress)
     {
@@ -178,7 +179,7 @@ void PostingJob::_postFiles()
         nbPosters = 1;
     if (!nbCon)
     {
-        _error("Error: there are no NntpConnection...");
+        _error(tr("Error: there are no NntpConnection..."));
         emit postingFinished();
         return;
     }
@@ -222,12 +223,13 @@ void PostingJob::_postFiles()
     _posters.reserve(nbPosters);
     int nbConPerPoster = static_cast<int>(std::floor(nbCon / nbPosters));
     int nbExtraCon     = nbCon - nbConPerPoster * nbPosters;
+#ifdef __DEBUG__
     qDebug() << "[PostingJob::_postFiles] nbFiles: " << _filesToUpload.size()
              << ", nbPosters: " << nbPosters
              << ", nbCons: " << nbCon
              << " => nbCon per Poster: " << nbConPerPoster
              << " (nbExtraCon: " << nbExtraCon << ")";
-
+#endif
 
 
     int conIdx = 0;
@@ -261,7 +263,7 @@ void PostingJob::onStopPosting()
 {
     if (_extProc)
     {
-        _log("killing external process...");
+        _log(tr("killing external process..."));
         _extProc->terminate();
         _extProc->waitForFinished();
     }
@@ -292,7 +294,7 @@ void PostingJob::onDisconnectedConnection(NntpConnection *con)
 void PostingJob::onNntpFileStartPosting()
 {
     NntpFile *nntpFile = static_cast<NntpFile*>(sender());
-    _log(QString("[avg. speed: %1] >>>>> %2").arg(avgSpeed()).arg(nntpFile->name()));
+    _log(tr("[avg. speed: %1] >>>>> %2").arg(avgSpeed()).arg(nntpFile->name()));
 }
 
 void PostingJob::onNntpFilePosted()
@@ -304,7 +306,7 @@ void PostingJob::onNntpFilePosted()
         emit filePosted(nntpFile->path(), nntpFile->nbArticles(), nntpFile->nbFailedArticles());
 
     if (_ngPost->_dispFilesPosting)
-        _log(QString("[avg. speed: %1] <<<<< %2").arg(avgSpeed()).arg(nntpFile->name()));
+        _log(tr("[avg. speed: %1] <<<<< %2").arg(avgSpeed()).arg(nntpFile->name()));
 
     nntpFile->writeToNZB(_nzbStream, _ngPost->_articleIdSignature.c_str());
     _filesInProgress.remove(nntpFile);
@@ -331,7 +333,7 @@ void PostingJob::onNntpErrorReading()
         emit filePosted(nntpFile->path(), nntpFile->nbArticles(), nntpFile->nbArticles());
 
     if (_ngPost->_dispFilesPosting)
-        _log(QString("[avg. speed: %1] <<<<< %2").arg(avgSpeed()).arg(nntpFile->name()));
+        _log(tr("[avg. speed: %1] <<<<< %2").arg(avgSpeed()).arg(nntpFile->name()));
 
     _filesInProgress.remove(nntpFile);
     _filesFailed.insert(nntpFile);
@@ -524,7 +526,9 @@ void PostingJob::_initPosting()
 
 void PostingJob::_finishPosting()
 {
+#ifdef __DEBUG__
 qDebug() << "[MB_TRACE][PostingJob::_finishPosting]";
+#endif
     _stopPosting = 0x1;
 
     if (!_timeStart.isNull() && _postFinished)
@@ -567,7 +571,7 @@ qDebug() << "[MB_TRACE][PostingJob::_finishPosting]";
     int nbPendingFiles = _filesToUpload.size() + _filesInProgress.size() + _filesFailed.size();
     if (nbPendingFiles)
     {
-        _error(QString("ERROR: there were %1 on %2 that havn't been posted:").arg(
+        _error(tr("ERROR: there were %1 on %2 that havn't been posted:").arg(
                    nbPendingFiles).arg(_nbFiles));
         for (NntpFile *file : _filesInProgress)
             _error(QString("  - %1").arg(file->path()));
@@ -615,12 +619,12 @@ void PostingJob::_printStats() const
 
     if (_nzb)
     {
-        msgEnd += QString("nzb file: %1\n").arg(_nzbFilePath);
+        msgEnd += tr("nzb file: %1\n").arg(_nzbFilePath);
         if (_doCompress)
         {
-            msgEnd += QString("file: %1, rar name: %2").arg(_nzbName).arg(_rarName);
+            msgEnd += tr("file: %1, rar name: %2").arg(_nzbName).arg(_rarName);
             if (!_rarPass.isEmpty())
-                msgEnd += QString(", rar pass: %1").arg(_rarPass);
+                msgEnd += tr(", rar pass: %1").arg(_rarPass);
         }
         msgEnd += "\n";
     }
@@ -752,7 +756,7 @@ bool PostingJob::startCompressFiles(const QString &cmdRar,
     if (_ngPost->debugMode() || !_postWidget)
         _log(tr("Compressing files: %1 %2\n").arg(cmdRar).arg(args.join(" ")));
     else
-        _log("Compressing files...\n");
+        _log(tr("Compressing files...\n"));
     _limitProcDisplay = false;
     _extProc->start(cmdRar, args);
 
@@ -863,7 +867,7 @@ bool PostingJob::startGenPar2(const QString &tmpFolder,
     if (_ngPost->debugMode() || !_postWidget)
         _log(tr("Generating par2: %1 %2\n").arg(_ngPost->_par2Path).arg(args.join(" ")));
     else
-        _log("Generating par2...\n");
+        _log(tr("Generating par2...\n"));
     if (!_ngPost->_par2Path.toLower().contains("parpar"))
         _limitProcDisplay = true;
     _nbProcDisp = 0;
@@ -897,17 +901,17 @@ void PostingJob::_cleanExtProc()
     delete _extProc;
     _extProc = nullptr;
     if (_ngPost->debugMode())
-        _log("External process deleted.");
+        _log(tr("External process deleted."));
 }
 
 void PostingJob::_cleanCompressDir()
 {
-    if (!_ngPost->keepRar())
+    if (!_keepRar)
         _compressDir->removeRecursively();
     delete _compressDir;
     _compressDir = nullptr;
     if (_ngPost->debugMode())
-        _log("Compressed files deleted.");
+        _log(tr("Compressed files deleted."));
 }
 
 QString PostingJob::_createArchiveFolder(const QString &tmpFolder, const QString &archiveName)

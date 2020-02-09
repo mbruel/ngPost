@@ -164,7 +164,8 @@ void PostingWidget::onPostFiles()
         _state = STATE::POSTING;
         _postingJob = new PostingJob(_ngPost, nzbPath, files, this, _ngPost->_obfuscateArticles, _ngPost->_tmpPath,
                                      _ngPost->_rarPath, _ngPost->_rarSize, _ngPost->_useRarMax, _ngPost->_par2Pct,
-                                     _ngPost->_doCompress, _ngPost->_doPar2, _ngPost->_rarName, _ngPost->_rarPass);
+                                     _ngPost->_doCompress, _ngPost->_doPar2, _ngPost->_rarName, _ngPost->_rarPass,
+                                     _ngPost->_keepRar);
 
         bool hasStarted = _ngPost->startPostingJob(_postingJob);
 
@@ -381,7 +382,6 @@ void PostingWidget::init()
     _ui->nzbPassCB->setChecked(false);
     onNzbPassToggled(false);
 
-    _ui->fileListLbl->hide();
     _ui->filesList->setSignature(QString("<pre>%1</pre>").arg(_ngPost->escapeXML(_ngPost->asciiArt())));
     connect(_ui->filesList, &SignedListWidget::rightClick, this, &PostingWidget::onSelectFilesClicked);
 
@@ -390,6 +390,8 @@ void PostingWidget::init()
 
     _ui->rarSizeEdit->setText(QString::number(_ngPost->_rarSize));
     _ui->rarSizeEdit->setValidator(new QIntValidator(1, 1000000, _ui->rarSizeEdit));
+
+    _ui->keepRarCB->setChecked(_ngPost->_keepRar);
 
     if (_ngPost->_par2Args.isEmpty())
     {
@@ -443,6 +445,8 @@ void PostingWidget::genNameAndPassword(bool genName, bool genPass, bool doPar2, 
 
     if (doPar2)
         _ui->par2CB->setChecked(true);
+
+    _ui->keepRarCB->setChecked(_ngPost->_keepRar);
 }
 
 
@@ -484,6 +488,8 @@ void PostingWidget::udatePostingParams()
     _ngPost->_par2Pct = 0;
     if (_ui->par2CB->isChecked())
         _ngPost->_par2Pct = static_cast<uint>(_ui->redundancySB->value());
+
+    _ngPost->_keepRar = _ui->keepRarCB->isChecked();
 }
 
 void PostingWidget::addPath(const QString &path, int currentNbFiles, int isDir)

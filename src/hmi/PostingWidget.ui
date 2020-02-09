@@ -267,13 +267,6 @@
        </property>
       </spacer>
      </item>
-     <item>
-      <widget class="QLabel" name="fileListLbl">
-       <property name="text">
-        <string>(press DEL on selected files to remove them)</string>
-       </property>
-      </widget>
-     </item>
     </layout>
    </item>
    <item>
@@ -457,6 +450,16 @@
          </property>
          <property name="text">
           <string>gen par2</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="keepRarCB">
+         <property name="toolTip">
+          <string>by default archives and par2 files are deleted uppon post success but you can choose to keep them</string>
+         </property>
+         <property name="text">
+          <string>keep archives</string>
          </property>
         </widget>
        </item>

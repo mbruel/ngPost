@@ -52,6 +52,7 @@ void AutoPostWidget::init()
     _ui->rarMaxCB->setToolTip(tr("limit the number of archive volume to %1 (cf config RAR_MAX)").arg(_ngPost->_rarMax));
     _ui->rarMaxCB->setChecked(_ngPost->_useRarMax);
 
+    _ui->keepRarCB->setChecked(_ngPost->_keepRar);
 
     _ui->compressPathEdit->setText(_ngPost->_tmpPath);
     _ui->rarEdit->setText(_ngPost->_rarPath);
@@ -386,6 +387,7 @@ void AutoPostWidget::udatePostingParams()
 
     _ngPost->_monitorIgnoreDir = !_ui->dirAllowedCB->isChecked();
 
+    _ngPost->_keepRar = _ui->keepRarCB->isChecked();
 }
 
 void AutoPostWidget::updateFinishedJob(const QString &path, uint nbArticles, uint nbUploaded, uint nbFailed)

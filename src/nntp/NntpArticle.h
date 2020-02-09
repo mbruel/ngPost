@@ -68,11 +68,6 @@ signals:
     void failed(quint64 size); //!< to warn the main thread (async upload)
 
 public:
-//    NntpArticle(NntpFile *file, uint part, const char data[], qint64 pos, qint64 bytes,
-//                const std::string &from, const std::string &groups, bool obfuscation);
-
-
-
     NntpArticle(NntpFile *file, uint part, qint64 pos, qint64 bytes,
                 const std::string &from, const std::string &groups, bool obfuscation);
 
