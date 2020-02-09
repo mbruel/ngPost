@@ -56,24 +56,26 @@ private:
     NgPost *const _ngPost; //!< handle on the application to access global configs
     QFileInfoList _files; //!< populated on constuction using a QStringList of paths
 
-    PostingWidget *_postWidget;
+    PostingWidget *const _postWidget;
 
     QProcess   *_extProc;
     QDir       *_compressDir;
     bool        _limitProcDisplay;
     ushort      _nbProcDisp;
 
-    QString     _tmpPath;
-    QString     _rarPath;
-    QString     _rarArgs;
-    uint        _rarSize;
-    bool        _useRarMax;
-    uint        _par2Pct;
+    const QString  _tmpPath;
+    const QString  _rarPath;
+    QString        _rarArgs;
+    const uint     _rarSize;
+    const bool     _useRarMax;
+    const uint     _par2Pct;
 
-    bool        _doCompress;
-    bool        _doPar2;
-    QString     _rarName;
-    QString     _rarPass;
+    const bool    _doCompress;
+    const bool    _doPar2;
+    const QString _rarName;
+    const QString _rarPass;
+    const bool    _keepRar;
+
 
 
     QVector<NntpConnection*> _nntpConnections; //!< the NNTP connections (owning the TCP sockets)
@@ -124,7 +126,6 @@ private:
 
     const bool  _overwriteNzb;
 
-
 public:
     PostingJob(NgPost *ngPost,
                const QString &nzbFilePath,
@@ -140,6 +141,7 @@ public:
                bool doPar2,
                const QString &rarName,
                const QString &rarPass,
+               bool keepRar = false,
                bool delFilesAfterPost = false,
                bool overwriteNzb = true,
                QObject *parent = nullptr);

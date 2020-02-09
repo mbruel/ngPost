@@ -445,12 +445,12 @@
       </spacer>
      </item>
      <item>
-      <widget class="QCheckBox" name="delFilesCB">
+      <widget class="QCheckBox" name="keepRarCB">
        <property name="toolTip">
-        <string>delete files/folders once they have been successfully posted (careful with that it's irreversible!!!)</string>
+        <string>by default archives and par2 files are deleted uppon post success but you can choose to keep them</string>
        </property>
        <property name="text">
-        <string>delete files once posted (only for Monitoring)</string>
+        <string>keep archives</string>
        </property>
       </widget>
      </item>
@@ -466,6 +466,16 @@
         </size>
        </property>
       </spacer>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="delFilesCB">
+       <property name="toolTip">
+        <string>delete files/folders once they have been successfully posted (careful with that it's irreversible!!!)</string>
+       </property>
+       <property name="text">
+        <string>delete files once posted (only for Monitoring)</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

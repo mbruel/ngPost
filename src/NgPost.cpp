@@ -434,7 +434,7 @@ void NgPost::_post(const QFileInfo &fileInfo, const QString &monitorFolder)
                                    _obfuscateArticles, _tmpPath,
                                    _rarPath, _rarSize, _useRarMax, _par2Pct,
                                    _doCompress, _doPar2, _rarName, _rarPass,
-                                   _delAuto, false));
+                                   _keepRar, _delAuto, false));
 }
 
 
@@ -1078,7 +1078,8 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         startPostingJob(new PostingJob(this, nzbFilePath, filesToUpload, nullptr,
                                        _obfuscateArticles, _tmpPath,
                                        _rarPath, _rarSize, _useRarMax, _par2Pct,
-                                       _doCompress, _doPar2, _rarName, _rarPass));
+                                       _doCompress, _doPar2, _rarName, _rarPass,
+                                       _keepRar, _delAuto, false));
     }
 
     if (_autoDirs.size())
@@ -1524,64 +1525,64 @@ void NgPost::saveConfig()
     if (file.open(QIODevice::WriteOnly|QIODevice::Text))
     {
         QTextStream stream(&file);
-        stream << "# ngPost configuration file\n"
+        stream << tr("# ngPost configuration file") << endl
                << "#\n"
                << "#\n"
                << "\n"
-               << "## destination folder for all your nzb\n"
-               << "## if you don't put anything, the nzb will be generated in the folder of ngPost on Windows and in /tmp on Linux\n"
-               << "## this will be overwritten if you use the option -o with the full path of the nzb\n"
+               << tr("## destination folder for all your nzb") << endl
+               << tr("## if you don't put anything, the nzb will be generated in the folder of ngPost on Windows and in /tmp on Linux") << endl
+               << tr("## this will be overwritten if you use the option -o with the full path of the nzb") << endl
                << "nzbPath  = " << (_nzbPath.isEmpty() ? _nzbPathConf : _nzbPath) << "\n"
                << "\n"
-               << "## nzb files are normally all created in nzbPath\n"
-               << "## but using this option, the nzb of each monitoring folder will be stored in their own folder (created in nzbPath)\n"
+               << tr("## nzb files are normally all created in nzbPath") << endl
+               << tr("## but using this option, the nzb of each monitoring folder will be stored in their own folder (created in nzbPath)") << endl
                << (_monitor_nzb_folders  ? "" : "#") << "MONITOR_NZB_FOLDERS = true\n"
                << "\n"
-               << "## for monitoring, extension file filter for new incoming files (coma separated, no dot)\n"
+               << tr("## for monitoring, extension file filter for new incoming files (coma separated, no dot)") << endl
                << (_monitorExtensions.isEmpty()  ? "#" : "") << "MONITOR_EXTENSIONS = "
                << (_monitorExtensions.isEmpty() ? "mkv,mp4,avi,zip,tar,gz,iso" : _monitorExtensions.join(",")) << "\n"
                << "\n"
-               << "## for monitoring, ignore new incoming folders\n"
+               << tr("## for monitoring, ignore new incoming folders") << endl
                << (_monitorIgnoreDir  ? "" : "#") << "MONITOR_IGNORE_DIR = true\n"
                << "\n\n"
-               << "## Default folder to open to select files from the HMI\n"
+               << tr("## Default folder to open to select files from the HMI") << endl
                << "inputDir = " << _inputDir << "\n"
                << "\n"
-               << "## History posting file\n"
-               << "## each succesful post will append a line with the date, the file name, the archive name, the password...\n"
+               << tr("## History posting file") << endl
+               << tr("## each succesful post will append a line with the date, the file name, the archive name, the password...") << endl
                << (_postHistoryFile.isEmpty()  ? "#" : "") <<"POST_HISTORY = "
                << (_postHistoryFile.isEmpty()  ? "/nzb/ngPost_history.cvs" : _postHistoryFile) << "\n"
                << "\n"
                << "groups   = " << _groups.c_str() << "\n"
                << "\n"
                << "\n"
-               << "## uncomment the next line if you want a fixed uploader email (in the nzb and in the header of each articles)\n"
-               << "## if you let it commented, we'll generate a random email for the whole post\n"
+               << tr("## uncomment the next line if you want a fixed uploader email (in the nzb and in the header of each articles)") << endl
+               << tr("## if you let it commented, we'll generate a random email for the whole post") << endl
                << "#from     = someone@ngPost.com\n"
                << "\n"
                << "\n"
-               << "## uncomment the next line to limit the number of threads,  (by default it'll use the number of cores)\n"
-               << "## all the connections are spread equally on those posting threads\n"
+               << tr("## uncomment the next line to limit the number of threads,  (by default it'll use the number of cores)") << endl
+               << tr("## all the connections are spread equally on those posting threads") << endl
                << "thread  =  " << _nbThreads << "\n"
                << "\n"
                << "\n"
-               << "## How to display progressbar in command line: NONE, BAR, FILES\n"
+               << tr("## How to display progressbar in command line: NONE, BAR, FILES") << endl
                << (_dispprogressbarBar  ? "" : "#") << "DISP_progressbar = BAR\n"
                << (_dispFilesPosting ? "" : "#") << "DISP_progressbar = FILES\n"
                << "\n"
                << "\n"
-               << "## suffix of the msg_id for all the articles (cf nzb file)\n"
+               << tr("## suffix of the msg_id for all the articles (cf nzb file)") << endl
                << (_articleIdSignature == "ngPost" ? "#msg_id  =  ngPost\n" : QString("msg_id  =  %1\n").arg(_articleIdSignature.c_str()))
                << "\n"
-               << "## article size (default 700k)\n"
+               << tr("## article size (default 700k)") << endl
                << "article_size = " << sArticleSize << "\n"
                << "\n"
-               << "## number of retry to post an Article in case of failure (probably due to an already existing msg-id)\n"
+               << tr("## number of retry to post an Article in case of failure (probably due to an already existing msg-id)") << endl
                << "retry = " << NntpArticle::nbMaxTrySending() << "\n"
                << "\n"
                << "\n"
-               << "## uncomment the following line to obfuscate the subjects of each Article\n"
-               << "## /!\\ CAREFUL you won't find your post if you lose the nzb file /!\\\n"
+               << tr("## uncomment the following line to obfuscate the subjects of each Article") << endl
+               << tr("## /!\\ CAREFUL you won't find your post if you lose the nzb file /!\\") << endl
                << (_obfuscateArticles ? "" : "#") << "obfuscate = article\n"
                << "\n"
                << "\n"
@@ -1591,56 +1592,56 @@ void NgPost::saveConfig()
                << "##           Compression and par2 section                   ##\n"
                << "##############################################################\n"
                << "\n"
-               << "## temporary folder where the compressed files and par2 will be stored\n"
-               << "## so we can post directly a compressed (obfuscated or not) archive of the selected files\n"
-               << "## /!\\ The directory MUST HAVE WRITE PERMISSION /!\\\n"
-               << "## this is set for Linux environment, Windows users MUST change it\n"
+               << tr("## temporary folder where the compressed files and par2 will be stored") << endl
+               << tr("## so we can post directly a compressed (obfuscated or not) archive of the selected files") << endl
+               << tr("## /!\\ The directory MUST HAVE WRITE PERMISSION /!\\") << endl
+               << tr("## this is set for Linux environment, Windows users MUST change it") << endl
                << "TMP_DIR = " << _tmpPath << "\n"
                << "\n"
-               << "## RAR absolute file path (external application)\n"
-               << "## /!\\ The file MUST EXIST and BE EXECUTABLE /!\\\n"
-               << "## this is set for Linux environment, Windows users MUST change it\n"
+               << tr("## RAR absolute file path (external application)") << endl
+               << tr("## /!\\ The file MUST EXIST and BE EXECUTABLE /!\\") << endl
+               << tr("## this is set for Linux environment, Windows users MUST change it") << endl
                << "RAR_PATH = " << _rarPath << "\n"
                << "\n"
-               << "## RAR EXTRA options (the first 'a' and '-idp' will be added automatically)\n"
-               << "## -hp will be added if you use a password with --gen_pass, --rar_pass or using the HMI\n"
-               << "## -v42m will be added with --rar_size or using the HMI\n"
-               << "## you could change the compression level, lock the archive, add redundancy...\n"
+               << tr("## RAR EXTRA options (the first 'a' and '-idp' will be added automatically)") << endl
+               << tr("## -hp will be added if you use a password with --gen_pass, --rar_pass or using the HMI") << endl
+               << tr("## -v42m will be added with --rar_size or using the HMI") << endl
+               << tr("## you could change the compression level, lock the archive, add redundancy...") << endl
                << "RAR_EXTRA = " << _rarArgs << "\n"
                << "\n"
-               << "## size in MB of the RAR volumes (0 by default meaning NO split)\n"
-               << "## feel free to change the value or to comment the next line if you don't want to split the archive\n"
+               << tr("## size in MB of the RAR volumes (0 by default meaning NO split)") << endl
+               << tr("## feel free to change the value or to comment the next line if you don't want to split the archive") << endl
                << "RAR_SIZE = " << _rarSize << "\n"
                << "\n"
-               << "## maximum number of archive volumes\n"
-               << "## we'll use RAR_SIZE except if it genereates too many volumes\n"
-               << "## in that case we'll update rar_size to be <size of post> / rar_max\n"
+               << tr("## maximum number of archive volumes") << endl
+               << tr("## we'll use RAR_SIZE except if it genereates too many volumes") << endl
+               << tr("## in that case we'll update rar_size to be <size of post> / rar_max") << endl
                << "RAR_MAX = " << _rarMax << "\n"
                << "\n"
-               << "##  keep rar folder after posting (otherwise it is automatically deleted uppon successful post)\n"
+               << tr("##  keep rar folder after posting (otherwise it is automatically deleted uppon successful post)") << endl
                << (_keepRar  ? "" : "#") << "KEEP_RAR = true\n"
                << "\n"
-               << "## par2 redundancy percentage (0 by default meaning NO par2 generation)\n"
+               << tr("## par2 redundancy percentage (0 by default meaning NO par2 generation)") << endl
                << "PAR2_PCT = " << _par2Pct << "\n"
                << "\n"
-               << "## par2 (or alternative) absolute file path\n"
-               << "## this is only useful if you compile from source (as par2 is included on Windows and the AppImage)\n"
-               << "## or if you wish to use an alternative to par2 (for exemple Multipar on Windows)\n"
-               << "## (in that case, you may need to set also PAR2_ARGS)\n"
+               << tr("## par2 (or alternative) absolute file path") << endl
+               << tr("## this is only useful if you compile from source (as par2 is included on Windows and the AppImage)") << endl
+               << tr("## or if you wish to use an alternative to par2 (for exemple Multipar on Windows)") << endl
+               << tr("## (in that case, you may need to set also PAR2_ARGS)") << endl
                << "PAR2_PATH = " << _par2Path << "\n"
                << "#PAR2_PATH = par2j64.exe\n"
                << "\n"
-               << "## fixed parameters for the par2 (or alternative) command\n"
-               << "## you could for exemple use Multipar on Windows\n"
-               << "#PAR2_ARGS = c -l -m1024 -r8 -s768000\n"
-               << "#PAR2_ARGS = create /rr8 /lc40 /lr /rd2\n"
+               << tr("## fixed parameters for the par2 (or alternative) command") << endl
+               << tr("## you could for exemple use Multipar on Windows") << endl
+               << tr("#PAR2_ARGS = c -l -m1024 -r8 -s768000") << endl
+               << tr("#PAR2_ARGS = create /rr8 /lc40 /lr /rd2") << endl
                << (_par2Args.isEmpty() ? "" : QString("PAR2_ARGS = %1\n").arg(_par2Args))
                << "\n"
                << "\n"
-               << "## length of the random generated archive's file name\n"
+               << tr("## length of the random generated archive's file name") << endl
                << "LENGTH_NAME = " << _lengthName << "\n"
                << "\n"
-               << "## length of the random archive's passsword\n"
+               << tr("## length of the random archive's passsword") << endl
                << "LENGTH_PASS = "<< _lengthPass << "\n"
                << "\n"
                << "\n"
@@ -1677,7 +1678,7 @@ void NgPost::saveConfig()
         file.close();
     }
     else
-        _error(tr("Error: Couldn't write default configuration file: ").arg(conf));
+        _error(tr("Error: Couldn't write default configuration file: %1").arg(conf));
 
 }
 
@@ -1705,15 +1706,15 @@ const QString NgPost::sNgPostASCII = QString("\
           \\//_____/                    \\/\n\
 ");
 
-const QString NgPost::sNgPostDesc = QString("%1 is a CMD/GUI Usenet binary poster developped in C++11/Qt5:\n\
-It is designed to be as fast as possible and offer all the main features to post data easily and safely.\n\n\
-Here are the main features and advantages of ngPost:\n\
-    - compress (using your external rar binary) and generate the par2 before posting!\n\
-    - scan folder(s) and post each file/folder individually after having them compressed\n\
-    - monitor folder(s) to post each new file/folder individually after having them compressed\n\
-    - auto delete files/folders once posted (only in command line with --auto or --monitor)\n\
-    - generate the nzb\n\
-    - full Article obfuscation: unique feature making all Aricles completely unrecognizable without the nzb\n\
-    - ... \n\
-for more details, cf https://github.com/mbruel/ngPost\n\
-").arg(sAppName);
+const QString NgPost::sNgPostDesc = QString("%1 %2\n%3\n\n%4\n    -%5\n    -%6\n    -%7\n    -%8\n    -%9\n    -%10\n    -%11\n%12\n").arg(sAppName).arg(
+            tr("is a CMD/GUI Usenet binary poster developped in C++11/Qt5:")).arg(
+            tr("It is designed to be as fast as possible and offer all the main features to post data easily and safely.")).arg(
+            tr("Here are the main features and advantages of ngPost:")).arg(
+            tr("compress (using your external rar binary) and generate the par2 before posting!")).arg(
+            tr("scan folder(s) and post each file/folder individually after having them compressed")).arg(
+            tr("monitor folder(s) to post each new file/folder individually after having them compressed")).arg(
+            tr("auto delete files/folders once posted (only in command line with --auto or --monitor)")).arg(
+            tr("generate the nzb")).arg(
+            tr("full Article obfuscation: unique feature making all Aricles completely unrecognizable without the nzb")).arg(
+            "...").arg(
+            tr("for more details, cf https://github.com/mbruel/ngPost"));

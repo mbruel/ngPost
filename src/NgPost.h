@@ -255,8 +255,6 @@ public:
 
     inline bool dispPostingFile() const;
 
-    inline bool keepRar() const;
-
     void saveConfig();
 
     void setDelFilesAfterPosted(bool delFiles);
@@ -356,8 +354,6 @@ bool NgPost::debugMode() const { return _debug; }
 void NgPost::setDebug(bool isDebug){ _debug = isDebug; }
 
 bool NgPost::dispPostingFile() const { return _dispFilesPosting; }
-
-bool NgPost::keepRar() const { return _keepRar; }
 
 
 qint64 NgPost::articleSize()  { return sArticleSize; }

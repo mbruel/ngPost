@@ -254,17 +254,44 @@
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="obfuscateMsgIdCB">
-           <property name="toolTip">
-            <string>CAREFUL: you won't be able to find your post without the NZB file</string>
-           </property>
-           <property name="text">
-            <string>Article's obfuscation: Subject changed to be a UUID + random From</string>
-           </property>
-           <property name="checked">
-            <bool>false</bool>
-           </property>
-          </widget>
+          <layout class="QHBoxLayout" name="horizontalLayout_6">
+           <item>
+            <widget class="QCheckBox" name="obfuscateMsgIdCB">
+             <property name="toolTip">
+              <string>CAREFUL: you won't be able to find your post without the NZB file</string>
+             </property>
+             <property name="text">
+              <string>Article's obfuscation: Subject changed to be a UUID + random From</string>
+             </property>
+             <property name="checked">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="obfuscateFileNameCB">
+             <property name="toolTip">
+              <string>when using compression with random name, rename also the file inside the archive</string>
+             </property>
+             <property name="text">
+              <string>file name obfuscation</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
          <item>
           <widget class="QFrame" name="frame">
