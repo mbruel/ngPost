@@ -57,6 +57,9 @@ public:
 
     bool deleteFilesOncePosted() const;
 
+    void retranslate();
+
+
 public slots:
     void onMonitorJobStart();
 

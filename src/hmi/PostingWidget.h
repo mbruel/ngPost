@@ -70,6 +70,8 @@ public:
 
     void udatePostingParams();
 
+    void retranslate();
+
 
 public slots: // for PostingJob
     void onFilePosted(QString filePath, uint nbArticles, uint nbFailed);

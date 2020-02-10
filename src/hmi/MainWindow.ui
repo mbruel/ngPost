@@ -353,6 +353,23 @@
             </layout>
            </item>
            <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_7">
+             <item>
+              <widget class="QLabel" name="langLbl">
+               <property name="toolTip">
+                <string>language</string>
+               </property>
+               <property name="text">
+                <string>Lang:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="langCB"/>
+             </item>
+            </layout>
+           </item>
+           <item>
             <widget class="QPushButton" name="saveButton">
              <property name="toolTip">
               <string>save all the parameters including servers in the config file</string>
@@ -523,7 +540,7 @@
        <item>
         <widget class="QLabel" name="uploadLbl">
          <property name="text">
-          <string>(11 / 125) avg speed: 6.53 MB/s</string>
+          <string>(0 / 0) avg speed: 0 MB/s</string>
          </property>
         </widget>
        </item>

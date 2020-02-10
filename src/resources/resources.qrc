@@ -17,5 +17,9 @@
         <file>icons/scanFolder.png</file>
         <file>icons/quick.png</file>
         <file>icons/monitor.png</file>
+        <file>icons/flag_FR.png</file>
+        <file>icons/flag_EN.png</file>
+        <file>icons/flag_ES.png</file>
+        <file>icons/flag_DE.png</file>
     </qresource>
 </RCC>

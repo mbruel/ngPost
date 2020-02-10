@@ -101,6 +101,7 @@ protected:
     void dropEvent(QDropEvent *e) override;
 
     void closeEvent(QCloseEvent *event) override;
+    void changeEvent(QEvent* event) override;
 
 public slots:
     void onSetProgressBarRange(int nbArticles);
@@ -129,6 +130,8 @@ private slots:
     void toBeImplemented();
 
     void onNzbPathClicked();
+
+    void onLangChanged(const QString &lang);
 
 private:
     void _initServerBox();
