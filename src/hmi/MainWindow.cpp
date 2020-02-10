@@ -135,6 +135,11 @@ MainWindow::~MainWindow()
 
 void MainWindow::init()
 {
+    for (const QString &lang : _ngPost->languages())
+        _ui->langCB->addItem(QIcon(QString(":/icons/flag_%1.png").arg(lang.toUpper())), lang.toUpper(), lang);
+    _ui->langCB->setCurrentText(_ngPost->_lang.toUpper());
+    connect(_ui->langCB, &QComboBox::currentTextChanged, this, &MainWindow::onLangChanged);
+
     _initServerBox();
     _initPostingBox();
     _quickJobTab->init();
@@ -220,6 +225,30 @@ void MainWindow::closeEvent(QCloseEvent *event)
     }
     else
         event->accept();
+}
+
+void MainWindow::changeEvent(QEvent *event)
+{
+    if(event)
+    {
+        switch(event->type()) {
+        // this event is send if a translator is loaded
+        case QEvent::LanguageChange:
+            qDebug() << "MainWindow::changeEvent";
+            _ui->retranslateUi(this);
+            setJobLabel(_ui->postTabWidget->currentIndex());
+            _quickJobTab->retranslate();
+            _autoPostTab->retranslate();
+            for (int i = 2 ; i < _ui->postTabWidget->count() - 1; ++i)
+                _getPostWidget(i)->retranslate();
+            break;
+
+            // this event is send, if the system, language changes
+        default:
+            break;
+        }
+    }
+    QMainWindow::changeEvent(event);
 }
 
 
@@ -478,7 +507,7 @@ void MainWindow::updateJobTab(QWidget *postWidget, const QColor &color, const QI
 
 void MainWindow::setJobLabel(int jobNumber)
 {
-    _ui->jobLabel->setText(QString("<b><u>Post #%1</u></b>").arg(jobNumber > 0 ? QString::number(jobNumber) : "Auto"));
+    _ui->jobLabel->setText(QString("<b><u>Post #%1</u></b>").arg(jobNumber != 1 ? QString::number(jobNumber) : "Auto"));
 }
 
 
@@ -652,6 +681,12 @@ void MainWindow::onNzbPathClicked()
 
     if (!path.isEmpty())
         _ui->nzbPathEdit->setText(path);
+}
+
+void MainWindow::onLangChanged(const QString &lang)
+{
+    qDebug() << "Changing lang to " << lang;
+    _ngPost->changeLanguage(lang.toLower());
 }
 
 

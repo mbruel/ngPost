@@ -418,6 +418,11 @@ void AutoPostWidget::updateFinishedJob(const QString &path, uint nbArticles, uin
 
 bool AutoPostWidget::deleteFilesOncePosted() const { return _ui->delFilesCB->isChecked(); }
 
+void AutoPostWidget::retranslate()
+{
+    _ui->retranslateUi(this);
+}
+
 
 
 void AutoPostWidget::handleKeyEvent(QKeyEvent *keyEvent)

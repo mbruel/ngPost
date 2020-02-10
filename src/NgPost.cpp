@@ -53,6 +53,7 @@ const QString NgPost::sSpace       = sDefaultSpace;
 const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
 {
     {Opt::HELP,         "help"},
+    {Opt::LANG,         "lang"},
     {Opt::VERSION,      "version"},
     {Opt::CONF,         "conf"},
     {Opt::DISP_PROGRESS,"disp_progress"},
@@ -119,6 +120,7 @@ const QList<QCommandLineOption> NgPost::sCmdOptions = {
     {{"c", sOptionNames[Opt::CONF]},          tr( "use configuration file (if not provided, we try to load $HOME/.ngPost)"), sOptionNames[Opt::CONF]},
     { sOptionNames[Opt::DISP_PROGRESS],       tr( "display cmd progressbar: NONE (default), BAR or FILES"), sOptionNames[Opt::DISP_PROGRESS]},
     {{"d", sOptionNames[Opt::DEBUG]},         tr( "display debug information")},
+    {{"l", sOptionNames[Opt::LANG]},          tr( "application language"), sOptionNames[Opt::LANG]},
 
 // automated posting (scanning and/or monitoring)
     { sOptionNames[Opt::AUTO_DIR],            tr("parse directory and post every file/folder separately. You must use --compress, should add --gen_par2, --gen_name and --gen_rar"), sOptionNames[Opt::AUTO_DIR]},
@@ -204,7 +206,8 @@ NgPost::NgPost(int &argc, char *argv[]):
     _folderMonitor(nullptr), _monitorThread(nullptr),
     _delAuto(false),
     _monitor_nzb_folders(false), _monitorExtensions(), _monitorIgnoreDir(false),
-    _keepRar(false)
+    _keepRar(false),
+    _lang("en")
 {
     QThread::currentThread()->setObjectName(sMainThreadName);
 
@@ -233,7 +236,9 @@ NgPost::NgPost(int &argc, char *argv[]):
         _par2Path = par2Embedded;
 
     connect(this, &NgPost::log,   this, &NgPost::onLog,   Qt::QueuedConnection);
-    connect(this, &NgPost::error, this, &NgPost::onError, Qt::QueuedConnection);  
+    connect(this, &NgPost::error, this, &NgPost::onError, Qt::QueuedConnection);
+
+    _loadTanslators();
 }
 
 void NgPost::_startMonitoring(const QString &folderPath)
@@ -408,6 +413,40 @@ void NgPost::onNewFileToProcess(const QFileInfo & fileInfo)
     _log(tr("Processing new incoming file: %1").arg(fileInfo.absoluteFilePath()));
     _post(fileInfo, _monitor_nzb_folders ? QDir(fileInfo.absolutePath()).dirName() : QString());
 }
+
+#include <QTranslator>
+void NgPost::_loadTanslators()
+{
+     QDir dir(sTranslationPath);
+     for (const QFileInfo &qmFile : dir.entryInfoList(QStringList("ngPost_*.qm")))
+     {
+         QTranslator *translator = new QTranslator();
+         if (translator->load(qmFile.absoluteFilePath()))
+         {
+             QString lang = qmFile.completeBaseName(); // ngPost_en
+             lang.remove(0, lang.indexOf('_') + 1); // en
+             _translators.insert(lang, translator);
+             qDebug() << "[NgPost::_loadTanslators] translator loaded for lang: " << lang;
+         }
+         else
+         {
+             qCritical() << "[NgPost::_loadTanslators] ERROR loading translator " << qmFile.absoluteFilePath();
+             delete translator;
+         }
+     }
+     _app->installTranslator(_translators[_lang]);
+}
+
+void NgPost::changeLanguage(const QString &lang)
+{
+    if (_translators.contains(lang))
+    {
+        _app->removeTranslator(_translators[_lang]);
+        _lang = lang;
+        _app->installTranslator(_translators[_lang]);
+    }
+}
+
 
 void NgPost::_post(const QFileInfo &fileInfo, const QString &monitorFolder)
 {
@@ -661,10 +700,36 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
              << "=> parsing: " << res << " (error: " << parser.errorText() << ")";
 #endif
 
+    if (parser.isSet(sOptionNames[Opt::CONF]))
+    {
+        QString err = _parseConfig(parser.value(sOptionNames[Opt::CONF]));
+        if (!err.isEmpty())
+        {
+            _error(err);
+            return false;
+        }
+    }
+    else
+    {
+        QString err = parseDefaultConfig();
+        if (!err.isEmpty())
+        {
+            _error(err);
+            return false;
+        }
+    }
+
     if (!parser.parse(args))
     {
         _error(tr("Error syntax: %1\nTo list the available options use: %2 --help\n").arg(parser.errorText()).arg(argv[0]));
         return false;
+    }
+
+    if (parser.isSet(sOptionNames[Opt::LANG]))
+    {
+        QString lang = parser.value(sOptionNames[Opt::LANG]).toLower();
+        _cout << "Lang: " << lang << endl << flush;
+        changeLanguage(lang);
     }
 
     if (parser.isSet(sOptionNames[Opt::HELP]))
@@ -739,25 +804,6 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
                 else
                     _startMonitoring(fi.absoluteFilePath());
             }
-        }
-    }
-
-    if (parser.isSet(sOptionNames[Opt::CONF]))
-    {
-        QString err = _parseConfig(parser.value(sOptionNames[Opt::CONF]));
-        if (!err.isEmpty())
-        {
-            _error(err);
-            return false;
-        }
-    }
-    else
-    {
-        QString err = parseDefaultConfig();
-        if (!err.isEmpty())
-        {
-            _error(err);
-            return false;
         }
     }
 
@@ -1249,10 +1295,10 @@ QString NgPost::_parseConfig(const QString &configPath)
                         _from = val.toStdString();
                     }
                     else if (opt == sOptionNames[Opt::GROUPS])
-                    {
                         updateGroups(val);
-                    }
 
+                    else if (opt == sOptionNames[Opt::LANG])
+                        changeLanguage(val.toLower());
 
                     else if (opt == sOptionNames[Opt::INPUT_DIR])
                         _inputDir = val;
@@ -1401,7 +1447,7 @@ void NgPost::_syntax(char *appName)
 {
 //    QString appVersion = QString("%1_v%2").arg(sAppName).arg(sVersion);
     QString app = QFileInfo(appName).fileName();
-    _cout << sNgPostDesc << "\n"
+    _cout << desc() << "\n"
           << "Syntax: " << app << " (options)* (-i <file or folder> | --auto <folder> | --monitor <folder>)+\n";
     for (const QCommandLineOption & opt : sCmdOptions)
     {
@@ -1706,15 +1752,3 @@ const QString NgPost::sNgPostASCII = QString("\
           \\//_____/                    \\/\n\
 ");
 
-const QString NgPost::sNgPostDesc = QString("%1 %2\n%3\n\n%4\n    -%5\n    -%6\n    -%7\n    -%8\n    -%9\n    -%10\n    -%11\n%12\n").arg(sAppName).arg(
-            tr("is a CMD/GUI Usenet binary poster developped in C++11/Qt5:")).arg(
-            tr("It is designed to be as fast as possible and offer all the main features to post data easily and safely.")).arg(
-            tr("Here are the main features and advantages of ngPost:")).arg(
-            tr("compress (using your external rar binary) and generate the par2 before posting!")).arg(
-            tr("scan folder(s) and post each file/folder individually after having them compressed")).arg(
-            tr("monitor folder(s) to post each new file/folder individually after having them compressed")).arg(
-            tr("auto delete files/folders once posted (only in command line with --auto or --monitor)")).arg(
-            tr("generate the nzb")).arg(
-            tr("full Article obfuscation: unique feature making all Aricles completely unrecognizable without the nzb")).arg(
-            "...").arg(
-            tr("for more details, cf https://github.com/mbruel/ngPost"));

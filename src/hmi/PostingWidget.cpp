@@ -492,6 +492,11 @@ void PostingWidget::udatePostingParams()
     _ngPost->_keepRar = _ui->keepRarCB->isChecked();
 }
 
+void PostingWidget::retranslate()
+{
+    _ui->retranslateUi(this);
+}
+
 void PostingWidget::addPath(const QString &path, int currentNbFiles, int isDir)
 {
     for (int i = 0 ; i < currentNbFiles ; ++i)

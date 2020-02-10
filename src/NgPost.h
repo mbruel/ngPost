@@ -31,6 +31,7 @@
 #include <QMutex>
 #include <QQueue>
 #include <QCommandLineOption>
+class QTranslator;
 class NntpConnection;
 class NntpServerParams;
 class NntpFile;
@@ -68,7 +69,7 @@ class NgPost : public QObject
     friend class AutoPostWidget;
     friend class PostingJob;
 
-    enum class Opt {HELP = 0, VERSION, CONF, DISP_PROGRESS, DEBUG, POST_HISTORY,
+    enum class Opt {HELP = 0, LANG, VERSION, CONF, DISP_PROGRESS, DEBUG, POST_HISTORY,
                     INPUT, OUTPUT, NZB_PATH, THREAD,
                     MONITOR_FOLDERS, MONITOR_EXT, MONITOR_IGNORE_DIR,
                     MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY,
@@ -158,6 +159,9 @@ private:
 
     bool          _keepRar;
 
+    QString       _lang;
+    QMap<QString, QTranslator*> _translators;
+
 
     static qint64 sArticleSize;
     static const QString sSpace;
@@ -188,7 +192,6 @@ private:
 
     static const QString sDonationURL;
     static const QString sNgPostASCII;
-    static const QString sNgPostDesc;
 
     static const QString sMainThreadName;
 
@@ -206,6 +209,8 @@ private:
     static constexpr const char *sDonationTooltip = "Donations are welcome, I spent quite some time to develop this app and make a sexy GUI although I'm not using it ;)";
 
     static const char sHistoryLogFieldSeparator = ';';
+    static constexpr const char *sTranslationPath = "./lang";
+
 
 public:
     NgPost(int &argc, char *argv[]);
@@ -241,7 +246,9 @@ public:
     inline static const QString & donationURL();
     inline static const QString & asciiArt();
     inline static QString asciiArtWithVersion();
-    inline static const QString & desc();
+    inline static QString desc();
+
+    inline QList<QString> languages() const;
 
     inline bool hasPostingJobs() const;
     void closeAllPostingJobs();
@@ -259,6 +266,8 @@ public:
 
     void setDelFilesAfterPosted(bool delFiles);
     void addMonitoringFolder(const QString &dirPath);
+
+    void changeLanguage(const QString &lang);
 
 signals:
     void log(QString msg, bool newline); //!< in case we signal from another thread
@@ -284,6 +293,8 @@ private slots:
 
 
 private:
+    void _loadTanslators();
+
     void _post(const QFileInfo &fileInfo, const QString &monitorFolder = "");
     void _finishPosting();
 
@@ -346,7 +357,7 @@ QString NgPost::asciiArtWithVersion()
     return QString("%1                          v%2\n").arg(sNgPostASCII).arg(sVersion);
 }
 
-const QString &NgPost::desc() { return sNgPostDesc; }
+QList<QString> NgPost::languages() const{ return _translators.keys(); }
 
 bool NgPost::hasPostingJobs() const { return (_activeJob || _pendingJobs.size()) ? true : false;}
 
@@ -413,6 +424,23 @@ std::string NgPost::_randomFrom(ushort length) const {
 
     randomFrom += QString("@%1.com").arg(_articleIdSignature.c_str());
     return randomFrom.toStdString();
+}
+
+
+QString NgPost::desc()
+{
+    return QString("%1 %2\n%3\n\n%4\n    -%5\n    -%6\n    -%7\n    -%8\n    -%9\n    -%10\n    -%11\n%12\n").arg(sAppName).arg(
+            tr("is a CMD/GUI Usenet binary poster developped in C++11/Qt5:")).arg(
+            tr("It is designed to be as fast as possible and offer all the main features to post data easily and safely.")).arg(
+            tr("Here are the main features and advantages of ngPost:")).arg(
+            tr("compress (using your external rar binary) and generate the par2 before posting!")).arg(
+            tr("scan folder(s) and post each file/folder individually after having them compressed")).arg(
+            tr("monitor folder(s) to post each new file/folder individually after having them compressed")).arg(
+            tr("auto delete files/folders once posted (only in command line with --auto or --monitor)")).arg(
+            tr("generate the nzb")).arg(
+            tr("invisible mode: full article obfuscation, unique feature making all Aricles completely unrecognizable without the nzb")).arg(
+            "...").arg(
+            tr("for more details, cf https://github.com/mbruel/ngPost"));
 }
 
 #endif // NGPOST_H
