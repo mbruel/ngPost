@@ -595,6 +595,8 @@ void PostingJob::_closeNzb()
         {
             _nzbStream << "</nzb>\n";
             _nzb->close();
+
+            _ngPost->uploadNzb(_nzbFilePath);
         }
         delete _nzb;
         _nzb = nullptr;
@@ -627,7 +629,8 @@ void PostingJob::_printStats() const
             if (!_rarPass.isEmpty())
                 msgEnd += tr(", rar pass: %1").arg(_rarPass);
         }
-        msgEnd += "\n";
+        if (!_ngPost->_urlNzbUpload)
+            msgEnd += "\n";
     }
 
     _log(msgEnd);

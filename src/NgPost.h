@@ -71,7 +71,7 @@ class NgPost : public QObject
     friend class PostingJob;
 
     enum class Opt {HELP = 0, LANG, VERSION, CONF, DISP_PROGRESS, DEBUG, POST_HISTORY,
-                    INPUT, OUTPUT, NZB_PATH, THREAD,
+                    INPUT, OUTPUT, NZB_PATH, THREAD, NZB_UPLOAD_URL,
                     MONITOR_FOLDERS, MONITOR_EXT, MONITOR_IGNORE_DIR,
                     MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY,
                     OBFUSCATE, INPUT_DIR, AUTO_DIR, MONITOR_DIR, DEL_AUTO,
@@ -275,6 +275,8 @@ public:
     void changeLanguage(const QString &lang);
 
     void checkForNewVersion();
+
+    void uploadNzb(const QString &nzbFilePath);
 
 signals:
     void log(QString msg, bool newline); //!< in case we signal from another thread

@@ -53,13 +53,14 @@ const QString NgPost::sSpace       = sDefaultSpace;
 
 const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
 {
-    {Opt::HELP,         "help"},
-    {Opt::LANG,         "lang"},
-    {Opt::VERSION,      "version"},
-    {Opt::CONF,         "conf"},
-    {Opt::DISP_PROGRESS,"disp_progress"},
-    {Opt::DEBUG,        "debug"},
-    {Opt::POST_HISTORY, "post_history"},
+    {Opt::HELP,           "help"},
+    {Opt::LANG,           "lang"},
+    {Opt::VERSION,        "version"},
+    {Opt::CONF,           "conf"},
+    {Opt::DISP_PROGRESS,  "disp_progress"},
+    {Opt::DEBUG,          "debug"},
+    {Opt::POST_HISTORY,   "post_history"},
+    {Opt::NZB_UPLOAD_URL, "nzb_upload_url"},
 
     {Opt::INPUT,        "input"},
     {Opt::AUTO_DIR,     "auto"},
@@ -241,12 +242,6 @@ NgPost::NgPost(int &argc, char *argv[]):
     connect(this, &NgPost::error, this, &NgPost::onError, Qt::QueuedConnection);
 
     _loadTanslators();
-
-
-// MB_TODO: nzb uploader!!! with new conf nzbUploadUrl
-//    FileUploader *testUpload = new FileUploader(_netMgr, "/tmp/virtualgl_2.5.2_amd64.deb");
-//    connect(testUpload, &FileUploader::readyToDie, testUpload, &QObject::deleteLater);
-//    testUpload->startUpload(*_urlNzbUpload);
 }
 
 void NgPost::_startMonitoring(const QString &folderPath)
@@ -294,6 +289,8 @@ NgPost::~NgPost()
 
     qDeleteAll(_nntpServers);
 
+    if (_urlNzbUpload)
+        delete _urlNzbUpload;
     delete _netMgr;
     delete _app;
 }
@@ -331,7 +328,10 @@ int NgPost::startEventLoop()
 
 int NgPost::startHMI()
 {
-    parseDefaultConfig();
+    QString err = parseDefaultConfig();
+    if (!err.isEmpty())
+        _error(err);
+
     if (_from.empty())
             _from = _randomFrom();
 #ifdef __DEBUG__
@@ -472,6 +472,18 @@ void NgPost::checkForNewVersion()
 
     QNetworkReply *reply = _netMgr->get(req);
     QObject::connect(reply, &QNetworkReply::finished, this, &NgPost::onCheckForNewVersion);
+}
+
+void NgPost::uploadNzb(const QString &nzbFilePath)
+{
+    if (_urlNzbUpload)
+    {
+        FileUploader *testUpload = new FileUploader(_netMgr, nzbFilePath);
+        connect(testUpload, &FileUploader::error,      this,       &NgPost::onError,      Qt::DirectConnection);
+        connect(testUpload, &FileUploader::log,        this,       &NgPost::onLog,        Qt::DirectConnection);
+        connect(testUpload, &FileUploader::readyToDie, testUpload, &QObject::deleteLater, Qt::QueuedConnection);
+        testUpload->startUpload(*_urlNzbUpload);
+    }
 }
 
 
@@ -1263,6 +1275,18 @@ QString NgPost::_parseConfig(const QString &configPath)
                         }
                         else
                             err += tr("the nzbPath '%1' is not writable...\n").arg(val);
+                    }
+                    else if (opt == sOptionNames[Opt::NZB_UPLOAD_URL])
+                    {
+                        _urlNzbUpload = new QUrl(val.trimmed());
+                        QStringList allowedProtocols = {"ftp", "http", "https"};
+                        if (!allowedProtocols.contains(_urlNzbUpload->scheme()))
+                        {
+                            err += tr("Unsupported protocol for NZB_UPLOAD_URL (%1). You can only use: %2\n").arg(
+                                        _urlNzbUpload->toString(QUrl::RemoveUserInfo)).arg(allowedProtocols.join(", "));
+                            delete _urlNzbUpload;
+                            _urlNzbUpload = nullptr;
+                        }
                     }
                     else if (opt == sOptionNames[Opt::MONITOR_FOLDERS])
                     {

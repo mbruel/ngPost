@@ -25,14 +25,16 @@
 
 FileUploader::FileUploader(QNetworkAccessManager *netMgr, const QString &nzbFilePath):
     QObject(), _netMgr(netMgr), _reply(nullptr),
-    _nzbFilePath(nzbFilePath), _nzbFile(nzbFilePath)
+    _nzbFilePath(nzbFilePath), _nzbFile(nzbFilePath), _nzbUrl()
 {}
 
 FileUploader::~FileUploader()
 {
     if (_nzbFile.isOpen())
     {
+#ifdef __DEBUG__
         qDebug() << "Deleting FileUploader for " << _nzbFile.fileName();
+#endif
         _nzbFile.close();
     }
 
@@ -44,15 +46,26 @@ void FileUploader::startUpload(const QUrl &serverUrl)
 {
     if (_nzbFile.open(QIODevice::ReadOnly))
     {
-        QUrl nzbUrl(QString("%1/%2").arg(serverUrl.url()).arg(_nzbFilePath.fileName()));
-        qDebug() << "FileUploader url: " << nzbUrl.url();
-
-        _reply = _netMgr->put(QNetworkRequest(nzbUrl), &_nzbFile);
-        QObject::connect(_reply, &QNetworkReply::finished, this, &FileUploader::onUploadFinished);
+        _nzbUrl = QUrl(QString("%1/%2").arg(serverUrl.url()).arg(_nzbFilePath.fileName()));
+#ifdef __DEBUG__
+        qDebug() << "FileUploader url: " << _nzbUrl.url();
+#endif
+        QString protocol = serverUrl.scheme(); // always lowercase
+        if (protocol == "ftp")
+            _reply = _netMgr->put(QNetworkRequest(_nzbUrl), &_nzbFile);
+        else if (protocol.startsWith("http"))
+            _reply = _netMgr->post(QNetworkRequest(_nzbUrl), &_nzbFile);
+        else
+        {
+            emit error(tr("Error uploading nzb to %1: Protocol not supported").arg(url()));
+            emit readyToDie();
+        }
+        if (_reply)
+            QObject::connect(_reply, &QNetworkReply::finished, this, &FileUploader::onUploadFinished);
     }
     else
     {
-        qCritical() << "Error FileUploader: can't open file " << _nzbFile.fileName();
+        emit error(tr("Error uploading file: can't open file ").arg(_nzbFile.fileName()));
         emit readyToDie();
     }
 }
@@ -60,9 +73,10 @@ void FileUploader::startUpload(const QUrl &serverUrl)
 void FileUploader::onUploadFinished()
 {
     if (_reply->error())
-        qCritical() << "Error FileUploader with: " << _nzbFile.fileName() << " : " << _reply->errorString();
+        emit error(tr("Error uploading nzb to %1: %2").arg(url()).arg(_reply->errorString()));
     else
-        qDebug() << "FileUploader done: " << _nzbFile.fileName();
+        emit log(tr("nzb %1 uploaded to %2\n").arg(_nzbFilePath.fileName()).arg(url()));
 
     emit readyToDie();
 }
+
