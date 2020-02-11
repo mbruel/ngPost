@@ -206,12 +206,12 @@ private:
     static constexpr const char *sDefaultRarExtraOptions = "-ep1 -m0";
     static constexpr const char *sDefault7zOptions = "-mx0 -mhe=on";
 
-    static constexpr const char *sFolderMonitoringName = "Auto Posting";
-    static constexpr const char *sQuickJobName = "Quick Post";
+    static constexpr const char *sFolderMonitoringName = QT_TRANSLATE_NOOP("NgPost", "Auto Posting");
+    static constexpr const char *sQuickJobName = QT_TRANSLATE_NOOP("NgPost", "Quick Post");
 
     static const int sNbPreparedArticlePerConnection = NB_ARTICLES_TO_PREPARE_PER_CONNECTION;
 
-    static constexpr const char *sDonationTooltip = "Donations are welcome, I spent quite some time to develop this app and make a sexy GUI although I'm not using it ;)";
+    static constexpr const char *sDonationTooltip = QT_TRANSLATE_NOOP("NgPost", "Donations are welcome, I spent quite some time to develop this app and make a sexy GUI although I'm not using it ;)");
 
     static const char sHistoryLogFieldSeparator = ';';
     static constexpr const char *sTranslationPath = "./lang";

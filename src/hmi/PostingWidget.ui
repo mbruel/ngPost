@@ -42,9 +42,6 @@
          <property name="toolTip">
           <string>temporary folder where the archives and par2 will be created (it will be cleaned once the post is done)</string>
          </property>
-         <property name="text">
-          <string/>
-         </property>
         </widget>
        </item>
        <item>
@@ -97,9 +94,6 @@
            <property name="toolTip">
             <string>full path of the rar executable</string>
            </property>
-           <property name="text">
-            <string/>
-           </property>
           </widget>
          </item>
          <item>
@@ -139,9 +133,6 @@
            </property>
            <property name="toolTip">
             <string>to split the rar archive in several volumes (0 to don't split)</string>
-           </property>
-           <property name="text">
-            <string>42</string>
            </property>
           </widget>
          </item>

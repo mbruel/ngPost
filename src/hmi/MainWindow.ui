@@ -10,9 +10,6 @@
     <height>709</height>
    </rect>
   </property>
-  <property name="windowTitle">
-   <string>MainWindow</string>
-  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_5">
     <item>
@@ -25,9 +22,6 @@
         <enum>Qt::Horizontal</enum>
        </property>
        <widget class="QGroupBox" name="serverBox">
-        <property name="title">
-         <string>GroupBox</string>
-        </property>
         <layout class="QVBoxLayout" name="verticalLayout_2">
          <item>
           <widget class="QTableWidget" name="serversTable">
@@ -86,9 +80,6 @@
         </layout>
        </widget>
        <widget class="QGroupBox" name="postingBox">
-        <property name="title">
-         <string>GroupBox</string>
-        </property>
         <layout class="QVBoxLayout" name="verticalLayout_4">
          <item>
           <layout class="QHBoxLayout" name="posterLayout">
@@ -196,9 +187,6 @@
              </property>
              <property name="toolTip">
               <string>don't touch if you don't know what it is</string>
-             </property>
-             <property name="text">
-              <string>718000</string>
              </property>
             </widget>
            </item>
@@ -406,9 +394,6 @@
         <enum>Qt::Horizontal</enum>
        </property>
        <widget class="QGroupBox" name="fileBox">
-        <property name="title">
-         <string>GroupBox</string>
-        </property>
         <layout class="QVBoxLayout" name="verticalLayout_3">
          <item>
           <widget class="QTabWidget" name="postTabWidget">
@@ -434,9 +419,6 @@
         </layout>
        </widget>
        <widget class="QGroupBox" name="logBox">
-        <property name="title">
-         <string>GroupBox</string>
-        </property>
         <layout class="QVBoxLayout" name="verticalLayout">
          <item>
           <widget class="QTextBrowser" name="logBrowser"/>

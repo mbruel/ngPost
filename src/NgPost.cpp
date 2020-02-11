@@ -400,13 +400,16 @@ void NgPost:: onRefreshprogressbarBar()
 
 void NgPost::onNewFileToProcess(const QFileInfo & fileInfo)
 {
-    if (_monitorIgnoreDir && fileInfo.isDir())
+    if (fileInfo.isDir())
     {
-        if (_debug)
-            _log(tr("MONITOR_IGNORE_DIR ON => Ignoring new incoming folder %1").arg(fileInfo.absoluteFilePath()));
-        return;
+        if (_monitorIgnoreDir)
+        {
+            if (_debug)
+                _log(tr("MONITOR_IGNORE_DIR ON => Ignoring new incoming folder %1").arg(fileInfo.absoluteFilePath()));
+            return;
+        }
     }
-    if (_monitorExtensions.size() && !_monitorExtensions.contains(fileInfo.suffix()))
+    else if (_monitorExtensions.size() && !_monitorExtensions.contains(fileInfo.suffix()))
     {
         if (_debug)
             _log(tr("MONITOR_EXTENSIONS ON => Ignoring new incoming file %1").arg(fileInfo.absoluteFilePath()));
@@ -1383,14 +1386,14 @@ QString NgPost::_parseConfig(const QString &configPath)
                                     if (file.open(QIODevice::WriteOnly|QIODevice::Text))
                                     {
                                         QTextStream stream(&file);
-                                        stream << "date"
-                                               << sHistoryLogFieldSeparator << "nzb name"
-                                               << sHistoryLogFieldSeparator << "size"
-                                               << sHistoryLogFieldSeparator << "avg. speed"
-                                               << sHistoryLogFieldSeparator << "archive name"
-                                               << sHistoryLogFieldSeparator << "archive pass"
-                                               << sHistoryLogFieldSeparator << "groups"
-                                               << sHistoryLogFieldSeparator << "from\n";
+                                        stream << tr("date")
+                                               << sHistoryLogFieldSeparator << tr("nzb name")
+                                               << sHistoryLogFieldSeparator << tr("size")
+                                               << sHistoryLogFieldSeparator << tr("avg. speed")
+                                               << sHistoryLogFieldSeparator << tr("archive name")
+                                               << sHistoryLogFieldSeparator << tr("archive pass")
+                                               << sHistoryLogFieldSeparator << tr("groups")
+                                               << sHistoryLogFieldSeparator << tr("from") << endl;
 
                                         file.close();
                                     }
@@ -1505,22 +1508,21 @@ QString NgPost::_parseConfig(const QString &configPath)
 
 void NgPost::_syntax(char *appName)
 {
-//    QString appVersion = QString("%1_v%2").arg(sAppName).arg(sVersion);
     QString app = QFileInfo(appName).fileName();
     _cout << desc() << "\n"
-          << "Syntax: " << app << " (options)* (-i <file or folder> | --auto <folder> | --monitor <folder>)+\n";
+          << tr("Syntax: ") << app << " (options)* (-i <file or folder> | --auto <folder> | --monitor <folder>)+\n";
     for (const QCommandLineOption & opt : sCmdOptions)
     {
         if (opt.valueName() == sOptionNames[Opt::HOST])
-            _cout << "\n// without config file, you can provide all the parameters to connect to ONE SINGLE server\n";
+            _cout << "\n// " << tr("without config file, you can provide all the parameters to connect to ONE SINGLE server") << endl;
         else if (opt.valueName() == sOptionNames[Opt::TMP_DIR])
-            _cout << "\n// for compression and par2 support\n";
+            _cout << "\n// " << tr("for compression and par2 support") << endl;
         else if (opt.valueName() == sOptionNames[Opt::AUTO_DIR])
-            _cout << "\n// automated posting (scanning and/or monitoring)\n";
+            _cout << "\n// " << tr("automated posting (scanning and/or monitoring)") << endl;
         else if (opt.valueName() == sOptionNames[Opt::INPUT])
-            _cout << "\n// quick posting (several files/folders)\n";
+            _cout << "\n// " << tr("quick posting (several files/folders)") << endl;
         else if (opt.valueName() == sOptionNames[Opt::OBFUSCATE])
-            _cout << "\n// general options\n";
+            _cout << "\n// " << tr("general options") << endl;
 
         if (opt.names().size() == 1)
             _cout << QString("\t--%1: %2\n").arg(opt.names().first(), -17).arg(tr(opt.description().toLocal8Bit().constData()));
@@ -1528,15 +1530,16 @@ void NgPost::_syntax(char *appName)
             _cout << QString("\t-%1: %2\n").arg(opt.names().join(" or --"), -18).arg(tr(opt.description().toLocal8Bit().constData()));
     }
 
-    _cout << "\nExamples:\n"
-          << "  - with monitoring: ngPost --monitor --rm_posted /Downloads/testNgPost --compress --gen_par2 --gen_name --gen_pass --rar_size 42 --disp_progress files\n"
-          << "  - with auto post: ngPost --auto /Downloads/testNgPost --compress --gen_par2 --gen_name --gen_pass --rar_size 42 --disp_progress files\n"
-          << "  - with compression, filename obfuscation, random password and par2: " << app << " -i /tmp/file1 -i /tmp/folder1 -o /nzb/myPost.nzb --compress --gen_name --gen_pass --gen_par2\n"
-          << "  - with config file: " << app << " -c ~/.ngPost -m \"password=qwerty42\" -f ngPost@nowhere.com -i /tmp/file1 -i /tmp/file2 -i /tmp/folderToPost1 -i /tmp/folderToPost2\n"
-          << "  - with all params:  " << app << " -t 1 -m \"password=qwerty42\" -m \"metaKey=someValue\" -h news.newshosting.com -P 443 -s -u user -p pass -n 30 -f ngPost@nowhere.com \
+    _cout << endl << tr("Examples:") << endl
+          << "  - " << tr("with monitoring") << ": " << app << " --monitor --rm_posted /Downloads/testNgPost --compress --gen_par2 --gen_name --gen_pass --rar_size 42 --disp_progress files\n"
+          << "  - " << tr("with auto post")  << ": " << app << " --auto /Downloads/testNgPost --compress --gen_par2 --gen_name --gen_pass --rar_size 42 --disp_progress files\n"
+          << "  - " << tr("with compression, filename obfuscation, random password and par2") << ": " << app << " -i /tmp/file1 -i /tmp/folder1 -o /nzb/myPost.nzb --compress --gen_name --gen_pass --gen_par2\n"
+          << "  - " << tr("with config file") << ": " << app << " -c ~/.ngPost -m \"password=qwerty42\" -f ngPost@nowhere.com -i /tmp/file1 -i /tmp/file2 -i /tmp/folderToPost1 -i /tmp/folderToPost2\n"
+          << "  - " << tr("with all params") << ":  " << app << " -t 1 -m \"password=qwerty42\" -m \"metaKey=someValue\" -h news.newshosting.com -P 443 -s -u user -p pass -n 30 -f ngPost@nowhere.com \
  -g \"alt.binaries.test,alt.binaries.test2\" -a 64000 -i /tmp/folderToPost -o /tmp/folderToPost.nzb\n"
-          << "\nIf you don't provide the output file (nzb file), we will create it in the nzbPath with the name of the first file or folder given in the command line.\n"
-          << "so in the second example above, the nzb would be: /tmp/file1.nzb\n"
+          << endl
+          << tr("If you don't provide the output file (nzb file), we will create it in the nzbPath with the name of the first file or folder given in the command line.") << endl
+          << tr("so in the second example above, the nzb would be: /tmp/file1.nzb") << endl
           << flush;
 }
 
@@ -1639,6 +1642,11 @@ void NgPost::saveConfig()
                << tr("## if you don't put anything, the nzb will be generated in the folder of ngPost on Windows and in /tmp on Linux") << endl
                << tr("## this will be overwritten if you use the option -o with the full path of the nzb") << endl
                << "nzbPath  = " << (_nzbPath.isEmpty() ? _nzbPathConf : _nzbPath) << "\n"
+               << "\n"
+               << tr("## upload the nzb to a specific URL") << endl
+               << tr("## only http, https or ftp (neither ftps or sftp are supported)") << endl
+               << tr("#NZB_UPLOAD_URL = ftp://user:pass@url_or_ip:21") << endl
+               << (_urlNzbUpload ? QString("NZB_UPLOAD_URL = %1\n").arg(_urlNzbUpload->url()): QString())
                << "\n"
                << tr("## nzb files are normally all created in nzbPath") << endl
                << tr("## but using this option, the nzb of each monitoring folder will be stored in their own folder (created in nzbPath)") << endl
@@ -1769,7 +1777,7 @@ void NgPost::saveConfig()
                    << "connection = " << param->nbCons << "\n"
                    << "\n\n";
         }
-        stream << "## You can add as many server if you have several providers by adding other \"server\" sections\n"
+        stream << tr("## You can add as many server if you have several providers by adding other \"server\" sections") << endl
                << "#[server]\n"
                << "#host = news.otherprovider.com\n"
                << "#port = 563\n"

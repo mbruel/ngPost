@@ -45,13 +45,13 @@ const QString MainWindow::sDoneKOIcon   = ":/icons/ko.png";
 const QColor  MainWindow::sArticlesFailedColor  = Qt::darkYellow;
 
 
-const QStringList  MainWindow::sServerListHeaders = {
-    tr("Host (name or IP)"),
-    tr("Port"),
-    tr("SSL"),
-    tr("Connections"),
-    tr("Username"),
-    tr("Password"),
+const QList<const char *> MainWindow::sServerListHeaders = {
+    QT_TRANSLATE_NOOP("MainWindow", "Host (name or IP)"),
+    QT_TRANSLATE_NOOP("MainWindow", "Port"),
+    QT_TRANSLATE_NOOP("MainWindow", "SSL"),
+    QT_TRANSLATE_NOOP("MainWindow", "Connections"),
+    QT_TRANSLATE_NOOP("MainWindow", "Username"),
+    QT_TRANSLATE_NOOP("MainWindow", "Password"),
     "" // for the delete button
 };
 const QVector<int> MainWindow::sServerListSizes   = {200, 50, 30, 100, 150, 150, sDeleteColumnWidth};
@@ -67,13 +67,6 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
     setAcceptDrops(true);
 
     _ui->setupUi(this);
-
-
-
-    _ui->serverBox->setTitle(tr("Servers"));
-    _ui->fileBox->setTitle(tr("Files"));
-    _ui->postingBox->setTitle(tr("Parameters"));
-    _ui->logBox->setTitle(tr("Posting Log"));
 
     _ui->serverBox->setStyleSheet(sGroupBoxStyle);
     _ui->fileBox->setStyleSheet(sGroupBoxStyle);
@@ -111,9 +104,9 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
     tabBar->setContextMenuPolicy(Qt::CustomContextMenu);
 
     _ui->postTabWidget->clear();
-    _ui->postTabWidget->addTab(_quickJobTab, QIcon(":/icons/quick.png"), QString("%1").arg(_ngPost->sQuickJobName));
-    _ui->postTabWidget->addTab(_autoPostTab, QIcon(":/icons/auto.png"), _ngPost->sFolderMonitoringName);
-    _ui->postTabWidget->addTab(new QWidget(_ui->postTabWidget), QIcon(":/icons/plus.png"), "New");
+    _ui->postTabWidget->addTab(_quickJobTab, QIcon(":/icons/quick.png"), tr(_ngPost->sQuickJobName));
+    _ui->postTabWidget->addTab(_autoPostTab, QIcon(":/icons/auto.png"), tr(_ngPost->sFolderMonitoringName));
+    _ui->postTabWidget->addTab(new QWidget(_ui->postTabWidget), QIcon(":/icons/plus.png"), tr("New"));
     tabBar->setTabToolTip(2, QString("Create a new %1").arg(_ngPost->sQuickJobName));
 
 //    connect(_ui->postTabWidget,           &QTabWidget::currentChanged, this, &MainWindow::onJobTabClicked);
@@ -123,7 +116,6 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
     _ui->postTabWidget->setTabsClosable(true);
     _ui->postTabWidget->installEventFilter(this);
 //    _ui->postTabWidget->setCurrentIndex(1);
-
 
     setJobLabel(1);
 }
@@ -151,9 +143,10 @@ void MainWindow::updateProgressBar(uint nbArticlesTotal, uint nbArticlesUploaded
 {
     qDebug() << "[MainWindow::updateProgressBar] _nbArticlesUploaded: " << nbArticlesUploaded;
     _ui->progressBar->setValue(static_cast<int>(nbArticlesUploaded));
-    _ui->uploadLbl->setText(QString("(%1 / %2) avg speed: %3").arg(
+    _ui->uploadLbl->setText(QString("(%1 / %2) %3: %4").arg(
                                 nbArticlesUploaded).arg(
                                 nbArticlesTotal).arg(
+                                tr("avg speed")).arg(
                                 avgSpeed));
 }
 
@@ -231,13 +224,33 @@ void MainWindow::changeEvent(QEvent *event)
 {
     if(event)
     {
+        QStringList serverTableHeader;
+        QTabBar *tabBar = _ui->postTabWidget->tabBar();
+        int lastTabIdx = tabBar->count() - 1;
         switch(event->type()) {
         // this event is send if a translator is loaded
         case QEvent::LanguageChange:
             qDebug() << "MainWindow::changeEvent";
             _ui->retranslateUi(this);
-            setWindowTitle(QString("%1_v%2").arg(_ngPost->sAppName).arg(_ngPost->sVersion));
+
+            _ui->serverBox->setTitle(tr("Servers"));
+            _ui->fileBox->setTitle(tr("Files"));
+            _ui->postingBox->setTitle(tr("Parameters"));
+            _ui->logBox->setTitle(tr("Posting Log"));
+
+            tabBar->setTabText(0, tr(_ngPost->sQuickJobName));
+            tabBar->setTabText(1, tr(_ngPost->sFolderMonitoringName));
+            for (int i = 2 ; i < lastTabIdx; ++i)
+                tabBar->setTabText(i, tr(_ngPost->sQuickJobName));
+            tabBar->setTabText(lastTabIdx, tr("New"));
+
             setJobLabel(_ui->postTabWidget->currentIndex());
+
+            for (const char *header : sServerListHeaders)
+                serverTableHeader << tr(header);
+            _ui->serversTable->setHorizontalHeaderLabels(serverTableHeader);
+
+
             _quickJobTab->retranslate();
             _autoPostTab->retranslate();
             for (int i = 2 ; i < _ui->postTabWidget->count() - 1; ++i)
@@ -329,7 +342,6 @@ void MainWindow::_initServerBox()
 {
     _ui->serversTable->verticalHeader()->hide();
     _ui->serversTable->setColumnCount(sServerListHeaders.size());
-    _ui->serversTable->setHorizontalHeaderLabels(sServerListHeaders);
 
     int width = 2, col = 0;
     for (int size : sServerListSizes)
