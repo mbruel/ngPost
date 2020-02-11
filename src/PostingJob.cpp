@@ -38,6 +38,9 @@ PostingJob::PostingJob(NgPost *ngPost,
                        const QString &nzbFilePath,
                        const QFileInfoList &files,
                        PostingWidget *postWidget,
+                       const QList<QString> &grpList,
+                       const std::string    &groups,
+                       const std::string    &from,
                        bool obfuscateArticles,
                        bool obfuscateFileName,
                        const QString &tmpPath,
@@ -81,7 +84,8 @@ PostingJob::PostingJob(NgPost *ngPost,
     _delFilesAfterPost(delFilesAfterPost ? 0x1 : 0x0),
     _originalFiles(!postWidget || delFilesAfterPost  || obfuscateFileName ? files : QFileInfoList()),
     _secureDiskAccess(), _posters(),
-    _overwriteNzb(overwriteNzb)
+    _overwriteNzb(overwriteNzb),
+    _grpList(grpList), _groups(groups), _from(from)
 {
 #ifdef __DEBUG__
     qDebug() << "[PostingJob] >>>> Construct " << this;
@@ -473,8 +477,8 @@ NntpArticle *PostingJob::_readNextArticleIntoBufferPtr(const QString &threadName
                 _log(tr("[%1] we've read %2 bytes from %3 (=> new pos: %4)").arg(threadName).arg(bytesRead).arg(pos).arg(_file->pos()));
             ++_part;
             NntpArticle *article = new NntpArticle(_nntpFile, _part, pos, bytesRead,
-                                                   _obfuscateArticles ? _ngPost->_randomFrom() : _ngPost->_from,
-                                                   _ngPost->_groups, _obfuscateArticles);
+                                                   _obfuscateArticles ? _ngPost->_randomFrom() : _from,
+                                                   _groups, _obfuscateArticles);
             return article;
         }
         else
@@ -513,7 +517,7 @@ void PostingJob::_initPosting()
     uint fileNum = 0;
     for (const QFileInfo &file : _files)
     {
-        NntpFile *nntpFile = new NntpFile(this, file, ++fileNum, _nbFiles, _ngPost->_grpList);
+        NntpFile *nntpFile = new NntpFile(this, file, ++fileNum, _nbFiles, _grpList);
         connect(nntpFile, &NntpFile::allArticlesArePosted, this, &PostingJob::onNntpFilePosted, Qt::QueuedConnection);
         connect(nntpFile, &NntpFile::errorReadingFile,     this, &PostingJob::onNntpErrorReading, Qt::QueuedConnection);
         if (_ngPost->_dispFilesPosting && _ngPost->debugMode())

@@ -163,6 +163,7 @@ void PostingWidget::onPostFiles()
         _postingFinished = false;
         _state = STATE::POSTING;
         _postingJob = new PostingJob(_ngPost, nzbPath, files, this,
+                                     _ngPost->_grpList, _ngPost->_groups, _ngPost->_from,
                                      _ngPost->_obfuscateArticles, _ngPost->_obfuscateFileName,
                                      _ngPost->_tmpPath, _ngPost->_rarPath,
                                      _ngPost->_rarSize, _ngPost->_useRarMax, _ngPost->_par2Pct,
