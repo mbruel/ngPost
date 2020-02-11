@@ -27,6 +27,7 @@
 #include "hmi/MainWindow.h"
 #include "hmi/PostingWidget.h"
 #include "hmi/AutoPostWidget.h"
+#include "FileUploader.h"
 
 #include <cmath>
 #include <QApplication>
@@ -187,8 +188,8 @@ NgPost::NgPost(int &argc, char *argv[]):
     _nzbName(),
     _nbFiles(0),
     _nntpServers(),
-    _obfuscateArticles(false), _from(),
-    _groups(sDefaultGroups),
+    _obfuscateArticles(false), _obfuscateFileName(false),
+    _from(), _groups(sDefaultGroups),
     _articleIdSignature(sDefaultMsgIdSignature),
     _meta(), _grpList(),
     _nbThreads(QThread::idealThreadCount()),
@@ -207,7 +208,8 @@ NgPost::NgPost(int &argc, char *argv[]):
     _delAuto(false),
     _monitor_nzb_folders(false), _monitorExtensions(), _monitorIgnoreDir(false),
     _keepRar(false),
-    _lang("en")
+    _lang("en"), _translators(),
+    _netMgr(new QNetworkAccessManager()), _urlNzbUpload(nullptr)
 {
     QThread::currentThread()->setObjectName(sMainThreadName);
 
@@ -239,6 +241,12 @@ NgPost::NgPost(int &argc, char *argv[]):
     connect(this, &NgPost::error, this, &NgPost::onError, Qt::QueuedConnection);
 
     _loadTanslators();
+
+
+// MB_TODO: nzb uploader!!! with new conf nzbUploadUrl
+//    FileUploader *testUpload = new FileUploader(_netMgr, "/tmp/virtualgl_2.5.2_amd64.deb");
+//    connect(testUpload, &FileUploader::readyToDie, testUpload, &QObject::deleteLater);
+//    testUpload->startUpload(*_urlNzbUpload);
 }
 
 void NgPost::_startMonitoring(const QString &folderPath)
@@ -285,6 +293,8 @@ NgPost::~NgPost()
     qDeleteAll(_pendingJobs);
 
     qDeleteAll(_nntpServers);
+
+    delete _netMgr;
     delete _app;
 }
 
@@ -426,13 +436,20 @@ void NgPost::_loadTanslators()
              QString lang = qmFile.completeBaseName(); // ngPost_en
              lang.remove(0, lang.indexOf('_') + 1); // en
              _translators.insert(lang, translator);
-             qDebug() << "[NgPost::_loadTanslators] translator loaded for lang: " << lang;
          }
          else
          {
-             qCritical() << "[NgPost::_loadTanslators] ERROR loading translator " << qmFile.absoluteFilePath();
+             _cerr << tr("ERROR loading translator %1").arg(qmFile.absoluteFilePath()) << endl << flush;
              delete translator;
          }
+     }
+#ifdef __DEBUG__
+         qDebug() << "available translators: " << _translators.keys().join(", ");
+#endif
+     if (!_translators.contains(_lang))
+     {
+         _cerr << tr("ERROR: couldn't find translator for lang %1").arg(_lang) << endl << flush;
+         _lang = "en";
      }
      _app->installTranslator(_translators[_lang]);
 }
@@ -445,6 +462,16 @@ void NgPost::changeLanguage(const QString &lang)
         _lang = lang;
         _app->installTranslator(_translators[_lang]);
     }
+}
+
+void NgPost::checkForNewVersion()
+{
+    QUrl proFileURL(NgPost::proFileUrl());
+    QNetworkRequest req(proFileURL);
+    req.setRawHeader( "User-Agent" , "ngPost C++ app" );
+
+    QNetworkReply *reply = _netMgr->get(req);
+    QObject::connect(reply, &QNetworkReply::finished, this, &NgPost::onCheckForNewVersion);
 }
 
 
@@ -470,8 +497,9 @@ void NgPost::_post(const QFileInfo &fileInfo, const QString &monitorFolder)
              << " (auto delete: " << _delAuto << ")";
 
     startPostingJob(new PostingJob(this, nzbFilePath, {fileInfo}, nullptr,
-                                   _obfuscateArticles, _tmpPath,
-                                   _rarPath, _rarSize, _useRarMax, _par2Pct,
+                                   _obfuscateArticles, _obfuscateFileName,
+                                   _tmpPath, _rarPath,
+                                   _rarSize, _useRarMax, _par2Pct,
                                    _doCompress, _doPar2, _rarName, _rarPass,
                                    _keepRar, _delAuto, false));
 }
@@ -515,6 +543,7 @@ void NgPost::onCheckForNewVersion()
             break; // no need to continue to parse the page
         }
     }
+    reply->deleteLater();
 }
 
 #include <QDesktopServices>
@@ -593,7 +622,6 @@ void NgPost::onPostingJobFinished()
         job->deleteLater();
     }
 }
-
 
 void NgPost::_log(const QString &aMsg, bool newline) const
 {
@@ -1122,8 +1150,9 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         if (!nzbFilePath.endsWith(".nzb"))
             nzbFilePath += ".nzb";
         startPostingJob(new PostingJob(this, nzbFilePath, filesToUpload, nullptr,
-                                       _obfuscateArticles, _tmpPath,
-                                       _rarPath, _rarSize, _useRarMax, _par2Pct,
+                                       _obfuscateArticles, _obfuscateFileName,
+                                       _tmpPath, _rarPath,
+                                       _rarSize, _useRarMax, _par2Pct,
                                        _doCompress, _doPar2, _rarName, _rarPass,
                                        _keepRar, _delAuto, false));
     }
@@ -1463,9 +1492,9 @@ void NgPost::_syntax(char *appName)
             _cout << "\n// general options\n";
 
         if (opt.names().size() == 1)
-            _cout << QString("\t--%1: %2\n").arg(opt.names().first(), -17).arg(opt.description());
+            _cout << QString("\t--%1: %2\n").arg(opt.names().first(), -17).arg(tr(opt.description().toLocal8Bit().constData()));
         else
-            _cout << QString("\t-%1: %2\n").arg(opt.names().join(" or --"), -18).arg(opt.description());
+            _cout << QString("\t-%1: %2\n").arg(opt.names().join(" or --"), -18).arg(tr(opt.description().toLocal8Bit().constData()));
     }
 
     _cout << "\nExamples:\n"

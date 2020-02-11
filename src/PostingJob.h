@@ -113,7 +113,8 @@ private:
 
     bool _postFinished;
 
-    bool _obfuscateArticles;
+    const bool _obfuscateArticles;
+    const bool _obfuscateFileName;
 
 
     QAtomicBool _delFilesAfterPost;
@@ -126,12 +127,16 @@ private:
 
     const bool  _overwriteNzb;
 
+    QMap<QString, QString> _obfuscatedFileNames;
+
+
 public:
     PostingJob(NgPost *ngPost,
                const QString &nzbFilePath,
                const QFileInfoList &files,
                PostingWidget *postWidget,
                bool obfuscateArticles,
+               bool obfuscateFileName,
                const QString &tmpPath,
                const QString &rarPath,
                uint rarSize,

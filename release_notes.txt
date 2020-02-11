@@ -11,13 +11,26 @@ TODO: bandwidth optimization:
 	test with no threads and no article preparation
 	check if we can play on the SSL protocol paramaters
 
-TODO: proper multi-threading support with several Article Producer (one per Thread)
-	otherwise issue and potential Producer event loop overflow on big stations (> 20 cores and 10Gbps connection)
-	Soluce: create ArticleProducer object and make PosterThread that would own ArticleProducer in a Thread and several NntpConnection in another
-
 TODO: --nfo option (cf github issue #10 and NewsUp dev)
 
-TODO: multi-language support (French and Spanish to start with)
+
+####################################################
+###       Release: ngPost v5.1                   ###
+###       date:    2020/02/??                    ###
+####################################################
+
+- release for old linux 64bit  kernels (GLIBC 2.19, Qt v5.8.0, built on Debian 8)
+
+- multi-language support with currently French, German and Spanish
+
+- new config : KEEP_RAR to not delete rar and par2
+- new configs: MONITOR_EXT, MONITOR_IGNORE_DIR to filter files on the monitoring mode
+
+- don't overwrite nzb file for monitoring (or --auto in CMD)
+
+
+- TODO: file obfuscation
+- TODO: FTP upload of the nzb and/or HTTP API
 
 
 

@@ -2,9 +2,6 @@
 #include <iostream>
 #include <QCoreApplication>
 #include <QLoggingCategory>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
-
 #include "NgPost.h"
 
 #if defined( Q_OS_WIN )
@@ -23,19 +20,12 @@ int main(int argc, char *argv[])
     // disable SSL warnings
     QLoggingCategory::setFilterRules("qt.network.ssl.warning=false");
 
-    QNetworkAccessManager netMgr;
-    QUrl proFileURL(NgPost::proFileUrl());
-    QNetworkRequest req(proFileURL);
-    req.setRawHeader( "User-Agent" , "ngPost C++ app" );
-
     signal(SIGINT,  &handleShutdown);// shut down on ctrl-c
     signal(SIGTERM, &handleShutdown);// shut down on killall
 
 //    qDebug() << "argc: " << argc;
     NgPost ngPost(argc, argv);
-
-    QNetworkReply *reply = netMgr.get(req);
-    QObject::connect(reply, &QNetworkReply::finished, &ngPost, &NgPost::onCheckForNewVersion);
+    ngPost.checkForNewVersion();
 
     if (ngPost.useHMI())
     {
