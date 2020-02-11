@@ -129,12 +129,18 @@ private:
 
     QMap<QString, QString> _obfuscatedFileNames;
 
+    const QList<QString> _grpList; //!< Newsgroup where we're posting in a list format to write in the nzb file
+    const std::string    _groups;             //!< Newsgroup where to post
+    const std::string    _from;               //!< email of poster (if empty, random one will be used for each file)
 
 public:
     PostingJob(NgPost *ngPost,
                const QString &nzbFilePath,
                const QFileInfoList &files,
                PostingWidget *postWidget,
+               const QList<QString> &grpList,
+               const std::string    &groups,
+               const std::string    &from,
                bool obfuscateArticles,
                bool obfuscateFileName,
                const QString &tmpPath,
@@ -175,6 +181,9 @@ public:
     inline QString getFirstOriginalFile() const;
 
     inline void setDelFilesAfterPosted(bool delFiles);
+
+    inline QString groups() const;
+    inline QString from() const;
 
 signals:
     void startPosting();    //!< connected to onStartPosting (to be able to run on a different Thread)
@@ -354,4 +363,9 @@ void PostingJob::setDelFilesAfterPosted(bool delFiles)
 {
     _delFilesAfterPost = delFiles ? 0x1 : 0x0;
 }
+
+QString PostingJob::groups() const { return QString::fromStdString(_groups); }
+QString PostingJob::from() const { return _obfuscateArticles ? QString() : QString::fromStdString(_from); }
+
+
 #endif // POSTINGJOB_H

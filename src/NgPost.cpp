@@ -509,6 +509,7 @@ void NgPost::_post(const QFileInfo &fileInfo, const QString &monitorFolder)
              << " (auto delete: " << _delAuto << ")";
 
     startPostingJob(new PostingJob(this, nzbFilePath, {fileInfo}, nullptr,
+                                   _grpList, _groups, _from,
                                    _obfuscateArticles, _obfuscateFileName,
                                    _tmpPath, _rarPath,
                                    _rarSize, _useRarMax, _par2Pct,
@@ -607,7 +608,9 @@ void NgPost::onPostingJobFinished()
                            << sHistoryLogFieldSeparator << _activeJob->rarPass();
                 else
                     stream << sHistoryLogFieldSeparator << sHistoryLogFieldSeparator;
-                stream << endl << flush;
+                stream << sHistoryLogFieldSeparator << _activeJob->groups()
+                       << sHistoryLogFieldSeparator << _activeJob->from()
+                       << endl << flush;
                 hist.close();
             }
         }
@@ -1162,6 +1165,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         if (!nzbFilePath.endsWith(".nzb"))
             nzbFilePath += ".nzb";
         startPostingJob(new PostingJob(this, nzbFilePath, filesToUpload, nullptr,
+                                       _grpList, _groups, _from,
                                        _obfuscateArticles, _obfuscateFileName,
                                        _tmpPath, _rarPath,
                                        _rarSize, _useRarMax, _par2Pct,
@@ -1384,7 +1388,10 @@ QString NgPost::_parseConfig(const QString &configPath)
                                                << sHistoryLogFieldSeparator << "size"
                                                << sHistoryLogFieldSeparator << "avg. speed"
                                                << sHistoryLogFieldSeparator << "archive name"
-                                               << sHistoryLogFieldSeparator << "archive pass\n";
+                                               << sHistoryLogFieldSeparator << "archive pass"
+                                               << sHistoryLogFieldSeparator << "groups"
+                                               << sHistoryLogFieldSeparator << "from\n";
+
                                         file.close();
                                     }
                                 }
