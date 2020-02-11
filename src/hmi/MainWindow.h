@@ -52,7 +52,7 @@ private:
     static const int  sDefaultServerPort  = 563;
     static const int  sDeleteColumnWidth  = 30;
 
-    static const QStringList  sServerListHeaders;
+    static const QList<const char *> sServerListHeaders;
     static const QVector<int> sServerListSizes;
 
 
