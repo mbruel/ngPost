@@ -39,6 +39,7 @@ PostingJob::PostingJob(NgPost *ngPost,
                        const QFileInfoList &files,
                        PostingWidget *postWidget,
                        bool obfuscateArticles,
+                       bool obfuscateFileName,
                        const QString &tmpPath,
                        const QString &rarPath,
                        uint rarSize,
@@ -76,9 +77,9 @@ PostingJob::PostingJob(NgPost *ngPost,
     _uploadedSize(0), _nbArticlesTotal(0),
     _stopPosting(0x0), _noMoreFiles(0x0),
     _postFinished(false),
-    _obfuscateArticles(obfuscateArticles),
+    _obfuscateArticles(obfuscateArticles), _obfuscateFileName(obfuscateFileName),
     _delFilesAfterPost(delFilesAfterPost ? 0x1 : 0x0),
-    _originalFiles(!postWidget || delFilesAfterPost ? files : QFileInfoList()),
+    _originalFiles(!postWidget || delFilesAfterPost  || obfuscateFileName ? files : QFileInfoList()),
     _secureDiskAccess(), _posters(),
     _overwriteNzb(overwriteNzb)
 {
@@ -720,6 +721,30 @@ bool PostingJob::startCompressFiles(const QString &cmdRar,
 #endif
     args << QString("%1/%2.%3").arg(archiveTmpFolder).arg(archiveName).arg(is7z ? "7z" : "rar");
 
+
+    if (_obfuscateFileName)
+    {
+        _files.clear();
+        for (const QFileInfo &fileInfo : _originalFiles)
+        {
+            QString obfuscatedName = QString("%1/%2").arg(fileInfo.absolutePath()).arg(
+                        _ngPost->randomPass(_ngPost->_lengthName)),
+                    fileName = fileInfo.absoluteFilePath();
+
+            if (QFile::rename(fileName, obfuscatedName))
+            {
+                _obfuscatedFileNames.insert(obfuscatedName, fileName);
+                _files << QFileInfo(obfuscatedName);
+            }
+            else
+            {
+                _files << fileInfo;
+                _error(tr("Couldn't rename file %1").arg(fileName));
+            }
+        }
+    }
+
+
     bool hasDir = false;
     for (const QFileInfo &fileInfo : _files)
     {
@@ -779,6 +804,13 @@ void PostingJob::onCompressionFinished(int exitCode)
 #ifdef __DEBUG__
     _log("[PostingJob::_compressFiles] compression finished...");
 #endif
+
+    if (_obfuscateFileName && !_delFilesAfterPost.load())
+    {
+        for (auto it = _obfuscatedFileNames.cbegin(), itEnd = _obfuscatedFileNames.cend(); it != itEnd; ++it)
+            QFile::rename(it.key(), it.value());
+    }
+
 
     if (exitCode != 0)
     {

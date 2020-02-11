@@ -162,9 +162,12 @@ void PostingWidget::onPostFiles()
 
         _postingFinished = false;
         _state = STATE::POSTING;
-        _postingJob = new PostingJob(_ngPost, nzbPath, files, this, _ngPost->_obfuscateArticles, _ngPost->_tmpPath,
-                                     _ngPost->_rarPath, _ngPost->_rarSize, _ngPost->_useRarMax, _ngPost->_par2Pct,
-                                     _ngPost->_doCompress, _ngPost->_doPar2, _ngPost->_rarName, _ngPost->_rarPass,
+        _postingJob = new PostingJob(_ngPost, nzbPath, files, this,
+                                     _ngPost->_obfuscateArticles, _ngPost->_obfuscateFileName,
+                                     _ngPost->_tmpPath, _ngPost->_rarPath,
+                                     _ngPost->_rarSize, _ngPost->_useRarMax, _ngPost->_par2Pct,
+                                     _ngPost->_doCompress, _ngPost->_doPar2,
+                                     _ngPost->_rarName, _ngPost->_rarPass,
                                      _ngPost->_keepRar);
 
         bool hasStarted = _ngPost->startPostingJob(_postingJob);

@@ -58,6 +58,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         ArticleBuilder.cpp \
+        FileUploader.cpp \
         FoldersMonitorForNewFiles.cpp \
         NgPost.cpp \
         NntpConnection.cpp \
@@ -83,6 +84,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     ArticleBuilder.h \
+    FileUploader.h \
     FoldersMonitorForNewFiles.h \
     NgPost.h \
     NntpConnection.h \

@@ -40,6 +40,7 @@ class QCoreApplication;
 class MainWindow;
 class PostingJob;
 class FoldersMonitorForNewFiles;
+class QNetworkAccessManager;
 
 #define NB_ARTICLES_TO_PREPARE_PER_CONNECTION 3
 
@@ -103,7 +104,8 @@ private:
 
     QList<NntpServerParams*> _nntpServers; //!< the servers parameters
 
-    bool                 _obfuscateArticles;  //!< shall we obfuscate each Article (subject)
+    bool                 _obfuscateArticles;  //!< shall we obfuscate each Article (subject + from)
+    bool                 _obfuscateFileName;  //!< for single file or folder, rename it with a random name prior to compress it
 
     std::string          _from;               //!< email of poster (if empty, random one will be used for each file)
     std::string          _groups;             //!< Newsgroup where to post
@@ -161,6 +163,9 @@ private:
 
     QString       _lang;
     QMap<QString, QTranslator*> _translators;
+
+    QNetworkAccessManager *_netMgr;
+    QUrl *_urlNzbUpload;
 
 
     static qint64 sArticleSize;
@@ -268,6 +273,8 @@ public:
     void addMonitoringFolder(const QString &dirPath);
 
     void changeLanguage(const QString &lang);
+
+    void checkForNewVersion();
 
 signals:
     void log(QString msg, bool newline); //!< in case we signal from another thread

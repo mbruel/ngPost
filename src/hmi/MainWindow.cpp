@@ -236,6 +236,7 @@ void MainWindow::changeEvent(QEvent *event)
         case QEvent::LanguageChange:
             qDebug() << "MainWindow::changeEvent";
             _ui->retranslateUi(this);
+            setWindowTitle(QString("%1_v%2").arg(_ngPost->sAppName).arg(_ngPost->sVersion));
             setJobLabel(_ui->postTabWidget->currentIndex());
             _quickJobTab->retranslate();
             _autoPostTab->retranslate();
@@ -356,6 +357,7 @@ void MainWindow::_initPostingBox()
     _ui->groupsEdit->setText(QString::fromStdString(_ngPost->_groups));
 
     _ui->obfuscateMsgIdCB->setChecked(_ngPost->_obfuscateArticles);
+    _ui->obfuscateFileNameCB->setChecked(_ngPost->_obfuscateFileName);
 
     _ui->articleSizeEdit->setText(QString::number(_ngPost->articleSize()));
     _ui->articleSizeEdit->setValidator(new QIntValidator(100000, 10000000, _ui->articleSizeEdit));
@@ -418,7 +420,8 @@ void MainWindow::updateParams()
     _ngPost->updateGroups(_ui->groupsEdit->toPlainText());
     _ngPost->_groups = _ui->groupsEdit->toPlainText().toStdString();
 
-    _ngPost->_obfuscateArticles  = _ui->obfuscateMsgIdCB->isChecked();
+    _ngPost->_obfuscateArticles = _ui->obfuscateMsgIdCB->isChecked();
+    _ngPost->_obfuscateFileName = _ui->obfuscateFileNameCB->isChecked();
 
     bool ok = false;
     uint articleSize = _ui->articleSizeEdit->text().toUInt(&ok);
