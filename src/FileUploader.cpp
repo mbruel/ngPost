@@ -22,7 +22,7 @@
 #include "FileUploader.h"
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
-
+#include <QHttpMultiPart>
 FileUploader::FileUploader(QNetworkAccessManager *netMgr, const QString &nzbFilePath):
     QObject(), _netMgr(netMgr), _reply(nullptr),
     _nzbFilePath(nzbFilePath), _nzbFile(nzbFilePath), _nzbUrl()
@@ -46,15 +46,45 @@ void FileUploader::startUpload(const QUrl &serverUrl)
 {
     if (_nzbFile.open(QIODevice::ReadOnly))
     {
-        _nzbUrl = QUrl(QString("%1/%2").arg(serverUrl.url()).arg(_nzbFilePath.fileName()));
-#ifdef __DEBUG__
-        qDebug() << "FileUploader url: " << _nzbUrl.url();
-#endif
         QString protocol = serverUrl.scheme(); // always lowercase
         if (protocol == "ftp")
+        {
+            _nzbUrl = QUrl(QString("%1/%2").arg(serverUrl.url()).arg(_nzbFilePath.fileName()));
+    #ifdef __DEBUG__
+            qDebug() << "FileUploader FTP url: " << _nzbUrl.url();
+    #endif
+
             _reply = _netMgr->put(QNetworkRequest(_nzbUrl), &_nzbFile);
+        }
         else if (protocol.startsWith("http"))
-            _reply = _netMgr->post(QNetworkRequest(_nzbUrl), &_nzbFile);
+        {
+            _nzbUrl = serverUrl;
+
+#ifdef __DEBUG__
+        qDebug() << "FileUploader POST on url: " << _nzbUrl.url();
+#endif
+
+             QNetworkRequest req(_nzbUrl);
+            req.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/octet-stream"));
+            _reply = _netMgr->post(req, &_nzbFile);
+
+            //https://forum.qt.io/topic/56708/solved-qnetworkaccessmanager-adding-a-multipart-form-data-to-a-post-request/9
+//            QHttpMultiPart *multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
+
+//            QHttpPart textPart;
+//            textPart.setHeader(QNetworkRequest::ContentTypeHeader,"application/x-www-form-urlencoded");
+//            textPart.setBody("my text");
+//            //    textPart.setBody(QByteArray); //How to set parameters like with QUrlQuery
+//            postData.addQueryItem("access_token", access_token);
+
+//            QHttpPart fileDataPart;
+//            fileDataPart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"file\"; filename=\"test.nzb\""));
+//            fileDataPart.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/octet-stream"));
+
+//            fileDataPart.setBodyDevice(&_nzbFile);
+
+//            _reply = _netMgr->post(QNetworkRequest(_nzbUrl), multiPart);
+        }
         else
         {
             emit error(tr("Error uploading nzb to %1: Protocol not supported").arg(url()));
@@ -72,6 +102,7 @@ void FileUploader::startUpload(const QUrl &serverUrl)
 
 void FileUploader::onUploadFinished()
 {
+    qDebug() << "FileUploader reply: " << _reply->readAll();
     if (_reply->error())
         emit error(tr("Error uploading nzb to %1: %2").arg(url()).arg(_reply->errorString()));
     else

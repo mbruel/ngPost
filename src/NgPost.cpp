@@ -46,7 +46,11 @@ const QString NgPost::sVersion     = QString::number(APP_VERSION);
 const QString NgPost::sProFileURL  = "https://raw.githubusercontent.com/mbruel/ngPost/master/src/ngPost.pro";
 const QString NgPost::sDonationURL = "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=W2C236U6JNTUA&item_name=ngPost&currency_code=EUR";
 
-const QString NgPost::sMainThreadName = "MainThread";
+const QString NgPost::sMainThreadName     = "MainThread";
+const char *NgPost::sFolderMonitoringName = QT_TRANSLATE_NOOP("NgPost", "Auto Posting");
+const char *NgPost::sQuickJobName         = QT_TRANSLATE_NOOP("NgPost", "Quick Post");
+const char *NgPost::sDonationTooltip      = QT_TRANSLATE_NOOP("NgPost", "Donations are welcome, I spent quite some time to develop this app and make a sexy GUI although I'm not using it ;)");
+
 
 qint64        NgPost::sArticleSize = sDefaultArticleSize;
 const QString NgPost::sSpace       = sDefaultSpace;
@@ -57,6 +61,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::LANG,           "lang"},
     {Opt::VERSION,        "version"},
     {Opt::CONF,           "conf"},
+    {Opt::SHUTDOWN_CMD,   "shutdown_cmd"},
     {Opt::DISP_PROGRESS,  "disp_progress"},
     {Opt::DEBUG,          "debug"},
     {Opt::POST_HISTORY,   "post_history"},
@@ -210,7 +215,16 @@ NgPost::NgPost(int &argc, char *argv[]):
     _monitor_nzb_folders(false), _monitorExtensions(), _monitorIgnoreDir(false),
     _keepRar(false),
     _lang("en"), _translators(),
-    _netMgr(new QNetworkAccessManager()), _urlNzbUpload(nullptr)
+    _netMgr(new QNetworkAccessManager()), _urlNzbUpload(nullptr), _urlNzbUploadStr(),
+    _doShutdownWhenDone(false), _shutdownProc(nullptr),
+#if defined(WIN32) || defined(__MINGW64__)
+    _shutdownCmd(sDefaultShutdownCmdWindows)
+#elif defined(__APPLE__)|| defined(__MACH__)
+    _shutdownCmd(sDefaultShutdownCmdMacOS)
+#else
+    _shutdownCmd(sDefaultShutdownCmdLinux)
+#endif
+
 {
     QThread::currentThread()->setObjectName(sMainThreadName);
 
@@ -490,6 +504,7 @@ void NgPost::uploadNzb(const QString &nzbFilePath)
 }
 
 
+
 void NgPost::_post(const QFileInfo &fileInfo, const QString &monitorFolder)
 {
     setNzbName(fileInfo);
@@ -627,6 +642,24 @@ void NgPost::onPostingJobFinished()
                 _hmi->setTab(_activeJob->widget());
             emit _activeJob->startPosting();
         }
+        else if (_doShutdownWhenDone && !_shutdownCmd.isEmpty())
+        {
+            //cf https://forum.qt.io/topic/111602/qprocess-signals-not-received-in-slots-except-in-debug-with-breakpoints/
+//            int exitCode = QProcess::execute("echo \\\"toto\\\" | /usr/bin/sudo -S /bin/ls -al");
+//            qDebug() << QString("Shutdown exit code: %1").arg(exitCode);
+            _shutdownProc = new QProcess();
+            connect(_shutdownProc, &QProcess::readyReadStandardOutput, this, &NgPost::onShutdownProcReadyReadStandardOutput, Qt::DirectConnection);
+            connect(_shutdownProc, &QProcess::readyReadStandardError,  this, &NgPost::onShutdownProcReadyReadStandardError,  Qt::DirectConnection);
+            connect(_shutdownProc, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished), this, &NgPost::onShutdownProcFinished, Qt::QueuedConnection);
+//            connect(_shutdownProc, &QProcess::started, this, &NgPost::onShutdownProcStarted, Qt::DirectConnection);
+//            connect(_shutdownProc, &QProcess::stateChanged,  this, &NgPost::onShutdownProcStateChanged,  Qt::DirectConnection);
+            connect(_shutdownProc, &QProcess::errorOccurred,  this, &NgPost::onShutdownProcError, Qt::DirectConnection);
+//            _shutdownProc->start("/bin/ls", QStringList() << "-al");
+//            _shutdownProc->start("/usr/bin/sudo", QStringList() << "-n" << "/sbin/poweroff");
+
+//            qDebug() << " cmd: " << _shutdownCmd;
+            _shutdownProc->start(_shutdownCmd);
+        }
         else if (!_folderMonitor && !_hmi)
         {
             _error(tr(" => closing application"));
@@ -639,6 +672,43 @@ void NgPost::onPostingJobFinished()
         _pendingJobs.removeOne(job);
         job->deleteLater();
     }
+}
+
+void NgPost::onShutdownProcReadyReadStandardOutput()
+{
+    QString line(_shutdownProc->readAllStandardOutput());
+//    _cout << "Shutdown out: " << line << endl << flush;
+    _log(QString("Shutdown out: %1").arg(QString(line)));
+}
+
+void NgPost::onShutdownProcReadyReadStandardError()
+{
+    QString line(_shutdownProc->readAllStandardError());
+//    _cout << "Shutdown ERROR: " << line << endl << flush;
+    _error(QString("Shutdown ERROR: %1").arg(line));
+}
+
+void NgPost::onShutdownProcFinished(int exitCode)
+{
+    if (_debug)
+        _log(QString("Shutdown proc exitCode: ").arg(exitCode));
+    _shutdownProc->deleteLater();
+    _shutdownProc = nullptr;
+}
+
+//void NgPost::onShutdownProcStarted()
+//{
+//    qDebug() << "Shutdown proc Started";
+//}
+
+//void NgPost::onShutdownProcStateChanged(QProcess::ProcessState newState)
+//{
+//    qDebug() << "Shutdown proc new State: " << newState;
+//}
+
+void NgPost::onShutdownProcError(QProcess::ProcessError error)
+{
+    _error(QString("Shutdown process Error: %1").arg(error));
 }
 
 void NgPost::_log(const QString &aMsg, bool newline) const
@@ -1256,7 +1326,7 @@ QString NgPost::_parseConfig(const QString &configPath)
             else
             {
                 QStringList args = line.split('=');
-                if (args.size() == 2)
+                if (args.size() >= 2)
                 {
                     QString opt = args.at(0).trimmed().toLower(),
                             val = args.at(1).trimmed();
@@ -1285,7 +1355,10 @@ QString NgPost::_parseConfig(const QString &configPath)
                     }
                     else if (opt == sOptionNames[Opt::NZB_UPLOAD_URL])
                     {
-                        _urlNzbUpload = new QUrl(val.trimmed());
+                        _urlNzbUploadStr = val;
+                        for (int i = 2; i < args.size(); ++i)
+                            _urlNzbUploadStr += QString("=%1").arg(args.at(i).trimmed());
+                        _urlNzbUpload    = new QUrl(_urlNzbUploadStr);
                         QStringList allowedProtocols = {"ftp", "http", "https"};
                         if (!allowedProtocols.contains(_urlNzbUpload->scheme()))
                         {
@@ -1359,6 +1432,9 @@ QString NgPost::_parseConfig(const QString &configPath)
 
                     else if (opt == sOptionNames[Opt::LANG])
                         changeLanguage(val.toLower());
+
+                    else if (opt == sOptionNames[Opt::SHUTDOWN_CMD])
+                        _shutdownCmd = val;
 
                     else if (opt == sOptionNames[Opt::INPUT_DIR])
                         _inputDir = val;
@@ -1638,15 +1714,26 @@ void NgPost::saveConfig()
                << "#\n"
                << "#\n"
                << "\n"
+               << tr("## Lang for the app. Currently supported: EN, FR, ES, DE") << endl
+               << "lang = " << _lang.toUpper() << endl
+               << "\n"
                << tr("## destination folder for all your nzb") << endl
                << tr("## if you don't put anything, the nzb will be generated in the folder of ngPost on Windows and in /tmp on Linux") << endl
                << tr("## this will be overwritten if you use the option -o with the full path of the nzb") << endl
                << "nzbPath  = " << (_nzbPath.isEmpty() ? _nzbPathConf : _nzbPath) << "\n"
                << "\n"
+               << tr("## Shutdown command to switch off the computer when ngPost is done with all its queued posting") << endl
+               << tr("## this should mainly used with the auto posting") << endl
+               << tr("## you could use whatever script instead (like to send a mail...)") << endl
+               << tr("#SHUTDOWN_CMD = shutdown /s /f /t 0  (Windows)") << endl
+               << tr("#SHUTDOWN_CMD = sudo -n /sbin/poweroff  (Linux, make sure poweroff has sudo rights without any password or change the command)") << endl
+               << tr("#SHUTDOWN_CMD = sudo -n shutdown -h now (MacOS, same make sure you've sudo rights)") << endl
+               << "SHUTDOWN_CMD = " << _shutdownCmd << "\n"
+               << "\n"
                << tr("## upload the nzb to a specific URL") << endl
                << tr("## only http, https or ftp (neither ftps or sftp are supported)") << endl
                << tr("#NZB_UPLOAD_URL = ftp://user:pass@url_or_ip:21") << endl
-               << (_urlNzbUpload ? QString("NZB_UPLOAD_URL = %1\n").arg(_urlNzbUpload->url()): QString())
+               << (_urlNzbUploadStr.isEmpty() ? QString() : QString("NZB_UPLOAD_URL = %1\n").arg(_urlNzbUpload->url()))
                << "\n"
                << tr("## nzb files are normally all created in nzbPath") << endl
                << tr("## but using this option, the nzb of each monitoring folder will be stored in their own folder (created in nzbPath)") << endl
@@ -1712,7 +1799,7 @@ void NgPost::saveConfig()
                << tr("## this is set for Linux environment, Windows users MUST change it") << endl
                << "TMP_DIR = " << _tmpPath << "\n"
                << "\n"
-               << tr("## RAR absolute file path (external application)") << endl
+               << tr("## RAR or 7zip absolute file path (external application)") << endl
                << tr("## /!\\ The file MUST EXIST and BE EXECUTABLE /!\\") << endl
                << tr("## this is set for Linux environment, Windows users MUST change it") << endl
                << "RAR_PATH = " << _rarPath << "\n"
@@ -1721,7 +1808,9 @@ void NgPost::saveConfig()
                << tr("## -hp will be added if you use a password with --gen_pass, --rar_pass or using the HMI") << endl
                << tr("## -v42m will be added with --rar_size or using the HMI") << endl
                << tr("## you could change the compression level, lock the archive, add redundancy...") << endl
-               << "RAR_EXTRA = " << _rarArgs << "\n"
+               << "#RAR_EXTRA = -ep1 -m0 -k -rr5p\n"
+               << "#RAR_EXTRA = -mx0 -mhe=on   (for 7-zip)\n"
+               << (_rarArgs.isEmpty() ? "" : QString("RAR_EXTRA = %1\n").arg(_rarArgs) )
                << "\n"
                << tr("## size in MB of the RAR volumes (0 by default meaning NO split)") << endl
                << tr("## feel free to change the value or to comment the next line if you don't want to split the archive") << endl
@@ -1747,8 +1836,9 @@ void NgPost::saveConfig()
                << "\n"
                << tr("## fixed parameters for the par2 (or alternative) command") << endl
                << tr("## you could for exemple use Multipar on Windows") << endl
-               << tr("#PAR2_ARGS = c -l -m1024 -r8 -s768000") << endl
-               << tr("#PAR2_ARGS = create /rr8 /lc40 /lr /rd2") << endl
+               << "#PAR2_ARGS = -s5M -r8% -m1024M --progress stdout -q   (for parpar)\n"
+               << "#PAR2_ARGS = c -l -m1024 -r8 -s768000                 (for par2cmdline)\n"
+               << "#PAR2_ARGS = create /rr8 /lc40 /lr /rd2               (for Multipar)\n"
                << (_par2Args.isEmpty() ? "" : QString("PAR2_ARGS = %1\n").arg(_par2Args))
                << "\n"
                << "\n"

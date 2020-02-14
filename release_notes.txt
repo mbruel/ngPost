@@ -27,10 +27,11 @@ TODO: --nfo option (cf github issue #10 and NewsUp dev)
 - new configs: MONITOR_EXT, MONITOR_IGNORE_DIR to filter files on the monitoring mode
 
 - don't overwrite nzb file for monitoring (or --auto in CMD)
+- file obfuscation (only from the GUI)
 
+- FTP upload of the nzb and/or HTTP API (cf NZB_UPLOAD_URL)
 
-- TODO: file obfuscation
-- TODO: FTP upload of the nzb and/or HTTP API
+- auto shutdown (cf SHUTDOWN_CMD), could be use to execute whatever script ;)
 
 
 

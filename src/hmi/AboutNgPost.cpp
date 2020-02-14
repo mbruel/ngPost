@@ -45,6 +45,7 @@ AboutNgPost::AboutNgPost(NgPost *ngPost, QWidget *parent) :
 //    ui->cosi7->setFont(QFont( "DejaVu Serif", 28, QFont::Bold));
 
 
+    ui->donateButton->setToolTip(ngPost->donationTooltip());
     connect(ui->donateButton, &QAbstractButton::clicked, ngPost, &NgPost::onDonation);
 }
 
