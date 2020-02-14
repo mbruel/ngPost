@@ -104,10 +104,10 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
     tabBar->setContextMenuPolicy(Qt::CustomContextMenu);
 
     _ui->postTabWidget->clear();
-    _ui->postTabWidget->addTab(_quickJobTab, QIcon(":/icons/quick.png"), tr(_ngPost->sQuickJobName));
-    _ui->postTabWidget->addTab(_autoPostTab, QIcon(":/icons/auto.png"), tr(_ngPost->sFolderMonitoringName));
+    _ui->postTabWidget->addTab(_quickJobTab, QIcon(":/icons/quick.png"), _ngPost->quickJobName());
+    _ui->postTabWidget->addTab(_autoPostTab, QIcon(":/icons/auto.png"), _ngPost->folderMonitoringName());
     _ui->postTabWidget->addTab(new QWidget(_ui->postTabWidget), QIcon(":/icons/plus.png"), tr("New"));
-    tabBar->setTabToolTip(2, QString("Create a new %1").arg(_ngPost->sQuickJobName));
+    tabBar->setTabToolTip(2, QString("Create a new %1").arg(_ngPost->quickJobName()));
 
 //    connect(_ui->postTabWidget,           &QTabWidget::currentChanged, this, &MainWindow::onJobTabClicked);
     connect(tabBar, &QTabBar::tabBarClicked,              this, &MainWindow::onJobTabClicked);
@@ -233,15 +233,18 @@ void MainWindow::changeEvent(QEvent *event)
             qDebug() << "MainWindow::changeEvent";
             _ui->retranslateUi(this);
 
+            _ui->shutdownCB->setToolTip(tr("Shutdown computer when all the current Posts are done (with command: %1)").arg(
+                                            _ngPost->_shutdownCmd));
+
             _ui->serverBox->setTitle(tr("Servers"));
             _ui->fileBox->setTitle(tr("Files"));
             _ui->postingBox->setTitle(tr("Parameters"));
             _ui->logBox->setTitle(tr("Posting Log"));
 
-            tabBar->setTabText(0, tr(_ngPost->sQuickJobName));
-            tabBar->setTabText(1, tr(_ngPost->sFolderMonitoringName));
+            tabBar->setTabText(0, _ngPost->quickJobName());
+            tabBar->setTabText(1, _ngPost->folderMonitoringName());
             for (int i = 2 ; i < lastTabIdx; ++i)
-                tabBar->setTabText(i, tr(_ngPost->sQuickJobName));
+                tabBar->setTabText(i, _ngPost->quickJobName());
             tabBar->setTabText(lastTabIdx, tr("New"));
 
             setJobLabel(_ui->postTabWidget->currentIndex());
@@ -360,6 +363,7 @@ void MainWindow::_initServerBox()
 
 void MainWindow::_initPostingBox()
 {
+    connect(_ui->shutdownCB,        &QAbstractButton::toggled, this, &MainWindow::onShutdownToggled);
     connect(_ui->saveButton,        &QAbstractButton::clicked, this, &MainWindow::onSaveConfig);
 
     connect(_ui->genPoster,         &QAbstractButton::clicked, this, &MainWindow::onGenPoster);
@@ -467,7 +471,7 @@ PostingWidget *MainWindow::addNewQuickTab(int lastTabIdx, const QFileInfoList &f
     _ui->postTabWidget->insertTab(lastTabIdx,
                                   newPostingWidget ,
                                   QIcon(":/icons/quick.png"),
-                                  QString("%1 #%2").arg(_ngPost->sQuickJobName).arg(lastTabIdx));
+                                  QString("%1 #%2").arg(_ngPost->quickJobName()).arg(lastTabIdx));
 
     for (const QFileInfo &file : files)
         newPostingWidget->addPath(file.absoluteFilePath(), 0, file.isDir());
@@ -632,24 +636,6 @@ void MainWindow::onSaveConfig()
 
 void MainWindow::onJobTabClicked(int index)
 {
-//    Q_UNUSED(index)
-//    if (index == 1)
-//    {
-//        QMessageBox box(this);
-//        box.setWindowTitle(tr("to be implemented..."));
-//        box.setInformativeText( tr("The idea would be to allow to prepare several posting Jobs with compression/par2... while the first job is posting.\n")
-//                               +tr("They will then start automatically, one after each other!\n")
-//                               +tr("\nAs this feature will require few days of work and that I don't particularly need it, ")
-//                               +tr("I'm waiting for some donations and if I get several, I'll definitely code it for you ;)\n"));
-//        box.setIcon(QMessageBox::Icon::Information);
-//        QAbstractButton* donateButton = box.addButton(tr("Donate"), QMessageBox::ActionRole);
-//        donateButton->setIcon(QIcon(":/icons/donate.png"));
-//        connect(donateButton, &QAbstractButton::clicked, _ngPost, &NgPost::onDonation);
-//        box.addButton(tr("Ok"), QMessageBox::AcceptRole);
-//        box.exec();
-//        _ui->postTabWidget->setCurrentIndex(0);
-//    }
-
     int nbJob = _ui->postTabWidget->count() -1;
     qDebug() << "Click on tab: " << index << ", count: " << nbJob;
     if (index == nbJob) // click on the last tab
@@ -702,6 +688,26 @@ void MainWindow::onLangChanged(const QString &lang)
 {
     qDebug() << "Changing lang to " << lang;
     _ngPost->changeLanguage(lang.toLower());
+}
+
+void MainWindow::onShutdownToggled(bool checked)
+{
+    if (checked)
+    {
+        int res = QMessageBox::question(this,
+                                        tr("Automatic Shutdown?"),
+                                        QString("%1\n%2").arg(
+                                            tr("You're about to schedule the shutdown of the computer once all the current Postings will be finished")).arg(
+                                            tr("Are you sure you want to switch off the computer?")),
+                                        QMessageBox::Yes,
+                                        QMessageBox::No);
+        if (res == QMessageBox::Yes)
+            _ngPost->_doShutdownWhenDone = checked;
+        else
+            _ui->shutdownCB->setChecked(false);
+    }
+    else
+        _ngPost->_doShutdownWhenDone = false;
 }
 
 

@@ -133,6 +133,8 @@ private slots:
 
     void onLangChanged(const QString &lang);
 
+    void onShutdownToggled(bool checked);
+
 private:
     void _initServerBox();
     void _initPostingBox();

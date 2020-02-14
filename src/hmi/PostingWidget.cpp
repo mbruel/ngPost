@@ -379,8 +379,6 @@ void PostingWidget::_buildFilesList(QFileInfoList &files, bool &hasFolder)
 
 void PostingWidget::init()
 {
-    _ui->donateButton->setToolTip(_ngPost->sDonationTooltip);
-    _ui->rarMaxCB->setToolTip(tr("limit the number of archive volume to %1 (cf config RAR_MAX)").arg(_ngPost->_rarMax));
     _ui->rarMaxCB->setChecked(_ngPost->_useRarMax);
 
     _ui->nzbPassCB->setChecked(false);
@@ -405,7 +403,6 @@ void PostingWidget::init()
     else
     {
         _ui->redundancySB->setEnabled(false);
-        _ui->redundancySB->setToolTip(tr("Using PAR2_ARGS from config file: %1").arg(_ngPost->_par2Args));
     }
 
     _ui->nameLengthSB->setRange(5, 50);
@@ -499,6 +496,9 @@ void PostingWidget::udatePostingParams()
 void PostingWidget::retranslate()
 {
     _ui->retranslateUi(this);
+    _ui->rarMaxCB->setToolTip(tr("limit the number of archive volume to %1 (cf config RAR_MAX)").arg(_ngPost->_rarMax));
+    _ui->redundancySB->setToolTip(tr("Using PAR2_ARGS from config file: %1").arg(_ngPost->_par2Args));
+    _ui->donateButton->setToolTip(_ngPost->donationTooltip());
 }
 
 void PostingWidget::addPath(const QString &path, int currentNbFiles, int isDir)

@@ -31,6 +31,7 @@
 #include <QMutex>
 #include <QQueue>
 #include <QCommandLineOption>
+#include <QProcess>
 class QTranslator;
 class NntpConnection;
 class NntpServerParams;
@@ -69,8 +70,10 @@ class NgPost : public QObject
     friend class PostingWidget;
     friend class AutoPostWidget;
     friend class PostingJob;
+    friend class AboutNgPost;
 
-    enum class Opt {HELP = 0, LANG, VERSION, CONF, DISP_PROGRESS, DEBUG, POST_HISTORY,
+    enum class Opt {HELP = 0, LANG, VERSION, CONF, SHUTDOWN_CMD,
+                    DISP_PROGRESS, DEBUG, POST_HISTORY,
                     INPUT, OUTPUT, NZB_PATH, THREAD, NZB_UPLOAD_URL,
                     MONITOR_FOLDERS, MONITOR_EXT, MONITOR_IGNORE_DIR,
                     MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY,
@@ -166,6 +169,15 @@ private:
 
     QNetworkAccessManager *_netMgr;
     QUrl *_urlNzbUpload;
+    QString _urlNzbUploadStr;
+
+    bool       _doShutdownWhenDone;
+    QProcess  *_shutdownProc;
+    QString    _shutdownCmd;
+
+    static constexpr const char *sDefaultShutdownCmdLinux   = "sudo -n /sbin/poweroff";
+    static constexpr const char *sDefaultShutdownCmdWindows = "shutdown /s /f /t 0";
+    static constexpr const char *sDefaultShutdownCmdMacOS   = "sudo -n shutdown -h now";
 
 
     static qint64 sArticleSize;
@@ -206,12 +218,12 @@ private:
     static constexpr const char *sDefaultRarExtraOptions = "-ep1 -m0";
     static constexpr const char *sDefault7zOptions = "-mx0 -mhe=on";
 
-    static constexpr const char *sFolderMonitoringName = QT_TRANSLATE_NOOP("NgPost", "Auto Posting");
-    static constexpr const char *sQuickJobName = QT_TRANSLATE_NOOP("NgPost", "Quick Post");
+    static const char *sFolderMonitoringName;
+    static const char *sQuickJobName;
 
     static const int sNbPreparedArticlePerConnection = NB_ARTICLES_TO_PREPARE_PER_CONNECTION;
 
-    static constexpr const char *sDonationTooltip = QT_TRANSLATE_NOOP("NgPost", "Donations are welcome, I spent quite some time to develop this app and make a sexy GUI although I'm not using it ;)");
+    static const char *sDonationTooltip;
 
     static const char sHistoryLogFieldSeparator = ';';
     static constexpr const char *sTranslationPath = "./lang";
@@ -278,6 +290,10 @@ public:
 
     void uploadNzb(const QString &nzbFilePath);
 
+    inline static QString quickJobName();
+    inline static QString folderMonitoringName();
+    inline static QString donationTooltip();
+
 signals:
     void log(QString msg, bool newline); //!< in case we signal from another thread
     void error(QString msg); //!< in case we signal from another thread
@@ -290,6 +306,13 @@ public slots:
 
     void onPostingJobStarted();
     void onPostingJobFinished();
+
+    void onShutdownProcReadyReadStandardOutput();
+    void onShutdownProcReadyReadStandardError();
+    void onShutdownProcFinished(int exitCode);
+//    void onShutdownProcStarted();
+//    void onShutdownProcStateChanged(QProcess::ProcessState newState);
+    void onShutdownProcError(QProcess::ProcessError error);
 
 private slots:
     void onLog(QString msg, bool newline);
@@ -336,6 +359,11 @@ public:
 
 
 };
+
+QString NgPost::quickJobName() { return tr(sQuickJobName); }
+QString NgPost::folderMonitoringName() { return tr(sFolderMonitoringName); }
+QString NgPost::donationTooltip() { return tr(sDonationTooltip); }
+
 
 bool NgPost::useHMI() const { return _mode == AppMode::HMI; }
 
@@ -438,7 +466,7 @@ std::string NgPost::_randomFrom(ushort length) const {
 
 QString NgPost::desc()
 {
-    return QString("%1 %2\n%3\n\n%4\n    -%5\n    -%6\n    -%7\n    -%8\n    -%9\n    -%10\n    -%11\n%12\n").arg(sAppName).arg(
+    return QString("%1 %2\n%3\n\n%4\n    - %5\n    - %6\n    - %7\n    - %8\n    - %9\n    - %10\n    - %11\n%12\n").arg(sAppName).arg(
             tr("is a CMD/GUI Usenet binary poster developped in C++11/Qt5:")).arg(
             tr("It is designed to be as fast as possible and offer all the main features to post data easily and safely.")).arg(
             tr("Here are the main features and advantages of ngPost:")).arg(
@@ -447,7 +475,7 @@ QString NgPost::desc()
             tr("monitor folder(s) to post each new file/folder individually after having them compressed")).arg(
             tr("auto delete files/folders once posted (only in command line with --auto or --monitor)")).arg(
             tr("generate the nzb")).arg(
-            tr("invisible mode: full article obfuscation, unique feature making all Aricles completely unrecognizable without the nzb")).arg(
+            tr("invisible mode: full article obfuscation, unique feature making all Articles completely unrecognizable without the nzb")).arg(
             "...").arg(
             tr("for more details, cf https://github.com/mbruel/ngPost"));
 }

@@ -48,8 +48,6 @@ AutoPostWidget::~AutoPostWidget()
 
 void AutoPostWidget::init()
 {
-    _ui->donateButton->setToolTip(_ngPost->sDonationTooltip);
-    _ui->rarMaxCB->setToolTip(tr("limit the number of archive volume to %1 (cf config RAR_MAX)").arg(_ngPost->_rarMax));
     _ui->rarMaxCB->setChecked(_ngPost->_useRarMax);
 
     _ui->keepRarCB->setChecked(_ngPost->_keepRar);
@@ -68,7 +66,6 @@ void AutoPostWidget::init()
     else
     {
         _ui->redundancySB->setEnabled(false);
-        _ui->redundancySB->setToolTip(tr("Using PAR2_ARGS from config file: %1").arg(_ngPost->_par2Args));
     }
 
 
@@ -421,6 +418,9 @@ bool AutoPostWidget::deleteFilesOncePosted() const { return _ui->delFilesCB->isC
 void AutoPostWidget::retranslate()
 {
     _ui->retranslateUi(this);
+    _ui->rarMaxCB->setToolTip(tr("limit the number of archive volume to %1 (cf config RAR_MAX)").arg(_ngPost->_rarMax));
+    _ui->redundancySB->setToolTip(tr("Using PAR2_ARGS from config file: %1").arg(_ngPost->_par2Args));
+    _ui->donateButton->setToolTip(_ngPost->donationTooltip());
 }
 
 
