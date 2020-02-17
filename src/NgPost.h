@@ -226,7 +226,7 @@ private:
     static const char *sDonationTooltip;
 
     static const char sHistoryLogFieldSeparator = ';';
-    static constexpr const char *sTranslationPath = "./lang";
+    static constexpr const char *sTranslationPath = ":/lang";
 
 
 public:
