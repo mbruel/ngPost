@@ -99,7 +99,7 @@ private:
     mutable QTextStream   _cerr; //!< stream for stderr
 
     bool                  _debug;
-    bool                  _dispprogressbarBar;
+    bool                  _dispProgressBar;
     bool                  _dispFilesPosting;
 
     QString               _nzbName; //!< name of nzb that we'll write (without the extension)

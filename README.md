@@ -210,11 +210,12 @@ Here is my email: Matthieu.Bruel@gmail.com
 
 
 ### Thanks
-- Uukrull for his intensive testing and feedbacks, for building all the MacOS packages and finally for the Spanish translation.
-- awsms for his testing on proper server (more than 20 cores) with a 10Gb/s connection that helped to improve ngPost's upload speed and the multi-threading support
+- Uukrull for his intensive testing and feedbacks and for building all the MacOS packages.
+- awsms for his testing on proper server with a 10Gb/s connection that helped to improve ngPost's upload speed and the multi-threading support
 - animetosho for having developped ParPar, the fasted par2 generator ever!
 - demanuel for the dev of NewsUP that was my first poster
 - noobcoder1983 for the German translation
+- tiriclote for the Spanish translation
 - all ngPost users ;)
 
 

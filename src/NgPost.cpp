@@ -189,7 +189,7 @@ NgPost::NgPost(int &argc, char *argv[]):
 #else
     _debug(false),
 #endif
-    _dispprogressbarBar(false),
+    _dispProgressBar(false),
     _dispFilesPosting(false),
     _nzbName(),
     _nbFiles(0),
@@ -311,12 +311,12 @@ NgPost::~NgPost()
 
 void NgPost::_finishPosting()
 {
-    if (_hmi || _dispprogressbarBar)
+    if (_hmi || _dispProgressBar)
         disconnect(&_progressbarTimer, &QTimer::timeout, this, &NgPost::onRefreshprogressbarBar);
 
     if (_activeJob && _activeJob->hasUploaded())
     {
-        if (_hmi || _dispprogressbarBar)
+        if (_hmi || _dispProgressBar)
         {
             onRefreshprogressbarBar();
             if (!_hmi)
@@ -592,7 +592,7 @@ void NgPost::onAboutClicked()
 
 void NgPost::onPostingJobStarted()
 {
-    if (_hmi || _dispprogressbarBar)
+    if (_hmi || _dispProgressBar)
     {
         connect(&_progressbarTimer, &QTimer::timeout, this, &NgPost::onRefreshprogressbarBar, Qt::DirectConnection);
         _progressbarTimer.start(_refreshRate);
@@ -981,19 +981,19 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         val = val.trimmed().toLower();
         if (val == "bar")
         {
-            _dispprogressbarBar  = true;
+            _dispProgressBar  = true;
             _dispFilesPosting = false;
             qDebug() << "Display progressbar bar\n";
         }
         else if (val == "files")
         {
-            _dispprogressbarBar  = false;
+            _dispProgressBar  = false;
             _dispFilesPosting = true;
             qDebug() << "Display Files when start posting\n";
         }
         else if (val == "none")
         { // force it in case in the config file something was on
-            _dispprogressbarBar  = false;
+            _dispProgressBar  = false;
             _dispFilesPosting = false;
         }
     }
@@ -1394,7 +1394,7 @@ QString NgPost::_parseConfig(const QString &configPath)
                         val = val.trimmed().toLower();
                         if (val == "bar")
                         {
-                            _dispprogressbarBar = true;
+                            _dispProgressBar = true;
                             qDebug() << "Display progressbar bar\n";
                         }
                         else if (val == "files")
@@ -1675,7 +1675,7 @@ void NgPost::_dumpParams() const
              << "\nfrom: " << _from.c_str() << ", groups: " << _groups.c_str()
              << "\narticleSize: " << sArticleSize
              << ", obfuscate articles: " << _obfuscateArticles
-             << ", display progressbar bar: " << _dispprogressbarBar
+             << ", display progressbar bar: " << _dispProgressBar
              << ", display posting files: " << _dispFilesPosting
              << "\ncompression settings: <tmp_path: " << _tmpPath << ">"
              << ", <rar_path: " << _rarPath << ">"
@@ -1768,8 +1768,8 @@ void NgPost::saveConfig()
                << "\n"
                << "\n"
                << tr("## How to display progressbar in command line: NONE, BAR, FILES") << endl
-               << (_dispprogressbarBar  ? "" : "#") << "DISP_progressbar = BAR\n"
-               << (_dispFilesPosting ? "" : "#") << "DISP_progressbar = FILES\n"
+               << (_dispProgressBar  ? "" : "#") << "DISP_Progress = BAR\n"
+               << (_dispFilesPosting ? "" : "#") << "DISP_Progress = FILES\n"
                << "\n"
                << "\n"
                << tr("## suffix of the msg_id for all the articles (cf nzb file)") << endl
