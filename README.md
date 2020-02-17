@@ -1,6 +1,6 @@
 <img align="left" width="80" height="80" src="https://raw.githubusercontent.com/mbruel/ngPost/master/src/resources/icons/ngPost.png" alt="ngPost">
 
-# ngPost v4.2
+# ngPost v4.3
 
 **Command Line and sexy GUI Usenet poster** for binaries developped in **C++11/Qt5**</br>
 it is designed to be **as fast as possible** and offer ALL the main features **to post data easily and safely**.</br>
@@ -9,6 +9,9 @@ it has a **posting queue** to allow you to prepare several posts (especially usi
 it can **automate posts** by **scanning folder(s)** and posting each file/folder individually after having them compressed (with a potential random archive name and password) and generated the par2!<br/>
 it can **monitor folder(s) to post each new file/folder** individually after having them compressed.<br/>
 it can **auto delete files/folders once posted** (only for monitoring with the HMI and with both --auto and --monitor in cmd)<br/>
+it can **switch off the computer** when all the posts are finished<br/>
+it is **translated in French, German and Spanish**.
+
 
 ![ngPost_v4.2](https://raw.githubusercontent.com/mbruel/ngPost/master/pics/ngPost_v4.2.png)
 
@@ -118,7 +121,6 @@ If you don't provide the output file (nzb file), we will create it in the nzbPat
 so in the second example above, the nzb would be: /tmp/file1.nzb
 </pre>
 
-
 ### Configuration file and keywords that are only in config
 The default configuration file for Linux and Mac environment is: **~/.ngPost** (no conf extension)<br/>
 If you wish, you can use another one in command line with the -c option.<br/>
@@ -136,23 +138,23 @@ The following ones are for experimented posters:
 
 ### Linux 64bit portable release (compiled with Qt v5.12.6)
 if you don't want to build it and install the dependencies, you can also the portable release that includes everything.<br/>
-- download [ngPost_v4.2-x86_64.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.2-x86_64.AppImage)
-- chmod 755 ngPost_v4.2-x86_64.AppImage
+- download [ngPost_v4.3-x86_64.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.3-x86_64.AppImage)
+- chmod 755 ngPost_v4.3-x86_64.AppImage
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
-PS: for older system with GLIBC < 3.4, here is a version compiled on Debian8 with GLIBC 2.19 and Qt v5.8.0: [ngPost_v4.2-x86_64_debian8.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.2-x86_64_debian8.AppImage)
+PS: for older system with GLIBC < 3.4, here is a version compiled on Debian8 with GLIBC 2.19 and Qt v5.8.0: [ngPost_v4.3-x86_64_debian8.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.3-x86_64_debian8.AppImage)
 
 
 ### Raspbian release (armhf for Raspberry PI)
-- download [ngPost_v4.2-armhf.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.2-armhf.AppImage)
-- chmod 755 ngPost_v4.2-armhf.AppImage
+- download [ngPost_v4.3-armhf.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.3-armhf.AppImage)
+- chmod 755 ngPost_v4.3-armhf.AppImage
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
 
 ### Windows installer
-- just use the packager [ngPost_v4.2_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.2_x64_setup.exe) or [ngPost_v4.2_x86_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.2_x86_setup.exe) for the 32bit version
+- just use the packager [ngPost_v4.3_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.3_x64_setup.exe) or [ngPost_v4.3_x86_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.3_x86_setup.exe) for the 32bit version
 - edit **ngPost.conf** (in the installation folder) to add your server settings (you can put several).
 - launch **ngPost.exe** (GUI version)
 - or you can use it with the command line: **ngPost.exe** -i "your file or directory"
@@ -166,7 +168,7 @@ By default:
 
 
 ### MacOS release built on High Sierra (v10.13)
-- download [ngPost_v4.2.dmg](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.2.dmg)
+- download [ngPost_v4.3.dmg](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.3.dmg)
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
