@@ -353,6 +353,7 @@ int NgPost::startHMI()
 #endif
     _hmi->init();
     _hmi->show();
+    changeLanguage(_lang); // reforce lang set up...
 
     return _app->exec();
 }
