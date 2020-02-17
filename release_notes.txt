@@ -15,8 +15,8 @@ TODO: --nfo option (cf github issue #10 and NewsUp dev)
 
 
 ####################################################
-###       Release: ngPost v5.1                   ###
-###       date:    2020/02/??                    ###
+###       Release: ngPost v4.3                   ###
+###       date:    2020/02/17                    ###
 ####################################################
 
 - release for old linux 64bit  kernels (GLIBC 2.19, Qt v5.8.0, built on Debian 8)
@@ -32,6 +32,8 @@ TODO: --nfo option (cf github issue #10 and NewsUp dev)
 - FTP upload of the nzb and/or HTTP API (cf NZB_UPLOAD_URL)
 
 - auto shutdown (cf SHUTDOWN_CMD), could be use to execute whatever script ;)
+
+- issue #19: Padding of subject in nzb file
 
 
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="es_ES">
+<TS version="2.0" language="es_ES">
 <context>
     <name>AboutNgPost</name>
     <message>
@@ -106,12 +106,12 @@
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="213"/>
         <source>Auto Dir path</source>
-        <translation>La ruta de Auto Dir</translation>
+        <translation>La ruta del Directorio Automatizado</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="226"/>
         <source>select the Auto Directory</source>
-        <translation>seleccione el Directorio.Automatizado</translation>
+        <translation>seleccione el Directorio Automatizado</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="242"/>
@@ -121,7 +121,7 @@
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="271"/>
         <source>Monitor extension filter: </source>
-        <translation>Filtro extensión monitoreo: </translation>
+        <translation>Filtro extensiones monitoreo: </translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="278"/>
@@ -131,12 +131,12 @@
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="285"/>
         <source>shall we post incoming folders</source>
-        <translation>publicamos las carpetas de entrada</translation>
+        <translation>Deberá publicar las carpetas nuevas</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="288"/>
         <source>post Folders</source>
-        <translation>Carpetas de Publicación</translation>
+        <translation>publicar Carpetas</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="310"/>
@@ -207,12 +207,12 @@
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="461"/>
         <source>delete files/folders once they have been successfully posted (careful with that it&apos;s irreversible!!!)</source>
-        <translation>borrar los ficheros/carpetas una vez que se han publicado con éxito (¡¡¡cuidado con esto es irreversible!!!)</translation>
+        <translation>borrar los ficheros/carpetas una vez que se han publicado con éxito (¡¡¡cuidado con esto, es irreversible!!!)</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="464"/>
         <source>delete files once posted (only for Monitoring)</source>
-        <translation>eliminar ficheros una vez publicados (sólo para Monitoreo)</translation>
+        <translation>eliminar ficheros una vez publicados (sólo Monitoreo)</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="488"/>
@@ -228,7 +228,7 @@
         <location filename="../hmi/AutoPostWidget.ui" line="515"/>
         <location filename="../hmi/AutoPostWidget.cpp" line="222"/>
         <source>Monitor Folder</source>
-        <translation>Carpeta de monitorización</translation>
+        <translation>Carpeta de Monitorización</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="526"/>
@@ -238,7 +238,7 @@
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="529"/>
         <source>start all Posts</source>
-        <translation>empezar todas las Publicaciones</translation>
+        <translation>empezar a Publicar</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="536"/>
@@ -396,7 +396,7 @@ Será irreversible...</translation>
     <message>
         <location filename="../hmi/MainWindow.ui" line="57"/>
         <source>Add Server</source>
-        <translation>Añadir servidor</translation>
+        <translation>Añadir Servidor</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="89"/>
@@ -447,7 +447,7 @@ Será irreversible...</translation>
     <message>
         <location filename="../hmi/MainWindow.ui" line="199"/>
         <source>nb Retry:</source>
-        <translation>núm. Reintentos:</translation>
+        <translation>Núm. Reintentos:</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="222"/>
@@ -477,7 +477,7 @@ Será irreversible...</translation>
     <message>
         <location filename="../hmi/MainWindow.ui" line="278"/>
         <source>file name obfuscation</source>
-        <translation>ofuscar nombre de fichero</translation>
+        <translation>Ofuscar nombre de fichero</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="301"/>
@@ -498,7 +498,7 @@ Será irreversible...</translation>
     <message>
         <location filename="../hmi/MainWindow.ui" line="355"/>
         <source>shutdown computer</source>
-        <translation type="unfinished"></translation>
+        <translation>Apagar ordenador</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="380"/>
@@ -508,7 +508,7 @@ Será irreversible...</translation>
     <message>
         <location filename="../hmi/MainWindow.ui" line="383"/>
         <source>Lang:</source>
-        <translation></translation>
+        <translation>Idioma:</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="395"/>
@@ -518,7 +518,7 @@ Será irreversible...</translation>
     <message>
         <location filename="../hmi/MainWindow.ui" line="398"/>
         <source>save</source>
-        <translation>guardar</translation>
+        <translation>Guardar</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="437"/>
@@ -533,7 +533,7 @@ Será irreversible...</translation>
     <message>
         <location filename="../hmi/MainWindow.ui" line="463"/>
         <source>show some debug information</source>
-        <translation>mostrar alguna información de depuración</translation>
+        <translation>mostrar información de depuración</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="466"/>
@@ -604,7 +604,7 @@ Será irreversible...</translation>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="236"/>
         <source>Shutdown computer when all the current Posts are done (with command: %1)</source>
-        <translation type="unfinished"></translation>
+        <translation>Apagar el ordenador cuando todas las publicaciones actuales estén terminadas (con el comando: %1)</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="239"/>
@@ -629,17 +629,17 @@ Será irreversible...</translation>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="698"/>
         <source>Automatic Shutdown?</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Apagado automático?</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="700"/>
         <source>You&apos;re about to schedule the shutdown of the computer once all the current Postings will be finished</source>
-        <translation type="unfinished"></translation>
+        <translation>Está a punto de programar el apagado del ordenador una vez que todas las publicaciones actuales se terminen</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="701"/>
         <source>Are you sure you want to switch off the computer?</source>
-        <translation type="unfinished"></translation>
+        <translation>¿Estás seguro de que quieres apagar el ordenador?</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="206"/>
@@ -1047,7 +1047,7 @@ O bien usa --par2_pct o establece PAR2_PCT o PAR2_ARGS en el fichero de configur
     <message>
         <location filename="../NgPost.cpp" line="1470"/>
         <source>archive pass</source>
-        <translation>Contraseña del archivo</translation>
+        <translation>contraseña del archivo</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1471"/>
@@ -1057,7 +1057,7 @@ O bien usa --par2_pct o establece PAR2_PCT o PAR2_ARGS en el fichero de configur
     <message>
         <location filename="../NgPost.cpp" line="1472"/>
         <source>from</source>
-        <translation>de</translation>
+        <translation>posteador</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1589"/>
@@ -1137,7 +1137,7 @@ O bien usa --par2_pct o establece PAR2_PCT o PAR2_ARGS en el fichero de configur
     <message>
         <location filename="../NgPost.cpp" line="1717"/>
         <source>## Lang for the app. Currently supported: EN, FR, ES, DE</source>
-        <translation type="unfinished"></translation>
+        <translation>## Idiomas para la aplicación. Actualmente soportados: EN, FR, ES, DE</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1720"/>
@@ -1157,32 +1157,32 @@ O bien usa --par2_pct o establece PAR2_PCT o PAR2_ARGS en el fichero de configur
     <message>
         <location filename="../NgPost.cpp" line="1725"/>
         <source>## Shutdown command to switch off the computer when ngPost is done with all its queued posting</source>
-        <translation type="unfinished"></translation>
+        <translation>## Comando de apagado para apagar el ordenador cuando ngPost termine con toda su cola de publicaciones</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1726"/>
         <source>## this should mainly used with the auto posting</source>
-        <translation type="unfinished"></translation>
+        <translation>## Esto debería ser usado principalmente con la publicación automática</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1727"/>
         <source>## you could use whatever script instead (like to send a mail...)</source>
-        <translation type="unfinished"></translation>
+        <translation>## Podrías usar cualquier script en su lugar (como enviar un correo...)</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1728"/>
         <source>#SHUTDOWN_CMD = shutdown /s /f /t 0  (Windows)</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1729"/>
         <source>#SHUTDOWN_CMD = sudo -n /sbin/poweroff  (Linux, make sure poweroff has sudo rights without any password or change the command)</source>
-        <translation type="unfinished"></translation>
+        <translation>#SHUTDOWN_CMD = sudo -n /sbin/poweroff  (Linux, asegúrate de que el poweroff tiene derechos de sudo sin ninguna contraseña o cambia el comando)</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1730"/>
         <source>#SHUTDOWN_CMD = sudo -n shutdown -h now (MacOS, same make sure you&apos;ve sudo rights)</source>
-        <translation type="unfinished"></translation>
+        <translation>#SHUTDOWN_CMD = sudo -n shutdown -h now (MacOS, igual, asegúrate de que tienes derechos de sudo)</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1733"/>
@@ -1222,7 +1222,7 @@ O bien usa --par2_pct o establece PAR2_PCT o PAR2_ARGS en el fichero de configur
     <message>
         <location filename="../NgPost.cpp" line="1749"/>
         <source>## Default folder to open to select files from the HMI</source>
-        <translation>## Carpeta predeterminada para abrir para seleccionar ficheros del HMI</translation>
+        <translation>## Carpeta predeterminada para abrir y seleccionar ficheros en HMI</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1752"/>
@@ -1242,7 +1242,7 @@ O bien usa --par2_pct o establece PAR2_PCT o PAR2_ARGS en el fichero de configur
     <message>
         <location filename="../NgPost.cpp" line="1761"/>
         <source>## if you let it commented, we&apos;ll generate a random email for the whole post</source>
-        <translation>## si lo dejas comentado, generaremos un email aleatorio para todo el post</translation>
+        <translation>## si lo dejas comentado, generaremos un email aleatorio para todas las publicaciones</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1765"/>
@@ -1308,11 +1308,11 @@ O bien usa --par2_pct o establece PAR2_PCT o PAR2_ARGS en el fichero de configur
     <message>
         <location filename="../NgPost.cpp" line="1802"/>
         <source>## RAR or 7zip absolute file path (external application)</source>
-        <translation type="unfinished"></translation>
+        <translation>## RAR o 7zip ruta completa del archivo (aplicación externa)</translation>
     </message>
     <message>
         <source>## RAR absolute file path (external application)</source>
-        <translation type="vanished">## RAR ruta del fichero completa (aplicación externa)</translation>
+        <translation>## RAR ruta del fichero completa (aplicación externa)</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1803"/>
@@ -1487,11 +1487,11 @@ O bien usa --par2_pct o establece PAR2_PCT o PAR2_ARGS en el fichero de configur
     <message>
         <location filename="../NgPost.h" line="478"/>
         <source>invisible mode: full article obfuscation, unique feature making all Articles completely unrecognizable without the nzb</source>
-        <translation type="unfinished"></translation>
+        <translation>modo invisible: ofuscación completa del artículo, característica única que hace a todos los Arículos completamente irreconocibles sin el nzb</translation>
     </message>
     <message>
         <source>invisible mode: full article obfuscation, unique feature making all Aricles completely unrecognizable without the nzb</source>
-        <translation type="vanished">modo invisible: ofuscación completa del artículo, característica única que hace a todos los Arículos completamente irreconocibles sin el nzb</translation>
+        <translation>modo invisible: ofuscación completa del artículo, característica única que hace a todos los Arículos completamente irreconocibles sin el nzb</translation>
     </message>
     <message>
         <location filename="../NgPost.h" line="480"/>
@@ -1558,7 +1558,7 @@ O bien usa --par2_pct o establece PAR2_PCT o PAR2_ARGS en el fichero de configur
     <message>
         <location filename="../PostingJob.cpp" line="139"/>
         <source>&lt;h3&gt;Start Post #%1: %2&lt;/h3&gt;</source>
-        <translation>&lt;h3&gt;Comenzar Publicación #%1: %2&lt;/h3&gt;</translation>
+        <translation>&lt;h3&gt;Comenzando Publicación #%1: %2&lt;/h3&gt;</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="141"/>
@@ -1694,7 +1694,7 @@ Tamaño de la subida: %1 en %2 (%3 seg.) =&gt; velocidad media: %4 (%5 conexione
     <message>
         <location filename="../PostingJob.cpp" line="634"/>
         <source>, rar pass: %1</source>
-        <translation>, rar contraseña: %1</translation>
+        <translation>, contraseña rar: %1</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="717"/>
@@ -1875,7 +1875,7 @@ Tamaño de la subida: %1 en %2 (%3 seg.) =&gt; velocidad media: %4 (%5 conexione
     <message>
         <location filename="../hmi/PostingWidget.ui" line="223"/>
         <source>Remove All</source>
-        <translation>Eliminar todo</translation>
+        <translation>Eliminar Todo</translation>
     </message>
     <message>
         <location filename="../hmi/PostingWidget.ui" line="234"/>
@@ -1960,7 +1960,7 @@ Tamaño de la subida: %1 en %2 (%3 seg.) =&gt; velocidad media: %4 (%5 conexione
     <message>
         <location filename="../hmi/PostingWidget.ui" line="440"/>
         <source>generate the par2 (the compress option must be selected)</source>
-        <translation>generar el par2 (la opción de compresión debe estar seleccionada)</translation>
+        <translation>generar el par2 (la opción de comprimir debe estar seleccionada)</translation>
     </message>
     <message>
         <location filename="../hmi/PostingWidget.ui" line="443"/>

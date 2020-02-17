@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="de_DE">
+<TS version="2.0" language="de_DE">
 <context>
     <name>AboutNgPost</name>
     <message>
@@ -125,12 +125,12 @@
     </message>
     <message>
         <source>Add monitoring extension filter (comma separated, not dot, no space, ex: mkv,mp4,avi,iso,tar)</source>
-        <translation type="vanished">Erweiterungsfilter für die Überwachung hinzufügen (Komma getrennt, kein Punkt, kein Leerzeichen, z.B.: mkv,mp4,avi,iso,tar)</translation>
+        <translation>Erweiterungsfilter für die Überwachung hinzufügen (Komma getrennt, kein Punkt, kein Leerzeichen, z.B.: mkv,mp4,avi,iso,tar)</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="278"/>
         <source>Add monitoring extension filter (coma separated, not dot, no space, ex: mkv,mp4,avi,iso,tar)</source>
-        <translation type="unfinished"></translation>
+        <translation>Erweiterungsfilter für die Überwachung hinzufügen (Komma getrennt, kein Punkt, kein Leerzeichen, z.B.: mkv,mp4,avi,iso,tar)</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="285"/>
@@ -420,7 +420,7 @@ Es wird nicht mehr rückgängig zu machen sein...</translation>
     <message>
         <location filename="../hmi/MainWindow.ui" line="136"/>
         <source>add the list of groups separated with a coma (no space)</source>
-        <translation type="unfinished"></translation>
+        <translation>Gruppen hinzufügen mit einem Komma getrennt (ohne Leerzeichen)</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="139"/>
@@ -430,7 +430,7 @@ Es wird nicht mehr rückgängig zu machen sein...</translation>
     <message>
         <location filename="../hmi/MainWindow.ui" line="152"/>
         <source>list of groups where to post (coma separated with no space)</source>
-        <translation type="unfinished"></translation>
+        <translation>Liste der Gruppen, in denen Beiträge gepostet werden sollen (durch Komma ohne Leerzeichen getrennt)</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="173"/>
@@ -445,11 +445,11 @@ Es wird nicht mehr rückgängig zu machen sein...</translation>
     </message>
     <message>
         <source>add the list of groups separated with a comma (no space)</source>
-        <translation type="vanished">Gruppen hinzufügen mit einem Komma getrennt (ohne Leerzeichen)</translation>
+        <translation>Gruppen hinzufügen mit einem Komma getrennt (ohne Leerzeichen)</translation>
     </message>
     <message>
         <source>list of groups where to post (comma separated with no space)</source>
-        <translation type="vanished">Liste der Gruppen, in denen Beiträge geschrieben werden sollen (durch Komma ohne Leerzeichen getrennt)</translation>
+        <translation>Liste der Gruppen, in denen Beiträge geschrieben werden sollen (durch Komma ohne Leerzeichen getrennt)</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="196"/>
@@ -510,7 +510,7 @@ Es wird nicht mehr rückgängig zu machen sein...</translation>
     <message>
         <location filename="../hmi/MainWindow.ui" line="355"/>
         <source>shutdown computer</source>
-        <translation type="unfinished"></translation>
+        <translation>Computer herunterfahren</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="380"/>
@@ -616,7 +616,7 @@ Es wird nicht mehr rückgängig zu machen sein...</translation>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="236"/>
         <source>Shutdown computer when all the current Posts are done (with command: %1)</source>
-        <translation type="unfinished"></translation>
+        <translation>Computer herunterfahren, wenn alle aktuellen Posts erledigt sind (mit dem Befehl: %1)</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="239"/>
@@ -641,17 +641,17 @@ Es wird nicht mehr rückgängig zu machen sein...</translation>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="698"/>
         <source>Automatic Shutdown?</source>
-        <translation type="unfinished"></translation>
+        <translation>Automatisches herunterfahren?</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="700"/>
         <source>You&apos;re about to schedule the shutdown of the computer once all the current Postings will be finished</source>
-        <translation type="unfinished"></translation>
+        <translation>Sie sind dabei, das Herunterfahren des Computers zu planen, sobald alle aktuellen Postings abgeschlossen sind.</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="701"/>
         <source>Are you sure you want to switch off the computer?</source>
-        <translation type="unfinished"></translation>
+        <translation>Sind Sie sicher, dass Sie den Computer ausschalten wollen?</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="206"/>
@@ -757,7 +757,7 @@ Sind Sie sicher, dass Sie beenden möchten?</translation>
     </message>
     <message>
         <source>newsgroups where to post the files (comma separated without space)</source>
-        <translation type="vanished">Newsgroups, in denen die Dateien gepostet werden sollen (Komma ohne Leerzeichen getrennt)</translation>
+        <translation>Newsgroups, in denen die Dateien gepostet werden sollen (Komma ohne Leerzeichen getrennt)</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="144"/>
@@ -1148,7 +1148,7 @@ Either use --par2_pct or set PAR2_PCT or PAR2_ARGS in the config file.</source>
     <message>
         <location filename="../NgPost.cpp" line="1717"/>
         <source>## Lang for the app. Currently supported: EN, FR, ES, DE</source>
-        <translation type="unfinished"></translation>
+        <translation>## Sprache für die App. Wird derzeit unterstützt: EN, FR, ES, DE</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1720"/>
@@ -1168,32 +1168,32 @@ Either use --par2_pct or set PAR2_PCT or PAR2_ARGS in the config file.</source>
     <message>
         <location filename="../NgPost.cpp" line="1725"/>
         <source>## Shutdown command to switch off the computer when ngPost is done with all its queued posting</source>
-        <translation type="unfinished"></translation>
+        <translation>## Shutdown-Befehl, um den Computer auszuschalten, wenn ngPost mit all seinen Postings in der Warteschlange fertig ist</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1726"/>
         <source>## this should mainly used with the auto posting</source>
-        <translation type="unfinished"></translation>
+        <translation>## dies sollte hauptsächlich mit dem auto post verwendet werden</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1727"/>
         <source>## you could use whatever script instead (like to send a mail...)</source>
-        <translation type="unfinished"></translation>
+        <translation>## Sie könnten stattdessen ein beliebiges Skript verwenden (z.B. um eine Mail zu versenden...)</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1728"/>
         <source>#SHUTDOWN_CMD = shutdown /s /f /t 0  (Windows)</source>
-        <translation type="unfinished"></translation>
+        <translation>#SHUTDOWN_CMD = shutdown /s /f /t 0 (Windows)</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1729"/>
         <source>#SHUTDOWN_CMD = sudo -n /sbin/poweroff  (Linux, make sure poweroff has sudo rights without any password or change the command)</source>
-        <translation type="unfinished"></translation>
+        <translation>#SHUTDOWN_CMD = sudo -n /sbin/poweroff (Linux, stellen Sie sicher, dass poweroff sudo-Rechte ohne Passwort hat oder ändern Sie den Befehl)</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1730"/>
         <source>#SHUTDOWN_CMD = sudo -n shutdown -h now (MacOS, same make sure you&apos;ve sudo rights)</source>
-        <translation type="unfinished"></translation>
+        <translation>#SHUTDOWN_CMD = sudo -n shutdown -h now (MacOS, stellen Sie ebenfalls sicher, dass Sie sudo-Rechte haben)</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1733"/>
@@ -1223,11 +1223,11 @@ Either use --par2_pct or set PAR2_PCT or PAR2_ARGS in the config file.</source>
     <message>
         <location filename="../NgPost.cpp" line="1802"/>
         <source>## RAR or 7zip absolute file path (external application)</source>
-        <translation type="unfinished"></translation>
+        <translation>## RAR oder 7zip absoluter Dateipfad (externe Anwendung)</translation>
     </message>
     <message>
         <source>## for monitoring, extension file filter for new incoming files (comma separated, no dot)</source>
-        <translation type="vanished">## für die Beobachtung, Erweiterungsdateifilter für neu eingehende Dateien (Komma getrennt, kein Punkt)</translation>
+        <translation>## für die Beobachtung, Erweiterungsdateifilter für neu eingehende Dateien (Komma getrennt, kein Punkt)</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1848"/>
@@ -1247,12 +1247,12 @@ Either use --par2_pct or set PAR2_PCT or PAR2_ARGS in the config file.</source>
     <message>
         <location filename="../NgPost.cpp" line="143"/>
         <source>newsgroups where to post the files (coma separated without space)</source>
-        <translation type="unfinished"></translation>
+        <translation>Newsgroups, in denen die Dateien gepostet werden sollen (Komma ohne Leerzeichen getrennt)</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1742"/>
         <source>## for monitoring, extension file filter for new incoming files (coma separated, no dot)</source>
-        <translation type="unfinished"></translation>
+        <translation>## für das Überwachen, Erweiterungsdateifilter für neu eingehende Dateien (Komma getrennt, kein Punkt)</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1749"/>
@@ -1342,7 +1342,7 @@ Either use --par2_pct or set PAR2_PCT or PAR2_ARGS in the config file.</source>
     </message>
     <message>
         <source>## RAR absolute file path (external application)</source>
-        <translation type="vanished">## RAR absoluter Dateipfad (externe Anwendung)</translation>
+        <translation>## RAR absoluter Dateipfad (externe Anwendung)</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1803"/>
@@ -1436,11 +1436,11 @@ Either use --par2_pct or set PAR2_PCT or PAR2_ARGS in the config file.</source>
     </message>
     <message>
         <source>#PAR2_ARGS = c -l -m1024 -r8 -s768000</source>
-        <translation type="vanished">#PAR2_ARGS = c -l -m1024 -r8 -s768000</translation>
+        <translation>#PAR2_ARGS = c -l -m1024 -r8 -s768000</translation>
     </message>
     <message>
         <source>#PAR2_ARGS = create /rr8 /lc40 /lr /rd2</source>
-        <translation type="vanished">#PAR2_ARGS = create /rr8 /lc40 /lr /rd2</translation>
+        <translation>#PAR2_ARGS = create /rr8 /lc40 /lr /rd2</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1845"/>
