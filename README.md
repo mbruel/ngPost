@@ -13,7 +13,7 @@ it can **switch off the computer** when all the posts are finished<br/>
 it is **translated in French, German and Spanish**.
 
 
-![ngPost_v4.2](https://raw.githubusercontent.com/mbruel/ngPost/master/pics/ngPost_v4.2.png)
+![ngPost_v4.3](https://raw.githubusercontent.com/mbruel/ngPost/master/pics/ngPost_v4.3.png)
 
 [Releases are availables](https://github.com/mbruel/ngPost/tree/master/release) for: Linux 64bit, Windows (both 32bit and 64bit), MacOS and Raspbian (RPI 4). Soon for Android then iOS...
 
