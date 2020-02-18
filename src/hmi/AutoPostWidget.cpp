@@ -102,7 +102,7 @@ void AutoPostWidget::init()
     connect(_ui->addMonitoringFolderButton, &QAbstractButton::clicked, this, &AutoPostWidget::onAddMonitoringFolder);
 
 
-    _ui->extensionFilterEdit->setText(_ngPost->_monitorExtensions.join(","));
+    _ui->extensionFilterEdit->setText(_ngPost->_monitorExtensions.isEmpty()? "" : _ngPost->_monitorExtensions.join(","));
     _ui->dirAllowedCB->setChecked(!_ngPost->_monitorIgnoreDir);
 }
 
@@ -379,8 +379,14 @@ void AutoPostWidget::udatePostingParams()
 
 
     _ngPost->_monitorExtensions.clear();
-    for (const QString &extension : _ui->extensionFilterEdit->text().split(","))
-        _ngPost->_monitorExtensions << extension.trimmed();
+    if (!_ui->extensionFilterEdit->text().isEmpty())
+    {
+        for (QString &extension : _ui->extensionFilterEdit->text().split(","))
+        {
+            if (!extension.trimmed().isEmpty())
+                _ngPost->_monitorExtensions << extension.trimmed();
+        }
+    }
 
     _ngPost->_monitorIgnoreDir = !_ui->dirAllowedCB->isChecked();
 

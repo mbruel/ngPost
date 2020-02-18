@@ -424,8 +424,14 @@ void NgPost::onNewFileToProcess(const QFileInfo & fileInfo)
             return;
         }
     }
-    else if (_monitorExtensions.size() && !_monitorExtensions.contains(fileInfo.suffix()))
+    else if (!_monitorExtensions.isEmpty() && !_monitorExtensions.contains(fileInfo.suffix()))
     {
+#ifdef __DEBUG__
+        qDebug() << "MONITOR_EXTENSIONS ON => Ignoring new incoming file: " << fileInfo.absoluteFilePath()
+                 << ", _monitorExtensions: " << _monitorExtensions
+                 << ", size: " << _monitorExtensions.size()
+                 << ", suffix: " << fileInfo.suffix();
+#endif
         if (_debug)
             _log(tr("MONITOR_EXTENSIONS ON => Ignoring new incoming file %1").arg(fileInfo.absoluteFilePath()));
         return;
