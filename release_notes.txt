@@ -13,6 +13,15 @@ TODO: bandwidth optimization:
 
 TODO: --nfo option (cf github issue #10 and NewsUp dev)
 
+####################################################
+###       Release: ngPost v4.4                   ###
+###       date:    2020/02/18                    ###
+####################################################
+
+- fix bug on monitoring
+
+- add README_FR.md and ngPost_fr.conf
+
 
 ####################################################
 ###       Release: ngPost v4.3                   ###
