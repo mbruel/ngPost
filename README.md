@@ -19,7 +19,7 @@ it is **translated in French, German and Spanish**.
 
 Here are the main features and advantages of ngPost:
 -   **full obfuscation of the Article Header** : the Subject will be a UUID (as the msg-id) and a random Poster will be used. **Be Careful**, using this, you won't be able to find your post on Usenet (or any Indexers) if you lose the NZB file. But using this method is **completely safe**, **no need to obfuscate your files or even tp use a password**.
--   **Posing Queue**: you can prepare several posts while you're posting something. Of course you can cancel pending posts ;)
+-   **Posting Queue**: you can prepare several posts while you're posting something. Of course you can cancel pending posts ;)
 -   **Post automation**: scan a folder and post each file/folder after compression. (cf **--auto option in CMD** and the "Auto Posting" tab on the GUI)
 -   **compress using RAR or 7zip** (external command) with random **name obfuscation** and password and **generate par2** before posting
 -   **write history of posts in a csv file**: so you can get the date, **file name**, size, upload speed but most important the **archive name and password** in simple excel spreadsheet ;)
