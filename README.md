@@ -2,6 +2,9 @@
 
 # ngPost v4.3
 
+[Pour la version Française cliquez ici ;)](https://github.com/mbruel/ngPost/blob/master/README_FR.md)<br/>
+<br/>
+
 **Command Line and sexy GUI Usenet poster** for binaries developped in **C++11/Qt5**</br>
 it is designed to be **as fast as possible** and offer ALL the main features **to post data easily and safely**.</br>
 it can **compress** (using your external rar binary) and **generate the par2** before posting!<br/>

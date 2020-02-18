@@ -116,8 +116,39 @@ Une fois les parties Serveurs et Paramètres remplies, on remarque un système d
 2 sont statiques:
   - Post Rapide: pour poster simplement un ou plusieurs fichiers
   - Post Auto: pour générer des Post Rapides ou surveiller un ou plusieurs dossiers
-L'onglet **Nouveau** permet de créer d'autres Post Rapides.
+L'onglet **Nouveau** permet de créer d'autres Post Rapides.<br />
+À noter que vous pouvez faire un click droit sur les onglets et vous avez l'option **Fermer tous les onglets des Posts finis**<br/>
 
+
+#### le Post Rapide:
+
+C'est assez intuitif... Ajoutez des fichiers / dossiers dans la liste en:
+  - cliquant sur les boutons **Choisir Fichiers** ou **Choisir Dossier**
+  - faisant un click droit (pour ajouter des fichiers) sur la zone de la liste
+  - en drag and drop (glisser déposer depuis un explorateur)
+  - le copiant / collant des fichiers (marche sous Linux, pas certain sous Windows)
+
+Choisissez si vous voulez compresser, générer les par2,...
+Puis il suffit de cliquer sur **Poster Fichiers**
+
+
+#### le mode auto:
+
+![ngPost_v4.3](https://raw.githubusercontent.com/mbruel/ngPost/master/pics/ngPost_v4.3_auto_fr.png)
+
+- choisissez le **Dossier auto** (par défaut, c'est le inputDir du fichier de configuration)
+- cliquez sur **Scanner**
+- supprimez les fichiers du dossiers que vous ne souhaitez pas poster. (sélection dans la liste et touche SUPPR ou BackSpace du clavier)
+- choisissez les options de compression / par2
+- cochez ou non l'option **lancer tous les posts**
+- cliquez sur **Créer Posts**
+
+Des onglets de Posts Rapides seront alors créer. Ils seront démarrés automatiquement si vous avez coché l'option.<br/>
+L'interface graphique sautera sur le Post Rapide courant.<br/>
+À noter que vous pouvez faire un click droit sur les onglets et vous avez l'option **Fermer tous les onglets des Posts finis**<br/>
+
+
+#### le mode surveillance:
 
 
 
@@ -143,46 +174,39 @@ Les dernieres versions packagées sont disponibles ici<br/>
 Une alternative pour compiler est [d'installer QT](https://www.qt.io/download) et de charger le fichier ngPost.pro dans QtCreator<br/>
 
 
-### Linux 64bit portable release (compiled with Qt v5.12.6)
-if you don't want to build it and install the dependencies, you can also the portable release that includes everything.<br/>
-- download [ngPost_v4.3-x86_64.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.3-x86_64.AppImage)
+### version Linux portable: AppImage compilée avec Qt v5.12.6, GLIBC 2.24
+- téléchargez [ngPost_v4.3-x86_64.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.3-x86_64.AppImage)
 - chmod 755 ngPost_v4.3-x86_64.AppImage
-- launch it using the same syntax than describe in the section above
-- if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
+- si vous le lancez sans paramètres, l'interface graphique s'ouvrira, sinon c'est en mode ligne de commande. (cf ngPost --help -l fr)
+- pour le fichier de configuration, éditez le fichier **~/.ngPost** et copiez [ce modèle](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost_fr.conf) (ne pas mettre l'extension .conf!)
 
-PS: for older system with GLIBC < 3.4, here is a version compiled on Debian8 with GLIBC 2.19 and Qt v5.8.0: [ngPost_v4.3-x86_64_debian8.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.3-x86_64_debian8.AppImage)
+PS: pour des systèmes plus vieux GLIBC < 2.24, voici une version compilée sous Debian8 avec GLIBC 2.19 et Qt v5.8.0: [ngPost_v4.3-x86_64_debian8.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.3-x86_64_debian8.AppImage)
 
 
-### Raspbian release (armhf for Raspberry PI)
-- download [ngPost_v4.3-armhf.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.3-armhf.AppImage)
+### version Raspbian portable (armhf pour Raspberry PI)
+- téléchargez [ngPost_v4.3-armhf.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.3-armhf.AppImage)
 - chmod 755 ngPost_v4.3-armhf.AppImage
-- launch it using the same syntax than describe in the section above
-- if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
+- si vous le lancez sans paramètres, l'interface graphique s'ouvrira, sinon c'est en mode ligne de commande. (cf ngPost --help -l fr)
+- pour le fichier de configuration, éditez le fichier **~/.ngPost** et copiez [ce modèle](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost_fr.conf) (ne pas mettre l'extension .conf!)
 
 
 ### Windows installer
-- just use the packager [ngPost_v4.3_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.3_x64_setup.exe) or [ngPost_v4.3_x86_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.3_x86_setup.exe) for the 32bit version
-- edit **ngPost.conf** (in the installation folder) to add your server settings (you can put several).
-- launch **ngPost.exe** (GUI version)
-- or you can use it with the command line: **ngPost.exe** -i "your file or directory"
-
-if you prefer, you can give all the server parameters in the command line (cf the above section)<br/>
-By default:
-- ngPost will load the configuration file 'ngPost.conf' that is in the directory
-- it will write the nzb file inside this directory too. (it's name will be the one of the latest input file in the command line)
+- Utilisez l'installeur [ngPost_v4.3_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.3_x64_setup.exe) ou [ngPost_v4.3_x86_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.3_x86_setup.exe) pour la version 32bit
+- lancez l'application **ngPost.exe**, l'interface graphique s'ouvrira. Changez tous vos paramètres dont la langue puis cliquez sur **sauver**
+- vous pouvez bien sûr ensuite l'utiliser en ligne de commande. cf ngPost --help
 
 **Know Issue with non SSL support:** you may need to install [msvc2015 redistribuables](https://www.microsoft.com/en-us/download/details.aspx?id=48145) as libssl depends on its APIs<br/>
 
 
 ### MacOS release built on High Sierra (v10.13)
-- download [ngPost_v4.3.dmg](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.3.dmg)
-- launch it using the same syntax than describe in the section above
-- if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
+- téléchargez [ngPost_v4.3.dmg](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.3.dmg)
+- si vous le lancez sans paramètres, l'interface graphique s'ouvrira, sinon c'est en mode ligne de commande. (cf ngPost --help -l fr)
+- pour le fichier de configuration, éditez le fichier **~/.ngPost** et copiez [ce modèle](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost_fr.conf) (ne pas mettre l'extension .conf!)
 
 
 ### Alternatives
 
-A list of Usenet posters from Nyuu github [can be found here](https://github.com/animetosho/Nyuu/wiki/Usenet-Uploaders).
+Voici une liste des posteurs alternatif sur le [github de Nyuu](https://github.com/animetosho/Nyuu/wiki/Usenet-Uploaders).
 
 
 
