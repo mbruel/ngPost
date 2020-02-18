@@ -150,8 +150,16 @@ L'interface graphique sautera sur le Post Rapide courant.<br/>
 
 #### le mode surveillance:
 
+![ngPost_v4.3](https://raw.githubusercontent.com/mbruel/ngPost/master/pics/ngPost_v4.3_monitor_fr.png)
 
+- choisissez le **Dossier auto** (par défaut, c'est le inputDir du fichier de configuration)
+- choisissez le **filtre sur les extensions** (ex: mp4,mkv,avi sans espaces) et si vous voulez poster les dossiers
+- choisissez les options de compression / par2
+- cliquez sur **Surveiller Dossier**
 
+ngPost est alors en attente et dès que vous copierez ou déplacerez un fichier/dossier dans ce dossier Auto, alors il sera posté.<br/>
+Vous pouvez ajouter d'autres dossiers de surveillance en cliquant sur le bouton **+** à côté du **Dossier auto**<br/>
+Vous pouvez faire des Post Rapides durant la phase de Surveillance<br/>
 
 
 ### Comment compiler ngPost
