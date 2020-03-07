@@ -73,7 +73,7 @@ class NgPost : public QObject
     friend class AboutNgPost;
 
     enum class Opt {HELP = 0, LANG, VERSION, CONF, SHUTDOWN_CMD,
-                    DISP_PROGRESS, DEBUG, POST_HISTORY,
+                    DISP_PROGRESS, DEBUG, POST_HISTORY, NZB_RM_ACCENTS,
                     INPUT, OUTPUT, NZB_PATH, THREAD, NZB_UPLOAD_URL,
                     MONITOR_FOLDERS, MONITOR_EXT, MONITOR_IGNORE_DIR,
                     MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY,
@@ -174,6 +174,8 @@ private:
     bool       _doShutdownWhenDone;
     QProcess  *_shutdownProc;
     QString    _shutdownCmd;
+
+    bool       _removeAccentsOnNzbFileName;
 
     static constexpr const char *sDefaultShutdownCmdLinux   = "sudo -n /sbin/poweroff";
     static constexpr const char *sDefaultShutdownCmdWindows = "shutdown /s /f /t 0";

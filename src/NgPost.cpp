@@ -66,6 +66,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::DEBUG,          "debug"},
     {Opt::POST_HISTORY,   "post_history"},
     {Opt::NZB_UPLOAD_URL, "nzb_upload_url"},
+    {Opt::NZB_RM_ACCENTS, "nzb_rm_accents"},
 
     {Opt::INPUT,        "input"},
     {Opt::AUTO_DIR,     "auto"},
@@ -218,13 +219,13 @@ NgPost::NgPost(int &argc, char *argv[]):
     _netMgr(new QNetworkAccessManager()), _urlNzbUpload(nullptr), _urlNzbUploadStr(),
     _doShutdownWhenDone(false), _shutdownProc(nullptr),
 #if defined(WIN32) || defined(__MINGW64__)
-    _shutdownCmd(sDefaultShutdownCmdWindows)
+    _shutdownCmd(sDefaultShutdownCmdWindows),
 #elif defined(__APPLE__)|| defined(__MACH__)
-    _shutdownCmd(sDefaultShutdownCmdMacOS)
+    _shutdownCmd(sDefaultShutdownCmdMacOS),
 #else
-    _shutdownCmd(sDefaultShutdownCmdLinux)
+    _shutdownCmd(sDefaultShutdownCmdLinux),
 #endif
-
+    _removeAccentsOnNzbFileName(false)
 {
     QThread::currentThread()->setObjectName(sMainThreadName);
 
@@ -1270,22 +1271,25 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
 void NgPost::setNzbName(const QFileInfo &fileInfo)
 {
     _nzbName = fileInfo.isDir() ? QDir(fileInfo.absoluteFilePath()).dirName() : fileInfo.completeBaseName();
-    _nzbName.replace(QRegExp("[ÀÁÂÃÄÅ]"), "A");
-    _nzbName.replace(QRegExp("[àáâãäå]"), "a");
-    _nzbName.replace("Ç","C");
-    _nzbName.replace("ç","c");
-    _nzbName.replace(QRegExp("[ÈÉÊË]"),   "E");
-    _nzbName.replace(QRegExp("[èéêë]"),   "e");
-    _nzbName.replace(QRegExp("[ÌÍÎÏ]"),   "I");
-    _nzbName.replace(QRegExp("[ìíîï]"),   "i");
-    _nzbName.replace("Ñ","N");
-    _nzbName.replace("ñ","n");
-    _nzbName.replace(QRegExp("[ÒÓÔÕÖØ]"), "O");
-    _nzbName.replace(QRegExp("[òóôõöø]"), "o");
-    _nzbName.replace(QRegExp("[ÙÚÛÜ]"),   "U");
-    _nzbName.replace(QRegExp("[ùúûü]"),   "u");
-    _nzbName.replace(QRegExp("[ÿý]"),     "y");
-    _nzbName.replace(QRegExp("[^A-Za-z0-9\\.,_\\-\\(\\)\\[\\]\\{\\}!#&'\\+ ]"), "");
+    if (_removeAccentsOnNzbFileName)
+    {
+        _nzbName.replace(QRegExp("[ÀÁÂÃÄÅ]"), "A");
+        _nzbName.replace(QRegExp("[àáâãäå]"), "a");
+        _nzbName.replace("Ç","C");
+        _nzbName.replace("ç","c");
+        _nzbName.replace(QRegExp("[ÈÉÊË]"),   "E");
+        _nzbName.replace(QRegExp("[èéêë]"),   "e");
+        _nzbName.replace(QRegExp("[ÌÍÎÏ]"),   "I");
+        _nzbName.replace(QRegExp("[ìíîï]"),   "i");
+        _nzbName.replace("Ñ","N");
+        _nzbName.replace("ñ","n");
+        _nzbName.replace(QRegExp("[ÒÓÔÕÖØ]"), "O");
+        _nzbName.replace(QRegExp("[òóôõöø]"), "o");
+        _nzbName.replace(QRegExp("[ÙÚÛÜ]"),   "U");
+        _nzbName.replace(QRegExp("[ùúûü]"),   "u");
+        _nzbName.replace(QRegExp("[ÿý]"),     "y");
+        _nzbName.replace(QRegExp("[^A-Za-z0-9\\.,_\\-\\(\\)\\[\\]\\{\\}!#&'\\+ ]"), "");
+    }
 }
 
 QString NgPost::nzbPath(const QString &monitorFolder)
@@ -1377,11 +1381,21 @@ QString NgPost::_parseConfig(const QString &configPath)
                     }
                     else if (opt == sOptionNames[Opt::MONITOR_FOLDERS])
                     {
-                        _monitor_nzb_folders = true;
+                        val = val.toLower();
+                        if (val == "true" || val == "on" || val == "1")
+                            _monitor_nzb_folders = true;
                     }
                     else if (opt == sOptionNames[Opt::MONITOR_IGNORE_DIR])
                     {
-                        _monitorIgnoreDir = true;
+                        val = val.toLower();
+                        if (val == "true" || val == "on" || val == "1")
+                            _monitorIgnoreDir = true;
+                    }
+                    else if (opt == sOptionNames[Opt::NZB_RM_ACCENTS])
+                    {
+                        val = val.toLower();
+                        if (val == "true" || val == "on" || val == "1")
+                            _removeAccentsOnNzbFileName = true;
                     }
                     else if (opt == sOptionNames[Opt::MONITOR_EXT])
                     {
@@ -1398,7 +1412,7 @@ QString NgPost::_parseConfig(const QString &configPath)
                     }
                     else if (opt == sOptionNames[Opt::DISP_PROGRESS])
                     {
-                        val = val.trimmed().toLower();
+                        val = val.toLower();
                         if (val == "bar")
                         {
                             _dispProgressBar = true;
@@ -1557,7 +1571,7 @@ QString NgPost::_parseConfig(const QString &configPath)
                     }
                     else if (opt == sOptionNames[Opt::SSL])
                     {
-                        val = val.trimmed();
+                        val = val.toLower();
                         if (val == "true" || val == "on" || val == "1")
                         {
                             serverParams->useSSL = true;
@@ -1792,6 +1806,9 @@ void NgPost::saveConfig()
                << tr("## uncomment the following line to obfuscate the subjects of each Article") << endl
                << tr("## /!\\ CAREFUL you won't find your post if you lose the nzb file /!\\") << endl
                << (_obfuscateArticles ? "" : "#") << "obfuscate = article\n"
+               << "\n"
+               << tr("## remove accents and special characters from the nzb file names") << endl
+               << (_removeAccentsOnNzbFileName  ? "" : "#") << "NZB_RM_ACCENTS = true\n"
                << "\n"
                << "\n"
                << "\n"
