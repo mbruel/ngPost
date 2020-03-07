@@ -63,7 +63,14 @@ NntpConnection::~NntpConnection()
 #if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
     qDebug() << "Destruction " << _logPrefix;
 #endif
-    _closeConnection(); // this should already have been triggered as the sockets lives in another thread
+    // this should already have been triggered as the sockets lives in another thread
+    if (_socket)
+    {
+        disconnect(_socket, &QAbstractSocket::disconnected, this, &NntpConnection::onDisconnected);
+        disconnect(_socket, &QIODevice::readyRead,          this, &NntpConnection::onReadyRead);
+        _socket->disconnectFromHost();
+        delete _socket;
+    }
 }
 
 
@@ -105,7 +112,7 @@ void NntpConnection::onKillConnection()
     if (_socket)
     {
         _closeConnection();
-        _socket->deleteLater();
+        delete _socket;
         _socket = nullptr;
     }
 }
@@ -132,7 +139,7 @@ void NntpConnection::onDisconnected()
 #endif
         _isConnected    = false;
 
-        _socket->deleteLater();
+        delete _socket;
         _socket = nullptr;
     }
     if (_tryReconnect)
