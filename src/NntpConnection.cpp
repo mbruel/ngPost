@@ -61,7 +61,7 @@ NntpConnection::NntpConnection(NgPost *ngPost, int id, const NntpServerParams &s
 NntpConnection::~NntpConnection()
 {
 #if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
-    qDebug() << "Destruction " << _logPrefix;
+    qDebug() << "Destruction NntpConnection " << _logPrefix;
 #endif
     // this should already have been triggered as the sockets lives in another thread
     if (_socket)
@@ -69,6 +69,7 @@ NntpConnection::~NntpConnection()
         disconnect(_socket, &QAbstractSocket::disconnected, this, &NntpConnection::onDisconnected);
         disconnect(_socket, &QIODevice::readyRead,          this, &NntpConnection::onReadyRead);
         _socket->disconnectFromHost();
+        _socket->waitForDisconnected();
         delete _socket;
     }
 }
@@ -111,7 +112,10 @@ void NntpConnection::onKillConnection()
 #endif
     if (_socket)
     {
-        _closeConnection();
+        disconnect(_socket, &QIODevice::readyRead, this, &NntpConnection::onReadyRead);
+        disconnect(_socket, &QAbstractSocket::disconnected, this, &NntpConnection::onDisconnected);
+        _socket->disconnectFromHost();
+        _socket->waitForDisconnected();
         delete _socket;
         _socket = nullptr;
     }
@@ -197,7 +201,7 @@ void NntpConnection::onSslErrors(const QList<QSslError> &errors)
     else  if (_currentArticle)
         emit _currentArticle->failed(_currentArticle->size());
 
-    emit killConnection();
+    _closeConnection();
 }
 
 
@@ -249,7 +253,7 @@ void NntpConnection::onReadyRead()
                     _postingState = PostingState::NOT_CONNECTED;
                     _error(tr("Closing Connection due to ERROR on post command: '%2' (%1 skipped)\n").arg(_currentArticle->str()).arg(line.constData()));
                     emit _currentArticle->failed(_currentArticle->size());
-                    emit killConnection();
+                    _closeConnection();
                 }
             }
         }

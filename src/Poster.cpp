@@ -44,6 +44,10 @@ Poster::Poster(PostingJob *job, ushort id):
 
 Poster::~Poster()
 {
+#if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
+    qDebug() << "Destruction Poster #" << _id;
+#endif
+
     stopThreads();
 
     if (_articleBuilder)
