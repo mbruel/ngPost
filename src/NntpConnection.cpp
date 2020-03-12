@@ -69,7 +69,7 @@ NntpConnection::~NntpConnection()
         disconnect(_socket, &QAbstractSocket::disconnected, this, &NntpConnection::onDisconnected);
         disconnect(_socket, &QIODevice::readyRead,          this, &NntpConnection::onReadyRead);
         _socket->disconnectFromHost();
-        if (_socket->isOpen())
+        if (_socket->state() != QAbstractSocket::UnconnectedState)
             _socket->waitForDisconnected();
         delete _socket;
     }
@@ -116,7 +116,7 @@ void NntpConnection::onKillConnection()
         disconnect(_socket, &QIODevice::readyRead, this, &NntpConnection::onReadyRead);
         disconnect(_socket, &QAbstractSocket::disconnected, this, &NntpConnection::onDisconnected);
         _socket->disconnectFromHost();
-        if (_socket->isOpen())
+        if (_socket->state() != QAbstractSocket::UnconnectedState)
             _socket->waitForDisconnected();
         delete _socket;
         _socket = nullptr;
