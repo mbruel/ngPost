@@ -706,12 +706,12 @@ Are you sure you want to quit?</source>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="133"/>
-        <source>parse directory and post every file/folder separately. You must use --compress, should add --gen_par2, --gen_name and --gen_rar</source>
+        <source>parse directory and post every file/folder separately. You must use --compress, should add --gen_par2, --gen_name and --gen_pass</source>
         <translation>Scan du dossier en paramètre et post de chaque fichier/dossier individuellement. L&apos;option de compression est obligatoire</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="134"/>
-        <source>monitor directory and post every new file/folder. You must use --compress, should add --gen_par2, --gen_name and --gen_rar</source>
+        <source>monitor directory and post every new file/folder. You must use --compress, should add --gen_par2, --gen_name and --gen_pass</source>
         <translation>Surveillance du dossier en paramètre et post de chaque nouveau fichier/dossier. L&apos;option de compression est obligatoire</translation>
     </message>
     <message>
