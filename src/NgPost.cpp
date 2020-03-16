@@ -206,7 +206,7 @@ NgPost::NgPost(int &argc, char *argv[]):
     _par2Pct(0), _par2Path(), _par2Args(),
     _doCompress(false), _doPar2(false), _genName(), _genPass(),
     _lengthName(sDefaultLengthName), _lengthPass(sDefaultLengthPass),
-    _rarName(), _rarPass(),
+    _rarName(), _rarPass(), _rarPassFixed(),
     _inputDir(),
     _activeJob(nullptr), _pendingJobs(),
     _postHistoryFile(),
@@ -530,6 +530,9 @@ void NgPost::_post(const QFileInfo &fileInfo, const QString &monitorFolder)
         _rarPass = randomPass(_lengthPass);
         _meta.remove("password");
     }
+    else if (!_rarPassFixed.isEmpty())
+        _rarPass = _rarPassFixed;
+
     qDebug() << "Start posting job for " << _nzbName
              << " with rar_name: " << _rarName << " and pass: " << _rarPass
              << " (auto delete: " << _delAuto << ")";
@@ -1098,7 +1101,10 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     if (parser.isSet(sOptionNames[Opt::RAR_NAME]))
         _rarName = parser.value(sOptionNames[Opt::RAR_NAME]);
     if (parser.isSet(sOptionNames[Opt::RAR_PASS]))
-        _rarPass = parser.value(sOptionNames[Opt::RAR_PASS]);
+    {
+        _rarPass      = parser.value(sOptionNames[Opt::RAR_PASS]);
+        _rarPassFixed = _rarPass;
+    }
 
     if (parser.isSet(sOptionNames[Opt::LENGTH_NAME]))
     {

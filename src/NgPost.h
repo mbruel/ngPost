@@ -144,6 +144,7 @@ private:
     uint        _lengthPass;
     QString     _rarName;
     QString     _rarPass;
+    QString     _rarPassFixed;
 
     QString     _inputDir;
 
