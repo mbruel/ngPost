@@ -125,13 +125,19 @@ void NntpConnection::onKillConnection()
 
 
 void NntpConnection::_closeConnection(){
-    if (_socket && _socket->isOpen())
+    if (_socket && _isConnected)
     {
 #if defined(__DEBUG__) && defined(LOG_CONNECTION_STEPS)
         _log("closeConnection");
 #endif
         disconnect(_socket, &QIODevice::readyRead, this, &NntpConnection::onReadyRead);
         _socket->disconnectFromHost();
+    }
+    else // wrong host info
+    {
+        delete _socket;
+        _socket = nullptr;
+        emit disconnected(this);
     }
 }
 
@@ -217,6 +223,7 @@ void NntpConnection::onErrors(QAbstractSocket::SocketError)
     else  if (_currentArticle)
         emit _currentArticle->failed(_currentArticle->size());
 
+    _closeConnection();
 }
 
 
