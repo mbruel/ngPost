@@ -133,6 +133,8 @@ private:
     const std::string    _groups;             //!< Newsgroup where to post
     const std::string    _from;               //!< email of poster (if empty, random one will be used for each file)
 
+    bool _use7z;
+
 public:
     PostingJob(NgPost *ngPost,
                const QString &nzbFilePath,

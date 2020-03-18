@@ -85,7 +85,8 @@ PostingJob::PostingJob(NgPost *ngPost,
     _originalFiles(!postWidget || delFilesAfterPost  || obfuscateFileName ? files : QFileInfoList()),
     _secureDiskAccess(), _posters(),
     _overwriteNzb(overwriteNzb),
-    _grpList(grpList), _groups(groups), _from(from)
+    _grpList(grpList), _groups(groups), _from(from),
+    _use7z(false)
 {
 #ifdef __DEBUG__
     qDebug() << "[PostingJob] >>>> Construct " << this;
@@ -661,10 +662,10 @@ bool PostingJob::startCompressFiles(const QString &cmdRar,
     connect(_extProc, &QProcess::readyReadStandardError,  this, &PostingJob::onExtProcReadyReadStandardError,  Qt::DirectConnection);
     connect(_extProc, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished), this, &PostingJob::onCompressionFinished);
 
-    bool is7z = false;
+    _use7z = false;
     if (_rarPath.contains("7z"))
     {
-        is7z = true;
+        _use7z = true;
         if (_rarArgs.isEmpty())
             _rarArgs = _ngPost->sDefault7zOptions;
     }
@@ -679,11 +680,11 @@ bool PostingJob::startCompressFiles(const QString &cmdRar,
     QStringList args = _rarArgs.split(" ");
     if (!args.contains("a"))
         args.prepend("a");
-    if (!is7z && !args.contains("-idp"))
+    if (!_use7z && !args.contains("-idp"))
         args << "-idp";
     if (!pass.isEmpty())
     {
-        if (is7z)
+        if (_use7z)
         {
             if (!args.contains("-mhe=on"))
                 args << "-mhe=on";
@@ -726,7 +727,7 @@ bool PostingJob::startCompressFiles(const QString &cmdRar,
     if (archiveTmpFolder.startsWith("//"))
         archiveTmpFolder.replace(QRegExp("^//"), "\\\\");
 #endif
-    args << QString("%1/%2.%3").arg(archiveTmpFolder).arg(archiveName).arg(is7z ? "7z" : "rar");
+    args << QString("%1/%2.%3").arg(archiveTmpFolder).arg(archiveName).arg(_use7z ? "7z" : "rar");
 
 
     if (_obfuscateFileName)
@@ -872,8 +873,12 @@ bool PostingJob::startGenPar2(const QString &tmpFolder,
         }
         else
         {
-            args << QString("%1/%2.par2").arg(archiveTmpFolder).arg(archiveName)
-                 << QString("%1/%2*rar").arg(archiveTmpFolder).arg(archiveName);
+            args << QString("%1/%2.par2").arg(archiveTmpFolder).arg(archiveName);
+            if (_use7z)
+                args << QString("%1/%2.7z*").arg(archiveTmpFolder).arg(archiveName);
+            else
+                args << QString("%1/%2*rar").arg(archiveTmpFolder).arg(archiveName);
+
             if (_ngPost->_par2Args.isEmpty() && (_ngPost->debugMode() || !_postWidget))
                 args << "-q"; // remove the progressbar bar
 
