@@ -155,6 +155,22 @@ PS: for older system with GLIBC < 2.24, here is a version compiled on Debian8 wi
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
+**As rar is not available on RPI, 7zip support has been added.** Use RAR_PATH to point on the 7z and RAR_EXTRA to have 7zip options. You should have something like this:
+<pre>
+## RAR or 7zip absolute file path (external application)
+## /!\ The file MUST EXIST and BE EXECUTABLE /!\
+## this is set for Linux environment, Windows users MUST change it
+#RAR_PATH = /usr/bin/rar
+RAR_PATH = /usr/bin/7z
+
+## RAR EXTRA options (the first 'a' and '-idp' will be added automatically)
+## -hp will be added if you use a password with --gen_pass, --rar_pass or using the HMI
+## -v42m will be added with --rar_size or using the HMI
+## you could change the compression level, lock the archive, add redundancy...
+#RAR_EXTRA = -ep1 -m0 -k -rr5p
+RAR_EXTRA = -mx0 -mhe=on
+</pre>
+
 
 ### Windows installer
 - just use the packager [ngPost_v4.4_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.4_x64_setup.exe) or [ngPost_v4.4_x86_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.4_x86_setup.exe) for the 32bit version
