@@ -452,41 +452,45 @@ void NgPost::onNewFileToProcess(const QFileInfo & fileInfo)
 #include <QTranslator>
 void NgPost::_loadTanslators()
 {
-     QDir dir(sTranslationPath);
-     for (const QFileInfo &qmFile : dir.entryInfoList(QStringList("ngPost_*.qm")))
-     {
-         QTranslator *translator = new QTranslator();
-         if (translator->load(qmFile.absoluteFilePath()))
-         {
-             QString lang = qmFile.completeBaseName(); // ngPost_en
-             lang.remove(0, lang.indexOf('_') + 1); // en
-             _translators.insert(lang, translator);
-         }
-         else
-         {
-             _cerr << tr("ERROR loading translator %1").arg(qmFile.absoluteFilePath()) << endl << flush;
-             delete translator;
-         }
-     }
+    QDir dir(sTranslationPath);
+    for (const QFileInfo &qmFile : dir.entryInfoList(QStringList("ngPost_*.qm")))
+    {
+        QTranslator *translator = new QTranslator();
+        QString lang = qmFile.completeBaseName(); // ngPost_en
+        lang.remove(0, lang.indexOf('_') + 1); // en
+
+        if (translator->load(qmFile.absoluteFilePath()))
+            _translators.insert(lang, translator);
+        else
+        {
+            if (lang == "en")
+                _translators.insert(lang, nullptr);
+            else
+                _cerr << tr("error loading translator %1").arg(qmFile.absoluteFilePath()) << endl << flush;
+            delete translator;
+        }
+    }
 #ifdef __DEBUG__
-         qDebug() << "available translators: " << _translators.keys().join(", ");
+    qDebug() << "available translators: " << _translators.keys().join(", ");
 #endif
-     if (!_translators.contains(_lang))
-     {
-         _cerr << tr("ERROR: couldn't find translator for lang %1").arg(_lang) << endl << flush;
-         _lang = "en";
-     }
-     _app->installTranslator(_translators[_lang]);
+    if (_lang != "en"){
+        if (_translators.contains(_lang))
+            _app->installTranslator(_translators[_lang]);
+        else
+        {
+            _cerr << tr("ERROR: couldn't find translator for lang %1").arg(_lang) << endl << flush;
+            _lang = "en";
+        }
+    }
 }
 
 void NgPost::changeLanguage(const QString &lang)
 {
-    if (_translators.contains(lang))
-    {
-        _app->removeTranslator(_translators[_lang]);
-        _lang = lang;
+    _app->removeTranslator(_translators[_lang]);
+    _lang = lang;
+
+    if (_translators[_lang])
         _app->installTranslator(_translators[_lang]);
-    }
 }
 
 void NgPost::checkForNewVersion()
