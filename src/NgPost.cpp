@@ -292,7 +292,7 @@ NgPost::~NgPost()
 
     _stopMonitoring();
 
-    _finishPosting();
+//    _finishPosting();
 
     _progressbarTimer.stop();
 
@@ -619,7 +619,6 @@ void NgPost::onPostingJobFinished()
     PostingJob *job = static_cast<PostingJob*>(sender());
     if (job == _activeJob)
     {
-        _finishPosting();
         if (_hmi && !job->widget())
             _hmi->autoWidget()->updateFinishedJob(job->getFirstOriginalFile(),
                                                   job->nbArticlesTotal(),
@@ -762,10 +761,7 @@ void NgPost::closeAllPostingJobs()
 {
     qDeleteAll(_pendingJobs);
     if (_activeJob)
-    {
         _activeJob->onStopPosting();
-        _finishPosting();
-    }
 }
 
 void NgPost::closeAllMonitoringJobs()

@@ -264,7 +264,7 @@ private:
 
     qint64 _dirSize(const QString &path);
 
-
+    inline QString timestamp() const;
 };
 
 
@@ -303,6 +303,11 @@ NntpFile *PostingJob::_getNextFile()
     }
     else
         return nullptr;
+}
+
+QString PostingJob::timestamp() const
+{
+    return QTime::currentTime().toString("hh:mm:ss.zzz");
 }
 
 void PostingJob::articlePosted(quint64 size)

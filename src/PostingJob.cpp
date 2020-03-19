@@ -139,7 +139,7 @@ void PostingJob::onStartPosting()
     if (_postWidget)
         _log(tr("<h3>Start Post #%1: %2</h3>").arg(_postWidget->jobNumber()).arg(_nzbName));
     else
-        _log(tr("\n\nStart posting: %1").arg(_nzbName));
+        _log(QString("\n\n[%1] %2: %3").arg(timestamp()).arg(tr("Start posting")).arg(_nzbName));
 
     if (_doCompress)
     {
@@ -300,7 +300,7 @@ void PostingJob::onDisconnectedConnection(NntpConnection *con)
 void PostingJob::onNntpFileStartPosting()
 {
     NntpFile *nntpFile = static_cast<NntpFile*>(sender());
-    _log(tr("[avg. speed: %1] >>>>> %2").arg(avgSpeed()).arg(nntpFile->name()));
+    _log(QString("[%1][%2: %3] >>>>> %4").arg(timestamp()).arg(tr("avg. speed")).arg(avgSpeed()).arg(nntpFile->name()));
 }
 
 void PostingJob::onNntpFilePosted()
@@ -312,7 +312,7 @@ void PostingJob::onNntpFilePosted()
         emit filePosted(nntpFile->path(), nntpFile->nbArticles(), nntpFile->nbFailedArticles());
 
     if (_ngPost->_dispFilesPosting)
-        _log(tr("[avg. speed: %1] <<<<< %2").arg(avgSpeed()).arg(nntpFile->name()));
+        _log(QString("[%1][%2: %3] <<<<< %4").arg(timestamp()).arg(tr("avg. speed")).arg(avgSpeed()).arg(nntpFile->name()));
 
     nntpFile->writeToNZB(_nzbStream, _ngPost->_articleIdSignature.c_str());
     _filesInProgress.remove(nntpFile);
@@ -388,7 +388,11 @@ int PostingJob::_createNntpConnections()
         }
     }
 
-    _log(tr("Number of available Nntp Connections: %1").arg(_nbConnections));
+    if (_ngPost->useHMI())
+        _log(tr("Number of available Nntp Connections: %1").arg(_nbConnections));
+    else
+        _log(QString("[%1] %2: %3").arg(timestamp()).arg(tr("Number of available Nntp Connections")).arg(_nbConnections));
+
     return _nbConnections;
 }
 
@@ -521,7 +525,7 @@ void PostingJob::_initPosting()
         NntpFile *nntpFile = new NntpFile(this, file, ++fileNum, _nbFiles, _grpList);
         connect(nntpFile, &NntpFile::allArticlesArePosted, this, &PostingJob::onNntpFilePosted, Qt::QueuedConnection);
         connect(nntpFile, &NntpFile::errorReadingFile,     this, &PostingJob::onNntpErrorReading, Qt::QueuedConnection);
-        if (_ngPost->_dispFilesPosting && _ngPost->debugMode())
+        if (_ngPost->_dispFilesPosting) //&& _ngPost->debugMode())
             connect(nntpFile, &NntpFile::startPosting, this, &PostingJob::onNntpFileStartPosting, Qt::QueuedConnection);
 
         _filesToUpload.enqueue(nntpFile);
@@ -547,6 +551,7 @@ qDebug() << "[MB_TRACE][PostingJob::_finishPosting]";
     _log("Finishing posting...");
 #endif
 
+    _ngPost->_finishPosting(); // to update progress bar
 
     // 1.: print stats
     if (!_timeStart.isNull())
@@ -579,13 +584,28 @@ qDebug() << "[MB_TRACE][PostingJob::_finishPosting]";
     {
         _error(tr("ERROR: there were %1 on %2 that havn't been posted:").arg(
                    nbPendingFiles).arg(_nbFiles));
+        bool isDebugMode = _ngPost->debugMode();
         for (NntpFile *file : _filesInProgress)
-            _error(QString("  - %1").arg(file->path()));
+        {
+            QString msg = QString("  - %1").arg(file->stats());
+            if (isDebugMode)
+                msg += " (fInProgress)";
+            _error(msg);
+        }
         for (NntpFile *file : _filesToUpload)
-            _error(QString("  - %1").arg(file->path()));
+        {
+            QString msg = QString("  - %1").arg(file->stats());
+            if (isDebugMode)
+                msg += " (fToUpload)";
+            _error(msg);
+        }
         for (NntpFile *file : _filesFailed)
-            _error(QString("  - %1").arg(file->path()));
-
+        {
+            QString msg = QString("  - %1").arg(file->stats());
+            if (isDebugMode)
+                msg += " (fFailed)";
+            _error(msg);
+        }
         _error(tr("you can try to repost only those and concatenate the nzb with the current one ;)"));
     }
     else if (_postFinished && _delFilesAfterPost.load())
@@ -616,9 +636,12 @@ void PostingJob::_printStats() const
     int duration = _timeStart.elapsed();
     double sec = duration/1000;
 
-    QString msgEnd = tr("\nUpload size: %1 in %2 (%3 sec) \
-=> average speed: %4 (%5 connections on %6 threads)\n").arg(size).arg(
-                QTime::fromMSecsSinceStartOfDay(duration).toString("hh:mm:ss.zzz")).arg(sec).arg(
+    QString msgEnd("\n"), ts = QString("[%1] ").arg(timestamp());
+    if (!_ngPost->useHMI())
+        msgEnd += ts;
+    msgEnd += tr("Upload size: %1 in %2 (%3 sec) \
+                 => average speed: %4 (%5 connections on %6 threads)\n").arg(size).arg(
+            QTime::fromMSecsSinceStartOfDay(duration).toString("hh:mm:ss.zzz")).arg(sec).arg(
                 avgSpeed()).arg(_nntpConnections.size()).arg(_posters.size()*2);
 
     if (_nbArticlesFailed > 0)
@@ -627,9 +650,13 @@ void PostingJob::_printStats() const
 
     if (_nzb)
     {
+        if (!_ngPost->useHMI())
+            msgEnd += ts;
         msgEnd += tr("nzb file: %1\n").arg(_nzbFilePath);
         if (_doCompress)
         {
+            if (!_ngPost->useHMI())
+                msgEnd += ts;
             msgEnd += tr("file: %1, rar name: %2").arg(_nzbName).arg(_rarName);
             if (!_rarPass.isEmpty())
                 msgEnd += tr(", rar pass: %1").arg(_rarPass);
@@ -787,9 +814,9 @@ bool PostingJob::startCompressFiles(const QString &cmdRar,
 
     // 3.: launch rar
     if (_ngPost->debugMode() || !_postWidget)
-        _log(tr("Compressing files: %1 %2\n").arg(cmdRar).arg(args.join(" ")));
+        _log(QString("[%1] %2: %3 %4\n").arg(timestamp()).arg(tr("Compressing files")).arg(cmdRar).arg(args.join(" ")));
     else
-        _log(tr("Compressing files...\n"));
+        _log(QString("%1...\n").arg(tr("Compressing files")));
     _limitProcDisplay = false;
     _extProc->start(cmdRar, args);
 
@@ -909,9 +936,9 @@ bool PostingJob::startGenPar2(const QString &tmpFolder,
     connect(_extProc, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished), this, &PostingJob::onGenPar2Finished);
 
     if (_ngPost->debugMode() || !_postWidget)
-        _log(tr("Generating par2: %1 %2\n").arg(_ngPost->_par2Path).arg(args.join(" ")));
+        _log(QString("[%1] %2: %3 %4").arg(timestamp()).arg(tr("Generating par2")).arg(_ngPost->_par2Path).arg(args.join(" ")));
     else
-        _log(tr("Generating par2...\n"));
+        _log(QString("%1...\n").arg(tr("Generating par2")));
     if (!_ngPost->_par2Path.toLower().contains("parpar"))
         _limitProcDisplay = true;
     _nbProcDisp = 0;

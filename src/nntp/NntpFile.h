@@ -46,6 +46,7 @@ public:
 
     void writeToNZB(QTextStream &stream, const char *articleIdSignature);
 
+    inline QString stats() const;
     inline QString path() const;
     inline QString name() const;
     inline std::string fileName() const;
@@ -79,6 +80,11 @@ private:
 };
 
 void NntpFile::addArticle(NntpArticle *article) { _articles.push_back(article); }
+
+QString NntpFile::stats() const
+{
+    return QString("[%1 ok / %2] %3").arg(_posted.size()).arg(_nbAticles).arg(_file.absoluteFilePath());
+}
 QString NntpFile::path() const { return _file.absoluteFilePath(); }
 QString NntpFile::name() const { return QString("[%1/%2] %3").arg(_num).arg(_nbFiles).arg(_file.fileName()); }
 std::string NntpFile::fileName() const { return _file.fileName().toStdString(); }
