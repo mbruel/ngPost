@@ -468,6 +468,16 @@
             </widget>
            </item>
            <item>
+            <widget class="QSpinBox" name="debugSB">
+             <property name="toolTip">
+              <string>debug level (0 nothing, 1 few extra info, 2  debugging level)</string>
+             </property>
+             <property name="maximum">
+              <number>2</number>
+             </property>
+            </widget>
+           </item>
+           <item>
             <spacer name="horizontalSpacer_7">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>

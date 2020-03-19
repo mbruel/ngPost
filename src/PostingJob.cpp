@@ -398,7 +398,7 @@ int PostingJob::_createNntpConnections()
 
 void PostingJob::_preparePostersArticles()
 {
-    if (_ngPost->debugMode())
+    if (_ngPost->debugFull())
         _log("PostingJob::_prepareArticles");
 
     for (int i = 0 ; i < _ngPost->sNbPreparedArticlePerConnection ; ++i)
@@ -452,7 +452,7 @@ NntpArticle *PostingJob::_readNextArticleIntoBufferPtr(const QString &threadName
         _file = new QFile(_nntpFile->path());
         if (_file->open(QIODevice::ReadOnly))
         {
-            if (_ngPost->debugMode())
+            if (_ngPost->debugFull())
                 _log(tr("[%1] starting processing file %2").arg(threadName).arg(_nntpFile->path()));
             _part = 0;
         }
@@ -478,7 +478,7 @@ NntpArticle *PostingJob::_readNextArticleIntoBufferPtr(const QString &threadName
         if (bytesRead > 0)
         {
             (*bufferPtr)[bytesRead] = '\0';
-            if (_ngPost->debugMode())
+            if (_ngPost->debugFull())
                 _log(tr("[%1] we've read %2 bytes from %3 (=> new pos: %4)").arg(threadName).arg(bytesRead).arg(pos).arg(_file->pos()));
             ++_part;
             NntpArticle *article = new NntpArticle(_nntpFile, _part, pos, bytesRead,
@@ -488,7 +488,7 @@ NntpArticle *PostingJob::_readNextArticleIntoBufferPtr(const QString &threadName
         }
         else
         {
-            if (_ngPost->debugMode())
+            if (_ngPost->debugFull())
                 _log(tr("[%1] finished processing file %2").arg(threadName).arg(_nntpFile->path()));
 
             _file->close();
@@ -508,10 +508,16 @@ void PostingJob::_initPosting()
     if (!_overwriteNzb)
     {
         QFileInfo fi(_nzbFilePath);
-        ushort nbDuplicates = 1;
-        while(fi.exists()){
-            _nzbFilePath = QString("%1/%2_%3.nzb").arg(fi.absolutePath()).arg(fi.completeBaseName()).arg(++nbDuplicates);
-            fi = QFileInfo(_nzbFilePath);
+        if (fi.exists())
+        {
+            QString baseName     = fi.completeBaseName();
+            ushort  nbDuplicates = 1;
+            do {
+                _nzbFilePath = QString("%1/%2_%3.nzb").arg(fi.absolutePath()).arg(baseName).arg(nbDuplicates++);
+                fi = QFileInfo(_nzbFilePath);
+            } while(fi.exists());
+
+            _nzbFilePath = fi.absoluteFilePath();
         }
     }
     _nzb     = new QFile(_nzbFilePath);
@@ -525,7 +531,7 @@ void PostingJob::_initPosting()
         NntpFile *nntpFile = new NntpFile(this, file, ++fileNum, _nbFiles, _grpList);
         connect(nntpFile, &NntpFile::allArticlesArePosted, this, &PostingJob::onNntpFilePosted, Qt::QueuedConnection);
         connect(nntpFile, &NntpFile::errorReadingFile,     this, &PostingJob::onNntpErrorReading, Qt::QueuedConnection);
-        if (_ngPost->_dispFilesPosting) //&& _ngPost->debugMode())
+        if (_ngPost->_dispFilesPosting && _ngPost->debugMode())
             connect(nntpFile, &NntpFile::startPosting, this, &PostingJob::onNntpFileStartPosting, Qt::QueuedConnection);
 
         _filesToUpload.enqueue(nntpFile);
@@ -971,7 +977,7 @@ void PostingJob::_cleanExtProc()
 {
     delete _extProc;
     _extProc = nullptr;
-    if (_ngPost->debugMode())
+    if (_ngPost->debugFull())
         _log(tr("External process deleted."));
 }
 

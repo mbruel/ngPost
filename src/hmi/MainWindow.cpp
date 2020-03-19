@@ -98,6 +98,7 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
     connect(_ui->clearLogButton, &QAbstractButton::clicked, _ui->logBrowser, &QTextEdit::clear);
     connect(_ui->debugBox,       &QAbstractButton::toggled, this, &MainWindow::onDebugToggled);
     _ui->debugBox->setChecked(_ngPost->debugMode());
+    _ui->debugSB->setEnabled(_ngPost->debugMode());
 
 
     QTabBar *tabBar = _ui->postTabWidget->tabBar();
@@ -612,6 +613,12 @@ void MainWindow::onDebugToggled(bool checked)
 #ifdef __DEBUG__
     qDebug() << "Debug mode: " << checked;
 #endif
+    if (checked)
+    {
+        if (!_ui->debugSB->value())
+            _ui->debugSB->setValue(1);
+    }
+    _ui->debugSB->setEnabled(checked);
     _ngPost->setDebug(checked);
 }
 

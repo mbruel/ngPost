@@ -70,7 +70,7 @@ NntpArticle *Poster::getNextArticle(const QString &conPrefix)
     if (_job->_stopPosting.load())
         return nullptr;
 
-    if (_ngPost->debugMode())
+    if (_ngPost->debugFull())
         _job->_log(QString("[%1][Poster::getNextArticle] _articles.size() = %2").arg(conPrefix).arg(_articles.size()));
 
     NntpArticle *article = nullptr;
@@ -81,7 +81,7 @@ NntpArticle *Poster::getNextArticle(const QString &conPrefix)
         if (!_job->_noMoreFiles.load())
         {
             // we should never come here as the goal is to have articles prepared in advance in the queue
-            if (_ngPost->debugMode())
+            if (_ngPost->debugFull())
                 _job->_log(QString("[%1][Poster::getNextArticle] no article prepared...").arg(conPrefix));
 
             article = _prepareNextArticle(conPrefix, false);

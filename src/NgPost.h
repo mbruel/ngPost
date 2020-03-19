@@ -73,7 +73,7 @@ class NgPost : public QObject
     friend class AboutNgPost;
 
     enum class Opt {HELP = 0, LANG, VERSION, CONF, SHUTDOWN_CMD,
-                    DISP_PROGRESS, DEBUG, POST_HISTORY, NZB_RM_ACCENTS,
+                    DISP_PROGRESS, DEBUG, DEBUG_FULL, POST_HISTORY, NZB_RM_ACCENTS,
                     INPUT, OUTPUT, NZB_PATH, THREAD, NZB_UPLOAD_URL,
                     MONITOR_FOLDERS, MONITOR_EXT, MONITOR_IGNORE_DIR,
                     MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY,
@@ -98,7 +98,7 @@ private:
     mutable QTextStream   _cout; //!< stream for stdout
     mutable QTextStream   _cerr; //!< stream for stderr
 
-    bool                  _debug;
+    ushort                _debug;
     bool                  _dispProgressBar;
     bool                  _dispFilesPosting;
 
@@ -278,7 +278,8 @@ public:
 
 
     inline bool debugMode() const;
-    inline void setDebug(bool isDebug);
+    inline bool debugFull() const;
+    inline void setDebug(ushort level);
 
     inline bool dispPostingFile() const;
 
@@ -401,8 +402,9 @@ QList<QString> NgPost::languages() const{ return _translators.keys(); }
 
 bool NgPost::hasPostingJobs() const { return (_activeJob || _pendingJobs.size()) ? true : false;}
 
-bool NgPost::debugMode() const { return _debug; }
-void NgPost::setDebug(bool isDebug){ _debug = isDebug; }
+bool NgPost::debugMode() const     { return _debug != 0; }
+bool NgPost::debugFull() const     { return _debug == 2; }
+void NgPost::setDebug(ushort level){ _debug = level; }
 
 bool NgPost::dispPostingFile() const { return _dispFilesPosting; }
 

@@ -64,6 +64,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::SHUTDOWN_CMD,   "shutdown_cmd"},
     {Opt::DISP_PROGRESS,  "disp_progress"},
     {Opt::DEBUG,          "debug"},
+    {Opt::DEBUG_FULL,     "fulldebug"},
     {Opt::POST_HISTORY,   "post_history"},
     {Opt::NZB_UPLOAD_URL, "nzb_upload_url"},
     {Opt::NZB_RM_ACCENTS, "nzb_rm_accents"},
@@ -127,7 +128,8 @@ const QList<QCommandLineOption> NgPost::sCmdOptions = {
     {{"v", sOptionNames[Opt::VERSION]},       tr( "app version")},
     {{"c", sOptionNames[Opt::CONF]},          tr( "use configuration file (if not provided, we try to load $HOME/.ngPost)"), sOptionNames[Opt::CONF]},
     { sOptionNames[Opt::DISP_PROGRESS],       tr( "display cmd progressbar: NONE (default), BAR or FILES"), sOptionNames[Opt::DISP_PROGRESS]},
-    {{"d", sOptionNames[Opt::DEBUG]},         tr( "display debug information")},
+    {{"d", sOptionNames[Opt::DEBUG]},         tr( "display extra information")},
+    { sOptionNames[Opt::DEBUG_FULL],          tr( "display full debug information")},
     {{"l", sOptionNames[Opt::LANG]},          tr( "application language"), sOptionNames[Opt::LANG]},
 
 // automated posting (scanning and/or monitoring)
@@ -186,9 +188,9 @@ NgPost::NgPost(int &argc, char *argv[]):
     _cout(stdout),
     _cerr(stderr),
 #ifdef __DEBUG__
-    _debug(true),
+    _debug(2),
 #else
-    _debug(false),
+    _debug(0),
 #endif
     _dispProgressBar(false),
     _dispFilesPosting(false),
@@ -676,7 +678,8 @@ void NgPost::onPostingJobFinished()
         }
         else if (!_folderMonitor && !_hmi)
         {
-            _error(tr(" => closing application"));
+	    if( debugFull())
+                _error(tr(" => closing application"));
             qApp->quit();
         }
     }
@@ -942,8 +945,13 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
 
     if (parser.isSet(sOptionNames[Opt::DEBUG]))
     {
-        _debug = true;
-        _cout << "Debug logs are ON\n" << flush;
+        _debug = 1;
+        _cout << "Extra logs are ON\n" << flush;
+    }
+    if (parser.isSet(sOptionNames[Opt::DEBUG_FULL]))
+    {
+        _debug = 2;
+        _cout << "Full debug logs are ON\n" << flush;
     }
 
     if (parser.isSet(sOptionNames[Opt::THREAD]))
