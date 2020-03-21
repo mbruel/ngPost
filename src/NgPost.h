@@ -76,7 +76,7 @@ class NgPost : public QObject
                     DISP_PROGRESS, DEBUG, DEBUG_FULL, POST_HISTORY, NZB_RM_ACCENTS,
                     INPUT, OUTPUT, NZB_PATH, THREAD, NZB_UPLOAD_URL,
                     MONITOR_FOLDERS, MONITOR_EXT, MONITOR_IGNORE_DIR,
-                    MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY,
+                    MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY, GEN_FROM,
                     OBFUSCATE, INPUT_DIR, AUTO_DIR, MONITOR_DIR, DEL_AUTO,
                     TMP_DIR, RAR_PATH, RAR_EXTRA, RAR_SIZE, RAR_MAX, KEEP_RAR,
                     PAR2_PCT, PAR2_PATH, PAR2_ARGS,
@@ -110,6 +110,7 @@ private:
     bool                 _obfuscateArticles;  //!< shall we obfuscate each Article (subject + from)
     bool                 _obfuscateFileName;  //!< for single file or folder, rename it with a random name prior to compress it
 
+    bool                 _genFrom;
     std::string          _from;               //!< email of poster (if empty, random one will be used for each file)
     std::string          _groups;             //!< Newsgroup where to post
     std::string          _articleIdSignature; //!< signature for Article message id (must be as a email address)

@@ -119,6 +119,7 @@ private slots:
 
 
     void onGenPoster();
+    void onUniqueFromToggled(bool checked);
 
     void onDebugToggled(bool checked);
 

@@ -96,7 +96,7 @@
               <bool>true</bool>
              </property>
              <property name="toolTip">
-              <string>poster used for all the Articles</string>
+              <string>poster used for all the Articles and all the Posts</string>
              </property>
             </widget>
            </item>
@@ -117,6 +117,29 @@
              <property name="icon">
               <iconset resource="../resources/resources.qrc">
                <normaloff>:/icons/genKey.png</normaloff>:/icons/genKey.png</iconset>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="horizontalSpacer_6">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="uniqueFromCB">
+             <property name="toolTip">
+              <string>generate a new random email for each Post</string>
+             </property>
+             <property name="text">
+              <string>new email for each Post</string>
              </property>
             </widget>
            </item>

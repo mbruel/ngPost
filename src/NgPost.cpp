@@ -87,6 +87,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::FROM,         "from"},
     {Opt::GROUPS,       "groups"},
     {Opt::NB_RETRY,     "retry"},
+    {Opt::GEN_FROM,     "gen_from"},
 
     {Opt::OBFUSCATE,    "obfuscate"},
     {Opt::INPUT_DIR,    "inputdir"},
@@ -150,6 +151,7 @@ const QList<QCommandLineOption> NgPost::sCmdOptions = {
     {{"z", sOptionNames[Opt::MSG_ID]},        tr("msg id signature, after the @ (default one: %1)").arg(sDefaultMsgIdSignature), sOptionNames[Opt::MSG_ID]},
     {{"r", sOptionNames[Opt::NB_RETRY]},      tr("number of time we retry to an Article that failed (default: %1)").arg(NntpArticle::nbMaxTrySending()), sOptionNames[Opt::NB_RETRY]},
     {{"t", sOptionNames[Opt::THREAD]},        tr("number of Threads (the connections will be distributed amongs them)"), sOptionNames[Opt::THREAD]},
+    { sOptionNames[Opt::GEN_FROM],            tr("generate a new random email for each Post (--auto or --monitor)")},
 
 
 // for compression and par2 support
@@ -198,7 +200,7 @@ NgPost::NgPost(int &argc, char *argv[]):
     _nbFiles(0),
     _nntpServers(),
     _obfuscateArticles(false), _obfuscateFileName(false),
-    _from(), _groups(sDefaultGroups),
+    _genFrom(false), _from(), _groups(sDefaultGroups),
     _articleIdSignature(sDefaultMsgIdSignature),
     _meta(), _grpList(),
     _nbThreads(QThread::idealThreadCount()),
@@ -349,7 +351,7 @@ int NgPost::startHMI()
     if (!err.isEmpty())
         _error(err);
 
-    if (_from.empty())
+    if (!_genFrom && _from.empty())
             _from = _randomFrom();
 #ifdef __DEBUG__
     _dumpParams();
@@ -544,7 +546,7 @@ void NgPost::_post(const QFileInfo &fileInfo, const QString &monitorFolder)
              << " (auto delete: " << _delAuto << ")";
 
     startPostingJob(new PostingJob(this, nzbFilePath, {fileInfo}, nullptr,
-                                   _grpList, _groups, _from,
+                                   _grpList, _groups, _from.empty() ? _randomFrom() : _from,
                                    _obfuscateArticles, _obfuscateFileName,
                                    _tmpPath, _rarPath,
                                    _rarSize, _useRarMax, _par2Pct,
@@ -990,6 +992,14 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         val = escapeXML(val);
         _from = val.toStdString();
     }
+
+
+    if (parser.isSet(sOptionNames[Opt::GEN_FROM]))
+    {
+        _genFrom = true;
+        if (_debug)
+            _cout << tr("Generate new random poster for each post") << "\n" << flush;
+    }
     else if (_from.empty())
         _from = _randomFrom();
 
@@ -1260,7 +1270,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         if (!nzbFilePath.endsWith(".nzb"))
             nzbFilePath += ".nzb";
         startPostingJob(new PostingJob(this, nzbFilePath, filesToUpload, nullptr,
-                                       _grpList, _groups, _from,
+                                       _grpList, _groups, _from.empty() ? _randomFrom() : _from,
                                        _obfuscateArticles, _obfuscateFileName,
                                        _tmpPath, _rarPath,
                                        _rarSize, _useRarMax, _par2Pct,
@@ -1461,6 +1471,16 @@ QString NgPost::_parseConfig(const QString &configPath)
                             val += "@ngPost.com";
                         val = escapeXML(val);
                         _from = val.toStdString();
+                    }
+                    else if (opt == sOptionNames[Opt::GEN_FROM])
+                    {
+                        val = val.toLower();
+                        if (val == "true" || val == "on" || val == "1")
+                        {
+                            _genFrom = true;
+                            if (_debug)
+                                _cout << tr("Generate new random poster for each post") << "\n" << flush;
+                        }
                     }
                     else if (opt == sOptionNames[Opt::GROUPS])
                         updateGroups(val);
@@ -1707,7 +1727,8 @@ void NgPost::_dumpParams() const
              << ", nzbPath: " << _nzbPath << ", nzbName" << _nzbName
              << ", inputDir: " << _inputDir << ", autoDelete: " << _delAuto
              << "\nnb Servers: " << _nntpServers.size() << ": " << servers
-             << "\nfrom: " << _from.c_str() << ", groups: " << _groups.c_str()
+             << "\nfrom: " << _from.c_str() << ", genFrom: " << _genFrom
+             << ", groups: " << _groups.c_str()
              << "\narticleSize: " << sArticleSize
              << ", obfuscate articles: " << _obfuscateArticles
              << ", display progressbar bar: " << _dispProgressBar
@@ -1793,8 +1814,11 @@ void NgPost::saveConfig()
                << "\n"
                << "\n"
                << tr("## uncomment the next line if you want a fixed uploader email (in the nzb and in the header of each articles)") << endl
-               << tr("## if you let it commented, we'll generate a random email for the whole post") << endl
-               << "#from     = someone@ngPost.com\n"
+               << tr("## if you let it commented, we'll generate ONE random email for all the posts of the session") << endl
+               << "from = " << _from.c_str() << endl
+               << "\n"
+               << tr("## Generate new random poster for each post (--auto or --monitor)") << endl
+               << (_genFrom  ? "" : "#") << "GEN_FROM = true" << endl
                << "\n"
                << "\n"
                << tr("## uncomment the next line to limit the number of threads,  (by default it'll use the number of cores)") << endl

@@ -369,9 +369,11 @@ void MainWindow::_initPostingBox()
 
     connect(_ui->genPoster,         &QAbstractButton::clicked, this, &MainWindow::onGenPoster);
     connect(_ui->obfuscateMsgIdCB,  &QAbstractButton::toggled, this, &MainWindow::onObfucateToggled);
+    connect(_ui->uniqueFromCB,      &QAbstractButton::toggled, this, &MainWindow::onUniqueFromToggled);
 
     _ui->fromEdit->setText(_ngPost->xml2txt(_ngPost->_from.c_str()));
     _ui->groupsEdit->setText(QString::fromStdString(_ngPost->_groups));
+    _ui->uniqueFromCB->setChecked(_ngPost->_genFrom);
 
     _ui->obfuscateMsgIdCB->setChecked(_ngPost->_obfuscateArticles);
     _ui->obfuscateFileNameCB->setChecked(_ngPost->_obfuscateFileName);
@@ -608,6 +610,12 @@ void MainWindow::onGenPoster()
     _ui->fromEdit->setText(_ngPost->randomFrom());
 }
 
+void MainWindow::onUniqueFromToggled(bool checked)
+{
+    _ui->genPoster->setEnabled(!checked);
+    _ui->fromEdit->setEnabled(!checked);
+}
+
 void MainWindow::onDebugToggled(bool checked)
 {
 #ifdef __DEBUG__
@@ -617,9 +625,11 @@ void MainWindow::onDebugToggled(bool checked)
     {
         if (!_ui->debugSB->value())
             _ui->debugSB->setValue(1);
+        _ngPost->setDebug(static_cast<ushort>(_ui->debugSB->value()));
     }
+    else
+        _ngPost->setDebug(0);
     _ui->debugSB->setEnabled(checked);
-    _ngPost->setDebug(checked);
 }
 
 
