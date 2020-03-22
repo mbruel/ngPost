@@ -121,6 +121,16 @@
             </widget>
            </item>
            <item>
+            <widget class="QCheckBox" name="saveFromCB">
+             <property name="toolTip">
+              <string>use this poster email everytime you launch ngPost</string>
+             </property>
+             <property name="text">
+              <string>always</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <spacer name="horizontalSpacer_6">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>

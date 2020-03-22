@@ -200,7 +200,7 @@ NgPost::NgPost(int &argc, char *argv[]):
     _nbFiles(0),
     _nntpServers(),
     _obfuscateArticles(false), _obfuscateFileName(false),
-    _genFrom(false), _from(), _groups(sDefaultGroups),
+    _genFrom(false), _saveFrom(false), _from(), _groups(sDefaultGroups),
     _articleIdSignature(sDefaultMsgIdSignature),
     _meta(), _grpList(),
     _nbThreads(QThread::idealThreadCount()),
@@ -351,7 +351,7 @@ int NgPost::startHMI()
     if (!err.isEmpty())
         _error(err);
 
-    if (!_genFrom && _from.empty())
+    if (_from.empty())
             _from = _randomFrom();
 #ifdef __DEBUG__
     _dumpParams();
@@ -546,7 +546,7 @@ void NgPost::_post(const QFileInfo &fileInfo, const QString &monitorFolder)
              << " (auto delete: " << _delAuto << ")";
 
     startPostingJob(new PostingJob(this, nzbFilePath, {fileInfo}, nullptr,
-                                   _grpList, _groups, _from.empty() ? _randomFrom() : _from,
+                                   _grpList, _groups, from(),
                                    _obfuscateArticles, _obfuscateFileName,
                                    _tmpPath, _rarPath,
                                    _rarSize, _useRarMax, _par2Pct,
@@ -1270,7 +1270,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         if (!nzbFilePath.endsWith(".nzb"))
             nzbFilePath += ".nzb";
         startPostingJob(new PostingJob(this, nzbFilePath, filesToUpload, nullptr,
-                                       _grpList, _groups, _from.empty() ? _randomFrom() : _from,
+                                       _grpList, _groups, from(),
                                        _obfuscateArticles, _obfuscateFileName,
                                        _tmpPath, _rarPath,
                                        _rarSize, _useRarMax, _par2Pct,
@@ -1471,6 +1471,7 @@ QString NgPost::_parseConfig(const QString &configPath)
                             val += "@ngPost.com";
                         val = escapeXML(val);
                         _from = val.toStdString();
+                        _saveFrom = true;
                     }
                     else if (opt == sOptionNames[Opt::GEN_FROM])
                     {
@@ -1727,7 +1728,7 @@ void NgPost::_dumpParams() const
              << ", nzbPath: " << _nzbPath << ", nzbName" << _nzbName
              << ", inputDir: " << _inputDir << ", autoDelete: " << _delAuto
              << "\nnb Servers: " << _nntpServers.size() << ": " << servers
-             << "\nfrom: " << _from.c_str() << ", genFrom: " << _genFrom
+             << "\nfrom: " << _from.c_str() << ", genFrom: " << _genFrom << ", saveFrom: " << _saveFrom
              << ", groups: " << _groups.c_str()
              << "\narticleSize: " << sArticleSize
              << ", obfuscate articles: " << _obfuscateArticles
@@ -1810,14 +1811,15 @@ void NgPost::saveConfig()
                << (_postHistoryFile.isEmpty()  ? "#" : "") <<"POST_HISTORY = "
                << (_postHistoryFile.isEmpty()  ? "/nzb/ngPost_history.cvs" : _postHistoryFile) << "\n"
                << "\n"
-               << "groups   = " << _groups.c_str() << "\n"
+               << "GROUPS   = " << _groups.c_str() << "\n"
                << "\n"
                << "\n"
                << tr("## uncomment the next line if you want a fixed uploader email (in the nzb and in the header of each articles)") << endl
                << tr("## if you let it commented, we'll generate ONE random email for all the posts of the session") << endl
-               << "from = " << _from.c_str() << endl
+               << (_saveFrom  ? "" : "#") << "FROM = " << _from.c_str() << endl
                << "\n"
                << tr("## Generate new random poster for each post (--auto or --monitor)") << endl
+               << tr("## if this option is set the FROM email just above will be ignored") << endl
                << (_genFrom  ? "" : "#") << "GEN_FROM = true" << endl
                << "\n"
                << "\n"

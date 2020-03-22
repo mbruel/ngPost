@@ -111,6 +111,7 @@ private:
     bool                 _obfuscateFileName;  //!< for single file or folder, rename it with a random name prior to compress it
 
     bool                 _genFrom;
+    bool                 _saveFrom;
     std::string          _from;               //!< email of poster (if empty, random one will be used for each file)
     std::string          _groups;             //!< Newsgroup where to post
     std::string          _articleIdSignature; //!< signature for Article message id (must be as a email address)
@@ -299,6 +300,9 @@ public:
     inline static QString folderMonitoringName();
     inline static QString donationTooltip();
 
+
+    inline std::string from() const;
+
 signals:
     void log(QString msg, bool newline); //!< in case we signal from another thread
     void error(QString msg); //!< in case we signal from another thread
@@ -368,6 +372,14 @@ public:
 QString NgPost::quickJobName() { return tr(sQuickJobName); }
 QString NgPost::folderMonitoringName() { return tr(sFolderMonitoringName); }
 QString NgPost::donationTooltip() { return tr(sDonationTooltip); }
+
+std::string NgPost::from() const
+{
+    if (_genFrom || _from.empty())
+        return _randomFrom();
+    else
+        return _from;
+}
 
 
 bool NgPost::useHMI() const { return _mode == AppMode::HMI; }

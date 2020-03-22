@@ -294,8 +294,11 @@ void MainWindow::onDelServer()
 
 void MainWindow::onObfucateToggled(bool checked)
 {
-    _ui->fromEdit->setEnabled(!checked);
-    _ui->genPoster->setEnabled(!checked);
+    bool enabled = !checked;
+    _ui->fromEdit->setEnabled(enabled);
+    _ui->genPoster->setEnabled(enabled);
+    _ui->saveFromCB->setEnabled(enabled);
+    _ui->uniqueFromCB->setEnabled(enabled);
 }
 
 void MainWindow::onTabContextMenu(const QPoint &point)
@@ -374,6 +377,7 @@ void MainWindow::_initPostingBox()
     _ui->fromEdit->setText(_ngPost->xml2txt(_ngPost->_from.c_str()));
     _ui->groupsEdit->setText(QString::fromStdString(_ngPost->_groups));
     _ui->uniqueFromCB->setChecked(_ngPost->_genFrom);
+    _ui->saveFromCB->setChecked(_ngPost->_saveFrom);
 
     _ui->obfuscateMsgIdCB->setChecked(_ngPost->_obfuscateArticles);
     _ui->obfuscateFileNameCB->setChecked(_ngPost->_obfuscateFileName);
@@ -435,6 +439,8 @@ void MainWindow::updateParams()
             from += QString("@%1.com").arg(_ngPost->_articleIdSignature.c_str());
         _ngPost->_from   = _ngPost->escapeXML(from).toStdString();
     }
+    _ngPost->_genFrom  = _ui->uniqueFromCB->isChecked();
+    _ngPost->_saveFrom = _ui->saveFromCB->isChecked();
 
     _ngPost->updateGroups(_ui->groupsEdit->toPlainText());
     _ngPost->_groups = _ui->groupsEdit->toPlainText().toStdString();
