@@ -49,6 +49,8 @@ public:
     void init();
 
     void handleKeyEvent(QKeyEvent *keyEvent);
+    void handleDropEvent(QDropEvent *e);
+
 
     void udatePostingParams();
 

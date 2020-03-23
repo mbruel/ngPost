@@ -29,6 +29,8 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <QKeyEvent>
+#include <QMimeData>
+
 AutoPostWidget::AutoPostWidget(NgPost *ngPost, MainWindow *hmi) :
     QWidget(hmi),
     _ui(new Ui::AutoPostWidget),
@@ -443,4 +445,23 @@ void AutoPostWidget::handleKeyEvent(QKeyEvent *keyEvent)
             delete item;
         }
     }
+}
+
+
+void AutoPostWidget::handleDropEvent(QDropEvent *e)
+{
+    if (e->mimeData()->urls().count() == 1)
+    {
+        QString folderPath =e->mimeData()->urls().first().toLocalFile();
+        QFileInfo fi(folderPath);
+        if (fi.exists() && fi.isDir())
+        {
+            _ui->autoDirEdit->setText(fi.absoluteFilePath());
+            onScanAutoDirClicked();
+        }
+        else
+            emit _ngPost->error(tr("You can only drag ONE folder on the Auto Posting widget..."));
+    }
+    else
+        emit _ngPost->error(tr("You can only drag ONE folder on the Auto Posting widget..."));
 }

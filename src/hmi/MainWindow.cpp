@@ -194,7 +194,9 @@ void MainWindow::dragEnterEvent(QDragEnterEvent *e)
 void MainWindow::dropEvent(QDropEvent *e)
 {
     int currentTabIdx = _ui->postTabWidget->currentIndex();
-    if (currentTabIdx != 1 && currentTabIdx < _ui->postTabWidget->count() - 1)
+    if (currentTabIdx == 1)
+        _autoPostTab->handleDropEvent(e);
+    else if (currentTabIdx < _ui->postTabWidget->count() - 1)
         static_cast<PostingWidget*>(_ui->postTabWidget->currentWidget())->handleDropEvent(e);
 }
 
@@ -618,8 +620,10 @@ void MainWindow::onGenPoster()
 
 void MainWindow::onUniqueFromToggled(bool checked)
 {
-    _ui->genPoster->setEnabled(!checked);
-    _ui->fromEdit->setEnabled(!checked);
+    bool enabled = !checked;
+    _ui->genPoster->setEnabled(enabled);
+    _ui->fromEdit->setEnabled(enabled);
+    _ui->saveFromCB->setEnabled(enabled);
 }
 
 void MainWindow::onDebugToggled(bool checked)

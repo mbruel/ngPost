@@ -126,7 +126,7 @@
               <string>use this poster email everytime you launch ngPost</string>
              </property>
              <property name="text">
-              <string>always</string>
+              <string>persistent email</string>
              </property>
             </widget>
            </item>
@@ -149,7 +149,7 @@
               <string>generate a new random email for each Post</string>
              </property>
              <property name="text">
-              <string>new email for each Post</string>
+              <string>new random email for each Post</string>
              </property>
             </widget>
            </item>
