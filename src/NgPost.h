@@ -74,7 +74,7 @@ class NgPost : public QObject
 
     enum class Opt {HELP = 0, LANG, VERSION, CONF, SHUTDOWN_CMD,
                     DISP_PROGRESS, DEBUG, DEBUG_FULL, POST_HISTORY, NZB_RM_ACCENTS,
-                    INPUT, OUTPUT, NZB_PATH, THREAD, NZB_UPLOAD_URL,
+                    INPUT, OUTPUT, NZB_PATH, THREAD, NZB_UPLOAD_URL, NZB_POST_CMD,
                     MONITOR_FOLDERS, MONITOR_EXT, MONITOR_IGNORE_DIR,
                     MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY, GEN_FROM,
                     OBFUSCATE, INPUT_DIR, AUTO_DIR, MONITOR_DIR, DEL_AUTO,
@@ -82,7 +82,7 @@ class NgPost : public QObject
                     PAR2_PCT, PAR2_PATH, PAR2_ARGS,
                     COMPRESS, GEN_PAR2, GEN_NAME, GEN_PASS, LENGTH_NAME, LENGTH_PASS,
                     RAR_NAME, RAR_PASS,
-                    HOST, PORT, SSL, USER, PASS, CONNECTION,
+                    HOST, PORT, SSL, USER, PASS, CONNECTION, ENABLED
                    };
 
     static const QMap<Opt, QString> sOptionNames;

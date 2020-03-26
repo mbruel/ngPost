@@ -32,6 +32,7 @@ struct NntpServerParams{
     std::string pass;
     int         nbCons;
     bool        useSSL;
+    bool        enabled;
 
     static const ushort sDefaultPort = 119;
     static const ushort sDefaultSslPort = 563;
@@ -39,7 +40,7 @@ struct NntpServerParams{
 
     NntpServerParams():
         host(""), port(sDefaultPort), auth(false), user(""),
-        pass(""), nbCons(1), useSSL(false)
+        pass(""), nbCons(1), useSSL(false), enabled(true)
     {}
 
     NntpServerParams(const QString & aHost, ushort aPort = sDefaultPort, bool aAuth = false,

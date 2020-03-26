@@ -67,6 +67,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::DEBUG_FULL,     "fulldebug"},
     {Opt::POST_HISTORY,   "post_history"},
     {Opt::NZB_UPLOAD_URL, "nzb_upload_url"},
+    {Opt::NZB_POST_CMD,   "nzb_post_cmd"},    // TODO: to allow posting nzb by scp or using curl ;)
     {Opt::NZB_RM_ACCENTS, "nzb_rm_accents"},
 
     {Opt::INPUT,        "input"},
@@ -121,7 +122,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::USER,         "user"},
     {Opt::PASS,         "pass"},
     {Opt::CONNECTION,   "connection"},
-
+    {Opt::ENABLED,      "enabled"},
 };
 
 const QList<QCommandLineOption> NgPost::sCmdOptions = {
@@ -1614,6 +1615,14 @@ QString NgPost::_parseConfig(const QString &configPath)
                                 serverParams->port = NntpServerParams::sDefaultSslPort;
                         }
                     }
+                    else if (opt == sOptionNames[Opt::ENABLED])
+                    {
+                        val = val.toLower();
+                        if (val == "true" || val == "on" || val == "1")
+                            serverParams->enabled = true;
+                        else
+                            serverParams->enabled = false;
+                    }
                     else if (opt == sOptionNames[Opt::USER])
                     {
                         serverParams->user = val.toStdString();
@@ -1929,6 +1938,7 @@ void NgPost::saveConfig()
                    << "user = " << param->user.c_str() << "\n"
                    << "pass = " << param->pass.c_str() << "\n"
                    << "connection = " << param->nbCons << "\n"
+                   << "enabled = " << (param->enabled ? "true":"false") << "\n"
                    << "\n\n";
         }
         stream << tr("## You can add as many server if you have several providers by adding other \"server\" sections") << endl
@@ -1939,6 +1949,7 @@ void NgPost::saveConfig()
                << "#user = myOtherUser\n"
                << "#pass = myOtherPass\n"
                << "#connection = 15\n"
+               << "#enabled = false\n"
                << "\n";
 
 

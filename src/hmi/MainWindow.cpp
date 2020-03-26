@@ -46,6 +46,7 @@ const QColor  MainWindow::sArticlesFailedColor  = Qt::darkYellow;
 
 
 const QList<const char *> MainWindow::sServerListHeaders = {
+    QT_TRANSLATE_NOOP("MainWindow", "on"),
     QT_TRANSLATE_NOOP("MainWindow", "Host (name or IP)"),
     QT_TRANSLATE_NOOP("MainWindow", "Port"),
     QT_TRANSLATE_NOOP("MainWindow", "SSL"),
@@ -54,7 +55,7 @@ const QList<const char *> MainWindow::sServerListHeaders = {
     QT_TRANSLATE_NOOP("MainWindow", "Password"),
     "" // for the delete button
 };
-const QVector<int> MainWindow::sServerListSizes   = {200, 50, 30, 100, 150, 150, sDeleteColumnWidth};
+const QVector<int> MainWindow::sServerListSizes   = {30, 200, 50, 30, 100, 150, 150, sDeleteColumnWidth};
 
 MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
     QMainWindow(parent),
@@ -397,7 +398,7 @@ void MainWindow::_initPostingBox()
     connect(_ui->nzbPathButton, &QAbstractButton::clicked, this, &MainWindow::onNzbPathClicked);
 }
 
-void MainWindow::updateServers()
+void MainWindow::updateServers(bool keepDisabled)
 {
     qDeleteAll(_ngPost->_nntpServers);
     _ngPost->_nntpServers.clear();
@@ -406,6 +407,10 @@ void MainWindow::updateServers()
     for (int row = 0 ; row < nbRows; ++row)
     {
         int col = 0;
+        bool isEnabled =  static_cast<CheckBoxCenterWidget*>(_ui->serversTable->cellWidget(row, col++))->isChecked();
+        if (!keepDisabled && !isEnabled)
+            continue;
+
         QLineEdit *hostEdit = static_cast<QLineEdit*>(_ui->serversTable->cellWidget(row, col++));
         if (hostEdit->text().isEmpty())
             continue;
@@ -419,6 +424,7 @@ void MainWindow::updateServers()
         NntpServerParams *srvParams = new NntpServerParams(hostEdit->text(), portEdit->text().toUShort());
         srvParams->useSSL = sslCb->isChecked();
         srvParams->nbCons = nbConsEdit->text().toInt();
+        srvParams->enabled = isEnabled;
         QString user = userEdit->text();
         if (!user.isEmpty())
         {
@@ -546,6 +552,10 @@ void MainWindow::_addServer(NntpServerParams *serverParam)
     int nbRows = _ui->serversTable->rowCount(), col = 0;
     _ui->serversTable->setRowCount(nbRows+1);
 
+    _ui->serversTable->setCellWidget(nbRows, col++,
+                                     new CheckBoxCenterWidget(_ui->serversTable,
+                                                              serverParam ? serverParam->enabled : true));
+
     QLineEdit *hostEdit = new QLineEdit(_ui->serversTable);
     if (serverParam)
         hostEdit->setText(serverParam->host);
@@ -645,7 +655,7 @@ void MainWindow::onDebugToggled(bool checked)
 
 void MainWindow::onSaveConfig()
 {
-    updateServers();
+    updateServers(true);
     updateParams();
     int currentTabIdx = _ui->postTabWidget->currentIndex();
     if (currentTabIdx == 0)
