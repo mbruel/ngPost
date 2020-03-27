@@ -65,7 +65,7 @@ public:
 
     void updateProgressBar(uint nbArticlesTotal, uint nbArticlesUploaded, const QString &avgSpeed);
 
-    void updateServers(bool keepDisabled = false);
+    void updateServers();
     void updateParams();
     void updateAutoPostingParams();
 

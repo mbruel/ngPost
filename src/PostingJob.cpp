@@ -371,20 +371,26 @@ int PostingJob::_createNntpConnections()
 {
     _nbConnections = 0;
     for (NntpServerParams *srvParams : _ngPost->_nntpServers)
-        _nbConnections += srvParams->nbCons;
+    {
+        if (srvParams->enabled)
+            _nbConnections += srvParams->nbCons;
+    }
 
     _nntpConnections.reserve(_nbConnections);
     int conIdx = 0;
     for (NntpServerParams *srvParams : _ngPost->_nntpServers)
     {
-        for (int k = 0 ; k < srvParams->nbCons ; ++k)
+        if (srvParams->enabled)
         {
-            NntpConnection *nntpCon = new NntpConnection(_ngPost, ++conIdx, *srvParams);
-            connect(nntpCon, &NntpConnection::log,   _ngPost, &NgPost::onLog, Qt::QueuedConnection);
-            connect(nntpCon, &NntpConnection::error, _ngPost, &NgPost::onError, Qt::QueuedConnection);
-            connect(nntpCon, &NntpConnection::errorConnecting, _ngPost, &NgPost::onErrorConnecting, Qt::QueuedConnection);
-            connect(nntpCon, &NntpConnection::disconnected, this, &PostingJob::onDisconnectedConnection, Qt::QueuedConnection);
-            _nntpConnections.append(nntpCon);
+            for (int k = 0 ; k < srvParams->nbCons ; ++k)
+            {
+                NntpConnection *nntpCon = new NntpConnection(_ngPost, ++conIdx, *srvParams);
+                connect(nntpCon, &NntpConnection::log,   _ngPost, &NgPost::onLog, Qt::QueuedConnection);
+                connect(nntpCon, &NntpConnection::error, _ngPost, &NgPost::onError, Qt::QueuedConnection);
+                connect(nntpCon, &NntpConnection::errorConnecting, _ngPost, &NgPost::onErrorConnecting, Qt::QueuedConnection);
+                connect(nntpCon, &NntpConnection::disconnected, this, &PostingJob::onDisconnectedConnection, Qt::QueuedConnection);
+                _nntpConnections.append(nntpCon);
+            }
         }
     }
 

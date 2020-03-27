@@ -398,7 +398,7 @@ void MainWindow::_initPostingBox()
     connect(_ui->nzbPathButton, &QAbstractButton::clicked, this, &MainWindow::onNzbPathClicked);
 }
 
-void MainWindow::updateServers(bool keepDisabled)
+void MainWindow::updateServers()
 {
     qDeleteAll(_ngPost->_nntpServers);
     _ngPost->_nntpServers.clear();
@@ -408,8 +408,6 @@ void MainWindow::updateServers(bool keepDisabled)
     {
         int col = 0;
         bool isEnabled =  static_cast<CheckBoxCenterWidget*>(_ui->serversTable->cellWidget(row, col++))->isChecked();
-        if (!keepDisabled && !isEnabled)
-            continue;
 
         QLineEdit *hostEdit = static_cast<QLineEdit*>(_ui->serversTable->cellWidget(row, col++));
         if (hostEdit->text().isEmpty())
@@ -655,7 +653,7 @@ void MainWindow::onDebugToggled(bool checked)
 
 void MainWindow::onSaveConfig()
 {
-    updateServers(true);
+    updateServers();
     updateParams();
     int currentTabIdx = _ui->postTabWidget->currentIndex();
     if (currentTabIdx == 0)
