@@ -41,6 +41,15 @@ AutoPostWidget::AutoPostWidget(NgPost *ngPost, MainWindow *hmi) :
 {
     _ui->setupUi(this);
     _ui->filesList->setSignature(QString("<pre>%1</pre>").arg(_ngPost->escapeXML(_ngPost->asciiArt())));
+    connect(_ui->filesList, &SignedListWidget::rightClick, this, &AutoPostWidget::onSelectFilesClicked);
+
+    _ui->filesList->setToolTip(QString("%1<br/><br/>%2<ul><li>%3</li><li>%4</li><li>%5</li></ul>%6").arg(
+                                   tr("You can use the <b>Monitor Mode</b>")).arg(
+                                   tr("or <b>Generate Posts</b> by adding files:")).arg(
+                                   tr("Drag & Drop files/folders")).arg(
+                                   tr("Right Click to add Files")).arg(
+                                   tr("Click on the Scan Button")).arg(
+                                   tr("Bare in mind you can select items in the list and press DEL to remove them")));
 }
 
 AutoPostWidget::~AutoPostWidget()
@@ -198,7 +207,7 @@ void AutoPostWidget::onScanAutoDirClicked()
         _ui->filesList->clear2();
         QDir::SortFlags sort = _ui->latestFilesFirstCB->isChecked() ? QDir::Time : QDir::Name;
         for (const QFileInfo &file : autoDir.entryInfoList(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot, sort))
-            _addPath(file.absoluteFilePath(), 0, file.isDir());
+            _ui->filesList->addPathIfNotInList(file.absoluteFilePath(), 0, file.isDir());
     }
     else
         QMessageBox::warning(nullptr,
@@ -326,28 +335,16 @@ void AutoPostWidget::onMonitorJobStart()
     }
 }
 
-
-void AutoPostWidget::_addPath(const QString &path, int currentNbFiles, int isDir)
+void AutoPostWidget::onSelectFilesClicked()
 {
-    for (int i = 0 ; i < currentNbFiles ; ++i)
-    {
-        if (_ui->filesList->item(i)->text() == path)
-        {
-            qDebug() << "[MainWindow::_addFile] we already have the file " << path;
-            return;
-        }
-    }
-    _ui->filesList->addPath(path, isDir);
-}
+    QStringList files = QFileDialog::getOpenFileNames(
+                this,
+                tr("Select one or more files"),
+                _ngPost->_inputDir);
 
-bool AutoPostWidget::_fileAlreadyInList(const QString &fileName, int currentNbFiles) const
-{
-    for (int i = 0 ; i < currentNbFiles ; ++i)
-    {
-        if (_ui->filesList->item(i)->text() == fileName)
-            return true;
-    }
-    return false;
+    int currentNbFiles = _ui->filesList->count();
+    for (const QString &file : files)
+        _ui->filesList->addPathIfNotInList(file, currentNbFiles);
 }
 
 void AutoPostWidget::udatePostingParams()
@@ -452,18 +449,24 @@ void AutoPostWidget::handleKeyEvent(QKeyEvent *keyEvent)
 
 void AutoPostWidget::handleDropEvent(QDropEvent *e)
 {
-    if (e->mimeData()->urls().count() == 1)
+    int currentNbFiles = _ui->filesList->count();
+    for (const QUrl &url : e->mimeData()->urls())
     {
-        QString folderPath =e->mimeData()->urls().first().toLocalFile();
-        QFileInfo fi(folderPath);
-        if (fi.exists() && fi.isDir())
-        {
-            _ui->autoDirEdit->setText(fi.absoluteFilePath());
-            onScanAutoDirClicked();
-        }
-        else
-            emit _ngPost->error(tr("You can only drag ONE folder on the Auto Posting widget..."));
+        QString fileName = url.toLocalFile();
+        _ui->filesList->addPathIfNotInList(fileName, currentNbFiles, QFileInfo(fileName).isDir());
     }
-    else
-        emit _ngPost->error(tr("You can only drag ONE folder on the Auto Posting widget..."));
+//    if (e->mimeData()->urls().count() == 1)
+//    {
+//        QString folderPath =e->mimeData()->urls().first().toLocalFile();
+//        QFileInfo fi(folderPath);
+//        if (fi.exists() && fi.isDir())
+//        {
+//            _ui->autoDirEdit->setText(fi.absoluteFilePath());
+//            onScanAutoDirClicked();
+//        }
+//        else
+//            emit _ngPost->error(tr("You can only drag ONE folder on the Auto Posting widget..."));
+//    }
+//    else
+//        emit _ngPost->error(tr("You can only drag ONE folder on the Auto Posting widget..."));
 }

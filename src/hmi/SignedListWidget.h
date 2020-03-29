@@ -34,6 +34,8 @@ public:
     void setSignature(const QString &str);
 
     void addPath(const QString &path, bool isDir = false);
+    bool addPathIfNotInList(const QString &path, int lastIndexToCheck, bool isDir = false);
+
     void removeItemWidget2(QListWidgetItem *item);
     void clear2();
 

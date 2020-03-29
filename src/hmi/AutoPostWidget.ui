@@ -181,9 +181,6 @@
    </item>
    <item>
     <widget class="SignedListWidget" name="filesList">
-     <property name="toolTip">
-      <string>monitor folder and post all new incoming files/folders</string>
-     </property>
     </widget>
    </item>
    <item>

@@ -66,6 +66,7 @@ public slots:
     void onMonitorJobStart();
 
 private slots:
+    void onSelectFilesClicked();
     void onGenQuickPosts();
     void onCompressPathClicked();
     void onRarPathClicked();
@@ -74,13 +75,6 @@ private slots:
     void onMonitoringClicked();
     void onDelFilesToggled(bool checked);
     void onAddMonitoringFolder();
-
-
-
-private:    
-    void _addPath(const QString &path, int currentNbFiles, int isDir = false);
-    bool _fileAlreadyInList(const QString &fileName, int currentNbFiles) const;
-
 };
 
 #endif // AUTOPOSTWIDGET_H

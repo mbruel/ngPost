@@ -45,6 +45,18 @@ void SignedListWidget::addPath(const QString &path, bool isDir)
         _asciiLbl->hide();
 }
 
+bool SignedListWidget::addPathIfNotInList(const QString &path, int lastIndexToCheck, bool isDir)
+{
+    for (int i = 0 ; i < lastIndexToCheck ; ++i)
+    {
+        if (item(i)->text() == path)
+            return false;
+    }
+
+    addPath(path, isDir);
+    return true;
+}
+
 //#include <QDebug>
 void SignedListWidget::removeItemWidget2(QListWidgetItem *item)
 {

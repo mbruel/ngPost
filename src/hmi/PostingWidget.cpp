@@ -52,6 +52,16 @@ PostingWidget::PostingWidget(NgPost *ngPost, MainWindow *hmi, uint jobNumber) :
     connect(_ui->postButton, &QAbstractButton::clicked, this, &PostingWidget::onPostFiles);
     connect(_ui->nzbPassCB,  &QAbstractButton::toggled, this, &PostingWidget::onNzbPassToggled);
     connect(_ui->genPass,    &QAbstractButton::clicked, this, &PostingWidget::onGenNzbPassword);
+
+    _ui->filesList->setSignature(QString("<pre>%1</pre>").arg(_ngPost->escapeXML(_ngPost->asciiArt())));
+    connect(_ui->filesList, &SignedListWidget::rightClick, this, &PostingWidget::onSelectFilesClicked);
+
+    _ui->filesList->setToolTip(QString("%1<ul><li>%2</li><li>%3</li><li>%4</li></ul>%5").arg(
+                                   tr("You can add files or folder by:")).arg(
+                                   tr("Drag & Drop files/folders")).arg(
+                                   tr("Right Click to add Files")).arg(
+                                   tr("Click on Select Files/Folder buttons")).arg(
+                                   tr("Bare in mind you can select items in the list and press DEL to remove them")));
 }
 
 PostingWidget::~PostingWidget()
@@ -385,9 +395,6 @@ void PostingWidget::init()
     _ui->nzbPassCB->setChecked(false);
     onNzbPassToggled(false);
 
-    _ui->filesList->setSignature(QString("<pre>%1</pre>").arg(_ngPost->escapeXML(_ngPost->asciiArt())));
-    connect(_ui->filesList, &SignedListWidget::rightClick, this, &PostingWidget::onSelectFilesClicked);
-
     _ui->compressPathEdit->setText(_ngPost->_tmpPath);
     _ui->rarEdit->setText(_ngPost->_rarPath);
 
@@ -527,24 +534,17 @@ void PostingWidget::retranslate()
 
 void PostingWidget::addPath(const QString &path, int currentNbFiles, int isDir)
 {
-    for (int i = 0 ; i < currentNbFiles ; ++i)
+    if (_ui->filesList->addPathIfNotInList(path, currentNbFiles, isDir))
     {
-        if (_ui->filesList->item(i)->text() == path)
+        QFileInfo fileInfo(path);
+        if (_ui->nzbFileEdit->text().isEmpty())
         {
-            qDebug() << "[MainWindow::_addFile] we already have the file " << path;
-            return;
+            _ngPost->setNzbName(fileInfo);
+            _ui->nzbFileEdit->setText(QString("%1.nzb").arg(_ngPost->nzbPath()));
         }
+        if (_ui->compressNameEdit->text().isEmpty())
+            _ui->compressNameEdit->setText(_ngPost->_nzbName);
     }
-    _ui->filesList->addPath(path, isDir);
-
-    QFileInfo fileInfo(path);
-    if (_ui->nzbFileEdit->text().isEmpty())
-    {
-        _ngPost->setNzbName(fileInfo);
-        _ui->nzbFileEdit->setText(QString("%1.nzb").arg(_ngPost->nzbPath()));
-    }
-    if (_ui->compressNameEdit->text().isEmpty())
-        _ui->compressNameEdit->setText(_ngPost->_nzbName);
 }
 
 bool PostingWidget::_fileAlreadyInList(const QString &fileName, int currentNbFiles) const
