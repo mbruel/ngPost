@@ -119,7 +119,7 @@ PostingJob::~PostingJob()
 
     if (_compressDir)
     {
-        if (_postFinished && !_nbArticlesFailed)
+        if (hasPostFinishedSuccessfully())
             _cleanCompressDir();
         delete _compressDir;
         _compressDir = nullptr;

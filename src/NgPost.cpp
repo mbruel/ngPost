@@ -69,6 +69,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::NZB_UPLOAD_URL, "nzb_upload_url"},
     {Opt::NZB_POST_CMD,   "nzb_post_cmd"},    // TODO: to allow posting nzb by scp or using curl ;)
     {Opt::NZB_RM_ACCENTS, "nzb_rm_accents"},
+    {Opt::AUTO_CLOSE_TABS,"auto_close_tabs"},
 
     {Opt::INPUT,        "input"},
     {Opt::AUTO_DIR,     "auto"},
@@ -232,7 +233,8 @@ NgPost::NgPost(int &argc, char *argv[]):
 #else
     _shutdownCmd(sDefaultShutdownCmdLinux),
 #endif
-    _removeAccentsOnNzbFileName(false)
+    _removeAccentsOnNzbFileName(false),
+    _autoCloseTabs(false)
 {
     QThread::currentThread()->setObjectName(sMainThreadName);
 
@@ -654,8 +656,12 @@ void NgPost::onPostingJobFinished()
             }
         }
 
+        if (_hmi && _autoCloseTabs && _activeJob->hasPostFinishedSuccessfully())
+            _hmi->closeTab(_activeJob->widget());
+
         _activeJob->deleteLater();
         _activeJob = nullptr;
+
         if (_pendingJobs.size())
         {
             _activeJob = _pendingJobs.dequeue();
@@ -1426,6 +1432,12 @@ QString NgPost::_parseConfig(const QString &configPath)
                         if (val == "true" || val == "on" || val == "1")
                             _removeAccentsOnNzbFileName = true;
                     }
+                    else if (opt == sOptionNames[Opt::AUTO_CLOSE_TABS])
+                    {
+                        val = val.toLower();
+                        if (val == "true" || val == "on" || val == "1")
+                            _autoCloseTabs = true;
+                    }
                     else if (opt == sOptionNames[Opt::MONITOR_EXT])
                     {
                         for (const QString &extension : val.split(","))
@@ -1544,6 +1556,11 @@ QString NgPost::_parseConfig(const QString &configPath)
                         _tmpPath = val;
                     else if (opt == sOptionNames[Opt::RAR_PATH])
                         _rarPath = val;
+                    else if (opt == sOptionNames[Opt::RAR_PASS])
+                    {
+                        _rarPassFixed = val;
+                        _rarPass      = val;
+                    }
                     else if (opt == sOptionNames[Opt::RAR_EXTRA])
                         _rarArgs = val;
                     else if (opt == sOptionNames[Opt::RAR_SIZE])
@@ -1872,6 +1889,9 @@ void NgPost::saveConfig()
                << tr("## remove accents and special characters from the nzb file names") << endl
                << (_removeAccentsOnNzbFileName  ? "" : "#") << "NZB_RM_ACCENTS = true\n"
                << "\n"
+               << tr("## close Quick Post Tabs when posted successfully (for the GUI)") << endl
+               << (_autoCloseTabs  ? "" : "#") << "AUTO_CLOSE_TABS = true\n"
+               << "\n"
                << "\n"
                << "\n"
                << "\n"
@@ -1881,6 +1901,9 @@ void NgPost::saveConfig()
                << "\n"
                << tr("## Auto compression for all posts with random archive name, password and par2 generation") << endl
                << (_autoCompress  ? "" : "#") << "AUTO_COMPRESS = true\n"
+               << "\n"
+               << tr("## use the same Password for all your Posts using compression") << endl
+               << (_rarPassFixed.isEmpty()  ? "#" : "") << "RAR_PASS = " << (_rarPassFixed.isEmpty()  ? "yourPassword" : _rarPassFixed) << endl
                << "\n"
                << tr("## temporary folder where the compressed files and par2 will be stored") << endl
                << tr("## so we can post directly a compressed (obfuscated or not) archive of the selected files") << endl

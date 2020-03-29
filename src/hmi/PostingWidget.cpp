@@ -406,6 +406,12 @@ void PostingWidget::init()
         _ui->redundancySB->setEnabled(false);
     }
 
+    if (!_ngPost->_rarPassFixed.isEmpty())
+    {
+        _ui->nzbPassCB->setChecked(true);
+        _ui->nzbPassEdit->setText(_ngPost->_rarPassFixed);
+    }
+
     _ui->nameLengthSB->setRange(5, 50);
     _ui->nameLengthSB->setValue(static_cast<int>(_ngPost->_lengthName));
     _ui->passLengthSB->setRange(5, 50);
@@ -444,6 +450,10 @@ void PostingWidget::init()
         _ui->par2CB->setChecked(true);
     if (_ngPost->_keepRar)
         _ui->keepRarCB->setChecked(true);
+
+    QString fixedPass = _hmi->fixedArchivePassword();
+    if (!fixedPass.isEmpty())
+        _ui->nzbPassEdit->setText(fixedPass);
 }
 
 void PostingWidget::genNameAndPassword(bool genName, bool genPass, bool doPar2, bool useRarMax)
@@ -451,9 +461,9 @@ void PostingWidget::genNameAndPassword(bool genName, bool genPass, bool doPar2, 
     _ui->compressCB->setChecked(true);
     if (genName)
         onGenCompressName();
-    if (genPass)
+    if (genPass && _ngPost->_rarPassFixed.isEmpty())
     {
-        _ui->nzbPassCB->setChecked(true);
+        _ui->nzbPassCB->setChecked(true);        
         onGenNzbPassword();
     }
     _ui->rarMaxCB->setChecked(useRarMax);

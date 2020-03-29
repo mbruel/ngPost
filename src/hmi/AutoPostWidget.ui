@@ -374,7 +374,7 @@
        <item>
         <widget class="QCheckBox" name="genPassCB">
          <property name="toolTip">
-          <string>generate a random password for the archive</string>
+          <string>generate a random password for the archive or use the fixed one</string>
          </property>
          <property name="text">
           <string>generate random password</string>

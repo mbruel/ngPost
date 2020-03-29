@@ -177,6 +177,7 @@ public:
 
     inline bool hasCompressed() const;
     inline bool hasPostFinished() const;
+    inline bool hasPostFinishedSuccessfully() const;
 
     inline PostingWidget *widget() const;
 
@@ -355,6 +356,7 @@ QString PostingJob::postSize() const
 
 bool PostingJob::hasCompressed() const { return _doCompress; }
 bool PostingJob::hasPostFinished() const { return _postFinished; }
+bool PostingJob::hasPostFinishedSuccessfully() const { return _postFinished && !_nbArticlesFailed; }
 
 PostingWidget *PostingJob::widget() const { return _postWidget; }
 

@@ -376,11 +376,29 @@ void MainWindow::_initPostingBox()
     connect(_ui->genPoster,         &QAbstractButton::clicked, this, &MainWindow::onGenPoster);
     connect(_ui->obfuscateMsgIdCB,  &QAbstractButton::toggled, this, &MainWindow::onObfucateToggled);
     connect(_ui->uniqueFromCB,      &QAbstractButton::toggled, this, &MainWindow::onUniqueFromToggled);
+    connect(_ui->rarPassCB,         &QAbstractButton::toggled, this, &MainWindow::onRarPassToggled);
+    connect(_ui->genPass,           &QAbstractButton::clicked, this, &MainWindow::onArchivePass);
+
 
     _ui->fromEdit->setText(_ngPost->xml2txt(_ngPost->_from.c_str()));
     _ui->groupsEdit->setText(QString::fromStdString(_ngPost->_groups));
     _ui->uniqueFromCB->setChecked(_ngPost->_genFrom);
     _ui->saveFromCB->setChecked(_ngPost->_saveFrom);
+
+    _ui->rarLengthSB->setValue(static_cast<int>(_ngPost->_lengthPass));
+    if (_ngPost->_rarPassFixed.isEmpty())
+    {
+        _ui->rarPassCB->setChecked(false);
+        onRarPassToggled(false);
+    }
+    else
+    {
+        _ui->rarPassCB->setChecked(true);
+        _ui->rarPassEdit->setText(_ngPost->_rarPassFixed);
+    }
+
+    _ui->autoCompressCB->setChecked(_ngPost->_autoCompress);
+    _ui->autoCloseCB->setChecked(_ngPost->_autoCloseTabs);
 
     _ui->obfuscateMsgIdCB->setChecked(_ngPost->_obfuscateArticles);
     _ui->obfuscateFileNameCB->setChecked(_ngPost->_obfuscateFileName);
@@ -448,6 +466,15 @@ void MainWindow::updateParams()
     _ngPost->_genFrom  = _ui->uniqueFromCB->isChecked();
     _ngPost->_saveFrom = _ui->saveFromCB->isChecked();
 
+    if (_ui->rarPassCB->isChecked())
+    {
+        _ngPost->_rarPassFixed = _ui->rarPassEdit->text();
+        _ngPost->_rarPass      = _ngPost->_rarPassFixed;
+    }
+
+    _ngPost->_autoCompress  = _ui->autoCompressCB->isChecked();
+    _ngPost->_autoCloseTabs = _ui->autoCloseCB->isChecked();
+
     _ngPost->updateGroups(_ui->groupsEdit->toPlainText());
     _ngPost->_groups = _ui->groupsEdit->toPlainText().toStdString();
 
@@ -475,6 +502,17 @@ void MainWindow::updateAutoPostingParams()
     updateServers();
     updateParams();
     _autoPostTab->udatePostingParams();
+}
+
+QString MainWindow::fixedArchivePassword() const
+{
+    if (_ui->rarPassCB->isChecked())
+    {
+        QString pass = _ui->rarPassEdit->text();
+        if (!pass.isEmpty())
+            return pass;
+    }
+    return QString();
 }
 
 PostingWidget *MainWindow::addNewQuickTab(int lastTabIdx, const QFileInfoList &files)
@@ -619,6 +657,17 @@ PostingWidget *MainWindow::_getPostWidget(int tabIndex) const
         return nullptr;
 }
 
+int MainWindow::_getPostWidgetIndex(PostingWidget *postWidget) const
+{
+    int nbJob = _ui->postTabWidget->count() -1;
+    for (int i = 2; i < nbJob ; ++i)
+    {
+        if (_ui->postTabWidget->widget(i) == postWidget)
+            return i;
+    }
+    return 0;
+}
+
 
 
 void MainWindow::onGenPoster()
@@ -632,6 +681,18 @@ void MainWindow::onUniqueFromToggled(bool checked)
     _ui->genPoster->setEnabled(enabled);
     _ui->fromEdit->setEnabled(enabled);
     _ui->saveFromCB->setEnabled(enabled);
+}
+
+void MainWindow::onRarPassToggled(bool checked)
+{
+    _ui->rarPassEdit->setEnabled(checked);
+    _ui->rarLengthSB->setEnabled(checked);
+    _ui->genPass->setEnabled(checked);
+}
+
+void MainWindow::onArchivePass()
+{
+    _ui->rarPassEdit->setText(_ngPost->randomPass(static_cast<uint>(_ui->rarLengthSB->value())));
 }
 
 void MainWindow::onDebugToggled(bool checked)
@@ -700,6 +761,21 @@ void MainWindow::onCloseJob(int index)
         }
     }
 }
+
+void MainWindow::closeTab(PostingWidget *postWidget)
+{
+    int index = _getPostWidgetIndex(postWidget);
+    if (index)
+    {
+        int nbJob = _ui->postTabWidget->count() -1;
+        _ui->postTabWidget->removeTab(index);
+        delete postWidget;
+
+        if (index == nbJob - 1)
+            _ui->postTabWidget->setCurrentIndex(_ui->postTabWidget->count() - 2);
+    }
+}
+
 
 void MainWindow::toBeImplemented()
 {

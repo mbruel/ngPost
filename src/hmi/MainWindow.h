@@ -69,6 +69,8 @@ public:
     void updateParams();
     void updateAutoPostingParams();
 
+    QString fixedArchivePassword() const;
+
     PostingWidget *addNewQuickTab(int lastTabIdx, const QFileInfoList &files = QFileInfoList());
 
     void setTab(QWidget *postWidget);
@@ -84,6 +86,7 @@ public:
     bool hasFinishedPosts() const;
 
     inline AutoPostWidget *autoWidget() const;
+    void closeTab(PostingWidget *postWidget);
 
     static const QColor  sPostingColor;
     static const QString sPostingIcon;
@@ -120,6 +123,8 @@ private slots:
 
     void onGenPoster();
     void onUniqueFromToggled(bool checked);
+    void onRarPassToggled(bool checked);
+    void onArchivePass();
 
     void onDebugToggled(bool checked);
 
@@ -143,7 +148,7 @@ private:
     void _addServer(NntpServerParams *serverParam);
     int  _serverRow(QObject *delButton);
     PostingWidget *_getPostWidget(int tabIndex) const;
-
+    int _getPostWidgetIndex(PostingWidget *postWidget) const;
 
 
     static const QString sGroupBoxStyle;

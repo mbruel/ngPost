@@ -81,7 +81,8 @@ class NgPost : public QObject
                     TMP_DIR, RAR_PATH, RAR_EXTRA, RAR_SIZE, RAR_MAX, KEEP_RAR,
                     PAR2_PCT, PAR2_PATH, PAR2_ARGS,
                     COMPRESS, GEN_PAR2, GEN_NAME, GEN_PASS, LENGTH_NAME, LENGTH_PASS,
-                    AUTO_COMPRESS, RAR_NAME, RAR_PASS,
+                    RAR_NAME, RAR_PASS,
+                    AUTO_CLOSE_TABS, AUTO_COMPRESS,
                     HOST, PORT, SSL, USER, PASS, CONNECTION, ENABLED
                    };
 
@@ -180,6 +181,7 @@ private:
     QString    _shutdownCmd;
 
     bool       _removeAccentsOnNzbFileName;
+    bool       _autoCloseTabs;
 
     static constexpr const char *sDefaultShutdownCmdLinux   = "sudo -n /sbin/poweroff";
     static constexpr const char *sDefaultShutdownCmdWindows = "shutdown /s /f /t 0";
