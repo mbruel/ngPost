@@ -430,7 +430,20 @@ void PostingWidget::init()
     connect(_ui->donateButton,      &QAbstractButton::clicked, _ngPost, &NgPost::onDonation);
 
 
-    onCompressCB(false);
+    onCompressCB(_ngPost->_doCompress);
+    if (_ngPost->_doCompress)
+        _ui->compressCB->setChecked(true);
+    if (_ngPost->_genName)
+        onGenCompressName();
+    if (_ngPost->_genPass)
+    {
+        _ui->nzbPassCB->setChecked(true);
+        onGenNzbPassword();
+    }
+    if (_ngPost->_doPar2)
+        _ui->par2CB->setChecked(true);
+    if (_ngPost->_keepRar)
+        _ui->keepRarCB->setChecked(true);
 }
 
 void PostingWidget::genNameAndPassword(bool genName, bool genPass, bool doPar2, bool useRarMax)

@@ -101,11 +101,11 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::RAR_MAX,      "rar_max"},
     {Opt::KEEP_RAR,     "keep_rar"},
 
-
     {Opt::PAR2_PCT,     "par2_pct"},
     {Opt::PAR2_PATH,    "par2_path"},
     {Opt::PAR2_ARGS,    "par2_args"},
 
+    {Opt::AUTO_COMPRESS,"auto_compress"},
     {Opt::COMPRESS,     "compress"},
     {Opt::GEN_PAR2,     "gen_par2"},
     {Opt::GEN_NAME,     "gen_name"},
@@ -162,7 +162,9 @@ const QList<QCommandLineOption> NgPost::sCmdOptions = {
     { sOptionNames[Opt::RAR_MAX],             tr( "maximum number of archive volumes"), sOptionNames[Opt::RAR_MAX]},
     { sOptionNames[Opt::PAR2_PCT],            tr( "par2 redundancy percentage (0 by default meaning NO par2 generation)"), sOptionNames[Opt::PAR2_PCT]},
     { sOptionNames[Opt::PAR2_PATH],           tr( "par2 absolute file path (in case of self compilation of ngPost)"), sOptionNames[Opt::PAR2_PCT]},
-    { sOptionNames[Opt::COMPRESS],            tr( "compress inputs using RAR")},
+
+    { sOptionNames[Opt::AUTO_COMPRESS],       tr( "compress inputs with random name and password and generate par2 (equivalent of --compress --gen_name --gen_pass --gen_par2)")},
+    { sOptionNames[Opt::COMPRESS],            tr( "compress inputs using RAR or 7z")},
     { sOptionNames[Opt::GEN_PAR2],            tr( "generate par2 (to be used with --compress)")},
     { sOptionNames[Opt::RAR_NAME],            tr( "provide the RAR file name (to be used with --compress)"), sOptionNames[Opt::RAR_NAME]},
     { sOptionNames[Opt::RAR_PASS],            tr( "provide the RAR password (to be used with --compress)"), sOptionNames[Opt::RAR_PASS]},
@@ -219,7 +221,7 @@ NgPost::NgPost(int &argc, char *argv[]):
     _folderMonitor(nullptr), _monitorThread(nullptr),
     _delAuto(false),
     _monitor_nzb_folders(false), _monitorExtensions(), _monitorIgnoreDir(false),
-    _keepRar(false),
+    _keepRar(false), _autoCompress(false),
     _lang("en"), _translators(),
     _netMgr(new QNetworkAccessManager()), _urlNzbUpload(nullptr), _urlNzbUploadStr(),
     _doShutdownWhenDone(false), _shutdownProc(nullptr),
@@ -1104,18 +1106,20 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     if (parser.isSet(sOptionNames[Opt::COMPRESS]))
         _doCompress = true;
     if (parser.isSet(sOptionNames[Opt::GEN_PAR2]))
-    {
         _doPar2 = true;
-        if (_par2Pct == 0 && _par2Args.isEmpty())
-        {
-            _error(tr("Error: can't generate par2 if the redundancy percentage is null or PAR2_ARGS is not provided...\nEither use --par2_pct or set PAR2_PCT or PAR2_ARGS in the config file."));
-            return false;
-        }
-    }
     if (parser.isSet(sOptionNames[Opt::GEN_NAME]))
         _genName = true;
     if (parser.isSet(sOptionNames[Opt::GEN_PASS]))
         _genPass = true;
+
+    if (parser.isSet(sOptionNames[Opt::AUTO_COMPRESS]))
+        _enableAutoCompress();
+
+    if (_doPar2 && _par2Pct == 0 && _par2Args.isEmpty())
+    {
+        _error(tr("Error: can't generate par2 if the redundancy percentage is null or PAR2_ARGS is not provided...\nEither use --par2_pct or set PAR2_PCT or PAR2_ARGS in the config file."));
+        return false;
+    }
 
     if (parser.isSet(sOptionNames[Opt::RAR_NAME]))
         _rarName = parser.value(sOptionNames[Opt::RAR_NAME]);
@@ -1557,8 +1561,17 @@ QString NgPost::_parseConfig(const QString &configPath)
                     }
                     else if (opt == sOptionNames[Opt::KEEP_RAR])
                     {
-                        _keepRar = true;
+                        val = val.toLower();
+                        if (val == "true" || val == "on" || val == "1")
+                            _keepRar = true;
                     }
+                    else if (opt == sOptionNames[Opt::AUTO_COMPRESS])
+                    {
+                        val = val.toLower();
+                        if (val == "true" || val == "on" || val == "1")
+                            _enableAutoCompress();
+                    }
+
                     else if (opt == sOptionNames[Opt::PAR2_PCT])
                     {
                         uint nb = val.toUInt(&ok);
@@ -1866,6 +1879,9 @@ void NgPost::saveConfig()
                << "##           Compression and par2 section                   ##\n"
                << "##############################################################\n"
                << "\n"
+               << tr("## Auto compression for all posts with random archive name, password and par2 generation") << endl
+               << (_autoCompress  ? "" : "#") << "AUTO_COMPRESS = true\n"
+               << "\n"
                << tr("## temporary folder where the compressed files and par2 will be stored") << endl
                << tr("## so we can post directly a compressed (obfuscated or not) archive of the selected files") << endl
                << tr("## /!\\ The directory MUST HAVE WRITE PERMISSION /!\\") << endl
@@ -1909,7 +1925,7 @@ void NgPost::saveConfig()
                << "\n"
                << tr("## fixed parameters for the par2 (or alternative) command") << endl
                << tr("## you could for exemple use Multipar on Windows") << endl
-               << "#PAR2_ARGS = -s5M -r8% -m1024M --progress stdout -q   (for parpar)\n"
+               << "#PAR2_ARGS = -s5M -r1n*0.6 -m2048M -p1l --progress stdout -q   (for parpar)\n"
                << "#PAR2_ARGS = c -l -m1024 -r8 -s768000                 (for par2cmdline)\n"
                << "#PAR2_ARGS = create /rr8 /lc40 /lr /rd2               (for Multipar)\n"
                << (_par2Args.isEmpty() ? "" : QString("PAR2_ARGS = %1\n").arg(_par2Args))

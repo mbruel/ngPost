@@ -81,7 +81,7 @@ class NgPost : public QObject
                     TMP_DIR, RAR_PATH, RAR_EXTRA, RAR_SIZE, RAR_MAX, KEEP_RAR,
                     PAR2_PCT, PAR2_PATH, PAR2_ARGS,
                     COMPRESS, GEN_PAR2, GEN_NAME, GEN_PASS, LENGTH_NAME, LENGTH_PASS,
-                    RAR_NAME, RAR_PASS,
+                    AUTO_COMPRESS, RAR_NAME, RAR_PASS,
                     HOST, PORT, SSL, USER, PASS, CONNECTION, ENABLED
                    };
 
@@ -166,6 +166,7 @@ private:
     bool          _monitorIgnoreDir;
 
     bool          _keepRar;
+    bool          _autoCompress;
 
     QString       _lang;
     QMap<QString, QTranslator*> _translators;
@@ -357,6 +358,8 @@ private:
 
     void _showVersionASCII() const;
 
+    inline void _enableAutoCompress();
+
 
 public:
     inline static qint64 articleSize();
@@ -479,6 +482,15 @@ std::string NgPost::_randomFrom(ushort length) const {
 
     randomFrom += QString("@%1.com").arg(_articleIdSignature.c_str());
     return randomFrom.toStdString();
+}
+
+void NgPost::_enableAutoCompress()
+{
+    _autoCompress = true;
+    _doCompress   = true;
+    _genName      = true;
+    _genPass      = true;
+    _doPar2       = true;
 }
 
 

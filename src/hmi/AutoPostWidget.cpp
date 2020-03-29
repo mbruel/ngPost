@@ -87,6 +87,8 @@ void AutoPostWidget::init()
     _ui->genNameCB->setChecked(true);
     _ui->genPassCB->setChecked(true);
     _ui->par2CB->setChecked(true);
+    if (_ngPost->_keepRar)
+        _ui->keepRarCB->setChecked(true);
     _ui->startJobsCB->setChecked(true);
 
     _ui->latestFilesFirstCB->setChecked(true);
