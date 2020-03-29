@@ -111,12 +111,19 @@ PostingJob::PostingJob(NgPost *ngPost,
 
 PostingJob::~PostingJob()
 {
+
 #ifdef __DEBUG__
+    _log("Destructing PostingJob");
     qDebug() << "[PostingJob] <<<< Destruction " << this;
 #endif
 
     if (_compressDir)
-        _cleanCompressDir();
+    {
+        if (_postFinished && !_nbArticlesFailed)
+            _cleanCompressDir();
+        delete _compressDir;
+        _compressDir = nullptr;
+    }
 
     if (_extProc)
         _cleanExtProc();
@@ -991,8 +998,6 @@ void PostingJob::_cleanCompressDir()
 {
     if (!_keepRar)
         _compressDir->removeRecursively();
-    delete _compressDir;
-    _compressDir = nullptr;
     if (_ngPost->debugMode())
         _log(tr("Compressed files deleted."));
 }
