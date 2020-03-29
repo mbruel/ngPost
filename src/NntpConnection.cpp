@@ -71,7 +71,7 @@ NntpConnection::~NntpConnection()
         _socket->disconnectFromHost();
         if (_socket->state() != QAbstractSocket::UnconnectedState)
             _socket->waitForDisconnected();
-        delete _socket;
+        _socket->deleteLater();
     }
 }
 
@@ -118,7 +118,7 @@ void NntpConnection::onKillConnection()
         _socket->disconnectFromHost();
         if (_socket->state() != QAbstractSocket::UnconnectedState)
             _socket->waitForDisconnected();
-        delete _socket;
+        _socket->deleteLater();
         _socket = nullptr;
     }
 }
@@ -135,7 +135,7 @@ void NntpConnection::_closeConnection(){
     }
     else // wrong host info
     {
-        delete _socket;
+        _socket->deleteLater();
         _socket = nullptr;
         emit disconnected(this);
     }
@@ -151,7 +151,7 @@ void NntpConnection::onDisconnected()
 #endif
         _isConnected    = false;
 
-        delete _socket;
+        _socket->deleteLater();
         _socket = nullptr;
     }
     if (_tryReconnect)
