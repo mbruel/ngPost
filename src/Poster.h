@@ -79,6 +79,8 @@ public:
 
     bool prepareArticlesInAdvance();
 
+    bool isPosting() const;
+
 
 private:
     NntpArticle *_prepareNextArticle(const QString &threadName, bool fillQueue = true);

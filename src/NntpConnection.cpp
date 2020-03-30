@@ -44,10 +44,9 @@ NntpConnection::NntpConnection(NgPost *ngPost, int id, const NntpServerParams &s
     _logPrefix(QString("NntpCon #%1").arg(_id)),
     _postingState(PostingState::NOT_CONNECTED),
     _currentArticle(nullptr),
-    _nbErrors(0),
+    _nbDisconnected(0),
     _ngPost(ngPost),
-    _poster(nullptr),
-    _tryReconnect(false)
+    _poster(nullptr)
 {
 #if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
     qDebug() << QString("Creation %1 %2 ssl").arg(_logPrefix).arg(_srvParams.useSSL ? "with" : "no");
@@ -154,13 +153,21 @@ void NntpConnection::onDisconnected()
         _socket->deleteLater();
         _socket = nullptr;
     }
-    if (_tryReconnect)
+    if (_poster->isPosting() && _nbDisconnected++ < NntpArticle::nbMaxTrySending())
     {
-        _tryReconnect = false;
+        // Let's try to reconnect
+        _error(tr("Connection lost, trying to reconnect! (nb disconnected: %1)").arg(_nbDisconnected));
         emit startConnection();
     }
     else
+    {
+        if (_currentArticle)
+        {
+            emit _currentArticle->failed(_currentArticle->size());
+            _currentArticle = nullptr;
+        }
         emit disconnected(this);
+    }
 }
 
 void NntpConnection::onConnected()
@@ -201,14 +208,7 @@ void NntpConnection::onSslErrors(const QList<QSslError> &errors)
     QString err("Error SSL Socket:\n");
     for(int i = 0 ; i< errors.size() ; ++i)
         err += QString("\t- %1\n").arg(errors[i].errorString());
-
     _error(err);
-
-    if (++_nbErrors < NntpArticle::nbMaxTrySending())
-        _tryReconnect = true;
-    else  if (_currentArticle)
-        emit _currentArticle->failed(_currentArticle->size());
-
     _closeConnection();
 }
 
@@ -217,12 +217,6 @@ void NntpConnection::onSslErrors(const QList<QSslError> &errors)
 void NntpConnection::onErrors(QAbstractSocket::SocketError)
 {
     _error(QString("Error Socket: %1").arg(_socket->errorString()));
-
-    if (++_nbErrors < NntpArticle::nbMaxTrySending())
-        _tryReconnect = true;
-    else  if (_currentArticle)
-        emit _currentArticle->failed(_currentArticle->size());
-
     _closeConnection();
 }
 
@@ -251,19 +245,19 @@ void NntpConnection::onReadyRead()
             }
             else
             {
-                if (++_nbErrors < NntpArticle::nbMaxTrySending())
-                {
-                    _socket->write(Nntp::POST);
-                    if (_ngPost->debugMode())
-                        _error(tr("ERROR on post command: %1").arg(line.constData()));
-                }
-                else
-                {
+//                if (++_nbErrors < NntpArticle::nbMaxTrySending())
+//                {
+//                    _socket->write(Nntp::POST);
+//                    if (_ngPost->debugMode())
+//                        _error(tr("ERROR on post command: %1").arg(line.constData()));
+//                }
+//                else
+//                {
                     _postingState = PostingState::NOT_CONNECTED;
                     _error(tr("Closing Connection due to ERROR on post command: '%2' (%1 skipped)\n").arg(_currentArticle->str()).arg(line.constData()));
-                    emit _currentArticle->failed(_currentArticle->size());
+//                    emit _currentArticle->failed(_currentArticle->size());
                     _closeConnection();
-                }
+//                }
             }
         }
         else if (_postingState == PostingState::WAITING_ANSWER)

@@ -188,6 +188,9 @@ public:
     inline QString groups() const;
     inline QString from() const;
 
+    inline bool isPosting() const;
+
+
 signals:
     void startPosting();    //!< connected to onStartPosting (to be able to run on a different Thread)
     void stopPosting();
@@ -375,6 +378,8 @@ void PostingJob::setDelFilesAfterPosted(bool delFiles)
 
 QString PostingJob::groups() const { return QString::fromStdString(_groups); }
 QString PostingJob::from() const { return _obfuscateArticles ? QString() : QString::fromStdString(_from); }
+
+bool PostingJob::isPosting() const { return _stopPosting.load() == 0x0; }
 
 
 #endif // POSTINGJOB_H

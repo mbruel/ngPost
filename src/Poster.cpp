@@ -124,3 +124,9 @@ NntpArticle *Poster::_prepareNextArticle(const QString &threadName, bool fillQue
         _articles.enqueue(article);
     return article;
 }
+
+
+bool Poster::isPosting() const
+{
+    return _job->isPosting();
+}
