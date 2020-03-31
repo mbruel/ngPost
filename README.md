@@ -230,6 +230,11 @@ A list of Usenet posters from Nyuu github [can be found here](https://github.com
 Here is my email: Matthieu.Bruel@gmail.com
 
 
+### Supported Languages
+For now, ngPost is translated in German, French and Spanish.<br/>
+If you'd like to translate ngPost in your language, it's easy to do (there is a nice GUI for that: QtLinguist), please get in touch with me (Matthieu.Bruel@gmail.com)
+
+
 ### Thanks
 - Uukrull for his intensive testing and feedbacks and for building all the MacOS packages.
 - awsms for his testing on proper server with a 10Gb/s connection that helped to improve ngPost's upload speed and the multi-threading support
