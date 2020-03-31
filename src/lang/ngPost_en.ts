@@ -221,7 +221,7 @@
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="512"/>
-        <location filename="../hmi/AutoPostWidget.cpp" line="235"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="228"/>
         <source>Monitor Folder</source>
         <translation></translation>
     </message>
@@ -251,17 +251,17 @@
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="428"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="420"/>
         <source>limit the number of archive volume to %1 (cf config RAR_MAX)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="429"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="421"/>
         <source>Using PAR2_ARGS from config file: %1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="135"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="128"/>
         <source>Nothing to post...</source>
         <translation></translation>
     </message>
@@ -296,91 +296,91 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="136"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="129"/>
         <source>There is nothing to post!
 Press the Scan button and remove what you don&apos;t want to post ;)
 (To remove files, select in the list and press DEL or BackSpace)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="164"/>
-        <location filename="../hmi/AutoPostWidget.cpp" line="194"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="157"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="187"/>
         <source>Select a Folder</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="176"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="169"/>
         <source>Select rar executable</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="186"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="179"/>
         <source>the selected file is not executable...</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="214"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="207"/>
         <source>No auto directory selected...</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="215"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="208"/>
         <source>There is no auto directory!
 Please select one.</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="225"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="218"/>
         <source>Ongoing Monitoring post</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="226"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="219"/>
         <source>There are still ongoing or pending Monitoring Posts.
  We&apos;re going to stop all of them.
 Are you sure you want to proceed?</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="245"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="238"/>
         <source>Error accessing Auto Dir...</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="245"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="238"/>
         <source>The auto directory must exist and be readable...</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="248"/>
-        <location filename="../hmi/AutoPostWidget.cpp" line="313"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="241"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="306"/>
         <source>Monitoring %1</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="250"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="243"/>
         <source>Stop Monitoring</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="295"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="288"/>
         <source>Deleting files/folders once posted</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="296"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="289"/>
         <source>You&apos;re about to delete files from your computer once they&apos;ve been posted!
 Use it at your own risk!
 It will be irreversible...</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="304"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="297"/>
         <source>Select a Monitoring Folder to add</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="342"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="335"/>
         <source>Select one or more files</source>
         <translation type="unfinished"></translation>
     </message>
@@ -685,7 +685,7 @@ It will be irreversible...</source>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="111"/>
-        <location filename="../hmi/MainWindow.cpp" line="252"/>
+        <location filename="../hmi/MainWindow.cpp" line="257"/>
         <source>New</source>
         <translation></translation>
     </message>
@@ -695,47 +695,47 @@ It will be irreversible...</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/MainWindow.cpp" line="240"/>
+        <location filename="../hmi/MainWindow.cpp" line="245"/>
         <source>Shutdown computer when all the current Posts are done (with command: %1)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/MainWindow.cpp" line="243"/>
+        <location filename="../hmi/MainWindow.cpp" line="248"/>
         <source>Servers</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/MainWindow.cpp" line="244"/>
+        <location filename="../hmi/MainWindow.cpp" line="249"/>
         <source>Files</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/MainWindow.cpp" line="245"/>
+        <location filename="../hmi/MainWindow.cpp" line="250"/>
         <source>Parameters</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/MainWindow.cpp" line="246"/>
+        <location filename="../hmi/MainWindow.cpp" line="251"/>
         <source>Posting Log</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/MainWindow.cpp" line="809"/>
+        <location filename="../hmi/MainWindow.cpp" line="814"/>
         <source>Automatic Shutdown?</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/MainWindow.cpp" line="811"/>
+        <location filename="../hmi/MainWindow.cpp" line="816"/>
         <source>You&apos;re about to schedule the shutdown of the computer once all the current Postings will be finished</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/MainWindow.cpp" line="812"/>
+        <location filename="../hmi/MainWindow.cpp" line="817"/>
         <source>Are you sure you want to switch off the computer?</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/MainWindow.cpp" line="210"/>
+        <location filename="../hmi/MainWindow.cpp" line="215"/>
         <source>close while still posting?</source>
         <translation></translation>
     </message>
@@ -745,34 +745,34 @@ It will be irreversible...</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/MainWindow.cpp" line="211"/>
+        <location filename="../hmi/MainWindow.cpp" line="216"/>
         <source>ngPost is currently posting.
 Are you sure you want to quit?</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/MainWindow.cpp" line="316"/>
+        <location filename="../hmi/MainWindow.cpp" line="321"/>
         <source>Quick Tabs Menu</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/MainWindow.cpp" line="317"/>
+        <location filename="../hmi/MainWindow.cpp" line="322"/>
         <source>Close All finished Tabs</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/MainWindow.cpp" line="751"/>
+        <location filename="../hmi/MainWindow.cpp" line="756"/>
         <source>Quick Post is working..</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/MainWindow.cpp" line="752"/>
+        <location filename="../hmi/MainWindow.cpp" line="757"/>
         <source>The Quick post is currentling uploading.
  Please Stop it before closing it..</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/MainWindow.cpp" line="790"/>
+        <location filename="../hmi/MainWindow.cpp" line="795"/>
         <source>Select a Folder</source>
         <translation></translation>
     </message>
@@ -1175,398 +1175,398 @@ Either use --par2_pct or set PAR2_PCT or PAR2_ARGS in the config file.</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1684"/>
+        <location filename="../NgPost.cpp" line="1687"/>
         <source>Syntax: </source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1688"/>
+        <location filename="../NgPost.cpp" line="1691"/>
         <source>without config file, you can provide all the parameters to connect to ONE SINGLE server</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1690"/>
+        <location filename="../NgPost.cpp" line="1693"/>
         <source>for compression and par2 support</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1692"/>
+        <location filename="../NgPost.cpp" line="1695"/>
         <source>automated posting (scanning and/or monitoring)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1694"/>
+        <location filename="../NgPost.cpp" line="1697"/>
         <source>quick posting (several files/folders)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1696"/>
+        <location filename="../NgPost.cpp" line="1699"/>
         <source>general options</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1704"/>
+        <location filename="../NgPost.cpp" line="1707"/>
         <source>Examples:</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1705"/>
+        <location filename="../NgPost.cpp" line="1708"/>
         <source>with monitoring</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1706"/>
+        <location filename="../NgPost.cpp" line="1709"/>
         <source>with auto post</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1707"/>
+        <location filename="../NgPost.cpp" line="1710"/>
         <source>with compression, filename obfuscation, random password and par2</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1708"/>
+        <location filename="../NgPost.cpp" line="1711"/>
         <source>with config file</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1709"/>
+        <location filename="../NgPost.cpp" line="1712"/>
         <source>with all params</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1712"/>
+        <location filename="../NgPost.cpp" line="1715"/>
         <source>If you don&apos;t provide the output file (nzb file), we will create it in the nzbPath with the name of the first file or folder given in the command line.</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1713"/>
+        <location filename="../NgPost.cpp" line="1716"/>
         <source>so in the second example above, the nzb would be: /tmp/file1.nzb</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1809"/>
+        <location filename="../NgPost.cpp" line="1818"/>
         <source># ngPost configuration file</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1813"/>
+        <location filename="../NgPost.cpp" line="1822"/>
         <source>## Lang for the app. Currently supported: EN, FR, ES, DE</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1816"/>
+        <location filename="../NgPost.cpp" line="1825"/>
         <source>## destination folder for all your nzb</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1817"/>
+        <location filename="../NgPost.cpp" line="1826"/>
         <source>## if you don&apos;t put anything, the nzb will be generated in the folder of ngPost on Windows and in /tmp on Linux</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1818"/>
+        <location filename="../NgPost.cpp" line="1827"/>
         <source>## this will be overwritten if you use the option -o with the full path of the nzb</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1821"/>
+        <location filename="../NgPost.cpp" line="1830"/>
         <source>## Shutdown command to switch off the computer when ngPost is done with all its queued posting</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1822"/>
+        <location filename="../NgPost.cpp" line="1831"/>
         <source>## this should mainly used with the auto posting</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1823"/>
+        <location filename="../NgPost.cpp" line="1832"/>
         <source>## you could use whatever script instead (like to send a mail...)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1824"/>
+        <location filename="../NgPost.cpp" line="1833"/>
         <source>#SHUTDOWN_CMD = shutdown /s /f /t 0  (Windows)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1825"/>
+        <location filename="../NgPost.cpp" line="1834"/>
         <source>#SHUTDOWN_CMD = sudo -n /sbin/poweroff  (Linux, make sure poweroff has sudo rights without any password or change the command)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1826"/>
+        <location filename="../NgPost.cpp" line="1835"/>
         <source>#SHUTDOWN_CMD = sudo -n shutdown -h now (MacOS, same make sure you&apos;ve sudo rights)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1829"/>
+        <location filename="../NgPost.cpp" line="1838"/>
         <source>## upload the nzb to a specific URL</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1830"/>
+        <location filename="../NgPost.cpp" line="1839"/>
         <source>## only http, https or ftp (neither ftps or sftp are supported)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1831"/>
+        <location filename="../NgPost.cpp" line="1840"/>
         <source>#NZB_UPLOAD_URL = ftp://user:pass@url_or_ip:21</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1834"/>
+        <location filename="../NgPost.cpp" line="1843"/>
         <source>## nzb files are normally all created in nzbPath</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1835"/>
+        <location filename="../NgPost.cpp" line="1844"/>
         <source>## but using this option, the nzb of each monitoring folder will be stored in their own folder (created in nzbPath)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1838"/>
+        <location filename="../NgPost.cpp" line="1847"/>
         <source>## for monitoring, extension file filter for new incoming files (coma separated, no dot)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1842"/>
+        <location filename="../NgPost.cpp" line="1851"/>
         <source>## for monitoring, ignore new incoming folders</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1845"/>
+        <location filename="../NgPost.cpp" line="1854"/>
         <source>## Default folder to open to select files from the HMI</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1848"/>
+        <location filename="../NgPost.cpp" line="1857"/>
         <source>## History posting file</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1849"/>
+        <location filename="../NgPost.cpp" line="1858"/>
         <source>## each succesful post will append a line with the date, the file name, the archive name, the password...</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1856"/>
+        <location filename="../NgPost.cpp" line="1865"/>
         <source>## uncomment the next line if you want a fixed uploader email (in the nzb and in the header of each articles)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1857"/>
+        <location filename="../NgPost.cpp" line="1866"/>
         <source>## if you let it commented, we&apos;ll generate ONE random email for all the posts of the session</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1860"/>
+        <location filename="../NgPost.cpp" line="1869"/>
         <source>## Generate new random poster for each post (--auto or --monitor)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1861"/>
+        <location filename="../NgPost.cpp" line="1870"/>
         <source>## if this option is set the FROM email just above will be ignored</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1865"/>
+        <location filename="../NgPost.cpp" line="1874"/>
         <source>## uncomment the next line to limit the number of threads,  (by default it&apos;ll use the number of cores)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1866"/>
+        <location filename="../NgPost.cpp" line="1875"/>
         <source>## all the connections are spread equally on those posting threads</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1870"/>
+        <location filename="../NgPost.cpp" line="1879"/>
         <source>## How to display progressbar in command line: NONE, BAR, FILES</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1875"/>
+        <location filename="../NgPost.cpp" line="1884"/>
         <source>## suffix of the msg_id for all the articles (cf nzb file)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1878"/>
+        <location filename="../NgPost.cpp" line="1887"/>
         <source>## article size (default 700k)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1881"/>
+        <location filename="../NgPost.cpp" line="1890"/>
         <source>## number of retry to post an Article in case of failure (probably due to an already existing msg-id)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1885"/>
+        <location filename="../NgPost.cpp" line="1894"/>
         <source>## uncomment the following line to obfuscate the subjects of each Article</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1886"/>
+        <location filename="../NgPost.cpp" line="1895"/>
         <source>## /!\ CAREFUL you won&apos;t find your post if you lose the nzb file /!\</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1889"/>
+        <location filename="../NgPost.cpp" line="1898"/>
         <source>## remove accents and special characters from the nzb file names</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1892"/>
+        <location filename="../NgPost.cpp" line="1901"/>
         <source>## close Quick Post Tabs when posted successfully (for the GUI)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1902"/>
+        <location filename="../NgPost.cpp" line="1911"/>
         <source>## Auto compression for all posts with random archive name, password and par2 generation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1905"/>
+        <location filename="../NgPost.cpp" line="1914"/>
         <source>## use the same Password for all your Posts using compression</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1908"/>
+        <location filename="../NgPost.cpp" line="1918"/>
         <source>## temporary folder where the compressed files and par2 will be stored</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1909"/>
+        <location filename="../NgPost.cpp" line="1919"/>
         <source>## so we can post directly a compressed (obfuscated or not) archive of the selected files</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1910"/>
+        <location filename="../NgPost.cpp" line="1920"/>
         <source>## /!\ The directory MUST HAVE WRITE PERMISSION /!\</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1911"/>
-        <location filename="../NgPost.cpp" line="1916"/>
+        <location filename="../NgPost.cpp" line="1921"/>
+        <location filename="../NgPost.cpp" line="1926"/>
         <source>## this is set for Linux environment, Windows users MUST change it</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1914"/>
+        <location filename="../NgPost.cpp" line="1924"/>
         <source>## RAR or 7zip absolute file path (external application)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1915"/>
+        <location filename="../NgPost.cpp" line="1925"/>
         <source>## /!\ The file MUST EXIST and BE EXECUTABLE /!\</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1919"/>
+        <location filename="../NgPost.cpp" line="1929"/>
         <source>## RAR EXTRA options (the first &apos;a&apos; and &apos;-idp&apos; will be added automatically)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1920"/>
+        <location filename="../NgPost.cpp" line="1930"/>
         <source>## -hp will be added if you use a password with --gen_pass, --rar_pass or using the HMI</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1921"/>
+        <location filename="../NgPost.cpp" line="1931"/>
         <source>## -v42m will be added with --rar_size or using the HMI</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1922"/>
+        <location filename="../NgPost.cpp" line="1932"/>
         <source>## you could change the compression level, lock the archive, add redundancy...</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1927"/>
+        <location filename="../NgPost.cpp" line="1937"/>
         <source>## size in MB of the RAR volumes (0 by default meaning NO split)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1928"/>
+        <location filename="../NgPost.cpp" line="1938"/>
         <source>## feel free to change the value or to comment the next line if you don&apos;t want to split the archive</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1931"/>
+        <location filename="../NgPost.cpp" line="1941"/>
         <source>## maximum number of archive volumes</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1932"/>
+        <location filename="../NgPost.cpp" line="1942"/>
         <source>## we&apos;ll use RAR_SIZE except if it genereates too many volumes</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1933"/>
+        <location filename="../NgPost.cpp" line="1943"/>
         <source>## in that case we&apos;ll update rar_size to be &lt;size of post&gt; / rar_max</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1936"/>
+        <location filename="../NgPost.cpp" line="1946"/>
         <source>##  keep rar folder after posting (otherwise it is automatically deleted uppon successful post)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1939"/>
+        <location filename="../NgPost.cpp" line="1949"/>
         <source>## par2 redundancy percentage (0 by default meaning NO par2 generation)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1942"/>
+        <location filename="../NgPost.cpp" line="1952"/>
         <source>## par2 (or alternative) absolute file path</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1943"/>
+        <location filename="../NgPost.cpp" line="1953"/>
         <source>## this is only useful if you compile from source (as par2 is included on Windows and the AppImage)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1944"/>
+        <location filename="../NgPost.cpp" line="1954"/>
         <source>## or if you wish to use an alternative to par2 (for exemple Multipar on Windows)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1945"/>
+        <location filename="../NgPost.cpp" line="1955"/>
         <source>## (in that case, you may need to set also PAR2_ARGS)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1949"/>
+        <location filename="../NgPost.cpp" line="1966"/>
         <source>## fixed parameters for the par2 (or alternative) command</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1950"/>
+        <location filename="../NgPost.cpp" line="1967"/>
         <source>## you could for exemple use Multipar on Windows</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1957"/>
+        <location filename="../NgPost.cpp" line="1974"/>
         <source>## length of the random generated archive&apos;s file name</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1960"/>
+        <location filename="../NgPost.cpp" line="1977"/>
         <source>## length of the random archive&apos;s passsword</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1983"/>
+        <location filename="../NgPost.cpp" line="2000"/>
         <source>## You can add as many server if you have several providers by adding other &quot;server&quot; sections</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1995"/>
+        <location filename="../NgPost.cpp" line="2012"/>
         <source>the config &apos;%1&apos; file has been updated</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.cpp" line="1999"/>
+        <location filename="../NgPost.cpp" line="2016"/>
         <source>Error: Couldn&apos;t write default configuration file: %1</source>
         <translation></translation>
     </message>
@@ -1586,52 +1586,52 @@ Either use --par2_pct or set PAR2_PCT or PAR2_ARGS in the config file.</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.h" line="502"/>
+        <location filename="../NgPost.h" line="503"/>
         <source>is a CMD/GUI Usenet binary poster developped in C++11/Qt5:</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.h" line="503"/>
+        <location filename="../NgPost.h" line="504"/>
         <source>It is designed to be as fast as possible and offer all the main features to post data easily and safely.</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.h" line="504"/>
+        <location filename="../NgPost.h" line="505"/>
         <source>Here are the main features and advantages of ngPost:</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.h" line="505"/>
+        <location filename="../NgPost.h" line="506"/>
         <source>compress (using your external rar binary) and generate the par2 before posting!</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.h" line="506"/>
+        <location filename="../NgPost.h" line="507"/>
         <source>scan folder(s) and post each file/folder individually after having them compressed</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.h" line="507"/>
+        <location filename="../NgPost.h" line="508"/>
         <source>monitor folder(s) to post each new file/folder individually after having them compressed</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.h" line="508"/>
+        <location filename="../NgPost.h" line="509"/>
         <source>auto delete files/folders once posted (only in command line with --auto or --monitor)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.h" line="509"/>
+        <location filename="../NgPost.h" line="510"/>
         <source>generate the nzb</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.h" line="510"/>
+        <location filename="../NgPost.h" line="511"/>
         <source>invisible mode: full article obfuscation, unique feature making all Articles completely unrecognizable without the nzb</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../NgPost.h" line="512"/>
+        <location filename="../NgPost.h" line="513"/>
         <source>for more details, cf https://github.com/mbruel/ngPost</source>
         <translation></translation>
     </message>
@@ -2118,7 +2118,7 @@ Either use --par2_pct or set PAR2_PCT or PAR2_ARGS in the config file.</source>
     </message>
     <message>
         <location filename="../hmi/PostingWidget.ui" line="509"/>
-        <location filename="../hmi/PostingWidget.cpp" line="562"/>
+        <location filename="../hmi/PostingWidget.cpp" line="555"/>
         <source>Post Files</source>
         <translation></translation>
     </message>
@@ -2180,7 +2180,7 @@ Would you like to overwrite it ?</source>
     </message>
     <message>
         <location filename="../hmi/PostingWidget.cpp" line="192"/>
-        <location filename="../hmi/PostingWidget.cpp" line="569"/>
+        <location filename="../hmi/PostingWidget.cpp" line="562"/>
         <source>Stop Posting</source>
         <translation></translation>
     </message>
@@ -2216,12 +2216,12 @@ Would you like to overwrite it ?</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/PostingWidget.cpp" line="530"/>
+        <location filename="../hmi/PostingWidget.cpp" line="523"/>
         <source>limit the number of archive volume to %1 (cf config RAR_MAX)</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../hmi/PostingWidget.cpp" line="531"/>
+        <location filename="../hmi/PostingWidget.cpp" line="524"/>
         <source>Using PAR2_ARGS from config file: %1</source>
         <translation></translation>
     </message>
