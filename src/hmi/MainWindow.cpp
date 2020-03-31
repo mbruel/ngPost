@@ -169,6 +169,11 @@ void MainWindow::logError(const QString &error) const
     _ui->logBrowser->append(QString("<font color='red'>%1</font><br/>\n").arg(error));
 }
 
+bool MainWindow::useFixedPassword() const
+{
+    return _ui->rarPassCB->isChecked();
+}
+
 #include <QKeyEvent>
 bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 {

@@ -47,7 +47,7 @@ struct NntpServerParams{
                          const std::string &aUser = "", const std::string &aPass = "",
                          int aNbCons = 1, bool aUseSSL = false):
        host(aHost), port(aPort), auth(aAuth), user(aUser),
-       pass(aPass), nbCons(aNbCons), useSSL(aUseSSL)
+       pass(aPass), nbCons(aNbCons), useSSL(aUseSSL), enabled(true)
     {}
 
     ~NntpServerParams() = default;
@@ -63,7 +63,9 @@ struct NntpServerParams{
 QString NntpServerParams::str() const
 {
     if (auth)
-        return QString("[%5con%6 on %1:%2@%3:%4]").arg(user.c_str()).arg(pass.c_str()).arg(host).arg(port).arg(nbCons).arg(useSSL?" SSL":"");
+        return QString("[%5con%6 on %1:%2@%3:%4 enabled:%7]").arg(user.c_str()).arg(pass.c_str()).arg(
+                    host).arg(port).arg(nbCons).arg(useSSL?" SSL":"").arg(enabled);
     else
-        return QString("[%3con%4 on %1:%2]").arg(host).arg(port).arg(nbCons).arg(useSSL?" SSL":"");
+        return QString("[%3con%4 on %1:%2 enabled:%5]").arg(host).arg(port).arg(nbCons).arg(
+                    useSSL?" SSL":"").arg(enabled);
 }

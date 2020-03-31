@@ -211,7 +211,7 @@ NgPost::NgPost(int &argc, char *argv[]):
     _socketTimeOut(sDefaultSocketTimeOut), _nzbPath(sDefaultNzbPath), _nzbPathConf(sDefaultNzbPath),
     _progressbarTimer(), _refreshRate(sDefaultRefreshRate),
     _tmpPath(), _rarPath(), _rarArgs(), _rarSize(0), _rarMax(sDefaultRarMax), _useRarMax(false),
-    _par2Pct(0), _par2Path(), _par2Args(),
+    _par2Pct(0), _par2Path(), _par2Args(), _par2PathConfig(),
     _doCompress(false), _doPar2(false), _genName(), _genPass(),
     _lengthName(sDefaultLengthName), _lengthPass(sDefaultLengthPass),
     _rarName(), _rarPass(), _rarPassFixed(),
@@ -1601,7 +1601,10 @@ QString NgPost::_parseConfig(const QString &configPath)
                         {
                             QFileInfo fi(val);
                             if (fi.exists() && fi.isFile() && fi.isExecutable())
-                                _par2Path = val;
+                            {
+                                _par2Path       = val;
+                                _par2PathConfig = val;
+                            }
                         }
                     }
                     else if (opt == sOptionNames[Opt::PAR2_ARGS])
@@ -1763,25 +1766,31 @@ void NgPost::_dumpParams() const
     for (NntpServerParams *srv : _nntpServers)
         servers += srv->str() + " ";
     qDebug() << "[NgPost::_dumpParams]>>>>>>>>>>>>>>>>>>\n"
-             << "nbThreads: " << _nbThreads << " nb Inputs: " << _nbFiles
+             << "nb Servers: " << _nntpServers.size() << ": " << servers
+
+             << "\n\nnbThreads: " << _nbThreads << " nb Inputs: " << _nbFiles
              << ", nzbPath: " << _nzbPath << ", nzbName" << _nzbName
-             << ", inputDir: " << _inputDir << ", autoDelete: " << _delAuto
-             << "\nnb Servers: " << _nntpServers.size() << ": " << servers
-             << "\nfrom: " << _from.c_str() << ", genFrom: " << _genFrom << ", saveFrom: " << _saveFrom
+
+             << "\ninputDir: " << _inputDir << ", autoDelete: " << _delAuto
+             << ", auto_compress:" << _autoCompress << ", autoClose: " << _autoCloseTabs
+
+             << "\n\nfrom: " << _from.c_str() << ", genFrom: " << _genFrom << ", saveFrom: " << _saveFrom
              << ", groups: " << _groups.c_str()
              << "\narticleSize: " << sArticleSize
              << ", obfuscate articles: " << _obfuscateArticles
-             << ", display progressbar bar: " << _dispProgressBar
-             << ", display posting files: " << _dispFilesPosting
-             << "\ncompression settings: <tmp_path: " << _tmpPath << ">"
+             << ", disp progress bar: " << _dispProgressBar
+             << ", disp posting files: " << _dispFilesPosting
+
+             << "\n\ncompression settings: <tmp_path: " << _tmpPath << ">"
              << ", <rar_path: " << _rarPath << ">"
              << ", <rar_size: " << _rarSize << ">"
-             << ", <par2_pct: " << _par2Pct << ">"
+             << "\n<par2_pct: " << _par2Pct << ">"
              << ", <par2_path: " << _par2Path << ">"
+             << ", <par2_pathCfg: " << _par2PathConfig << ">"
              << ", <par2_args: " << _par2Args << ">"
-             << "\ncompress: " << _doCompress << ", doPar2: " << _doPar2
+             << "\n\ncompress: " << _doCompress << ", doPar2: " << _doPar2
              << ", gen_name: " << _genName << ", genPass: " << _genPass
-             << ", rarName: " << _rarName << ", rarPass: " << _rarPass
+             << "\nrarName: " << _rarName << ", rarPass: " << _rarPass
              << ", lengthName: " << _lengthName << ", lengthPass: " << _lengthPass
              << "\n[NgPost::_dumpParams]<<<<<<<<<<<<<<<<<<\n";
 }
@@ -1903,7 +1912,8 @@ void NgPost::saveConfig()
                << (_autoCompress  ? "" : "#") << "AUTO_COMPRESS = true\n"
                << "\n"
                << tr("## use the same Password for all your Posts using compression") << endl
-               << (_rarPassFixed.isEmpty()  ? "#" : "") << "RAR_PASS = " << (_rarPassFixed.isEmpty()  ? "yourPassword" : _rarPassFixed) << endl
+               << (_hmi?(_hmi->useFixedPassword()?"":"#"):(_rarPassFixed.isEmpty()  ? "#" : ""))
+               << "RAR_PASS = " << (_rarPassFixed.isEmpty()  ? "yourPassword" : _rarPassFixed) << endl
                << "\n"
                << tr("## temporary folder where the compressed files and par2 will be stored") << endl
                << tr("## so we can post directly a compressed (obfuscated or not) archive of the selected files") << endl
@@ -1942,10 +1952,17 @@ void NgPost::saveConfig()
                << tr("## par2 (or alternative) absolute file path") << endl
                << tr("## this is only useful if you compile from source (as par2 is included on Windows and the AppImage)") << endl
                << tr("## or if you wish to use an alternative to par2 (for exemple Multipar on Windows)") << endl
-               << tr("## (in that case, you may need to set also PAR2_ARGS)") << endl
-               << "PAR2_PATH = " << _par2Path << "\n"
-               << "#PAR2_PATH = par2j64.exe\n"
-               << "\n"
+               << tr("## (in that case, you may need to set also PAR2_ARGS)") << endl;
+        if (!_par2PathConfig.isEmpty())
+            stream << "PAR2_PATH = " << _par2PathConfig << "\n";
+#if defined(WIN32) || defined(__MINGW64__)
+        stream << "#PAR2_PATH = <your_path>\parpar.exe\n"
+               << "#PAR2_PATH = <your_path>\par2j64.exe\n";
+#else
+        stream << "#/usr/bin/par2\n"
+               << "#<your_path>/parpar\n";
+#endif
+        stream << "\n"
                << tr("## fixed parameters for the par2 (or alternative) command") << endl
                << tr("## you could for exemple use Multipar on Windows") << endl
                << "#PAR2_ARGS = -s5M -r1n*0.6 -m2048M -p1l --progress stdout -q   (for parpar)\n"

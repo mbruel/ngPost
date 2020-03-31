@@ -403,15 +403,9 @@ void PostingWidget::init()
 
     _ui->keepRarCB->setChecked(_ngPost->_keepRar);
 
-    if (_ngPost->_par2Args.isEmpty())
-    {
-        _ui->redundancySB->setRange(0, 100);
-        _ui->redundancySB->setValue(static_cast<int>(_ngPost->_par2Pct));
-    }
-    else
-    {
-        _ui->redundancySB->setEnabled(false);
-    }
+    _ui->redundancySB->setRange(0, 100);
+    _ui->redundancySB->setValue(static_cast<int>(_ngPost->_par2Pct));
+    _ui->redundancySB->setEnabled(_ngPost->_par2Args.isEmpty());
 
     if (!_ngPost->_rarPassFixed.isEmpty())
     {
@@ -517,8 +511,7 @@ void PostingWidget::udatePostingParams()
 
     // fetch par2 settings
     _ngPost->_doPar2  = _ui->par2CB->isChecked();
-    _ngPost->_par2Pct = 0;
-    if (_ui->par2CB->isChecked())
+    if (_ngPost->_par2Args.isEmpty())
         _ngPost->_par2Pct = static_cast<uint>(_ui->redundancySB->value());
 
     _ngPost->_keepRar = _ui->keepRarCB->isChecked();

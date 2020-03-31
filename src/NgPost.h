@@ -137,6 +137,7 @@ private:
     uint        _par2Pct;
     QString     _par2Path;
     QString     _par2Args;
+    QString     _par2PathConfig;
 
     bool        _doCompress;
     bool        _doPar2;

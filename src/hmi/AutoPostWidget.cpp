@@ -69,16 +69,9 @@ void AutoPostWidget::init()
     _ui->rarSizeEdit->setText(QString::number(_ngPost->_rarSize));
     _ui->rarSizeEdit->setValidator(new QIntValidator(1, 1000000, _ui->rarSizeEdit));
 
-    if (_ngPost->_par2Args.isEmpty())
-    {
-        _ui->redundancySB->setRange(0, 100);
-        _ui->redundancySB->setValue(static_cast<int>(_ngPost->_par2Pct));
-    }
-    else
-    {
-        _ui->redundancySB->setEnabled(false);
-    }
-
+    _ui->redundancySB->setRange(0, 100);
+    _ui->redundancySB->setValue(static_cast<int>(_ngPost->_par2Pct));
+    _ui->redundancySB->setEnabled(_ngPost->_par2Args.isEmpty());
 
     _ui->autoDirEdit->setText(_ngPost->_inputDir);
     _ui->nameLengthSB->setRange(5, 50);
@@ -370,8 +363,7 @@ void AutoPostWidget::udatePostingParams()
     }
 
     // fetch par2 settings
-    _ngPost->_par2Pct = 0;
-    if (_ngPost->_doPar2)
+    if (_ngPost->_par2Args.isEmpty())
         _ngPost->_par2Pct = static_cast<uint>(_ui->redundancySB->value());
 
     QFileInfo inputDir(_ui->autoDirEdit->text());

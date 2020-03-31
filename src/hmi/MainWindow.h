@@ -82,6 +82,7 @@ public:
     void log(const QString &aMsg, bool newline = true) const; //!< log function for QString
     void logError(const QString &error) const; //!< log function for QString
 
+    bool useFixedPassword() const;
 
     bool hasFinishedPosts() const;
 
