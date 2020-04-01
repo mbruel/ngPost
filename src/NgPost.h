@@ -306,6 +306,7 @@ public:
 
 
     inline std::string from() const;
+    inline void setAutoCompress(bool checked);
 
 signals:
     void log(QString msg, bool newline); //!< in case we signal from another thread
@@ -385,6 +386,15 @@ std::string NgPost::from() const
         return _randomFrom();
     else
         return _from;
+}
+
+void NgPost::setAutoCompress(bool checked)
+{
+    _autoCompress = checked;
+    _doCompress   = checked;
+    _genName      = checked;
+    _genPass      = checked;
+    _doPar2       = checked;
 }
 
 

@@ -525,6 +525,32 @@ void PostingWidget::retranslate()
     _ui->donateButton->setToolTip(_ngPost->donationTooltip());
 }
 
+void PostingWidget::setNzbPassword(const QString &pass)
+{
+    _ui->nzbPassCB->setChecked(true);
+    _ui->nzbPassEdit->setText(pass);
+}
+
+void PostingWidget::setAutoCompress(bool checked)
+{
+    _ui->nzbPassCB->setChecked(checked);
+    _ui->compressCB->setChecked(checked);
+    _ui->par2CB->setChecked(checked);
+
+    if (checked)
+    {
+        if (_ui->nzbPassEdit->text().isEmpty())
+        {
+            if (_hmi->useFixedPassword())
+                _ui->nzbPassEdit->setText(_ngPost->_rarPassFixed);
+            else
+                onGenNzbPassword();
+        }
+        if (_ui->compressNameEdit->text().isEmpty())
+            onGenCompressName();
+    }
+}
+
 void PostingWidget::addPath(const QString &path, int currentNbFiles, int isDir)
 {
     if (_ui->filesList->addPathIfNotInList(path, currentNbFiles, isDir))

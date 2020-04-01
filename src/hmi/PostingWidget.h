@@ -72,6 +72,9 @@ public:
 
     void retranslate();
 
+    void setNzbPassword(const QString &pass);
+    void setAutoCompress(bool checked);
+
 
 public slots: // for PostingJob
     void onFilePosted(QString filePath, uint nbArticles, uint nbFailed);

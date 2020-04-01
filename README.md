@@ -69,11 +69,13 @@ Syntax: ngPost (options)* (-i <file or folder> | --auto <folder> | --monitor <fo
 	-v or --version    : app version
 	-c or --conf       : use configuration file (if not provided, we try to load $HOME/.ngPost)
 	--disp_progress    : display cmd progressbar: NONE (default), BAR or FILES
-	-d or --debug      : display debug information
+	-d or --debug      : display extra information
+	--fulldebug        : display full debug information
+	-l or --lang       : application language
 
 // automated posting (scanning and/or monitoring)
-	--auto             : parse directory and post every file/folder separately. You must use --compress, should add --gen_par2, --gen_name and --gen_rar
-	--monitor          : monitor directory and post every new file/folder. You must use --compress, should add --gen_par2, --gen_name and --gen_rar
+	--auto             : parse directory and post every file/folder separately. You must use --compress, should add --gen_par2, --gen_name and --gen_pass
+	--monitor          : monitor directory and post every new file/folder. You must use --compress, should add --gen_par2, --gen_name and --gen_pass
 	--rm_posted        : delete file/folder once posted. You must use --auto or --monitor with this option.
 
 // quick posting (several files/folders)
@@ -87,6 +89,7 @@ Syntax: ngPost (options)* (-i <file or folder> | --auto <folder> | --monitor <fo
 	-z or --msg_id     : msg id signature, after the @ (default one: ngPost)
 	-r or --retry      : number of time we retry to an Article that failed (default: 5)
 	-t or --thread     : number of Threads (the connections will be distributed amongs them)
+	--gen_from         : generate a new random email for each Post (--auto or --monitor)
 
 // for compression and par2 support
 	--tmp_dir          : temporary folder where the compressed files and par2 will be stored
@@ -95,7 +98,8 @@ Syntax: ngPost (options)* (-i <file or folder> | --auto <folder> | --monitor <fo
 	--rar_max          : maximum number of archive volumes
 	--par2_pct         : par2 redundancy percentage (0 by default meaning NO par2 generation)
 	--par2_path        : par2 absolute file path (in case of self compilation of ngPost)
-	--compress         : compress inputs using RAR
+	--auto_compress    : compress inputs with random name and password and generate par2 (equivalent of --compress --gen_name --gen_pass --gen_par2)
+	--compress         : compress inputs using RAR or 7z
 	--gen_par2         : generate par2 (to be used with --compress)
 	--rar_name         : provide the RAR file name (to be used with --compress)
 	--rar_pass         : provide the RAR password (to be used with --compress)

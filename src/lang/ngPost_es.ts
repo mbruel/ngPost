@@ -464,7 +464,7 @@ Será irreversible...</translation>
     <message>
         <location filename="../hmi/MainWindow.ui" line="129"/>
         <source>save email</source>
-        <translation>guardar correo electrónico</translation>
+        <translation>guardar correo</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="136"/>
@@ -474,7 +474,7 @@ Será irreversible...</translation>
     <message>
         <location filename="../hmi/MainWindow.ui" line="139"/>
         <source>new random email for each Post</source>
-        <translation>nuevo correo electrónico aleatorio para cada Publicación</translation>
+        <translation>nuevo correo aleatorio por Publicación</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="161"/>
@@ -1698,7 +1698,7 @@ O bien usa --par2_pct o establece PAR2_PCT o PAR2_ARGS en el fichero de configur
     <message>
         <location filename="../NntpConnection.cpp" line="159"/>
         <source>Connection lost, trying to reconnect! (nb disconnected: %1)</source>
-        <translation type="unfinished"></translation>
+        <translation>¡Conexión perdida, tratando de reconectar! (Núm desconectado: %1)</translation>
     </message>
     <message>
         <location filename="../NntpConnection.cpp" line="257"/>
@@ -2233,7 +2233,7 @@ Tamaño de la subida: %1 en %2 (%3 seg.) =&gt; velocidad media: %4 (%5 conexione
     <message>
         <location filename="../hmi/PostingWidget.cpp" line="60"/>
         <source>You can add files or folder by:</source>
-        <translation type="unfinished"></translation>
+        <translation>Puedes añadir archivos o carpetas por:</translation>
     </message>
     <message>
         <location filename="../hmi/PostingWidget.cpp" line="61"/>
@@ -2248,7 +2248,7 @@ Tamaño de la subida: %1 en %2 (%3 seg.) =&gt; velocidad media: %4 (%5 conexione
     <message>
         <location filename="../hmi/PostingWidget.cpp" line="63"/>
         <source>Click on Select Files/Folder buttons</source>
-        <translation type="unfinished"></translation>
+        <translation>Clic en los botones Seleccionar Archivos/Carpetas</translation>
     </message>
     <message>
         <location filename="../hmi/PostingWidget.cpp" line="64"/>

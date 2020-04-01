@@ -61,6 +61,8 @@ public:
 
     void retranslate();
 
+    void setAutoCompress(bool checked);
+
 
 public slots:
     void onMonitorJobStart();

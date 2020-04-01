@@ -47,7 +47,8 @@ Syntaxe: ngPost (options)* (-i <file or folder> | --auto <folder> | --monitor <f
 	-v or --version    : version de l'application
 	-c or --conf       : utilisation d'un fichier de configuration autre que celui par défaut ($HOME/.ngPost ou ngPost.conf sous Windows)
 	--disp_progress    : affichage de la progression en ligne de commande: NONE (défaut), BAR (barre de progression) ou FILES (log à chaque upload de fichier)
-	-d or --debug      : debug mode (plus d'info)
+	-d or --debug      : display extra information
+	--fulldebug        : display full debug information
 	-l or --lang       : langue de l'application (EN, FR, ES ou DE)
 
 // post automatique (scan et/ou surveillance du dossier auto)
@@ -66,6 +67,7 @@ Syntaxe: ngPost (options)* (-i <file or folder> | --auto <folder> | --monitor <f
 	-z or --msg_id     : msg id signature, after the @ (default one: ngPost)
 	-r or --retry      : number of time we retry to an Article that failed (default: 5)
 	-t or --thread     : nombre de Threads (les connexions sont distribuées parmis eux)
+	--gen_from         : generate a new random email for each Post (--auto or --monitor)
 
 // pour la compression et le support des fichiers par2
 	--tmp_dir          : dossier temporaire où les archives sont crées ainsi que les par2
@@ -74,7 +76,8 @@ Syntaxe: ngPost (options)* (-i <file or folder> | --auto <folder> | --monitor <f
 	--rar_max          : nombre maximum de volumes RAR
 	--par2_pct         : pourcentage de redondance des fichiers par2. (0 équivaut à pas de génération de par2)
 	--par2_path        : chemin d'accès complet de l'application par2 ou alternative (parpar, multipar...)
-	--compress         : compression des fichiers/dossiers avant le post
+	--auto_compress    : compress inputs with random name and password and generate par2 (equivalent of --compress --gen_name --gen_pass --gen_par2)
+	--compress         : compress inputs using RAR or 7z
 	--gen_par2         : génération des fichiers par2 (avec --compress)
 	--rar_name         : nom des archives (avec --compress)
 	--rar_pass         : mot de passe de l'archive (avec --compress)
@@ -90,6 +93,7 @@ Syntaxe: ngPost (options)* (-i <file or folder> | --auto <folder> | --monitor <f
 	-u or --user       : nom d'utilisateur du serveur NNTP
 	-p or --pass       : mot de passe du serveur NNTP
 	-n or --connection : nombre de connexions du serveur NNTP
+
 
 Exemples:
   - surveillance d'un dossier: ngPost --monitor --rm_posted /Downloads/testNgPost --compress --gen_par2 --gen_name --gen_pass --rar_size 42 --disp_progress files

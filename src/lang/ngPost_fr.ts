@@ -1685,7 +1685,7 @@ Soit utilisez --par2_pct, soit renseignez PAR2_PCT ou PAR2_ARGS dans le fichier 
     <message>
         <location filename="../NntpConnection.cpp" line="159"/>
         <source>Connection lost, trying to reconnect! (nb disconnected: %1)</source>
-        <translation type="unfinished"></translation>
+        <translation>Perte de Connexion. Tentative de reconnexion! (nombre de déconnexions : %1)</translation>
     </message>
     <message>
         <location filename="../NntpConnection.cpp" line="257"/>
@@ -2225,7 +2225,7 @@ Taille du Post: %1 en %2 (%3 sec) =&gt; débit moyen: %4 (%5 connexions sur %6 t
     <message>
         <location filename="../hmi/PostingWidget.cpp" line="60"/>
         <source>You can add files or folder by:</source>
-        <translation type="unfinished"></translation>
+        <translation>Vous pouvez ajoutez fichiers ou dossiers:</translation>
     </message>
     <message>
         <location filename="../hmi/PostingWidget.cpp" line="61"/>
@@ -2240,7 +2240,7 @@ Taille du Post: %1 en %2 (%3 sec) =&gt; débit moyen: %4 (%5 connexions sur %6 t
     <message>
         <location filename="../hmi/PostingWidget.cpp" line="63"/>
         <source>Click on Select Files/Folder buttons</source>
-        <translation type="unfinished"></translation>
+        <translation>Click sur les boutons Choisir Fichiers ou Choisir Dossier</translation>
     </message>
     <message>
         <location filename="../hmi/PostingWidget.cpp" line="64"/>

@@ -7,11 +7,45 @@
          \//_____/                    \/
 
 
-TODO: bandwidth optimization:
-	test with no threads and no article preparation
-	check if we can play on the SSL protocol paramaters
+
+TODO: implement NZB_POST_CMD to be able to launch an external CMD with the nzb path
 
 TODO: --nfo option (cf github issue #10 and NewsUp dev)
+
+TODO: include ParPar instead of par2cmdline?
+
+TODO: auto RAR size and par2 parameters depending on the inputs size?
+
+
+####################################################
+###       Release: ngPost v4.5                   ###
+###       date:    2020/04/01                    ###
+####################################################
+
+- remove binaries from git repository. => repo is now 60MB (due to win libs) against 1.9GB before...
+binaries will now be uploaded as Release files on GitHub. No need to have them in the repo!!!
+
+- Fix connection retry and potential freeze when we get disconnected several times and can't post an Article
+
+- Fix 7z usage (RPI don't have rar)
+
+- new config GEN_FROM:        generate new random poster for each post (--auto or --monitor)
+- new config NZB_RM_ACCENTS:  remove accents and special characters from the nzb file names (by default OFF)
+- new config AUTO_CLOSE_TABS: close tabs automatically when a post is finished successfully
+
+- new config AUTO_COMPRESS (or --auto_compress): compress inputs with random name and password and generate par2 (equivalent of --compress --gen_name --gen_pass --gen_par2). In the GUI, all Quick Posts will have the checkboxes ticked.
+
+- new config RAR_PASS: possibility to use always the same password
+
+- possibility to disable some servers ('enabled' keyword in config file for the server sections)
+
+- drag and drop for the Auto Posting Tab and also Right Click (cf the tooltip)
+
+- two levels for the debug info:
+	1 (--debug) just a few extra logs
+	2 (--fulldebug) real debug info for me)
+
+
 
 ####################################################
 ###       Release: ngPost v4.4                   ###

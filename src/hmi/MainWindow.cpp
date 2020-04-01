@@ -383,7 +383,8 @@ void MainWindow::_initPostingBox()
     connect(_ui->uniqueFromCB,      &QAbstractButton::toggled, this, &MainWindow::onUniqueFromToggled);
     connect(_ui->rarPassCB,         &QAbstractButton::toggled, this, &MainWindow::onRarPassToggled);
     connect(_ui->genPass,           &QAbstractButton::clicked, this, &MainWindow::onArchivePass);
-
+    connect(_ui->autoCompressCB,    &QAbstractButton::toggled, this, &MainWindow::onAutoCompressToggled);
+    connect(_ui->rarPassEdit,       &QLineEdit::textChanged,   this, &MainWindow::onRarPassUpdated);
 
     _ui->fromEdit->setText(_ngPost->xml2txt(_ngPost->_from.c_str()));
     _ui->groupsEdit->setText(QString::fromStdString(_ngPost->_groups));
@@ -477,7 +478,7 @@ void MainWindow::updateParams()
         _ngPost->_rarPass      = _ngPost->_rarPassFixed;
     }
 
-    _ngPost->_autoCompress  = _ui->autoCompressCB->isChecked();
+    _ngPost->setAutoCompress(_ui->autoCompressCB->isChecked());
     _ngPost->_autoCloseTabs = _ui->autoCloseCB->isChecked();
 
     _ngPost->updateGroups(_ui->groupsEdit->toPlainText());
@@ -693,11 +694,34 @@ void MainWindow::onRarPassToggled(bool checked)
     _ui->rarPassEdit->setEnabled(checked);
     _ui->rarLengthSB->setEnabled(checked);
     _ui->genPass->setEnabled(checked);
+    if (checked)
+        onRarPassUpdated(_ui->rarPassEdit->text());
+}
+
+void MainWindow::onRarPassUpdated(const QString &fixedPass)
+{
+    _ngPost->_rarPassFixed = fixedPass;
+//    if (!_quickJobTab->isPosting())
+        _quickJobTab->setNzbPassword(fixedPass);
+    PostingWidget *currentQuickPost = _getPostWidget(_ui->postTabWidget->currentIndex());
+    if (currentQuickPost) //&& !currentQuickPost->isPosting())
+        currentQuickPost->setNzbPassword(fixedPass);
 }
 
 void MainWindow::onArchivePass()
 {
     _ui->rarPassEdit->setText(_ngPost->randomPass(static_cast<uint>(_ui->rarLengthSB->value())));
+}
+
+void MainWindow::onAutoCompressToggled(bool checked)
+{
+    _ngPost->setAutoCompress(checked);
+    _autoPostTab->setAutoCompress(checked);
+    if (!_quickJobTab->isPosting())
+        _quickJobTab->setAutoCompress(checked);
+    PostingWidget *currentQuickPost = _getPostWidget(_ui->postTabWidget->currentIndex());
+    if (currentQuickPost && !currentQuickPost->isPosting())
+        currentQuickPost->setAutoCompress(checked);
 }
 
 void MainWindow::onDebugToggled(bool checked)

@@ -567,7 +567,7 @@ Es wird nicht mehr rückgängig zu machen sein...</translation>
     <message>
         <location filename="../hmi/MainWindow.ui" line="336"/>
         <source>Article&apos;s obfuscation: Subject changed to be a UUID + random From</source>
-        <translation>Die Verschleierung des Artikels: Der Betreff wurde so geändert, dass er eine UUID + zufällig von</translation>
+        <translation>Artikel Verschleierung: Betreff wird UUID + zufällig von</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="346"/>
@@ -587,7 +587,7 @@ Es wird nicht mehr rückgängig zu machen sein...</translation>
     <message>
         <location filename="../hmi/MainWindow.ui" line="372"/>
         <source>Auto Compress</source>
-        <translation>Automatisch komprimieren</translation>
+        <translation>Auto komprimieren</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="379"/>
@@ -597,7 +597,7 @@ Es wird nicht mehr rückgängig zu machen sein...</translation>
     <message>
         <location filename="../hmi/MainWindow.ui" line="382"/>
         <source>Auto Close Tabs</source>
-        <translation>Automatisches Schließen der Registerkarten</translation>
+        <translation>Auto Schließen Registerkarten</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="405"/>
@@ -1721,7 +1721,7 @@ Either use --par2_pct or set PAR2_PCT or PAR2_ARGS in the config file.</source>
     <message>
         <location filename="../NntpConnection.cpp" line="159"/>
         <source>Connection lost, trying to reconnect! (nb disconnected: %1)</source>
-        <translation type="unfinished"></translation>
+        <translation>Verbindung verloren, versuche wiederherzustellen! (nb getrennt: %1)</translation>
     </message>
     <message>
         <location filename="../NntpConnection.cpp" line="257"/>
@@ -2255,7 +2255,7 @@ Upload size: %1 in %2 (%3 sec) =&gt; average speed: %4 (%5 connections on %6 thr
     <message>
         <location filename="../hmi/PostingWidget.cpp" line="60"/>
         <source>You can add files or folder by:</source>
-        <translation type="unfinished"></translation>
+        <translation>Dateien oder Ordner hinzufügen:</translation>
     </message>
     <message>
         <location filename="../hmi/PostingWidget.cpp" line="61"/>
@@ -2270,7 +2270,7 @@ Upload size: %1 in %2 (%3 sec) =&gt; average speed: %4 (%5 connections on %6 thr
     <message>
         <location filename="../hmi/PostingWidget.cpp" line="63"/>
         <source>Click on Select Files/Folder buttons</source>
-        <translation type="unfinished"></translation>
+        <translation>Klick auf Schaltfläche Dateien/Ordner auswählen</translation>
     </message>
     <message>
         <location filename="../hmi/PostingWidget.cpp" line="64"/>

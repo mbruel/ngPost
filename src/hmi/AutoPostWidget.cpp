@@ -422,6 +422,13 @@ void AutoPostWidget::retranslate()
     _ui->donateButton->setToolTip(_ngPost->donationTooltip());
 }
 
+void AutoPostWidget::setAutoCompress(bool checked)
+{
+    _ui->genNameCB->setChecked(checked);
+    _ui->genPassCB->setChecked(checked);
+    _ui->par2CB->setChecked(checked);
+}
+
 
 
 void AutoPostWidget::handleKeyEvent(QKeyEvent *keyEvent)

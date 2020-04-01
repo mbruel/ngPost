@@ -538,13 +538,12 @@ void NgPost::_post(const QFileInfo &fileInfo, const QString &monitorFolder)
         _rarName = randomPass(_lengthName);
 
     _rarPass = "";
-    if (_genPass)
-    {
-        _rarPass = randomPass(_lengthPass);
-        _meta.remove("password");
-    }
-    else if (!_rarPassFixed.isEmpty())
+    if (_genPass) // shall we gen password?
+        _rarPass = randomPass(_lengthPass);        
+    if (!_rarPassFixed.isEmpty()) // rar pass fixed would take other
         _rarPass = _rarPassFixed;
+    if (!_rarPass.isEmpty())
+        _meta.remove("password");
 
     qDebug() << "Start posting job for " << _nzbName
              << " with rar_name: " << _rarName << " and pass: " << _rarPass
