@@ -1,6 +1,6 @@
 <img align="left" width="80" height="80" src="https://raw.githubusercontent.com/mbruel/ngPost/master/src/resources/icons/ngPost.png" alt="ngPost">
 
-# ngPost v4.4
+# ngPost v4.5
 
 ngPost est un posteur pour Usenet en ligne de commande ou via une interface graphique développé en C++11/Qt5.<br/>
 Il a été conçu pour être le plus rapide possible et offrir toutes les fonctionnalités utiles pour poster facilement et en toute sécurité.<br/>
@@ -187,23 +187,38 @@ Une alternative pour compiler est [d'installer QT](https://www.qt.io/download) e
 
 
 ### version Linux portable: AppImage compilée avec Qt v5.12.6, GLIBC 2.24
-- téléchargez [ngPost_v4.4-x86_64.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.4-x86_64.AppImage)
-- chmod 755 ngPost_v4.4-x86_64.AppImage
+- téléchargez [ngPost_v4.5-x86_64.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.5/ngPost_v4.5-x86_64.AppImage)
+- chmod 755 ngPost_v4.5-x86_64.AppImage
 - si vous le lancez sans paramètres, l'interface graphique s'ouvrira, sinon c'est en mode ligne de commande. (cf ngPost --help -l fr)
 - pour le fichier de configuration, éditez le fichier **~/.ngPost** et copiez [ce modèle](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost_fr.conf) (ne pas mettre l'extension .conf!)
 
-PS: pour des systèmes plus vieux GLIBC < 2.24, voici une version compilée sous Debian8 avec GLIBC 2.19 et Qt v5.8.0: [ngPost_v4.4-x86_64_debian8.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.4-x86_64_debian8.AppImage)
+PS: pour des systèmes plus vieux GLIBC < 2.24, voici une version compilée sous Debian8 avec GLIBC 2.19 et Qt v5.8.0: [ngPost_v4.5-x86_64_debian8.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.5/ngPost_v4.5-x86_64_debian8.AppImage)
 
 
 ### version Raspbian portable (armhf pour Raspberry PI)
-- téléchargez [ngPost_v4.4-armhf.AppImage](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.4-armhf.AppImage)
-- chmod 755 ngPost_v4.4-armhf.AppImage
+- téléchargez [ngPost_v4.5-armhf.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.5/ngPost_v4.5-armhf.AppImage)
+- chmod 755 ngPost_v4.5-armhf.AppImage
 - si vous le lancez sans paramètres, l'interface graphique s'ouvrira, sinon c'est en mode ligne de commande. (cf ngPost --help -l fr)
 - pour le fichier de configuration, éditez le fichier **~/.ngPost** et copiez [ce modèle](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost_fr.conf) (ne pas mettre l'extension .conf!)
 
+**Comme rar n'est pas disponible sur RPI, le support de 7zip a été ajouté.** Faites pointer RAR_PATH sur 7z et si besoin (pas utile) utilisez RAR_EXTRA pour les options de 7z. Vous devriez avoir ceci:
+<pre>
+## RAR or 7zip absolute file path (external application)
+## /!\ The file MUST EXIST and BE EXECUTABLE /!\
+## this is set for Linux environment, Windows users MUST change it
+#RAR_PATH = /usr/bin/rar
+RAR_PATH = /usr/bin/7z
+
+## RAR EXTRA options (the first 'a' and '-idp' will be added automatically)
+## -hp will be added if you use a password with --gen_pass, --rar_pass or using the HMI
+## -v42m will be added with --rar_size or using the HMI
+## you could change the compression level, lock the archive, add redundancy...
+#RAR_EXTRA = -ep1 -m0 -k -rr5p
+RAR_EXTRA = -mx0 -mhe=on
+</pre>
 
 ### Windows installer
-- Utilisez l'installeur [ngPost_v4.4_x64_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.4_x64_setup.exe) ou [ngPost_v4.4_x86_setup.exe](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.4_x86_setup.exe) pour la version 32bit
+- Utilisez l'installeur [ngPost_v4.5_x64_setup.exe](https://github.com/mbruel/ngPost/releases/download/v4.5/ngPost_v4.5_x64_setup.exe) ou [ngPost_v4.5_x86_setup.exe](https://github.com/mbruel/ngPost/releases/download/v4.5/ngPost_v4.5_x86_setup.exe) pour la version 32bit
 - lancez l'application **ngPost.exe**, l'interface graphique s'ouvrira. Changez tous vos paramètres dont la langue puis cliquez sur **sauver**
 - vous pouvez bien sûr ensuite l'utiliser en ligne de commande. cf ngPost --help
 
@@ -211,7 +226,7 @@ PS: pour des systèmes plus vieux GLIBC < 2.24, voici une version compilée sous
 
 
 ### MacOS release built on High Sierra (v10.13)
-- téléchargez [ngPost_v4.4.dmg](https://github.com/mbruel/ngPost/raw/master/release/ngPost_v4.4.dmg)
+- téléchargez [ngPost_v4.5.dmg](https://github.com/mbruel/ngPost/releases/download/v4.5/ngPost_v4.5.dmg)
 - si vous le lancez sans paramètres, l'interface graphique s'ouvrira, sinon c'est en mode ligne de commande. (cf ngPost --help -l fr)
 - pour le fichier de configuration, éditez le fichier **~/.ngPost** et copiez [ce modèle](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost_fr.conf) (ne pas mettre l'extension .conf!)
 

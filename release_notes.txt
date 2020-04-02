@@ -19,13 +19,13 @@ TODO: auto RAR size and par2 parameters depending on the inputs size?
 
 ####################################################
 ###       Release: ngPost v4.5                   ###
-###       date:    2020/04/01                    ###
+###       date:    2020/04/02                    ###
 ####################################################
 
 - remove binaries from git repository. => repo is now 60MB (due to win libs) against 1.9GB before...
 binaries will now be uploaded as Release files on GitHub. No need to have them in the repo!!!
 
-- Fix connection retry and potential freeze when we get disconnected several times and can't post an Article
+- Fix connection retry and potential hang when we get disconnected several times and can't post an Article
 
 - Fix 7z usage (RPI don't have rar)
 

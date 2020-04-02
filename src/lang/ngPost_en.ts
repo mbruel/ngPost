@@ -171,7 +171,7 @@
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="374"/>
         <source>generate a random password for the archive or use the fixed one</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="377"/>
@@ -268,32 +268,32 @@
     <message>
         <location filename="../hmi/AutoPostWidget.cpp" line="47"/>
         <source>You can use the &lt;b&gt;Monitor Mode&lt;/b&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.cpp" line="48"/>
         <source>or &lt;b&gt;Generate Posts&lt;/b&gt; by adding files:</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.cpp" line="49"/>
         <source>Drag &amp; Drop files/folders</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.cpp" line="50"/>
         <source>Right Click to add Files</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.cpp" line="51"/>
         <source>Click on the Scan Button</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.cpp" line="52"/>
         <source>Bare in mind you can select items in the list and press DEL to remove them</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.cpp" line="129"/>
@@ -382,7 +382,7 @@ It will be irreversible...</source>
     <message>
         <location filename="../hmi/AutoPostWidget.cpp" line="335"/>
         <source>Select one or more files</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
 </context>
 <context>
@@ -444,7 +444,7 @@ It will be irreversible...</source>
     <message>
         <location filename="../hmi/MainWindow.ui" line="129"/>
         <source>save email</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="136"/>
@@ -459,27 +459,27 @@ It will be irreversible...</source>
     <message>
         <location filename="../hmi/MainWindow.ui" line="161"/>
         <source>Use a Fixed password for all the Posts</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="164"/>
         <source>archive password:</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="174"/>
         <source>archive password</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="181"/>
         <source>length of the password</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="194"/>
         <source>generate random password</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="220"/>
@@ -535,7 +535,7 @@ It will be irreversible...</source>
     <message>
         <location filename="../hmi/MainWindow.ui" line="336"/>
         <source>Article&apos;s obfuscation: Subject changed to be a UUID + random From</source>
-        <translation></translation>
+        <translation type="unfinished">Article&apos;s obfuscation: Subject changed to UUID + random From</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="346"/>
@@ -550,22 +550,22 @@ It will be irreversible...</source>
     <message>
         <location filename="../hmi/MainWindow.ui" line="369"/>
         <source>compress QuickPosts with a random archive name and password and generate the par2</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="372"/>
         <source>Auto Compress</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="379"/>
         <source>Auto close Tabs when posted successfully</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="382"/>
         <source>Auto Close Tabs</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="405"/>
@@ -917,12 +917,12 @@ Are you sure you want to quit?</source>
     <message>
         <location filename="../NgPost.cpp" line="167"/>
         <source>compress inputs with random name and password and generate par2 (equivalent of --compress --gen_name --gen_pass --gen_par2)</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="168"/>
         <source>compress inputs using RAR or 7z</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="169"/>
@@ -1417,17 +1417,17 @@ Either use --par2_pct or set PAR2_PCT or PAR2_ARGS in the config file.</source>
     <message>
         <location filename="../NgPost.cpp" line="1901"/>
         <source>## close Quick Post Tabs when posted successfully (for the GUI)</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1911"/>
         <source>## Auto compression for all posts with random archive name, password and par2 generation</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1914"/>
         <source>## use the same Password for all your Posts using compression</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1918"/>
@@ -1641,7 +1641,7 @@ Either use --par2_pct or set PAR2_PCT or PAR2_ARGS in the config file.</source>
     <message>
         <location filename="../NntpConnection.cpp" line="159"/>
         <source>Connection lost, trying to reconnect! (nb disconnected: %1)</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../NntpConnection.cpp" line="257"/>
@@ -2130,27 +2130,27 @@ Either use --par2_pct or set PAR2_PCT or PAR2_ARGS in the config file.</source>
     <message>
         <location filename="../hmi/PostingWidget.cpp" line="60"/>
         <source>You can add files or folder by:</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../hmi/PostingWidget.cpp" line="61"/>
         <source>Drag &amp; Drop files/folders</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../hmi/PostingWidget.cpp" line="62"/>
         <source>Right Click to add Files</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../hmi/PostingWidget.cpp" line="63"/>
         <source>Click on Select Files/Folder buttons</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../hmi/PostingWidget.cpp" line="64"/>
         <source>Bare in mind you can select items in the list and press DEL to remove them</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../hmi/PostingWidget.cpp" line="133"/>
