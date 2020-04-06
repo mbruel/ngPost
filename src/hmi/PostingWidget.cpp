@@ -124,7 +124,7 @@ void PostingWidget::onPostingJobDone()
     setIDLE();
 }
 
-void PostingWidget::onPostFiles()
+void PostingWidget::onPostFiles(bool updateMainParams)
 {
     if (_state == STATE::IDLE)
     {
@@ -150,8 +150,11 @@ void PostingWidget::onPostFiles()
         }
 
 
-        _hmi->updateServers();
-        _hmi->updateParams();
+        if (updateMainParams)
+        {
+            _hmi->updateServers();
+            _hmi->updateParams();
+        }
         udatePostingParams();
 
         // check if the nzb file name already exist

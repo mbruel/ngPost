@@ -145,7 +145,7 @@ Press the Scan button and remove what you don't want to post ;)\n\
         quickPostWidget->genNameAndPassword(_ngPost->_genName, _ngPost->_genPass, _ngPost->_doPar2, useRarMax);
 
         if (startPost)
-            quickPostWidget->onPostFiles();
+            quickPostWidget->onPostFiles(false);
     }
 }
 

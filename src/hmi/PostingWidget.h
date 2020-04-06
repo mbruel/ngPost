@@ -82,7 +82,7 @@ public slots: // for PostingJob
     void onArticlesNumber(int nbArticles);
     void onPostingJobDone();
 
-    void onPostFiles(); //!< for the post button but also can be used by the AutoPostWidget
+    void onPostFiles(bool updateMainParams = true); //!< for the post button but also can be used by the AutoPostWidget
 
 private slots: // for the HMI
 
