@@ -1,0 +1,8 @@
+.qmake.stash
+*.o
+Makefile
+src/ngPost
+moc_*.cpp
+ui_*.h
+moc_predefs.h
+qrc_resources.cpp

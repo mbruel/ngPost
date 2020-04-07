@@ -168,10 +168,10 @@ Vous pouvez faire des Post Rapides durant la phase de Surveillance<br/>
 
 ### Comment compiler ngPost
 #### les dépendances:
-- build-essential (C++ compiler, libstdc++, make,...)
-- qt5-default (Qt5 libraries and headers)
-- qt5-qmake (to generate the moc files and create the Makefile)
-- libssl (v1.0.2 or v1.1) but it should be already installed on your system
+- build-essential (compilateur C++, libstdc++, make,...)
+- qt5-default (librairies Qt5 et headers)
+- qt5-qmake (pour générer les fichiers moc et créer le Makefile)
+- libssl (v1.0.2 or v1.1) mais devrait déjà être installée sur votre système
 
 #### Compilation:
 - allez dans le dossier **src** ou copiez le en **bin**
