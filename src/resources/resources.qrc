@@ -25,5 +25,7 @@
         <file>lang/ngPost_en.qm</file>
         <file>lang/ngPost_es.qm</file>
         <file>lang/ngPost_fr.qm</file>
+        <file>icons/flag_PT.png</file>
+        <file>lang/ngPost_pt.qm</file>
     </qresource>
 </RCC>
