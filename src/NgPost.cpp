@@ -51,6 +51,8 @@ const char *NgPost::sFolderMonitoringName = QT_TRANSLATE_NOOP("NgPost", "Auto Po
 const char *NgPost::sQuickJobName         = QT_TRANSLATE_NOOP("NgPost", "Quick Post");
 const char *NgPost::sDonationTooltip      = QT_TRANSLATE_NOOP("NgPost", "Donations are welcome, I spent quite some time to develop this app and make a sexy GUI although I'm not using it ;)");
 
+std::string NgPost::sArticleIdSignature   = sDefaultMsgIdSignature;
+const std::string NgPost::sRandomAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
 qint64        NgPost::sArticleSize = sDefaultArticleSize;
 const QString NgPost::sSpace       = sDefaultSpace;
@@ -205,7 +207,6 @@ NgPost::NgPost(int &argc, char *argv[]):
     _nntpServers(),
     _obfuscateArticles(false), _obfuscateFileName(false),
     _genFrom(false), _saveFrom(false), _from(), _groups(sDefaultGroups),
-    _articleIdSignature(sDefaultMsgIdSignature),
     _meta(), _grpList(),
     _nbThreads(QThread::idealThreadCount()),
     _socketTimeOut(sDefaultSocketTimeOut), _nzbPath(sDefaultNzbPath), _nzbPathConf(sDefaultNzbPath),
@@ -357,7 +358,7 @@ int NgPost::startHMI()
         _error(err);
 
     if (_from.empty())
-            _from = _randomFrom();
+            _from = randomStdFrom();
 #ifdef __DEBUG__
     _dumpParams();
 #endif
@@ -1009,7 +1010,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
             _cout << tr("Generate new random poster for each post") << "\n" << flush;
     }
     else if (_from.empty())
-        _from = _randomFrom();
+        _from = randomStdFrom();
 
 
     if (parser.isSet(sOptionNames[Opt::DISP_PROGRESS]))
@@ -1036,7 +1037,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     }
 
     if (parser.isSet(sOptionNames[Opt::MSG_ID]))
-        _articleIdSignature = escapeXML(parser.value(sOptionNames[Opt::MSG_ID])).toStdString();
+        sArticleIdSignature = escapeXML(parser.value(sOptionNames[Opt::MSG_ID])).toStdString();
 
     if (parser.isSet(sOptionNames[Opt::ARTICLE_SIZE]))
     {
@@ -1466,7 +1467,7 @@ QString NgPost::_parseConfig(const QString &configPath)
                     }
                     else if (opt == sOptionNames[Opt::MSG_ID])
                     {
-                        _articleIdSignature = val.toStdString();
+                        sArticleIdSignature = val.toStdString();
                     }
                     else if (opt == sOptionNames[Opt::ARTICLE_SIZE])
                     {
@@ -1881,7 +1882,7 @@ void NgPost::saveConfig()
                << "\n"
                << "\n"
                << tr("## suffix of the msg_id for all the articles (cf nzb file)") << endl
-               << (_articleIdSignature == "ngPost" ? "#msg_id  =  ngPost\n" : QString("msg_id  =  %1\n").arg(_articleIdSignature.c_str()))
+               << (sArticleIdSignature == "ngPost" ? "#msg_id  =  ngPost\n" : QString("msg_id  =  %1\n").arg(sArticleIdSignature.c_str()))
                << "\n"
                << tr("## article size (default 700k)") << endl
                << "article_size = " << sArticleSize << "\n"

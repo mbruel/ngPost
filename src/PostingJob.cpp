@@ -321,7 +321,7 @@ void PostingJob::onNntpFilePosted()
     if (_ngPost->_dispFilesPosting)
         _log(QString("[%1][%2: %3] <<<<< %4").arg(timestamp()).arg(tr("avg. speed")).arg(avgSpeed()).arg(nntpFile->name()));
 
-    nntpFile->writeToNZB(_nzbStream, _ngPost->_articleIdSignature.c_str());
+    nntpFile->writeToNZB(_nzbStream, QString::fromStdString(_from));
     _filesInProgress.remove(nntpFile);
     emit nntpFile->scheduleDeletion();
     if (_nbPosted == _nbFiles)
@@ -495,7 +495,7 @@ NntpArticle *PostingJob::_readNextArticleIntoBufferPtr(const QString &threadName
                 _log(tr("[%1] we've read %2 bytes from %3 (=> new pos: %4)").arg(threadName).arg(bytesRead).arg(pos).arg(_file->pos()));
             ++_part;
             NntpArticle *article = new NntpArticle(_nntpFile, _part, pos, bytesRead,
-                                                   _obfuscateArticles ? _ngPost->_randomFrom() : _from,
+                                                   _obfuscateArticles ? nullptr : &_from,
                                                    _groups, _obfuscateArticles);
             return article;
         }

@@ -75,6 +75,8 @@ public:
     void setNzbPassword(const QString &pass);
     void setAutoCompress(bool checked);
 
+    void postFiles(bool updateMainParams);
+
 
 public slots: // for PostingJob
     void onFilePosted(QString filePath, uint nbArticles, uint nbFailed);
@@ -82,7 +84,7 @@ public slots: // for PostingJob
     void onArticlesNumber(int nbArticles);
     void onPostingJobDone();
 
-    void onPostFiles(bool updateMainParams = true); //!< for the post button but also can be used by the AutoPostWidget
+    void onPostFiles(); //!< for the post button but also can be used by the AutoPostWidget
 
 private slots: // for the HMI
 

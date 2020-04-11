@@ -124,7 +124,12 @@ void PostingWidget::onPostingJobDone()
     setIDLE();
 }
 
-void PostingWidget::onPostFiles(bool updateMainParams)
+void PostingWidget::onPostFiles()
+{
+    postFiles(true);
+}
+
+void PostingWidget::postFiles(bool updateMainParams)
 {
     if (_state == STATE::IDLE)
     {

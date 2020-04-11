@@ -37,7 +37,8 @@ class NntpArticle : public QObject
 {
     Q_OBJECT
 
-    friend class NntpFile; //!< to access all members and be able to clear the _body
+    friend class NntpFile; //!< to access all members
+
 #if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
     static const QUuid::StringFormat sMsgIdFormat = QUuid::StringFormat::Id128;
 #endif
@@ -48,18 +49,13 @@ private:
     const uint _part;     //!< part of the original file
     QUuid      _id;       //!< to generate a unique Message-ID for the Header
 
-    const std::string _from;    //!< NNTP header From
-    const std::string _groups;  //!< NNTP header Newsgroups
-    const std::string _subject; //!< NNTP header Subject (if defined it won't be obfuscated)
+    const std::string *_from;    //!< NNTP header From (owned by PostingJob)
+    const std::string &_groups;  //!< NNTP header Newsgroups (owned by PostingJob)
+    char *_subject;              //!< NNTP header Subject (if defined it won't be obfuscated)
+    char *_body;                 //!< full body of the Article with the yEnc header
 
     const qint64 _filePos;   //!< position in the File (for yEnc header)
     const qint64 _fileBytes; //!< bytes of the original file that are encoded
-
-    uchar    *_yencBody; //!< buffer for the yEnc encoding
-    qint64    _yencSize; //!< size of the yEnc body (unused)
-    quint32   _crc32;    //!< crc of the yEnc body
-
-    std::string _body; //!< full body of the Article with the yEnc header
 
     ushort _nbTrySending;
 
@@ -69,20 +65,21 @@ signals:
 
 public:
     NntpArticle(NntpFile *file, uint part, qint64 pos, qint64 bytes,
-                const std::string &from, const std::string &groups, bool obfuscation);
+                const std::string *from, const std::string &groups, bool obfuscation);
 
     void yEncBody(const char data[]);
 
-    NntpArticle(const std::string &from, const std::string &groups, const std::string &subject,
-                const std::string &body);
+//    NntpArticle(const std::string &from, const std::string &groups, const std::string &subject,
+//                const std::string &body);
 
-    ~NntpArticle() = default;
+    ~NntpArticle();
 
     QString str() const;
 
     bool tryResend();
 
     void write(NntpConnection *con, const std::string &idSignature);
+    inline void freeMemory();
 
     void dumpToFile(const QString &path, const std::string &articleIdSignature);
 
@@ -101,6 +98,20 @@ public:
     inline static ushort nbMaxTrySending();
     inline static void setNbMaxRetry(ushort nbMax);
 };
+
+void NntpArticle::freeMemory()
+{
+    if (_subject)
+    {
+        delete _subject;
+        _subject = nullptr;
+    }
+    if (_body)
+    {
+        delete[] _body;
+        _body = nullptr;
+    }
+}
 
 std::string NntpArticle::body() const { return _body; }
 

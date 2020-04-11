@@ -21,6 +21,7 @@
 
 #include "NntpArticle.h"
 #include "NntpConnection.h"
+#include "NgPost.h"
 #include "nntp/NntpFile.h"
 #include "nntp/Nntp.h"
 #include "utils/Yenc.h"
@@ -29,57 +30,76 @@
 ushort NntpArticle::sNbMaxTrySending = 5;
 
 NntpArticle::NntpArticle(NntpFile *file, uint part, qint64 pos, qint64 bytes,
-                         const std::string &from, const std::string &groups, bool obfuscation):
+                         const std::string *from, const std::string &groups, bool obfuscation):
     _nntpFile(file), _part(part),
     _id(QUuid::createUuid()),
     _from(from), _groups(groups),
-    _subject(obfuscation ? "": QString("%1 (%2/%3)").arg(_nntpFile->name()).arg(part).arg(_nntpFile->nbArticles()).toStdString()),
+    _subject(nullptr),
+    _body(nullptr),
     _filePos(pos), _fileBytes(bytes),
-    _yencBody(new uchar[bytes*2]),
-    _yencSize(0),
-    _crc32(0xFFFFFFFF),
-    _body(),
     _nbTrySending(0)
 {
     file->addArticle(this);
     connect(this, &NntpArticle::posted, _nntpFile, &NntpFile::onArticlePosted, Qt::QueuedConnection);
     connect(this, &NntpArticle::failed, _nntpFile, &NntpFile::onArticleFailed, Qt::QueuedConnection);
+
+    if (!obfuscation)
+    {
+        std::stringstream ss;
+        ss << _nntpFile->name().toStdString() << " (" << part << "/" << _nntpFile->nbArticles() << ")";
+
+        std::string subject = ss.str();
+        _subject = new char[subject.length()+1];
+        std::strcpy(_subject, subject.c_str());
+    }
 }
 
 void NntpArticle::yEncBody(const char data[])
 {
-    _yencSize = Yenc::encode(data, _fileBytes, _yencBody, _crc32);
+    // do the yEnc encoding
+    quint32 crc32    = 0xFFFFFFFF;
+    uchar  *yencBody = new uchar[_fileBytes*2];
+    Yenc::encode(data, _fileBytes, yencBody, crc32);
 
+    // format the body
     std::stringstream ss;
     ss << "=ybegin part=" << _part << " total=" << _nntpFile->nbArticles() << " line=128"
        << " size=" << _nntpFile->fileSize() << " name=" << _nntpFile->fileName() << Nntp::ENDLINE
        << "=ypart begin=" << _filePos + 1 << " end=" << _filePos + _fileBytes << Nntp::ENDLINE
-       << _yencBody << Nntp::ENDLINE
-       << "=yend size=" << _fileBytes << " pcrc32=" << std::hex << _crc32 << Nntp::ENDLINE
+       << yencBody << Nntp::ENDLINE
+       << "=yend size=" << _fileBytes << " pcrc32=" << std::hex << crc32 << Nntp::ENDLINE
        << "." << Nntp::ENDLINE;
-    _body = ss.str();
 
-    delete [] _yencBody;
-    _yencBody = nullptr;
+    delete[] yencBody;
+
+    std::string body = ss.str();
+    _body = new char[body.length()+1];
+    std::strcpy(_body, body.c_str());
 }
 
-
-NntpArticle::NntpArticle(const std::string &from, const std::string &groups, const std::string &subject, const std::string &body):
-    _nntpFile(nullptr), _part(1),
-    _id(QUuid::createUuid()),
-    _from(from), _groups(groups),
-    _subject(subject),
-    _filePos(0), _fileBytes(0),
-    _yencBody(nullptr),
-    _yencSize(0),
-    _crc32(0xFFFFFFFF),
-    _body(body),
-    _nbTrySending(0)
+NntpArticle::~NntpArticle()
 {
-    _body += Nntp::ENDLINE;
-    _body += ".";
-    _body += Nntp::ENDLINE;
+    freeMemory();
 }
+
+
+//NntpArticle::NntpArticle(const std::string &from, const std::string &groups, const std::string &subject, const std::string &body):
+//    _nntpFile(nullptr), _part(1),
+//    _id(QUuid::createUuid()),
+//    _from(from), _groups(groups),
+//    _subject(subject),
+//    _body(nullptr),
+//    _filePos(0), _fileBytes(0),
+//    _yencBody(nullptr),
+//    _yencSize(0),
+//    _crc32(0xFFFFFFFF),
+//    _nbTrySending(0)
+//{
+
+//    _body->operator+=(Nntp::ENDLINE);
+//    _body->operator+=(".");
+//    _body->operator+=(Nntp::ENDLINE);
+//}
 
 QString NntpArticle::str() const
 {
@@ -104,7 +124,7 @@ void NntpArticle::write(NntpConnection *con, const std::string &idSignature)
 {
     ++_nbTrySending;
     con->write(header(idSignature).c_str());
-    con->write(_body.c_str());
+    con->write(_body);
 }
 
 std::string NntpArticle::header(const std::string &idSignature) const
@@ -115,9 +135,9 @@ std::string NntpArticle::header(const std::string &idSignature) const
     QByteArray msgId = _id.toByteArray();
 #endif
     std::stringstream ss;
-    ss << "From: "        << _from    << Nntp::ENDLINE
+    ss << "From: "        << (_from == nullptr ? NgPost::randomStdFrom() : *_from)    << Nntp::ENDLINE
        << "Newsgroups: "  << _groups  << Nntp::ENDLINE
-       << "Subject: "     << (_subject.empty() ? msgId.constData() : _subject) << Nntp::ENDLINE
+       << "Subject: "     << (_subject == nullptr ? msgId.constData() : _subject) << Nntp::ENDLINE
        << "Message-ID: <" << msgId.constData() << "@" << idSignature << ">" << Nntp::ENDLINE
        << Nntp::ENDLINE;
     return ss.str();
@@ -134,6 +154,6 @@ void NntpArticle::dumpToFile(const QString &path, const std::string &articleIdSi
     }
 
     file.write(header(articleIdSignature).c_str());
-    file.write(_body.c_str());
+    file.write(_body);
     file.close();
 }

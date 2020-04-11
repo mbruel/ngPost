@@ -70,7 +70,7 @@ void NntpFile::onArticlePosted(quint64 size)
              << ", id: " << article->id();
 #endif
     _posted.insert(part);
-    article->_body.clear(); // free resources
+    article->freeMemory(); // free resources
 
     if (_posted.size() + _failed.size() == static_cast<int>(_nbAticles))
         emit allArticlesArePosted();
@@ -93,7 +93,7 @@ void NntpFile::onArticleFailed(quint64 size)
              << ", id: " << article->id();
 #endif
     _failed.insert(part);
-    article->_body.clear(); // free resources
+    article->freeMemory(); // free resources
 
     if (_posted.size() + _failed.size() == static_cast<int>(_nbAticles))
         emit allArticlesArePosted();
@@ -101,7 +101,7 @@ void NntpFile::onArticleFailed(quint64 size)
 
 #include <string>
 #include <QDateTime>
-void NntpFile::writeToNZB(QTextStream &stream, const char *articleIdSignature)
+void NntpFile::writeToNZB(QTextStream &stream, const QString &from)
 {
     //    <file poster="NewsUP &lt;NewsUP@somewhere.cbr&gt;" date="1565026184" subject="[1/846] - &quot;1w7NbOvYC2E8D5oYeXROyp4FZAaxEOmK&quot; ">
     //        <groups>
@@ -134,7 +134,7 @@ void NntpFile::writeToNZB(QTextStream &stream, const char *articleIdSignature)
             tmp /= 10.;
         }
 
-        stream << tab << "<file poster=\"" << _articles.first()->_from.c_str()<< "\""
+        stream << tab << "<file poster=\"" << from << "\""
 #if QT_VERSION >= QT_VERSION_CHECK(5, 8, 0)
                << " date=\"" << QDateTime::currentSecsSinceEpoch() << "\""
 #else
@@ -151,6 +151,7 @@ void NntpFile::writeToNZB(QTextStream &stream, const char *articleIdSignature)
         stream << tab << tab << "</groups>\n";
 
         stream << tab << tab << "<segments>\n";
+        QString articleIdSignature = QString::fromStdString(NgPost::aticleSignature());
         for (NntpArticle *article : _articles)
         {
             stream << tab << tab << tab << "<segment"

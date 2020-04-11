@@ -115,7 +115,6 @@ private:
     bool                 _saveFrom;
     std::string          _from;               //!< email of poster (if empty, random one will be used for each file)
     std::string          _groups;             //!< Newsgroup where to post
-    std::string          _articleIdSignature; //!< signature for Article message id (must be as a email address)
 
     QMap<QString, QString> _meta;    //!< list of meta to add in the nzb header (typically a password)
     QList<QString>         _grpList; //!< Newsgroup where we're posting in a list format to write in the nzb file
@@ -238,6 +237,10 @@ private:
     static constexpr const char *sTranslationPath = ":/lang";
 
 
+    static std::string sArticleIdSignature; //!< signature for Article message id (must be as a email address)
+    static const std::string sRandomAlphabet;
+
+
 public:
     NgPost(int &argc, char *argv[]);
     ~NgPost();
@@ -254,7 +257,7 @@ public:
 
     bool parseCommandLine(int argc, char *argv[]);
 
-    inline const std::string &aticleSignature() const;
+    inline static const std::string &aticleSignature();
 
     inline int nbThreads() const;
     inline int getSocketTimeout() const;
@@ -308,6 +311,9 @@ public:
     inline std::string from() const;
     inline void setAutoCompress(bool checked);
 
+    inline static std::string randomStdFrom(ushort length = 13);
+
+
 signals:
     void log(QString msg, bool newline); //!< in case we signal from another thread
     void error(QString msg); //!< in case we signal from another thread
@@ -337,7 +343,6 @@ private slots:
     void onNewFileToProcess(const QFileInfo &fileInfo);
 
 
-
 private:
     void _loadTanslators();
 
@@ -348,9 +353,7 @@ private:
     void _stopMonitoring();
 
     void _log(const QString &aMsg, bool newline = true) const; //!< log function for QString
-    void _error(const QString &error) const;
-
-    inline std::string _randomFrom(ushort length = 13) const;
+    void _error(const QString &error) const;    
 
 
     void _syntax(char *appName);
@@ -383,7 +386,7 @@ QString NgPost::donationTooltip() { return tr(sDonationTooltip); }
 std::string NgPost::from() const
 {
     if (_genFrom || _from.empty())
-        return _randomFrom();
+        return randomStdFrom();
     else
         return _from;
 }
@@ -400,7 +403,7 @@ void NgPost::setAutoCompress(bool checked)
 
 bool NgPost::useHMI() const { return _mode == AppMode::HMI; }
 
-const std::string &NgPost::aticleSignature() const { return _articleIdSignature; }
+const std::string &NgPost::aticleSignature() { return sArticleIdSignature; }
 
 int NgPost::nbThreads() const { return _nbThreads; }
 int NgPost::getSocketTimeout() const { return _socketTimeOut; }
@@ -485,16 +488,19 @@ QString NgPost::xml2txt(const QString &str)
     return escaped;
 }
 
-QString NgPost::randomFrom(ushort length) const { return QString::fromStdString(_randomFrom(length));}
+QString NgPost::randomFrom(ushort length) const { return QString::fromStdString(randomStdFrom(length));}
 
-std::string NgPost::_randomFrom(ushort length) const {
-    QString randomFrom, alphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
-    int nbLetters = alphabet.length();
-    for (ushort i = 0 ; i < length ; ++i)
-        randomFrom.append(alphabet.at(std::rand()%nbLetters));
+std::string NgPost::randomStdFrom(ushort length) {
+    size_t nbLetters = sRandomAlphabet.length();
+    std::string randomFrom;
+    randomFrom.reserve(length+sArticleIdSignature.length()+5);
+    for (size_t i = 0 ; i < length ; ++i)
+        randomFrom.push_back(sRandomAlphabet.at(std::rand()%nbLetters));
+    randomFrom.push_back('@');
+    randomFrom.append(sArticleIdSignature);
+    randomFrom.append(".com");
 
-    randomFrom += QString("@%1.com").arg(_articleIdSignature.c_str());
-    return randomFrom.toStdString();
+    return randomFrom;
 }
 
 void NgPost::_enableAutoCompress()

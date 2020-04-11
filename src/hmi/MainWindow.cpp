@@ -466,7 +466,7 @@ void MainWindow::updateParams()
     {
         QRegularExpression email("\\w+@\\w+\\.\\w+");
         if (!email.match(from).hasMatch())
-            from += QString("@%1.com").arg(_ngPost->_articleIdSignature.c_str());
+            from += QString("@%1.com").arg(_ngPost->aticleSignature().c_str());
         _ngPost->_from   = _ngPost->escapeXML(from).toStdString();
     }
     _ngPost->_genFrom  = _ui->uniqueFromCB->isChecked();
