@@ -81,7 +81,7 @@ class NgPost : public QObject
                     TMP_DIR, RAR_PATH, RAR_EXTRA, RAR_SIZE, RAR_MAX, KEEP_RAR,
                     PAR2_PCT, PAR2_PATH, PAR2_ARGS,
                     COMPRESS, GEN_PAR2, GEN_NAME, GEN_PASS, LENGTH_NAME, LENGTH_PASS,
-                    RAR_NAME, RAR_PASS,
+                    RAR_NAME, RAR_PASS, RAR_NO_ROOT_FOLDER,
                     AUTO_CLOSE_TABS, AUTO_COMPRESS,
                     HOST, PORT, SSL, USER, PASS, CONNECTION, ENABLED
                    };
@@ -182,6 +182,7 @@ private:
 
     bool       _removeAccentsOnNzbFileName;
     bool       _autoCloseTabs;
+    bool       _rarNoRootFolder;
 
     static constexpr const char *sDefaultShutdownCmdLinux   = "sudo -n /sbin/poweroff";
     static constexpr const char *sDefaultShutdownCmdWindows = "shutdown /s /f /t 0";
@@ -257,7 +258,6 @@ public:
 
     bool parseCommandLine(int argc, char *argv[]);
 
-    inline static const std::string &aticleSignature();
 
     inline int nbThreads() const;
     inline int getSocketTimeout() const;
@@ -271,11 +271,6 @@ public:
     inline QString randomFrom(ushort length = 13) const;
     QString randomPass(uint length = 13) const;
 
-    inline static const QString & proFileUrl();
-    inline static const QString & donationURL();
-    inline static const QString & asciiArt();
-    inline static QString asciiArtWithVersion();
-    inline static QString desc();
 
     inline QList<QString> languages() const;
 
@@ -303,15 +298,13 @@ public:
 
     void uploadNzb(const QString &nzbFilePath);
 
-    inline static QString quickJobName();
-    inline static QString folderMonitoringName();
-    inline static QString donationTooltip();
 
 
     inline std::string from() const;
     inline void setAutoCompress(bool checked);
 
-    inline static std::string randomStdFrom(ushort length = 13);
+    inline bool removeRarRootFolder() const;
+
 
 
 signals:
@@ -368,15 +361,28 @@ private:
     inline void _enableAutoCompress();
 
 
+// Static functions
 public:
-    inline static qint64 articleSize();
     inline static const QString &space();
     inline static QString escapeXML(const char *str);
     inline static QString escapeXML(const QString &str);
     inline static QString xml2txt(const char *str);
     inline static QString xml2txt(const QString &str);
 
+    inline static qint64 articleSize();
+    inline static const std::string &aticleSignature();
 
+    inline static const QString & proFileUrl();
+    inline static const QString & donationURL();
+    inline static const QString & asciiArt();
+    inline static QString asciiArtWithVersion();
+    inline static QString desc();
+
+    inline static QString quickJobName();
+    inline static QString folderMonitoringName();
+    inline static QString donationTooltip();
+
+    inline static std::string randomStdFrom(ushort length = 13);
 };
 
 QString NgPost::quickJobName() { return tr(sQuickJobName); }
@@ -400,7 +406,7 @@ void NgPost::setAutoCompress(bool checked)
     _doPar2       = checked;
 }
 
-
+bool NgPost::removeRarRootFolder() const { return _rarNoRootFolder; }
 bool NgPost::useHMI() const { return _mode == AppMode::HMI; }
 
 const std::string &NgPost::aticleSignature() { return sArticleIdSignature; }

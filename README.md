@@ -107,6 +107,7 @@ Syntax: ngPost (options)* (-i <file or folder> | --auto <folder> | --monitor <fo
 	--gen_pass         : generate random RAR password (to be used with --compress)
 	--length_name      : length of the random RAR name (to be used with --gen_name), default: 17
 	--length_pass      : length of the random RAR password (to be used with --gen_pass), default: 13
+	--rar_no_root_folder: Remove root (parent) folder when compressing Folders using RAR
 
 // without config file, you can provide all the parameters to connect to ONE SINGLE server
 	-h or --host       : NNTP server hostname (or IP)

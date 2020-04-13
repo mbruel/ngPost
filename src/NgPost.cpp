@@ -72,6 +72,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::NZB_POST_CMD,   "nzb_post_cmd"},    // TODO: to allow posting nzb by scp or using curl ;)
     {Opt::NZB_RM_ACCENTS, "nzb_rm_accents"},
     {Opt::AUTO_CLOSE_TABS,"auto_close_tabs"},
+    {Opt::RAR_NO_ROOT_FOLDER, "rar_no_root_folder"},
 
     {Opt::INPUT,        "input"},
     {Opt::AUTO_DIR,     "auto"},
@@ -175,6 +176,7 @@ const QList<QCommandLineOption> NgPost::sCmdOptions = {
     { sOptionNames[Opt::GEN_PASS],            tr( "generate random RAR password (to be used with --compress)")},
     { sOptionNames[Opt::LENGTH_NAME],         tr( "length of the random RAR name (to be used with --gen_name), default: %1").arg(sDefaultLengthName), sOptionNames[Opt::LENGTH_NAME]},
     { sOptionNames[Opt::LENGTH_PASS],         tr( "length of the random RAR password (to be used with --gen_pass), default: %1").arg(sDefaultLengthPass), sOptionNames[Opt::LENGTH_PASS]},
+    { sOptionNames[Opt::RAR_NO_ROOT_FOLDER],  tr( "Remove root (parent) folder when compressing Folders using RAR")},
 
 
 // without config file, you can provide all the parameters to connect to ONE SINGLE server
@@ -235,7 +237,8 @@ NgPost::NgPost(int &argc, char *argv[]):
     _shutdownCmd(sDefaultShutdownCmdLinux),
 #endif
     _removeAccentsOnNzbFileName(false),
-    _autoCloseTabs(false)
+    _autoCloseTabs(false),
+    _rarNoRootFolder(false)
 {
     QThread::currentThread()->setObjectName(sMainThreadName);
 
@@ -1117,6 +1120,8 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         _genName = true;
     if (parser.isSet(sOptionNames[Opt::GEN_PASS]))
         _genPass = true;
+    if (parser.isSet(sOptionNames[Opt::RAR_NO_ROOT_FOLDER]))
+        _rarNoRootFolder = true;
 
     if (parser.isSet(sOptionNames[Opt::AUTO_COMPRESS]))
         _enableAutoCompress();
@@ -1588,6 +1593,12 @@ QString NgPost::_parseConfig(const QString &configPath)
                         if (val == "true" || val == "on" || val == "1")
                             _enableAutoCompress();
                     }
+                    else if (opt == sOptionNames[Opt::RAR_NO_ROOT_FOLDER])
+                    {
+                        val = val.toLower();
+                        if (val == "true" || val == "on" || val == "1")
+                            _rarNoRootFolder = true;
+                    }
 
                     else if (opt == sOptionNames[Opt::PAR2_PCT])
                     {
@@ -1945,6 +1956,9 @@ void NgPost::saveConfig()
                << "\n"
                << tr("##  keep rar folder after posting (otherwise it is automatically deleted uppon successful post)") << endl
                << (_keepRar  ? "" : "#") << "KEEP_RAR = true\n"
+               << "\n"
+               << "## " << tr("Remove root (parent) folder when compressing Folders using RAR") << endl
+               << (_rarNoRootFolder  ? "" : "#") << "RAR_NO_ROOT_FOLDER = true\n"
                << "\n"
                << tr("## par2 redundancy percentage (0 by default meaning NO par2 generation)") << endl
                << "PAR2_PCT = " << _par2Pct << "\n"

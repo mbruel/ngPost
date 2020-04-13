@@ -28,6 +28,10 @@ instead of std::string for the Article subject and body (Issue #33)
 
 - Portuguese translation
 
+- new config RAR_NO_ROOT_FOLDER: Remove root (parent) folder when compressing Folders using RAR
+It was always ON by default before. Now it's OFF by default.
+It will also only apply if we're posting ONLY ONE folder.
+
 
 
 ####################################################

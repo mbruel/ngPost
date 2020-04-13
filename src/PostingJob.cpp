@@ -800,32 +800,35 @@ bool PostingJob::startCompressFiles(const QString &cmdRar,
 
 
     bool hasDir = false;
-    for (const QFileInfo &fileInfo : _files)
-    {
+    if (_files.size() == 1)
+    { // Only remove rar root folder if there is only ONE folder AND RAR_NO_ROOT_FOLDER is set
+        const QFileInfo &fileInfo = _files.first();
+        QString path = fileInfo.absoluteFilePath();
+#if defined( Q_OS_WIN )
+        if (path.startsWith("//"))
+            path.replace(QRegExp("^//"), "\\\\");
+#endif
         if (fileInfo.isDir())
         {
             hasDir = true;
-#if defined( Q_OS_WIN )
-            QString path = QString("%1/").arg(fileInfo.absoluteFilePath());
-            if (path.startsWith("//"))
-                path.replace(QRegExp("^//"), "\\\\");
-            args << path;
-#else
-            args << QString("%1/").arg(fileInfo.absoluteFilePath());
-#endif
+            if (_ngPost->removeRarRootFolder())
+                path += "/";
         }
-        else
-#if defined( Q_OS_WIN )
+        args << path;
+    }
+    else
+    {
+        for (const QFileInfo &fileInfo : _files)
         {
-
             QString path = fileInfo.absoluteFilePath();
+#if defined( Q_OS_WIN )
             if (path.startsWith("//"))
                 path.replace(QRegExp("^//"), "\\\\");
+#endif
+            if (fileInfo.isDir())
+                hasDir = true;
             args << path;
         }
-#else
-            args << fileInfo.absoluteFilePath();
-#endif
     }
 
     if (hasDir && !args.contains("-r"))
