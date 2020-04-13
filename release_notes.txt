@@ -16,6 +16,19 @@ TODO: include ParPar instead of par2cmdline?
 
 TODO: auto RAR size and par2 parameters depending on the inputs size?
 
+####################################################
+###       Release: ngPost v4.6                   ###
+###       date:    2020/04/??                    ###
+####################################################
+
+- Memory usage drastic improvement by using C style char *
+instead of std::string for the Article subject and body (Issue #33)
+
+- Fix bug with Auto Compress (if not ticked)
+
+- Portuguese translation
+
+
 
 ####################################################
 ###       Release: ngPost v4.5                   ###

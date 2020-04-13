@@ -83,6 +83,8 @@ public:
     void logError(const QString &error) const; //!< log function for QString
 
     bool useFixedPassword() const;
+    bool hasAutoCompress() const;
+
 
     bool hasFinishedPosts() const;
 

@@ -174,6 +174,11 @@ bool MainWindow::useFixedPassword() const
     return _ui->rarPassCB->isChecked();
 }
 
+bool MainWindow::hasAutoCompress() const
+{
+    return _ui->autoCompressCB->isChecked();
+}
+
 #include <QKeyEvent>
 bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 {

@@ -62,8 +62,13 @@ void SignedListWidget::removeItemWidget2(QListWidgetItem *item)
 {
 //    qDebug() << "[removeItemWidget2] count: " << count();
     if (count() == 1)
-        _asciiLbl->show();
-    removeItemWidget(item);
+    {
+//        removeItemWidget(item);
+//        _asciiLbl->show();
+        emit empty();
+    }
+    else
+        removeItemWidget(item);
 }
 
 void SignedListWidget::clear2()

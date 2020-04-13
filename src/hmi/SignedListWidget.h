@@ -41,6 +41,8 @@ public:
 
 signals:
     void rightClick();
+    void empty();
+
 
 protected:
     void resizeEvent(QResizeEvent *e) override;

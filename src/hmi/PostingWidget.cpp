@@ -259,6 +259,14 @@ void PostingWidget::onClearFilesClicked()
     _ui->filesList->clear2();
     _ui->nzbFileEdit->clear();
     _ui->compressNameEdit->clear();
+    if (_hmi->hasAutoCompress())
+    {
+        onGenCompressName();
+        onGenNzbPassword();
+    }
+    else
+        _ui->compressNameEdit->clear();
+
     _hmi->clearJobTab(this);
 }
 
@@ -431,6 +439,7 @@ void PostingWidget::init()
     connect(_ui->selectFilesButton, &QAbstractButton::clicked, this, &PostingWidget::onSelectFilesClicked);
     connect(_ui->selectFolderButton,&QAbstractButton::clicked, this, &PostingWidget::onSelectFolderClicked);
     connect(_ui->clearFilesButton,  &QAbstractButton::clicked, this, &PostingWidget::onClearFilesClicked);
+    connect(_ui->filesList,         &SignedListWidget::empty,  this, &PostingWidget::onClearFilesClicked, Qt::QueuedConnection);
 
     connect(_ui->compressCB,        &QAbstractButton::toggled, this, &PostingWidget::onCompressCB);
     connect(_ui->genCompressName,   &QAbstractButton::clicked, this, &PostingWidget::onGenCompressName);
