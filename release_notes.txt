@@ -18,7 +18,7 @@ TODO: auto RAR size and par2 parameters depending on the inputs size?
 
 ####################################################
 ###       Release: ngPost v4.6                   ###
-###       date:    2020/04/??                    ###
+###       date:    2020/04/14                    ###
 ####################################################
 
 - Memory usage drastic improvement by using C style char *
