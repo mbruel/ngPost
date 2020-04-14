@@ -1,6 +1,6 @@
 <img align="left" width="80" height="80" src="https://raw.githubusercontent.com/mbruel/ngPost/master/src/resources/icons/ngPost.png" alt="ngPost">
 
-# ngPost v4.5
+# ngPost v4.6
 
 [Pour la version Française cliquez ici ;)](https://github.com/mbruel/ngPost/blob/master/README_FR.md)<br/>
 <br/>
@@ -146,17 +146,17 @@ The following ones are for experimented posters:
 
 ### Linux 64bit portable release (compiled with Qt v5.12.6)
 if you don't want to build it and install the dependencies, you can also the portable release that includes everything.<br/>
-- download [ngPost_v4.5-x86_64.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.5/ngPost_v4.5-x86_64.AppImage)
-- chmod 755 ngPost_v4.5-x86_64.AppImage
+- download [ngPost_v4.6-x86_64.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.6/ngPost_v4.6-x86_64.AppImage)
+- chmod 755 ngPost_v4.6-x86_64.AppImage
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
-PS: for older system with GLIBC < 2.24, here is a version compiled on Debian8 with GLIBC 2.19 and Qt v5.8.0: [ngPost_v4.5-x86_64_debian8.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.5/ngPost_v4.5-x86_64_debian8.AppImage)
+PS: for older system with GLIBC < 2.24, here is a version compiled on Debian8 with GLIBC 2.19 and Qt v5.8.0: [ngPost_v4.6-x86_64_debian8.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.6/ngPost_v4.6-x86_64_debian8.AppImage)
 
 
 ### Raspbian release (armhf for Raspberry PI)
-- download [ngPost_v4.5-armhf.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.5/ngPost_v4.5-armhf.AppImage)
-- chmod 755 ngPost_v4.5-armhf.AppImage
+- download [ngPost_v4.6-armhf.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.6/ngPost_v4.6-armhf.AppImage)
+- chmod 755 ngPost_v4.6-armhf.AppImage
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
@@ -178,7 +178,7 @@ RAR_EXTRA = -mx0 -mhe=on
 
 
 ### Windows installer
-- just use the packager [ngPost_v4.5_x64_setup.exe](https://github.com/mbruel/ngPost/releases/download/v4.5/ngPost_v4.5_x64_setup.exe) or [ngPost_v4.5_x86_setup.exe](https://github.com/mbruel/ngPost/releases/download/v4.5/ngPost_v4.5_x86_setup.exe) for the 32bit version
+- just use the packager [ngPost_v4.6_x64_setup.exe](https://github.com/mbruel/ngPost/releases/download/v4.6/ngPost_v4.6_x64_setup.exe) or [ngPost_v4.6_x86_setup.exe](https://github.com/mbruel/ngPost/releases/download/v4.6/ngPost_v4.6_x86_setup.exe) for the 32bit version
 - edit **ngPost.conf** (in the installation folder) to add your server settings (you can put several).
 - launch **ngPost.exe** (GUI version)
 - or you can use it with the command line: **ngPost.exe** -i "your file or directory"
@@ -192,7 +192,7 @@ By default:
 
 
 ### MacOS release built on High Sierra (v10.13)
-- download [ngPost_v4.5.dmg](https://github.com/mbruel/ngPost/releases/download/v4.5/ngPost_v4.5.dmg)
+- download [ngPost_v4.6.dmg](https://github.com/mbruel/ngPost/releases/download/v4.6/ngPost_v4.6.dmg)
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
@@ -236,7 +236,7 @@ Here is my email: Matthieu.Bruel@gmail.com
 
 
 ### Supported Languages
-For now, ngPost is translated in German, French and Spanish.<br/>
+For now, ngPost is translated in German, French, Portuguese and Spanish.<br/>
 If you'd like to translate ngPost in your language, it's easy to do (there is a nice GUI for that: QtLinguist), please get in touch with me (Matthieu.Bruel@gmail.com)
 
 
@@ -247,6 +247,7 @@ If you'd like to translate ngPost in your language, it's easy to do (there is a 
 - demanuel for the dev of NewsUP that was my first poster
 - noobcoder1983 for the German translation
 - tiriclote for the Spanish translation
+- hunesco for the Portuguese translation
 - all ngPost users ;)
 
 

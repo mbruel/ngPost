@@ -39,7 +39,9 @@ AboutNgPost::AboutNgPost(NgPost *ngPost, QWidget *parent) :
     ui->copyrightLbl->setStyleSheet("QLabel { color : darkgray; }");
     ui->copyrightLbl->setFont(QFont( "Arial", 12, QFont::Bold));
 
+    ui->descLbl->setTextFormat(Qt::RichText);
     ui->descLbl->setText(ngPost->desc());
+    ui->descLbl->setOpenExternalLinks(true);
     ui->descLbl->setStyleSheet(QString("QLabel { color : %1; }").arg(sTextColor));
     ui->descLbl->setFont(QFont( "Caladea", 14, QFont::Medium));
 //    ui->cosi7->setFont(QFont( "DejaVu Serif", 28, QFont::Bold));
@@ -47,6 +49,8 @@ AboutNgPost::AboutNgPost(NgPost *ngPost, QWidget *parent) :
 
     ui->donateButton->setToolTip(ngPost->donationTooltip());
     connect(ui->donateButton, &QAbstractButton::clicked, ngPost, &NgPost::onDonation);
+
+    connect(ui->closeButton, &QAbstractButton::clicked, this, &QWidget::close);
 }
 
 AboutNgPost::~AboutNgPost()
@@ -56,12 +60,14 @@ AboutNgPost::~AboutNgPost()
 
 void AboutNgPost::keyPressEvent(QKeyEvent *e)
 {
-    Q_UNUSED(e);
+    Q_UNUSED(e)
     close();
 }
 
+#include <QMouseEvent>
 void AboutNgPost::mousePressEvent(QMouseEvent *e)
 {
-    Q_UNUSED(e);
-    close();
+    Q_UNUSED(e)
+    if (e->button() == Qt::RightButton)
+        close();
 }

@@ -39,7 +39,7 @@
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="24"/>
         <source>compress path: </source>
-        <translation>caminho para compressão: </translation>
+        <translation>caminho p/ compressão: </translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="43"/>
@@ -61,7 +61,7 @@
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="88"/>
         <source>rar path: </source>
-        <translation>caminho do executável rar: </translation>
+        <translation>caminho rar: </translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="95"/>
@@ -76,7 +76,7 @@
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="122"/>
         <source>vol size:</source>
-        <translation>tamanho do volume:</translation>
+        <translation>tamanho do vol:</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="135"/>
@@ -86,12 +86,12 @@
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="142"/>
         <source>limit rar number</source>
-        <translation>limite o número de rar</translation>
+        <translation>limite número rar</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="171"/>
         <source>par2 redundancy (%): </source>
-        <translation>par2 redundância.(%): </translation>
+        <translation>par2 redundância (%): </translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="191"/>
@@ -221,7 +221,7 @@
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="512"/>
-        <location filename="../hmi/AutoPostWidget.cpp" line="228"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="220"/>
         <source>Monitor Folder</source>
         <translation>Pasta de Monitoramento</translation>
     </message>
@@ -251,42 +251,42 @@
         <translation>Doar</translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="47"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="416"/>
         <source>You can use the &lt;b&gt;Monitor Mode&lt;/b&gt;</source>
         <translation>Você pode usar o&lt;b&gt;Modo de Monitoramento&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="48"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="417"/>
         <source>or &lt;b&gt;Generate Posts&lt;/b&gt; by adding files:</source>
         <translation>ou&lt;b&gt;Gerar Postagens&lt;/b&gt;adicionando arquivos:</translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="49"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="418"/>
         <source>Drag &amp; Drop files/folders</source>
         <translation>Arraste e Solte arquivos/pastas</translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="50"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="419"/>
         <source>Right Click to add Files</source>
         <translation>Botão direito para adicionar arquivos</translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="51"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="420"/>
         <source>Click on the Scan Button</source>
         <translation>Clique no Botão de Escanear</translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="52"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="421"/>
         <source>Bare in mind you can select items in the list and press DEL to remove them</source>
         <translation>Lembre-se de que você pode selecionar itens na lista e pressionar DEL para removê-los</translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="128"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="120"/>
         <source>Nothing to post...</source>
         <translation>Nada para postar...</translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="129"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="121"/>
         <source>There is nothing to post!
 Press the Scan button and remove what you don&apos;t want to post ;)
 (To remove files, select in the list and press DEL or BackSpace)</source>
@@ -295,40 +295,40 @@ Aperte o botão de Escanear e remota o que não deseja postar ;)
 (para remover arquivos, selecione na lista e pressione DEL ou BackSpace)</translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="157"/>
-        <location filename="../hmi/AutoPostWidget.cpp" line="187"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="149"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="179"/>
         <source>Select a Folder</source>
         <translation>Selecione uma Pasta</translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="169"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="161"/>
         <source>Select rar executable</source>
         <translation>Selecione o executável rar</translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="179"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="171"/>
         <source>the selected file is not executable...</source>
         <translation>o arquivo selecionado não pode ser executável...</translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="207"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="199"/>
         <source>No auto directory selected...</source>
         <translation>Diretório automático não selecionado...</translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="208"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="200"/>
         <source>There is no auto directory!
 Please select one.</source>
         <translation>Não existe diretório para postagem automática!
 Por favor, selecione um.</translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="218"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="210"/>
         <source>Ongoing Monitoring post</source>
         <translation>Postagem de Monitoramento em Andamento</translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="219"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="211"/>
         <source>There are still ongoing or pending Monitoring Posts.
  We&apos;re going to stop all of them.
 Are you sure you want to proceed?</source>
@@ -337,33 +337,33 @@ Nós vamos parar todos eles.
 Tem certeza que deseja continuar?</translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="238"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="230"/>
         <source>Error accessing Auto Dir...</source>
         <translation>Erro acessando Diretório Automático...</translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="238"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="230"/>
         <source>The auto directory must exist and be readable...</source>
         <translation>A pasta automática precisa existir e ser legível...</translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="241"/>
-        <location filename="../hmi/AutoPostWidget.cpp" line="306"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="233"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="298"/>
         <source>Monitoring %1</source>
         <translation>Monitoramento %1</translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="243"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="235"/>
         <source>Stop Monitoring</source>
         <translation>Parar Monitoramento</translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="288"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="280"/>
         <source>Deleting files/folders once posted</source>
         <translation>Excluindo arquivos/pastas depois de postados</translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="289"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="281"/>
         <source>You&apos;re about to delete files from your computer once they&apos;ve been posted!
 Use it at your own risk!
 It will be irreversible...</source>
@@ -372,22 +372,22 @@ Use pelo seu próprio risco!
 Isso Será irreversível...</translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="297"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="289"/>
         <source>Select a Monitoring Folder to add</source>
         <translation>Selecione a Pasta de Monitoramento para adicionar</translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="335"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="327"/>
         <source>Select one or more files</source>
         <translation>Selecione um ou mais arquivos</translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="420"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="412"/>
         <source>limit the number of archive volume to %1 (cf config RAR_MAX)</source>
         <translation>limite o numero de volumes do arquivo para %1 (cf config RAR_MAX)</translation>
     </message>
     <message>
-        <location filename="../hmi/AutoPostWidget.cpp" line="421"/>
+        <location filename="../hmi/AutoPostWidget.cpp" line="413"/>
         <source>Using PAR2_ARGS from config file: %1</source>
         <translation>Usando ARGS_PAR2 do arquivo de configuração: %1</translation>
     </message>
@@ -462,7 +462,7 @@ Isso Será irreversível...</translation>
     <message>
         <location filename="../hmi/MainWindow.ui" line="139"/>
         <source>new random email for each Post</source>
-        <translation>novo email aleatório para cada Postagem</translation>
+        <translation>novo email aleatório p/ cada Post</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="161"/>
@@ -553,7 +553,7 @@ Isso Será irreversível...</translation>
     <message>
         <location filename="../hmi/MainWindow.ui" line="349"/>
         <source>file name obfuscation</source>
-        <translation>ofuscação do nome do arquivo</translation>
+        <translation>ofuscação nome do arquivo</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="369"/>
@@ -563,7 +563,7 @@ Isso Será irreversível...</translation>
     <message>
         <location filename="../hmi/MainWindow.ui" line="372"/>
         <source>Auto Compress</source>
-        <translation>Comprimir Automaticamente</translation>
+        <translation>Comprimir Auto</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="379"/>
@@ -573,7 +573,7 @@ Isso Será irreversível...</translation>
     <message>
         <location filename="../hmi/MainWindow.ui" line="382"/>
         <source>Auto Close Tabs</source>
-        <translation>Fechas Abas Automaticamente</translation>
+        <translation>Fechas Abas Auto</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="405"/>
@@ -988,7 +988,7 @@ Por favor clique em parar antes de fechar..</translation>
         <location filename="../NgPost.cpp" line="179"/>
         <location filename="../NgPost.cpp" line="1960"/>
         <source>Remove root (parent) folder when compressing Folders using RAR</source>
-        <translation type="unfinished"></translation>
+        <translation>Remova a pasta raiz (pai) ao compactar pastas usando o RAR</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="183"/>
@@ -1655,8 +1655,16 @@ OU use --par2_pct ou coloque PAR2_PCT ou PAR2_ARGS na configuração de arquivo.
     </message>
     <message>
         <location filename="../NgPost.h" line="535"/>
+        <source>for more details, cf &lt;a href=&quot;https://github.com/mbruel/ngPost/&quot;&gt;https://github.com/mbruel/ngPost&lt;/a&gt;</source>
+        <translation>para obter mais detalhes, consulte &lt;a href=&quot;https://github.com/mbruel/ngPost/&quot;&gt;https://github.com/mbruel/ngPost&lt;/a&gt;</translation>
+    </message>
+    <message>
+        <source>for more details, cf &lt;a href=&apos;https://github.com/mbruel/ngPost/&gt;https://github.com/mbruel/ngPost&lt;/a&gt;</source>
+        <translation type="vanished">para obter mais detalhes, consulte &lt;a href=&apos;https://github.com/mbruel/ngPost/&gt;https://github.com/mbruel/ngPost&lt;/a&gt;</translation>
+    </message>
+    <message>
         <source>for more details, cf https://github.com/mbruel/ngPost</source>
-        <translation>para obter mais detalhes, consulte https://github.com/mbruel/ngPost</translation>
+        <translation type="vanished">para obter mais detalhes, consulte https://github.com/mbruel/ngPost</translation>
     </message>
 </context>
 <context>
@@ -1958,7 +1966,7 @@ OU use --par2_pct ou coloque PAR2_PCT ou PAR2_ARGS na configuração de arquivo.
     <message>
         <location filename="../hmi/PostingWidget.ui" line="24"/>
         <source>compress path: </source>
-        <translation>caminho de compactação: </translation>
+        <translation>caminho p/ compressão: </translation>
     </message>
     <message>
         <location filename="../hmi/PostingWidget.ui" line="43"/>
@@ -1994,7 +2002,7 @@ OU use --par2_pct ou coloque PAR2_PCT ou PAR2_ARGS na configuração de arquivo.
     <message>
         <location filename="../hmi/PostingWidget.ui" line="122"/>
         <source>vol size:</source>
-        <translation>tamanho do volume:</translation>
+        <translation>tamanho do vol:</translation>
     </message>
     <message>
         <location filename="../hmi/PostingWidget.ui" line="135"/>
@@ -2004,12 +2012,12 @@ OU use --par2_pct ou coloque PAR2_PCT ou PAR2_ARGS na configuração de arquivo.
     <message>
         <location filename="../hmi/PostingWidget.ui" line="145"/>
         <source>limit rar number</source>
-        <translation>limite o número de rar</translation>
+        <translation>limite número rar</translation>
     </message>
     <message>
         <location filename="../hmi/PostingWidget.ui" line="174"/>
         <source>par2 redundancy (%): </source>
-        <translation>redundância de par2 (%): </translation>
+        <translation>par2 redundância (%): </translation>
     </message>
     <message>
         <location filename="../hmi/PostingWidget.ui" line="206"/>
@@ -2148,7 +2156,7 @@ OU use --par2_pct ou coloque PAR2_PCT ou PAR2_ARGS na configuração de arquivo.
     </message>
     <message>
         <location filename="../hmi/PostingWidget.ui" line="509"/>
-        <location filename="../hmi/PostingWidget.cpp" line="598"/>
+        <location filename="../hmi/PostingWidget.cpp" line="597"/>
         <source>Post Files</source>
         <translation>Postar Arquivos</translation>
     </message>
@@ -2158,101 +2166,101 @@ OU use --par2_pct ou coloque PAR2_PCT ou PAR2_ARGS na configuração de arquivo.
         <translation>Doação</translation>
     </message>
     <message>
-        <location filename="../hmi/PostingWidget.cpp" line="60"/>
+        <location filename="../hmi/PostingWidget.cpp" line="537"/>
         <source>You can add files or folder by:</source>
         <translation>Você pode adicionar arquivos ou pasta por:</translation>
     </message>
     <message>
-        <location filename="../hmi/PostingWidget.cpp" line="61"/>
+        <location filename="../hmi/PostingWidget.cpp" line="538"/>
         <source>Drag &amp; Drop files/folders</source>
         <translation>Arraste e solte arquivos/pastas</translation>
     </message>
     <message>
-        <location filename="../hmi/PostingWidget.cpp" line="62"/>
+        <location filename="../hmi/PostingWidget.cpp" line="539"/>
         <source>Right Click to add Files</source>
         <translation>Botão Direito para adicionar Arquivos</translation>
     </message>
     <message>
-        <location filename="../hmi/PostingWidget.cpp" line="63"/>
+        <location filename="../hmi/PostingWidget.cpp" line="540"/>
         <source>Click on Select Files/Folder buttons</source>
         <translation>Clique nos botões para selecionar Arquivos/Pasta</translation>
     </message>
     <message>
-        <location filename="../hmi/PostingWidget.cpp" line="64"/>
+        <location filename="../hmi/PostingWidget.cpp" line="541"/>
         <source>Bare in mind you can select items in the list and press DEL to remove them</source>
         <translation>Lembre-se de que você pode selecionar itens na lista e pressionar DEL para removê-los</translation>
     </message>
     <message>
-        <location filename="../hmi/PostingWidget.cpp" line="138"/>
+        <location filename="../hmi/PostingWidget.cpp" line="131"/>
         <source>There are no selected files to post...</source>
         <translation>Não existem arquivos selecionados para postar...</translation>
     </message>
     <message>
-        <location filename="../hmi/PostingWidget.cpp" line="147"/>
+        <location filename="../hmi/PostingWidget.cpp" line="140"/>
         <source>There are no existing files to post...</source>
         <translation>Não existem arquivos para postar...</translation>
     </message>
     <message>
-        <location filename="../hmi/PostingWidget.cpp" line="153"/>
+        <location filename="../hmi/PostingWidget.cpp" line="146"/>
         <source>You can&apos;t post folders without using compression...</source>
         <translation>Você não pode postar pastas sem usar a compactação ...</translation>
     </message>
     <message>
-        <location filename="../hmi/PostingWidget.cpp" line="173"/>
+        <location filename="../hmi/PostingWidget.cpp" line="166"/>
         <source>Overwrite existing nzb file?</source>
         <translation>Substituir arquivo nzb existente?</translation>
     </message>
     <message>
-        <location filename="../hmi/PostingWidget.cpp" line="174"/>
+        <location filename="../hmi/PostingWidget.cpp" line="167"/>
         <source>The nzb file &apos;%1&apos; already exists.
 Would you like to overwrite it ?</source>
         <translation>o arquivo nzb &apos;%1&apos;já existe.
 Deseja substituí-lo?</translation>
     </message>
     <message>
-        <location filename="../hmi/PostingWidget.cpp" line="200"/>
-        <location filename="../hmi/PostingWidget.cpp" line="605"/>
+        <location filename="../hmi/PostingWidget.cpp" line="193"/>
+        <location filename="../hmi/PostingWidget.cpp" line="604"/>
         <source>Stop Posting</source>
         <translation>Para a Postagem</translation>
     </message>
     <message>
-        <location filename="../hmi/PostingWidget.cpp" line="206"/>
+        <location filename="../hmi/PostingWidget.cpp" line="199"/>
         <source>Cancel Posting</source>
         <translation>Cancele a Postagem</translation>
     </message>
     <message>
-        <location filename="../hmi/PostingWidget.cpp" line="237"/>
+        <location filename="../hmi/PostingWidget.cpp" line="230"/>
         <source>Select one or more files to Post</source>
         <translation>Selecione um ou mais arquivo para Postar</translation>
     </message>
     <message>
-        <location filename="../hmi/PostingWidget.cpp" line="249"/>
-        <location filename="../hmi/PostingWidget.cpp" line="290"/>
+        <location filename="../hmi/PostingWidget.cpp" line="242"/>
+        <location filename="../hmi/PostingWidget.cpp" line="283"/>
         <source>Select a Folder</source>
         <translation>Selecione uma Pasta</translation>
     </message>
     <message>
-        <location filename="../hmi/PostingWidget.cpp" line="302"/>
+        <location filename="../hmi/PostingWidget.cpp" line="295"/>
         <source>Create nzb file</source>
         <translation>Crie o arquivo nzb</translation>
     </message>
     <message>
-        <location filename="../hmi/PostingWidget.cpp" line="315"/>
+        <location filename="../hmi/PostingWidget.cpp" line="308"/>
         <source>Select rar executable</source>
         <translation>Selecione o executável rar</translation>
     </message>
     <message>
-        <location filename="../hmi/PostingWidget.cpp" line="325"/>
+        <location filename="../hmi/PostingWidget.cpp" line="318"/>
         <source>the selected file is not executable...</source>
         <translation>o arquivo selecionado não é executável...</translation>
     </message>
     <message>
-        <location filename="../hmi/PostingWidget.cpp" line="540"/>
+        <location filename="../hmi/PostingWidget.cpp" line="533"/>
         <source>limit the number of archive volume to %1 (cf config RAR_MAX)</source>
         <translation>limite o número de volumes do arquivo para %1 (cf config RAR_MAX)</translation>
     </message>
     <message>
-        <location filename="../hmi/PostingWidget.cpp" line="541"/>
+        <location filename="../hmi/PostingWidget.cpp" line="534"/>
         <source>Using PAR2_ARGS from config file: %1</source>
         <translation>Usando PAR2_ARGS do arquivo de configuração: %1</translation>
     </message>

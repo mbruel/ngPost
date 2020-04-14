@@ -521,7 +521,7 @@ void NgPost::_enableAutoCompress()
 
 QString NgPost::desc()
 {
-    return QString("%1 %2\n%3\n\n%4\n    - %5\n    - %6\n    - %7\n    - %8\n    - %9\n    - %10\n    - %11\n%12\n").arg(sAppName).arg(
+    return QString("%1 %2<br/>%3<br/><br/>%4<ul><li>%5</li><li>%6</li><li>%7</li><li>%8</li><li>%9</li><li>%10</li><li>%11</li></ul>%12<br/><br/>").arg(sAppName).arg(
             tr("is a CMD/GUI Usenet binary poster developped in C++11/Qt5:")).arg(
             tr("It is designed to be as fast as possible and offer all the main features to post data easily and safely.")).arg(
             tr("Here are the main features and advantages of ngPost:")).arg(
@@ -532,7 +532,7 @@ QString NgPost::desc()
             tr("generate the nzb")).arg(
             tr("invisible mode: full article obfuscation, unique feature making all Articles completely unrecognizable without the nzb")).arg(
             "...").arg(
-            tr("for more details, cf https://github.com/mbruel/ngPost"));
+            tr("for more details, cf <a href=\"https://github.com/mbruel/ngPost/\">https://github.com/mbruel/ngPost</a>"));
 }
 
 #endif // NGPOST_H
