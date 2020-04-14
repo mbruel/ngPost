@@ -96,222 +96,224 @@
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="191"/>
         <source>&lt;b&gt;Auto Dir&lt;/b&gt; path: </source>
-        <translation></translation>
+        <translation>&lt;b&gt;Diretório Automático&lt;/b&gt; caminho: </translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="210"/>
         <source>Auto Dir path</source>
-        <translation></translation>
+        <translation>caminho diretório automático</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="223"/>
         <source>select the Auto Directory</source>
-        <translation></translation>
+        <translation>selecione o diretório automático</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="239"/>
         <source>add another folder to monitor (you must be in monitoring already)</source>
-        <translation></translation>
+        <translation>adicione outra pasta para monitorar (você já deve estar monitorando)</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="268"/>
         <source>Monitor extension filter: </source>
-        <translation></translation>
+        <translation>Filtro de extensão do monitoramento: </translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="275"/>
         <source>Add monitoring extension filter (coma separated, not dot, no space, ex: mkv,mp4,avi,iso,tar)</source>
-        <translation></translation>
+        <translation>Adicionar ifltro de extensão para monitoramento (separado por vírgula, sem pontos ou espaço, ex:mkv,mp4,avi,iso,tar)</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="282"/>
         <source>shall we post incoming folders</source>
-        <translation></translation>
+        <translation>devemos postar pastas de entrada</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="285"/>
         <source>post Folders</source>
-        <translation></translation>
+        <translation>Postar Pastas</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="307"/>
         <source>Show latest files first (otherwise it&apos;ll be sorted by names)</source>
-        <translation></translation>
+        <translation>Mostrar últimos arquivos primeiro (caso contrário será classificados por nomes)</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="310"/>
         <source>latest files first</source>
-        <translation></translation>
+        <translation>últimos arquivos primeiro</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="317"/>
         <source>Scan the Auto directory. Delete manually the files/folder you don&apos;t want to post (using DEL)</source>
-        <translation></translation>
+        <translation>Escaneie o diretório Automático. Delete manualmente os arquivos/pastas que não quiser postar (usando DEL)</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="320"/>
         <source> Scan</source>
-        <translation></translation>
+        <translation> Escanear</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="337"/>
         <source>generate a random name for the archive</source>
-        <translation></translation>
+        <translation>gere um nome aleatório para o arquivo</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="340"/>
         <source>generate random name</source>
-        <translation></translation>
+        <translation>gere um nome aleatório</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="347"/>
         <source>length of the random archive name</source>
-        <translation></translation>
+        <translation>tamanho do nome aleatório do arquivo</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="374"/>
         <source>generate a random password for the archive or use the fixed one</source>
-        <translation></translation>
+        <translation>gere uma senha senha aleatória para o arquivo ou use uma fixa</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="377"/>
         <source>generate random password</source>
-        <translation></translation>
+        <translation>gere uma senha aleatória</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="384"/>
         <source>length of the random archive password</source>
-        <translation></translation>
+        <translation>tamanho da senha aleatória do arquivo</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="409"/>
         <location filename="../hmi/AutoPostWidget.ui" line="412"/>
         <source>generate par2</source>
-        <translation></translation>
+        <translation>gerar par2</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="435"/>
         <source>by default archives and par2 files are deleted uppon post success but you can choose to keep them</source>
-        <translation></translation>
+        <translation>por padrão, os arquivos e os arquivos par2 são excluídos após o sucesso da postagem, mas você pode optar por mantê-los</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="438"/>
         <source>keep archives</source>
-        <translation></translation>
+        <translation>manter arquivos</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="458"/>
         <source>delete files/folders once they have been successfully posted (careful with that it&apos;s irreversible!!!)</source>
-        <translation></translation>
+        <translation>delete arquivos/pastas uma vez que sejam postados com sucesso (cuidado com isso é irreversível!!!)</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="461"/>
         <source>delete files once posted (only for Monitoring)</source>
-        <translation></translation>
+        <translation>delete arquivos após a postagem (somente para Monitoramento)</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="485"/>
         <source>About ngPost</source>
-        <translation></translation>
+        <translation>Sobre ngPost</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="488"/>
         <source>About</source>
-        <translation></translation>
+        <translation>Sobre</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="512"/>
         <location filename="../hmi/AutoPostWidget.cpp" line="228"/>
         <source>Monitor Folder</source>
-        <translation></translation>
+        <translation>Pasta de Monitoramento</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="523"/>
         <source>start all posts when generating them</source>
-        <translation></translation>
+        <translation>inicie todos as postagens ao gerá-las</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="526"/>
         <source>start all Posts</source>
-        <translation></translation>
+        <translation>iniciar toda as Postagens</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="533"/>
         <source>Generate Quick Posting Tabs for each file/folder</source>
-        <translation></translation>
+        <translation>Gerar Abas de Postagens Rápidas para cada arquivo/pasta</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="539"/>
         <source>Generate Posts</source>
-        <translation></translation>
+        <translation>Gerar Postagens</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="566"/>
         <source>Donate</source>
-        <translation></translation>
+        <translation>Doar</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.cpp" line="47"/>
         <source>You can use the &lt;b&gt;Monitor Mode&lt;/b&gt;</source>
-        <translation></translation>
+        <translation>Você pode usar o&lt;b&gt;Modo de Monitoramento&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.cpp" line="48"/>
         <source>or &lt;b&gt;Generate Posts&lt;/b&gt; by adding files:</source>
-        <translation></translation>
+        <translation>ou&lt;b&gt;Gerar Postagens&lt;/b&gt;adicionando arquivos:</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.cpp" line="49"/>
         <source>Drag &amp; Drop files/folders</source>
-        <translation></translation>
+        <translation>Arraste e Solte arquivos/pastas</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.cpp" line="50"/>
         <source>Right Click to add Files</source>
-        <translation></translation>
+        <translation>Botão direito para adicionar arquivos</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.cpp" line="51"/>
         <source>Click on the Scan Button</source>
-        <translation></translation>
+        <translation>Clique no Botão de Escanear</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.cpp" line="52"/>
         <source>Bare in mind you can select items in the list and press DEL to remove them</source>
-        <translation></translation>
+        <translation>Lembre-se de que você pode selecionar itens na lista e pressionar DEL para removê-los</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.cpp" line="128"/>
         <source>Nothing to post...</source>
-        <translation></translation>
+        <translation>Nada para postar...</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.cpp" line="129"/>
         <source>There is nothing to post!
 Press the Scan button and remove what you don&apos;t want to post ;)
 (To remove files, select in the list and press DEL or BackSpace)</source>
-        <translation></translation>
+        <translation>Não tem nada para postar!
+Aperte o botão de Escanear e remota o que não deseja postar ;)
+(para remover arquivos, selecione na lista e pressione DEL ou BackSpace)</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.cpp" line="157"/>
         <location filename="../hmi/AutoPostWidget.cpp" line="187"/>
         <source>Select a Folder</source>
-        <translation></translation>
+        <translation>Selecione uma Pasta</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.cpp" line="169"/>
         <source>Select rar executable</source>
-        <translation></translation>
+        <translation>Selecione o executável rar</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.cpp" line="179"/>
         <source>the selected file is not executable...</source>
-        <translation></translation>
+        <translation>o arquivo selecionado não pode ser executável...</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.cpp" line="207"/>
         <source>No auto directory selected...</source>
-        <translation></translation>
+        <translation>Diretório automático não selecionado...</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.cpp" line="208"/>
@@ -395,23 +397,24 @@ Isso Será irreversível...</translation>
     <message>
         <location filename="../FileUploader.cpp" line="90"/>
         <source>Error uploading nzb to %1: Protocol not supported</source>
-        <translation></translation>
+        <translation>Erro enviando nzb para %1: Protocolo não suportado</translation>
     </message>
     <message>
         <location filename="../FileUploader.cpp" line="98"/>
         <source>Error uploading file: can&apos;t open file </source>
-        <translation></translation>
+        <translation>Erro enviando o arquivo: arquivo não pode ser aberto </translation>
     </message>
     <message>
         <location filename="../FileUploader.cpp" line="107"/>
         <source>Error uploading nzb to %1: %2</source>
-        <translation></translation>
+        <translation>Erro enviando nzb para %1: %2</translation>
     </message>
     <message>
         <location filename="../FileUploader.cpp" line="109"/>
         <source>nzb %1 uploaded to %2
 </source>
-        <translation></translation>
+        <translation>nzb %1 enviado para %2
+</translation>
     </message>
 </context>
 <context>
@@ -419,12 +422,12 @@ Isso Será irreversível...</translation>
     <message>
         <location filename="../hmi/MainWindow.ui" line="54"/>
         <source>Add a server (you can use as many as you want)</source>
-        <translation></translation>
+        <translation>Adicionar um servidor (você pode usar quantos desejar)</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="57"/>
         <source>Add Server</source>
-        <translation></translation>
+        <translation>Adicionar um servidor</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="89"/>
@@ -449,204 +452,204 @@ Isso Será irreversível...</translation>
     <message>
         <location filename="../hmi/MainWindow.ui" line="129"/>
         <source>save email</source>
-        <translation></translation>
+        <translation>salvar email</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="136"/>
         <source>generate a new random email for each Post</source>
-        <translation></translation>
+        <translation>gerar um novo email aleatório para cada Postagem</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="139"/>
         <source>new random email for each Post</source>
-        <translation></translation>
+        <translation>novo email aleatório para cada Postagem</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="161"/>
         <source>Use a Fixed password for all the Posts</source>
-        <translation></translation>
+        <translation>Usar uma senha Fixa para todas as Postagens</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="164"/>
         <source>archive password:</source>
-        <translation></translation>
+        <translation>senha para arquivamento:</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="174"/>
         <source>archive password</source>
-        <translation></translation>
+        <translation>senha para arquivamento</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="181"/>
         <source>length of the password</source>
-        <translation></translation>
+        <translation>tamanho da senha</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="194"/>
         <source>generate random password</source>
-        <translation></translation>
+        <translation>gerar senha aleatória</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="220"/>
         <source>add the list of groups separated with a coma (no space)</source>
-        <translation></translation>
+        <translation>adicionar a lista de grupos separadamente com uma vírgula (não usar espaço)</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="223"/>
         <source>NewsGroups:</source>
-        <translation></translation>
+        <translation>NewsGroups:</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="236"/>
         <source>list of groups where to post (coma separated with no space)</source>
-        <translation></translation>
+        <translation>lista de grupos onde postar (vírgula para seprar não usar espaço)</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="257"/>
         <location filename="../hmi/MainWindow.ui" line="273"/>
         <source>don&apos;t touch if you don&apos;t know what it is</source>
-        <translation></translation>
+        <translation>não toque nisso se não souber o que é</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="260"/>
         <source>Article Size:</source>
-        <translation></translation>
+        <translation>Tamanho do Artigo:</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="280"/>
         <source>Number of retry if an Article FAILS to be posted (probably its msg-id is already in use)</source>
-        <translation></translation>
+        <translation>Número de tentativas se um Artigo FALHAR de ser postado (provavelmente essa mensagem-id está atualmente em uso)</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="283"/>
         <source>nb Retry:</source>
-        <translation></translation>
+        <translation>nm Tentativa:</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="306"/>
         <source>Number of Threads on which all the Connections will be spreads</source>
-        <translation></translation>
+        <translation>Número de Tópicos nos quais todas as conexões serão espalhadas</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="309"/>
         <source>Nb Threads:</source>
-        <translation></translation>
+        <translation>Nm Tópicos:</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="333"/>
         <source>CAREFUL: you won&apos;t be able to find your post without the NZB file</source>
-        <translation></translation>
+        <translation>CUIDADO: você não será capaz de encontrar sua postagem sem o arquivo NZB</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="336"/>
         <source>Article&apos;s obfuscation: Subject changed to be a UUID + random From</source>
-        <translation></translation>
+        <translation>Ofuscação do Artigo: Assunto alterado para ser umm UUID + Aleatório</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="346"/>
         <source>when using compression with random name, rename also the file inside the archive</source>
-        <translation></translation>
+        <translation>quando usar compressão com nome aleatório, renomeie também o nome do arquivo dentro da compressão</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="349"/>
         <source>file name obfuscation</source>
-        <translation></translation>
+        <translation>ofuscação do nome do arquivo</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="369"/>
         <source>compress QuickPosts with a random archive name and password and generate the par2</source>
-        <translation></translation>
+        <translation>comprimir PostagensRápidas com um nome e senha aleatórias e gerar o par2</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="372"/>
         <source>Auto Compress</source>
-        <translation></translation>
+        <translation>Comprimir Automaticamente</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="379"/>
         <source>Auto close Tabs when posted successfully</source>
-        <translation></translation>
+        <translation>Fechar Automaticamente Abas quando postadas com sucesso</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="382"/>
         <source>Auto Close Tabs</source>
-        <translation></translation>
+        <translation>Fechas Abas Automaticamente</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="405"/>
         <source>nzb destination Path: </source>
-        <translation></translation>
+        <translation>caminho de destino nzb: </translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="418"/>
         <location filename="../hmi/MainWindow.ui" line="431"/>
         <source>set the destination path of all the nzb file</source>
-        <translation></translation>
+        <translation>selecione o caminho de destino de todos os arquivos nzb</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="434"/>
         <source> ... </source>
-        <translation></translation>
+        <translation> ... </translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="459"/>
         <source>shutdown computer</source>
-        <translation></translation>
+        <translation>desligar o computador</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="484"/>
         <source>language</source>
-        <translation></translation>
+        <translation>idioma</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="487"/>
         <source>Lang:</source>
-        <translation></translation>
+        <translation>Idioma:</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="499"/>
         <source>save all the parameters including servers in the config file</source>
-        <translation></translation>
+        <translation>salvar todos os parâmetros incluindo os servidores no arquivo de configuração</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="502"/>
         <source>save</source>
-        <translation></translation>
+        <translation>salvar</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="541"/>
         <source>Job 1</source>
-        <translation></translation>
+        <translation>Tarefa 1</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="550"/>
         <source>Add</source>
-        <translation></translation>
+        <translation>Adicionar</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="567"/>
         <source>show some debug information</source>
-        <translation></translation>
+        <translation>exibir alguma informação de depuramento</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="570"/>
         <source>show debug info</source>
-        <translation></translation>
+        <translation>mostrar informação de depuramento</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="577"/>
         <source>debug level (0 nothing, 1 few extra info, 2  debugging level)</source>
-        <translation></translation>
+        <translation>depuramento level (0 nada, 1 alguma informação extra, 2 level de depuração)</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="600"/>
         <source>clear log</source>
-        <translation></translation>
+        <translation>limpar log</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="603"/>
         <source>Clear</source>
-        <translation></translation>
+        <translation>Limpar</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="651"/>
@@ -656,130 +659,132 @@ Isso Será irreversível...</translation>
     <message>
         <location filename="../hmi/MainWindow.ui" line="671"/>
         <source>(0 / 0) avg speed: 0 MB/s</source>
-        <translation></translation>
+        <translation>(0 / 0) velocidade média: 0 MB/s</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="49"/>
         <source>on</source>
-        <translation></translation>
+        <translation>on</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="50"/>
         <source>Host (name or IP)</source>
-        <translation></translation>
+        <translation>Host (nome ou IP)</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="51"/>
         <source>Port</source>
-        <translation></translation>
+        <translation>Porta</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="52"/>
         <source>SSL</source>
-        <translation></translation>
+        <translation>SSL</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="53"/>
         <source>Connections</source>
-        <translation></translation>
+        <translation>Conexões</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="54"/>
         <source>Username</source>
-        <translation></translation>
+        <translation>Nome de Usuário</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="55"/>
         <source>Password</source>
-        <translation></translation>
+        <translation>Senha</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="111"/>
         <location filename="../hmi/MainWindow.cpp" line="262"/>
         <source>New</source>
-        <translation></translation>
+        <translation>Novo</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="151"/>
         <source>avg speed</source>
-        <translation></translation>
+        <translation>velocidade média</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="220"/>
         <source>close while still posting?</source>
-        <translation></translation>
+        <translation>fechar enquanto ainda está postando?</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="221"/>
         <source>ngPost is currently posting.
 Are you sure you want to quit?</source>
-        <translation></translation>
+        <translation>ngPost está postando.
+Tem certeza que deseja sair?</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="250"/>
         <source>Shutdown computer when all the current Posts are done (with command: %1)</source>
-        <translation></translation>
+        <translation>Desligar o computador quando todas as Postagens atuais terminarem (com comando: %1)</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="253"/>
         <source>Servers</source>
-        <translation></translation>
+        <translation>Servidores</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="254"/>
         <source>Files</source>
-        <translation></translation>
+        <translation>Arquivos</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="255"/>
         <source>Parameters</source>
-        <translation></translation>
+        <translation>Parâmetros</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="256"/>
         <source>Posting Log</source>
-        <translation></translation>
+        <translation>Registro de Postagem</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="326"/>
         <source>Quick Tabs Menu</source>
-        <translation></translation>
+        <translation>Menu Rápido de Abas</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="327"/>
         <source>Close All finished Tabs</source>
-        <translation></translation>
+        <translation>Fechar todas as Abas Finalizadas</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="785"/>
         <source>Quick Post is working..</source>
-        <translation></translation>
+        <translation>Postagem Rápida em curso..</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="786"/>
         <source>The Quick post is currentling uploading.
  Please Stop it before closing it..</source>
-        <translation></translation>
+        <translation>A Postagem Rápida está atualmente enviando.
+Por favor clique em parar antes de fechar..</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="824"/>
         <source>Select a Folder</source>
-        <translation></translation>
+        <translation>Selecione uma Pasta</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="843"/>
         <source>Automatic Shutdown?</source>
-        <translation></translation>
+        <translation>Desligamento Automático?</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="845"/>
         <source>You&apos;re about to schedule the shutdown of the computer once all the current Postings will be finished</source>
-        <translation></translation>
+        <translation>Você está prestes a programar o desligamento do computador uma vez que todas as postagens atuais sejam finalizadas</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.cpp" line="846"/>
         <source>Are you sure you want to switch off the computer?</source>
-        <translation></translation>
+        <translation>Tem certeza que deseja desligar o computador?</translation>
     </message>
 </context>
 <context>
@@ -787,37 +792,37 @@ Are you sure you want to quit?</source>
     <message>
         <location filename="../NgPost.cpp" line="50"/>
         <source>Auto Posting</source>
-        <translation></translation>
+        <translation>Postadem Automática</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="51"/>
         <source>Quick Post</source>
-        <translation></translation>
+        <translation>Postagem Rápida</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="52"/>
         <source>Donations are welcome, I spent quite some time to develop this app and make a sexy GUI although I&apos;m not using it ;)</source>
-        <translation></translation>
+        <translation>Doações são bem vindas, Eu gasto um bom tempo desenvolvendo esse aplicativo e fazendo uma sexy interface gráfica ainda que não a use ;)</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="133"/>
         <source>Help: display syntax</source>
-        <translation></translation>
+        <translation>Ajuda: sintaxe de exibição</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="134"/>
         <source>app version</source>
-        <translation></translation>
+        <translation>versão do aplicativo</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="135"/>
         <source>use configuration file (if not provided, we try to load $HOME/.ngPost)</source>
-        <translation></translation>
+        <translation>usar arquivo de configuração (se não fornecido, nós tentaremos carregar de $HOME/.ngPost)</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="136"/>
         <source>display cmd progressbar: NONE (default), BAR or FILES</source>
-        <translation></translation>
+        <translation>exibir bara de progresso do comando de linha: NONE (padrão), BAR or FILES</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="137"/>
@@ -1659,53 +1664,54 @@ OU use --par2_pct ou coloque PAR2_PCT ou PAR2_ARGS na configuração de arquivo.
     <message>
         <location filename="../NntpConnection.cpp" line="159"/>
         <source>Connection lost, trying to reconnect! (nb disconnected: %1)</source>
-        <translation></translation>
+        <translation>Conexão perdida, tentanto reconectar!nb disconectada: %1)</translation>
     </message>
     <message>
         <location filename="../NntpConnection.cpp" line="257"/>
         <source>Closing Connection due to ERROR on post command: &apos;%2&apos; (%1 skipped)
 </source>
-        <translation></translation>
+        <translation>Fechando a Conexão devido ao ERRO no comando de postagem: &apos;%2&apos; (%1 pulado)
+</translation>
     </message>
     <message>
         <location filename="../NntpConnection.cpp" line="269"/>
         <source>POSTED: %1</source>
-        <translation></translation>
+        <translation>POSTADO: %1</translation>
     </message>
     <message>
         <location filename="../NntpConnection.cpp" line="276"/>
         <source>Error on posting article %1: %2</source>
-        <translation></translation>
+        <translation>Erro na postagem do artigo %1: %2</translation>
     </message>
     <message>
         <location filename="../NntpConnection.cpp" line="284"/>
         <source>ReTry %1 (Error: &apos;%2&apos;)</source>
-        <translation></translation>
+        <translation>Tentativa %1 (Erro: &apos;%2&apos;)</translation>
     </message>
     <message>
         <location filename="../NntpConnection.cpp" line="289"/>
         <source>FAIL posting %1 (Error: &apos;%2&apos;)</source>
-        <translation></translation>
+        <translation>ERRO na postagem %1 (Erro: &apos;%2&apos;)</translation>
     </message>
     <message>
         <location filename="../NntpConnection.cpp" line="309"/>
         <source>[Connection #%1] Error connecting to server %2:%3</source>
-        <translation></translation>
+        <translation>[Conexão #%1] Erro conectando ao servidor %2:%3</translation>
     </message>
     <message>
         <location filename="../NntpConnection.cpp" line="347"/>
         <source>[Connection #%1] Error sending user &apos;%4&apos; to server %2:%3</source>
-        <translation></translation>
+        <translation>[Conexão #%1] Erro ao enviar usuário &apos;%4&apos; para o servidor %2:%3</translation>
     </message>
     <message>
         <location filename="../NntpConnection.cpp" line="376"/>
         <source>[Connection #%1] Error authentication to server %2:%3 with user &apos;%4&apos; and pass &apos;%5&apos;</source>
-        <translation></translation>
+        <translation>[Conexão #%1] Erro autenticando ao servidor %2:%3 com usuário &apos;%4&apos; e senha &apos;%5&apos;</translation>
     </message>
     <message>
         <location filename="../NntpConnection.cpp" line="403"/>
         <source>start sending article: %1</source>
-        <translation></translation>
+        <translation>iniciar envio do artigo: %1</translation>
     </message>
 </context>
 <context>
@@ -1713,120 +1719,122 @@ OU use --par2_pct ou coloque PAR2_PCT ou PAR2_ARGS na configuração de arquivo.
     <message>
         <location filename="../PostingJob.cpp" line="147"/>
         <source>&lt;h3&gt;Start Post #%1: %2&lt;/h3&gt;</source>
-        <translation></translation>
+        <translation>&lt;h3&gt;Iniciar Post #%1: %2&lt;/h3&gt;</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="149"/>
         <source>Start posting</source>
-        <translation></translation>
+        <translation>Iniciar postagem</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="195"/>
         <source>Error: there are no NntpConnection...</source>
-        <translation></translation>
+        <translation>Erro: não há ConexãoNntp...</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="202"/>
         <source>Error: Can&apos;t create nzb output file: %1</source>
-        <translation></translation>
+        <translation>Erro: Não é possível criar o arquivo de saída nzb: %1</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="279"/>
         <source>killing external process...</source>
-        <translation></translation>
+        <translation>matando processo externo...</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="296"/>
         <source>Error: disconnected connection: #%1
 </source>
-        <translation></translation>
+        <translation>Erro:conexão disconectada: #%1
+</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="301"/>
         <source>we lost all the connections...</source>
-        <translation></translation>
+        <translation>perdemos todas as conexões...</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="310"/>
         <location filename="../PostingJob.cpp" line="322"/>
         <source>avg. speed</source>
-        <translation></translation>
+        <translation>velocidade. média</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="349"/>
         <source>[avg. speed: %1] &lt;&lt;&lt;&lt;&lt; %2</source>
-        <translation></translation>
+        <translation>[velocidade. média: %1] &lt;&lt;&lt;&lt;&lt; %2</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="405"/>
         <source>Number of available Nntp Connections: %1</source>
-        <translation></translation>
+        <translation>Número de conexões Nntp disponíveis: %1</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="407"/>
         <source>Number of available Nntp Connections</source>
-        <translation></translation>
+        <translation>Número de conexões Nntp disponíveis</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="434"/>
         <source>Deleting posted %1: %2</source>
-        <translation></translation>
+        <translation>Deletando postagem %1: %2</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="434"/>
         <source>folder</source>
-        <translation></translation>
+        <translation>pasta</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="434"/>
         <source>file</source>
-        <translation></translation>
+        <translation>arquivo</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="457"/>
         <source>[%1] No more file to post...</source>
-        <translation></translation>
+        <translation>[%1] Sem mais arquivos para postar...</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="469"/>
         <source>[%1] starting processing file %2</source>
-        <translation></translation>
+        <translation>[%1] iniciando processamento do arquivo %2</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="475"/>
         <source>[%1] Error: couldn&apos;t open file %2</source>
-        <translation></translation>
+        <translation>[%1] Erro: arquivo não pode ser aberto %2</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="477"/>
         <source>Error: couldn&apos;t open file %1</source>
-        <translation></translation>
+        <translation>Erro: não é possível abrir o arquivo %1</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="495"/>
         <source>[%1] we&apos;ve read %2 bytes from %3 (=&gt; new pos: %4)</source>
-        <translation></translation>
+        <translation>[%1] nós lemos %2 bytes de %3 (=&gt; new pos: %4)</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="505"/>
         <source>[%1] finished processing file %2</source>
-        <translation></translation>
+        <translation>[%1] arquivo de processamento finalizado %2</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="604"/>
         <source>ERROR: there were %1 on %2 that havn&apos;t been posted:</source>
-        <translation></translation>
+        <translation>ERRO: havia %1 em %2 que não foi postado:</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="628"/>
         <source>you can try to repost only those and concatenate the nzb with the current one ;)</source>
-        <translation></translation>
+        <translation>você pode tentar reenviar somente esses e juntar o nzb com o atual</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="661"/>
         <source>Upload size: %1 in %2 (%3 sec)                  =&gt; average speed: %4 (%5 connections on %6 threads)
 </source>
-        <translation></translation>
+        <translation>Tamanho do upload %1 em %2 (%3 seg)                  =&gt; velocidade média: %4 (%5 conexões em %6 tópicos)
+</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="667"/>
