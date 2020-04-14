@@ -42,14 +42,6 @@ AutoPostWidget::AutoPostWidget(NgPost *ngPost, MainWindow *hmi) :
     _ui->setupUi(this);
     _ui->filesList->setSignature(QString("<pre>%1</pre>").arg(_ngPost->escapeXML(_ngPost->asciiArt())));
     connect(_ui->filesList, &SignedListWidget::rightClick, this, &AutoPostWidget::onSelectFilesClicked);
-
-    _ui->filesList->setToolTip(QString("%1<br/><br/>%2<ul><li>%3</li><li>%4</li><li>%5</li></ul>%6").arg(
-                                   tr("You can use the <b>Monitor Mode</b>")).arg(
-                                   tr("or <b>Generate Posts</b> by adding files:")).arg(
-                                   tr("Drag & Drop files/folders")).arg(
-                                   tr("Right Click to add Files")).arg(
-                                   tr("Click on the Scan Button")).arg(
-                                   tr("Bare in mind you can select items in the list and press DEL to remove them")));
 }
 
 AutoPostWidget::~AutoPostWidget()
@@ -420,6 +412,13 @@ void AutoPostWidget::retranslate()
     _ui->rarMaxCB->setToolTip(tr("limit the number of archive volume to %1 (cf config RAR_MAX)").arg(_ngPost->_rarMax));
     _ui->redundancySB->setToolTip(tr("Using PAR2_ARGS from config file: %1").arg(_ngPost->_par2Args));
     _ui->donateButton->setToolTip(_ngPost->donationTooltip());
+    _ui->filesList->setToolTip(QString("%1<br/><br/>%2<ul><li>%3</li><li>%4</li><li>%5</li></ul>%6").arg(
+                                   tr("You can use the <b>Monitor Mode</b>")).arg(
+                                   tr("or <b>Generate Posts</b> by adding files:")).arg(
+                                   tr("Drag & Drop files/folders")).arg(
+                                   tr("Right Click to add Files")).arg(
+                                   tr("Click on the Scan Button")).arg(
+                                   tr("Bare in mind you can select items in the list and press DEL to remove them")));
 }
 
 void AutoPostWidget::setAutoCompress(bool checked)

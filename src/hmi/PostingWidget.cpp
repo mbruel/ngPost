@@ -55,13 +55,6 @@ PostingWidget::PostingWidget(NgPost *ngPost, MainWindow *hmi, uint jobNumber) :
 
     _ui->filesList->setSignature(QString("<pre>%1</pre>").arg(_ngPost->escapeXML(_ngPost->asciiArt())));
     connect(_ui->filesList, &SignedListWidget::rightClick, this, &PostingWidget::onSelectFilesClicked);
-
-    _ui->filesList->setToolTip(QString("%1<ul><li>%2</li><li>%3</li><li>%4</li></ul>%5").arg(
-                                   tr("You can add files or folder by:")).arg(
-                                   tr("Drag & Drop files/folders")).arg(
-                                   tr("Right Click to add Files")).arg(
-                                   tr("Click on Select Files/Folder buttons")).arg(
-                                   tr("Bare in mind you can select items in the list and press DEL to remove them")));
 }
 
 PostingWidget::~PostingWidget()
@@ -540,6 +533,12 @@ void PostingWidget::retranslate()
     _ui->rarMaxCB->setToolTip(tr("limit the number of archive volume to %1 (cf config RAR_MAX)").arg(_ngPost->_rarMax));
     _ui->redundancySB->setToolTip(tr("Using PAR2_ARGS from config file: %1").arg(_ngPost->_par2Args));
     _ui->donateButton->setToolTip(_ngPost->donationTooltip());
+    _ui->filesList->setToolTip(QString("%1<ul><li>%2</li><li>%3</li><li>%4</li></ul>%5").arg(
+                                   tr("You can add files or folder by:")).arg(
+                                   tr("Drag & Drop files/folders")).arg(
+                                   tr("Right Click to add Files")).arg(
+                                   tr("Click on Select Files/Folder buttons")).arg(
+                                   tr("Bare in mind you can select items in the list and press DEL to remove them")));
 }
 
 void PostingWidget::setNzbPassword(const QString &pass)
