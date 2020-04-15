@@ -124,15 +124,15 @@ void NntpConnection::onKillConnection()
 
 
 void NntpConnection::_closeConnection(){
-    if (_socket && _isConnected)
-    {
 #if defined(__DEBUG__) && defined(LOG_CONNECTION_STEPS)
         _log("closeConnection");
 #endif
+    if (_socket && _isConnected)
+    {
         disconnect(_socket, &QIODevice::readyRead, this, &NntpConnection::onReadyRead);
         _socket->disconnectFromHost();
     }
-    else // wrong host info
+    else // wrong host info or network down
     {
         _socket->deleteLater();
         _socket = nullptr;
@@ -163,6 +163,9 @@ void NntpConnection::onDisconnected()
     {
         // Let's try to reconnect
         _error(tr("Connection lost, trying to reconnect! (nb disconnected: %1)").arg(_nbDisconnected));
+        if (_currentArticle)
+            _currentArticle->genNewId();
+
         emit startConnection();
     }
     else

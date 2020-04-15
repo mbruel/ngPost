@@ -143,7 +143,7 @@ void MainWindow::init()
 
 void MainWindow::updateProgressBar(uint nbArticlesTotal, uint nbArticlesUploaded, const QString &avgSpeed)
 {
-    qDebug() << "[MainWindow::updateProgressBar] _nbArticlesUploaded: " << nbArticlesUploaded;
+//    qDebug() << "[MainWindow::updateProgressBar] _nbArticlesUploaded: " << nbArticlesUploaded;
     _ui->progressBar->setValue(static_cast<int>(nbArticlesUploaded));
     _ui->uploadLbl->setText(QString("(%1 / %2) %3: %4").arg(
                                 nbArticlesUploaded).arg(
