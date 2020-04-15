@@ -136,6 +136,12 @@ void NntpConnection::_closeConnection(){
     {
         _socket->deleteLater();
         _socket = nullptr;
+
+        if (_currentArticle)
+        {
+            emit _currentArticle->failed(_currentArticle->size());
+            _currentArticle = nullptr;
+        }
         emit disconnected(this);
     }
 }
