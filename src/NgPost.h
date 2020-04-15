@@ -376,9 +376,7 @@ public:
     inline static const QString & donationURL();
     inline static const QString & asciiArt();
     inline static QString asciiArtWithVersion();
-    inline static QString desc();
-    inline static QString descHTML();
-
+    inline static QString desc(bool useHTML = false);
 
     inline static QString quickJobName();
     inline static QString folderMonitoringName();
@@ -521,9 +519,14 @@ void NgPost::_enableAutoCompress()
 }
 
 
-QString NgPost::desc()
+QString NgPost::desc(bool useHTML)
 {
-    return QString("%1 %2\n%3\n\n%4\n    - %5\n    - %6\n    - %7\n    - %8\n    - %9\n    - %10\n    - %11\n%12\n").arg(sAppName).arg(
+    QString desc;
+    if (useHTML)
+        desc = QString("%1 %2<br/>%3<br/><br/>%4<ul><li>%5</li><li>%6</li><li>%7</li><li>%8</li><li>%9</li><li>%10</li><li>%11</li></ul>%12<br/><br/>");
+    else
+        desc = QString("%1 %2\n%3\n\n%4\n    - %5\n    - %6\n    - %7\n    - %8\n    - %9\n    - %10\n    - %11\n%12\n");
+    return desc.arg(sAppName).arg(
             tr("is a CMD/GUI Usenet binary poster developped in C++11/Qt5:")).arg(
             tr("It is designed to be as fast as possible and offer all the main features to post data easily and safely.")).arg(
             tr("Here are the main features and advantages of ngPost:")).arg(
@@ -534,24 +537,9 @@ QString NgPost::desc()
             tr("generate the nzb")).arg(
             tr("invisible mode: full article obfuscation, unique feature making all Articles completely unrecognizable without the nzb")).arg(
             "...").arg(
-             tr("for more details, cf https://github.com/mbruel/ngPost"));
-}
-
-QString NgPost::descHTML()
-{
-    return QString("%1 %2<br/>%3<br/><br/>%4<ul><li>%5</li><li>%6</li><li>%7</li><li>%8</li><li>%9</li><li>%10</li><li>%11</li></ul>%12<br/><br/>").arg(sAppName).arg(
-            tr("is a CMD/GUI Usenet binary poster developped in C++11/Qt5:")).arg(
-            tr("It is designed to be as fast as possible and offer all the main features to post data easily and safely.")).arg(
-            tr("Here are the main features and advantages of ngPost:")).arg(
-            tr("compress (using your external rar binary) and generate the par2 before posting!")).arg(
-            tr("scan folder(s) and post each file/folder individually after having them compressed")).arg(
-            tr("monitor folder(s) to post each new file/folder individually after having them compressed")).arg(
-            tr("auto delete files/folders once posted (only in command line with --auto or --monitor)")).arg(
-            tr("generate the nzb")).arg(
-            tr("invisible mode: full article obfuscation, unique feature making all Articles completely unrecognizable without the nzb")).arg(
-            "...").arg(
-            tr("for more details, cf <a href=\"https://github.com/mbruel/ngPost/\">https://github.com/mbruel/ngPost</a>"));
-
+            tr("for more details, cf %1").arg(
+                    useHTML ? "<a href=\"https://github.com/mbruel/ngPost/\">https://github.com/mbruel/ngPost</a>"
+                            : "https://github.com/mbruel/ngPost"));
 }
 
 #endif // NGPOST_H

@@ -40,7 +40,7 @@ AboutNgPost::AboutNgPost(NgPost *ngPost, QWidget *parent) :
     ui->copyrightLbl->setFont(QFont( "Arial", 12, QFont::Bold));
 
     ui->descLbl->setTextFormat(Qt::RichText);
-    ui->descLbl->setText(ngPost->descHTML());
+    ui->descLbl->setText(ngPost->desc(true));
     ui->descLbl->setOpenExternalLinks(true);
     ui->descLbl->setStyleSheet(QString("QLabel { color : %1; }").arg(sTextColor));
     ui->descLbl->setFont(QFont( "Caladea", 14, QFont::Medium));
