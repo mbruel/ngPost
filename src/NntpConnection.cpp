@@ -415,9 +415,8 @@ void NntpConnection::_sendNextArticle()
     if (_currentArticle)
     {
         _postingState = PostingState::SENDING_ARTICLE;
-#if defined(__DEBUG__) && defined(LOG_POSTING_STEPS)
-        _log(tr("start sending article: %1").arg(_currentArticle->id()));
-#endif
+        if (_ngPost->debugFull())
+            _log(tr("start sending article: %1").arg(_currentArticle->str()));
         _socket->write(Nntp::POST);
     }
     else

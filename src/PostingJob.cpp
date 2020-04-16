@@ -628,21 +628,21 @@ qDebug() << "[MB_TRACE][PostingJob::_finishPosting]";
         {
             QString msg = QString("  - %1").arg(file->stats());
             if (isDebugMode)
-                msg += " (fInProgress)";
+                msg += QString(" (fInProgress%1)").arg(file->missingArticles());
             _error(msg);
         }
         for (NntpFile *file : _filesToUpload)
         {
             QString msg = QString("  - %1").arg(file->stats());
             if (isDebugMode)
-                msg += " (fToUpload)";
+                msg += QString(" (fToUpload%1)").arg(file->missingArticles());
             _error(msg);
         }
         for (NntpFile *file : _filesFailed)
         {
             QString msg = QString("  - %1").arg(file->stats());
             if (isDebugMode)
-                msg += " (fFailed)";
+                msg += QString(" (fFailed%1)").arg(file->missingArticles());
             _error(msg);
         }
         _error(tr("you can try to repost only those and concatenate the nzb with the current one ;)"));

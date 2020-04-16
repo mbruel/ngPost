@@ -97,6 +97,7 @@ public:
 
     inline static ushort nbMaxTrySending();
     inline static void setNbMaxRetry(ushort nbMax);
+
 };
 
 void NntpArticle::freeMemory()

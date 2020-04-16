@@ -55,6 +55,8 @@ public:
     inline uint nbFailedArticles() const;
     inline bool hasFailedArticles() const;
 
+    QString missingArticles() const;
+
 signals:
     void allArticlesArePosted();
     void startPosting();
@@ -92,5 +94,7 @@ qint64 NntpFile::fileSize() const { return _file.size(); }
 uint NntpFile::nbArticles() const { return _nbAticles; }
 uint NntpFile::nbFailedArticles() const { return static_cast<uint>(_failed.size()); }
 bool NntpFile::hasFailedArticles() const { return _failed.size() != 0; }
+
+
 
 #endif // NntpFile_H

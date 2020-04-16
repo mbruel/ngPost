@@ -166,3 +166,24 @@ void NntpFile::writeToNZB(QTextStream &stream, const QString &from)
         stream << tab << "</file>\n";
     }
 }
+
+QString NntpFile::missingArticles() const
+{
+    QSet<uint> allArticles;
+    allArticles.reserve(static_cast<int>(_nbAticles));
+    for (uint i = 1; i <= _nbAticles ; ++i)
+        allArticles << i;
+
+    allArticles.subtract(_posted);
+    allArticles.subtract(_failed);
+
+    if (allArticles.isEmpty())
+        return QString();
+    else
+    {
+        QString str(" missing Articles: ");
+        for (uint part : allArticles)
+            str += QString("%1 ").arg(part);
+        return str;
+    }
+}
