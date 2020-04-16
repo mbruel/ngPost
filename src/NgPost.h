@@ -74,6 +74,7 @@ class NgPost : public QObject
 
     enum class Opt {HELP = 0, LANG, VERSION, CONF, SHUTDOWN_CMD,
                     DISP_PROGRESS, DEBUG, DEBUG_FULL, POST_HISTORY, NZB_RM_ACCENTS,
+                    RESUME_WAIT, NO_RESUME_AUTO, SOCK_TIMEOUT,
                     INPUT, OUTPUT, NZB_PATH, THREAD, NZB_UPLOAD_URL, NZB_POST_CMD,
                     MONITOR_FOLDERS, MONITOR_EXT, MONITOR_IGNORE_DIR,
                     MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY, GEN_FROM,
@@ -184,6 +185,9 @@ private:
     bool       _autoCloseTabs;
     bool       _rarNoRootFolder;
 
+    bool       _tryResumePostWhenConnectionLost;
+    ushort     _waitDurationBeforeAutoResume;
+
     static constexpr const char *sDefaultShutdownCmdLinux   = "sudo -n /sbin/poweroff";
     static constexpr const char *sDefaultShutdownCmdWindows = "shutdown /s /f /t 0";
     static constexpr const char *sDefaultShutdownCmdMacOS   = "sudo -n shutdown -h now";
@@ -199,6 +203,7 @@ private:
 
     static const QList<QCommandLineOption> sCmdOptions;
 
+    static const int sDefaultResumeWaitInSec     = 30;
     static const int sDefaultNumberOfConnections = 15;
     static const int sDefaultSocketTimeOut       = 5000;
     static const int sDefaultArticleSize         = 716800;
@@ -310,6 +315,9 @@ public:
     void pause() const;
     void resume() const;
 
+    inline bool tryResumePostWhenConnectionLost() const;
+    inline ushort waitDurationBeforeAutoResume() const;
+
 signals:
     void log(QString msg, bool newline); //!< in case we signal from another thread
     void error(QString msg); //!< in case we signal from another thread
@@ -412,6 +420,9 @@ void NgPost::setAutoCompress(bool checked)
 }
 
 bool NgPost::removeRarRootFolder() const { return _rarNoRootFolder; }
+bool NgPost::tryResumePostWhenConnectionLost() const { return _tryResumePostWhenConnectionLost; }
+ushort NgPost::waitDurationBeforeAutoResume() const { return _waitDurationBeforeAutoResume; }
+
 bool NgPost::useHMI() const { return _mode == AppMode::HMI; }
 
 const std::string &NgPost::aticleSignature() { return sArticleIdSignature; }

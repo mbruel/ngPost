@@ -857,25 +857,24 @@ void MainWindow::onShutdownToggled(bool checked)
         _ngPost->_doShutdownWhenDone = false;
 }
 
+void MainWindow::setPauseIcon(bool pause)
+{
+    if (pause)
+        _ui->pauseButton->setIcon(QIcon(":/icons/pause.png"));
+    else
+        _ui->pauseButton->setIcon(QIcon(":/icons/play.png"));
+}
+
 void MainWindow::onPauseClicked()
 {
     if (_ngPost->isPosting())
     {
         if (_ngPost->isPaused())
-        {
             _ngPost->resume();
-            _ui->pauseButton->setIcon(QIcon(":/icons/pause.png"));
-        }
         else
-        {
             _ngPost->pause();
-            _ui->pauseButton->setIcon(QIcon(":/icons/play.png"));
-        }
     }
 }
-
-
-
 
 
 const QString MainWindow::sGroupBoxStyle =  "\

@@ -34,8 +34,9 @@
 #include <QFile>
 #include <QAbstractSocket>
 #include <QSslCipher>
-
-int NntpConnection::sSocketTimeoutMs = 5000;
+#ifdef __USE_CONNECTION_TIMEOUT__
+#include <QTimer>
+#endif
 
 NntpConnection::NntpConnection(NgPost *ngPost, int id, const NntpServerParams &srvParams):
     QObject(),
@@ -47,6 +48,9 @@ NntpConnection::NntpConnection(NgPost *ngPost, int id, const NntpServerParams &s
     _nbDisconnected(0),
     _ngPost(ngPost),
     _poster(nullptr)
+#ifdef __USE_CONNECTION_TIMEOUT__
+    ,_timeout(nullptr)
+#endif
 {
 #if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
     qDebug() << QString("Creation %1 %2 ssl").arg(_logPrefix).arg(_srvParams.useSSL ? "with" : "no");
@@ -72,6 +76,10 @@ NntpConnection::~NntpConnection()
             _socket->waitForDisconnected();
         _socket->deleteLater();
     }
+#ifdef __USE_CONNECTION_TIMEOUT__
+    if (_timeout)
+        delete _timeout;
+#endif
 }
 
 
@@ -99,6 +107,15 @@ void NntpConnection::onStartConnection()
 
     _socket->connectToHost(_srvParams.host, _srvParams.port);
 
+#ifdef __USE_CONNECTION_TIMEOUT__
+    if (!_timeout)
+    {
+        _timeout = new QTimer();
+        connect(_timeout, &QTimer::timeout, this, &NntpConnection::onTimeout);
+    }
+    _timeout->start(_ngPost->getSocketTimeout());
+#endif
+
     if (_ngPost->debugFull())
         _log(QString("SSL support: %1, build version: %2, system version: %3").arg(QSslSocket::supportsSsl() ? "yes" : "no").arg(
                  QSslSocket::sslLibraryBuildVersionString()).arg(QSslSocket::sslLibraryVersionString()));
@@ -110,6 +127,11 @@ void NntpConnection::onKillConnection()
 #if defined(__DEBUG__) && defined(LOG_CONNECTION_STEPS)
     qDebug() << "[killConnection] #" << _id;
 #endif
+#ifdef __USE_CONNECTION_TIMEOUT__
+    if (_timeout)
+        _timeout->stop();
+#endif
+
     if (_socket)
     {
         if (_ngPost->debugFull())
@@ -134,6 +156,10 @@ void NntpConnection::_closeConnection(){
 #if defined(__DEBUG__) && defined(LOG_CONNECTION_STEPS)
         _log("closeConnection");
 #endif
+#ifdef __USE_CONNECTION_TIMEOUT__
+    if (_timeout)
+        _timeout->stop();
+#endif
     if (_socket && _isConnected)
     {
         disconnect(_socket, &QIODevice::readyRead, this, &NntpConnection::onReadyRead);
@@ -144,7 +170,7 @@ void NntpConnection::_closeConnection(){
         _socket->deleteLater();
         _socket = nullptr;
 
-        if (_currentArticle)
+        if (_currentArticle && !_ngPost->tryResumePostWhenConnectionLost())
         {
             emit _currentArticle->failed(_currentArticle->size());
             _currentArticle = nullptr;
@@ -236,12 +262,23 @@ void NntpConnection::onErrors(QAbstractSocket::SocketError)
     _closeConnection();
 }
 
+#ifdef __USE_CONNECTION_TIMEOUT__
+void NntpConnection::onTimeout()
+{
+    _error(QString("Socket Timeout (%1 ms)").arg(_ngPost->getSocketTimeout()));
+    _closeConnection();
+}
+#endif
 
 void NntpConnection::onReadyRead()
 {
     while (_isConnected && _socket->canReadLine())
     {
         QByteArray line = _socket->readLine();
+#ifdef __USE_CONNECTION_TIMEOUT__
+        if (_timeout)
+            _timeout->start(_ngPost->getSocketTimeout());
+#endif
 
 #if defined(__DEBUG__) && defined(LOG_NEWS_DATA)
         _log(QString("Data In: %1").arg(line.constData()));

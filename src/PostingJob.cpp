@@ -64,7 +64,7 @@ PostingJob::PostingJob(NgPost *ngPost,
     _tmpPath(tmpPath), _rarPath(rarPath), _rarSize(rarSize), _useRarMax(useRarMax), _par2Pct(par2Pct),
     _doCompress(doCompress), _doPar2(doPar2), _rarName(rarName), _rarPass(rarPass), _keepRar(keepRar),
 
-    _nntpConnections(),
+    _nntpConnections(), _closedConnections(),
 
     _nzbName(QFileInfo(nzbFilePath).fileName()),
     _filesToUpload(), _filesInProgress(), _filesFailed(),
@@ -86,7 +86,7 @@ PostingJob::PostingJob(NgPost *ngPost,
     _secureDiskAccess(), _posters(),
     _overwriteNzb(overwriteNzb),
     _grpList(grpList), _groups(groups), _from(from),
-    _use7z(false), _isPaused(false)
+    _use7z(false), _isPaused(false), _resumeTimer()
 {
 #ifdef __DEBUG__
     qDebug() << "[PostingJob] >>>> Construct " << this;
@@ -107,6 +107,8 @@ PostingJob::PostingJob(NgPost *ngPost,
         connect(this, &PostingJob::postingFinished,  _postWidget, &PostingWidget::onPostingJobDone,    Qt::QueuedConnection);
         connect(this, &PostingJob::noMoreConnection, _postWidget, &PostingWidget::onPostingJobDone,    Qt::QueuedConnection);
     }
+
+    connect(&_resumeTimer, &QTimer::timeout, this, &PostingJob::onResumeTriggered);
 }
 
 PostingJob::~PostingJob()
@@ -132,6 +134,7 @@ PostingJob::~PostingJob()
     qDeleteAll(_filesInProgress);
     qDeleteAll(_filesToUpload);
     qDeleteAll(_nntpConnections);
+    qDeleteAll(_closedConnections);
     qDeleteAll(_posters);
 
     if (_nzb)
@@ -142,8 +145,7 @@ PostingJob::~PostingJob()
 
 void PostingJob::pause()
 {
-    _ngPost->_log("Pause posting...");
-
+    _log("Pause posting...");
     for (NntpConnection *con : _nntpConnections)
         emit con->killConnection();
 
@@ -152,14 +154,22 @@ void PostingJob::pause()
 
 void PostingJob::resume()
 {
-    _ngPost->_log("Resume posting...");
-
+    _log("Resume posting...");
     for (NntpConnection *con : _nntpConnections)
         emit con->startConnection();
 
     _isPaused = false;
 }
 
+void PostingJob::onResumeTriggered()
+{
+    if (_isPaused)
+    {
+        _log(tr("Try to resume posting"));
+        _nntpConnections.swap(_closedConnections);
+        _ngPost->resume();
+    }
+}
 
 void PostingJob::onStartPosting()
 {
@@ -314,13 +324,27 @@ void PostingJob::onDisconnectedConnection(NntpConnection *con)
         return; // we're destructing all the connections
 
     _error(tr("Error: disconnected connection: #%1\n").arg(con->getId()));
-    _nntpConnections.removeOne(con);
-    delete con;
-    if (_nntpConnections.isEmpty())
+    if (_nntpConnections.removeOne(con))
     {
-        _error(tr("we lost all the connections..."));
-        _finishPosting();
-        emit noMoreConnection();
+        con->resetErrorCount(); // In case we will resume if we loose all
+        _closedConnections.append(con);
+
+        if (_nntpConnections.isEmpty())
+        {
+            _error(tr("we lost all the connections..."));
+            if (_ngPost->_tryResumePostWhenConnectionLost)
+            {
+                int sleepDurationInSec = _ngPost->waitDurationBeforeAutoResume();
+                _log(tr("Sleep for %1 sec before trying to reconnect").arg(sleepDurationInSec));
+                _ngPost->pause();
+                _resumeTimer.start(sleepDurationInSec*1000);
+            }
+            else
+            {
+                _finishPosting();
+                emit noMoreConnection();
+            }
+        }
     }
 }
 

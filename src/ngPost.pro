@@ -9,6 +9,9 @@ TEMPLATE = app
 CONFIG += c++14
 CONFIG -= app_bundle
 
+
+DEFINES += __USE_CONNECTION_TIMEOUT__
+
 TRANSLATIONS = lang/ngPost_en.ts lang/ngPost_fr.ts lang/ngPost_es.ts lang/ngPost_de.ts\
                lang/ngPost_pt.ts
 

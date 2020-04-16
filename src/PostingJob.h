@@ -28,6 +28,7 @@
 #include <QTextStream>
 #include <QMutex>
 #include <QTime>
+#include <QTimer>
 class QProcess;
 class NgPost;
 class NntpConnection;
@@ -79,6 +80,7 @@ private:
 
 
     QVector<NntpConnection*> _nntpConnections; //!< the NNTP connections (owning the TCP sockets)
+    QVector<NntpConnection*> _closedConnections; //!< the NNTP connections (owning the TCP sockets)
 
     QString               _nzbName; //!< name of nzb that we'll write (without the extension)
     QQueue<NntpFile*>     _filesToUpload;  //!< list of files to upload (that we didn't start)
@@ -136,6 +138,9 @@ private:
     bool _use7z;
 
     bool _isPaused;
+
+    QTimer _resumeTimer;
+
 
 public:
     PostingJob(NgPost *ngPost,
@@ -230,6 +235,7 @@ private slots:
     void onCompressionFinished(int exitCode);
     void onGenPar2Finished(int exitCode);
 
+    void onResumeTriggered();
 
 
 private:

@@ -74,6 +74,11 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::AUTO_CLOSE_TABS,"auto_close_tabs"},
     {Opt::RAR_NO_ROOT_FOLDER, "rar_no_root_folder"},
 
+
+    {Opt::NO_RESUME_AUTO, "no_resume_auto"},
+    {Opt::RESUME_WAIT,    "resume_wait"},
+    {Opt::SOCK_TIMEOUT,   "sock_timeout"},
+
     {Opt::INPUT,        "input"},
     {Opt::AUTO_DIR,     "auto"},
     {Opt::MONITOR_DIR,  "monitor"},
@@ -189,7 +194,9 @@ const QList<QCommandLineOption> NgPost::sCmdOptions = {
 };
 
 
-
+#ifdef __DEBUG__
+#include <QNetworkConfigurationManager>
+#endif
 NgPost::NgPost(int &argc, char *argv[]):
     QObject (),
     _app(nullptr),
@@ -238,7 +245,9 @@ NgPost::NgPost(int &argc, char *argv[]):
 #endif
     _removeAccentsOnNzbFileName(false),
     _autoCloseTabs(false),
-    _rarNoRootFolder(false)
+    _rarNoRootFolder(false),
+    _tryResumePostWhenConnectionLost(true),
+    _waitDurationBeforeAutoResume(sDefaultResumeWaitInSec)
 {
     QThread::currentThread()->setObjectName(sMainThreadName);
 
@@ -271,8 +280,26 @@ NgPost::NgPost(int &argc, char *argv[]):
 
     _loadTanslators();
 
-    connect(&_netMgr, &QNetworkAccessManager::networkAccessibleChanged,
-            this, &NgPost::onNetworkAccessibleChanged);
+#ifdef __DEBUG__
+    QNetworkConfigurationManager netConfMgr;
+    for (const QNetworkConfiguration &conf : netConfMgr.allConfigurations())
+    {
+        qDebug() << "net conf: " << conf.name()
+                 << ", bearerType: " << conf.bearerTypeName()
+                 << ", timeout: " << conf.connectTimeout()
+                 << ", isValid: " << conf.isValid()
+                 << ", state: " << conf.state();
+    }
+
+    QNetworkConfiguration conf = netConfMgr.defaultConfiguration();
+    qDebug() << "DEFAULT conf: " << conf.name()
+             << ", bearerType: " << conf.bearerTypeName()
+             << ", timeout: " << conf.connectTimeout()
+             << ", isValid: " << conf.isValid()
+             << ", state: " << conf.state();
+#endif
+
+    connect(&_netMgr, &QNetworkAccessManager::networkAccessibleChanged, this, &NgPost::onNetworkAccessibleChanged);
 }
 
 void NgPost::_startMonitoring(const QString &folderPath)
@@ -541,13 +568,21 @@ bool NgPost::isPaused() const
 void NgPost::pause() const
 {
     if (_activeJob && !_activeJob->isPaused())
+    {
         _activeJob->pause();
+        if (_hmi)
+            _hmi->setPauseIcon(false);
+    }
 }
 
 void NgPost::resume() const
 {
     if (_activeJob && _activeJob->isPaused())
+    {
         _activeJob->resume();
+        if (_hmi)
+            _hmi->setPauseIcon(true);
+    }
 }
 
 
@@ -771,14 +806,18 @@ void NgPost::onNetworkAccessibleChanged(QNetworkAccessManager::NetworkAccessibil
     if (accessible == QNetworkAccessManager::NetworkAccessibility::Accessible)
     {
         _log(msg.arg("ON"));
+#ifndef __USE_CONNECTION_TIMEOUT__
         if (_activeJob && _activeJob->isPaused())
             _activeJob->resume();
+#endif
     }
     else
     {
         _error(msg.arg("OFF"));
+#ifndef __USE_CONNECTION_TIMEOUT__
         if (_activeJob)
             _activeJob->pause();
+#endif
     }
 }
 
@@ -1459,6 +1498,24 @@ QString NgPost::_parseConfig(const QString &configPath)
                             _urlNzbUpload = nullptr;
                         }
                     }
+                    else if (opt == sOptionNames[Opt::RESUME_WAIT])
+                    {
+                        ushort nb = val.toUShort(&ok);
+                        if (ok)
+                            _waitDurationBeforeAutoResume = nb;
+                    }
+                    else if (opt == sOptionNames[Opt::NO_RESUME_AUTO])
+                    {
+                        val = val.toLower();
+                        if (val == "true" || val == "on" || val == "1")
+                            _tryResumePostWhenConnectionLost = false;
+                    }
+                    else if (opt == sOptionNames[Opt::SOCK_TIMEOUT])
+                    {
+                        int nb = val.toInt(&ok);
+                        if (ok)
+                            _socketTimeOut = nb;
+                    }
                     else if (opt == sOptionNames[Opt::MONITOR_FOLDERS])
                     {
                         val = val.toLower();
@@ -1951,6 +2008,19 @@ void NgPost::saveConfig()
                << "\n"
                << tr("## close Quick Post Tabs when posted successfully (for the GUI)") << endl
                << (_autoCloseTabs  ? "" : "#") << "AUTO_CLOSE_TABS = true\n"
+               << "\n"
+               << "\n"
+               << tr("## Time to wait (seconds) before trying to resume a Post automatically in case of loss of Network") << endl
+               << "RESUME_WAIT = " << _waitDurationBeforeAutoResume << endl
+               << "\n"
+               << tr("## By default, ngPost tries to resume a Post if the network is down.") << endl
+               << tr("## it won't stop trying until the network is back and the post is finished properly") << endl
+               << tr("## you can disable this feature and thus stop a post when you loose the network") << endl
+               << (_tryResumePostWhenConnectionLost  ? "#" : "") << "NO_RESUME_AUTO = true\n"
+               << "\n"
+               << tr("## if there is no activity on a connection it will be closed and restarted") << endl
+               << tr("## The duration is in second.") << endl
+               << "SOCK_TIMEOUT = " << _socketTimeOut << endl
                << "\n"
                << "\n"
                << "\n"

@@ -91,6 +91,8 @@ public:
     inline AutoPostWidget *autoWidget() const;
     void closeTab(PostingWidget *postWidget);
 
+    void setPauseIcon(bool pause);
+
     static const QColor  sPostingColor;
     static const QString sPostingIcon;
     static const QColor  sPendingColor;

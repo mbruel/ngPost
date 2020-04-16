@@ -32,7 +32,9 @@ class Poster;
 class QSslSocket;
 class QSslError;
 class QByteArray;
-
+#ifdef __USE_CONNECTION_TIMEOUT__
+class QTimer;
+#endif
 
 /*!
  * \brief NntpConnection is a client side Active Object that is made to Post Articles in an async way
@@ -63,8 +65,9 @@ private:
 
     NgPost        *_ngPost;
     Poster        *_poster;
-
-    static int sSocketTimeoutMs;
+#ifdef __USE_CONNECTION_TIMEOUT__
+    QTimer        *_timeout;
+#endif
 
 public:
     /*!
@@ -87,6 +90,7 @@ public:
     inline void write(const QByteArray & aBuffer); //!< write on the socket
     inline void write(const char *aBuffer); //!< write on the socket
 
+    inline void resetErrorCount();
 
     void setPoster(Poster *poster);
 
@@ -116,6 +120,9 @@ public slots:
     void onSslErrors(const QList<QSslError> &errors); //!< SSL errors handler
     void onErrors(QAbstractSocket::SocketError);      //!< Socket errors handler
 
+#ifdef __USE_CONNECTION_TIMEOUT__
+    void onTimeout();
+#endif
 
 private:
     inline void _log(const QString     &aMsg) const; //!< log function for QString
@@ -136,6 +143,8 @@ int NntpConnection::getId() const { return _id;}
 
 void NntpConnection::write(const QByteArray &aBuffer){_socket->write(aBuffer);}
 void NntpConnection::write(const char *aBuffer){_socket->write(aBuffer);}
+
+void NntpConnection::resetErrorCount() { _nbDisconnected = 0; }
 
 void NntpConnection::_log(const char *aMsg) const
 {
