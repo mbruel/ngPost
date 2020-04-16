@@ -32,14 +32,14 @@ class FileUploader : public QObject
     Q_OBJECT
 
 private:
-    QNetworkAccessManager *_netMgr;
+    QNetworkAccessManager &_netMgr;
     QNetworkReply         *_reply;
     QFileInfo              _nzbFilePath;
     QFile                  _nzbFile;
     QUrl                   _nzbUrl;
 
 public:
-    FileUploader(QNetworkAccessManager *netMgr, const QString &nzbFilePath);
+    FileUploader(QNetworkAccessManager &netMgr, const QString &nzbFilePath);
     ~FileUploader();
 
     void startUpload(const QUrl &serverUrl);

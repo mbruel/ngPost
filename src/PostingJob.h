@@ -135,6 +135,8 @@ private:
 
     bool _use7z;
 
+    bool _isPaused;
+
 public:
     PostingJob(NgPost *ngPost,
                const QString &nzbFilePath,
@@ -159,6 +161,10 @@ public:
                bool overwriteNzb = true,
                QObject *parent = nullptr);
     ~PostingJob();
+
+
+    void pause();
+    void resume();
 
     inline QString avgSpeed() const;
 
@@ -189,6 +195,8 @@ public:
     inline QString from() const;
 
     inline bool isPosting() const;
+
+    inline bool isPaused() const;
 
 
 signals:
@@ -380,6 +388,7 @@ QString PostingJob::groups() const { return QString::fromStdString(_groups); }
 QString PostingJob::from() const { return _obfuscateArticles ? QString() : QString::fromStdString(_from); }
 
 bool PostingJob::isPosting() const { return _stopPosting.load() == 0x0; }
+bool PostingJob::isPaused() const { return _isPaused; }
 
 
 #endif // POSTINGJOB_H

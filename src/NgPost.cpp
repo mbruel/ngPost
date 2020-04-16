@@ -227,7 +227,7 @@ NgPost::NgPost(int &argc, char *argv[]):
     _monitor_nzb_folders(false), _monitorExtensions(), _monitorIgnoreDir(false),
     _keepRar(false), _autoCompress(false),
     _lang("en"), _translators(),
-    _netMgr(new QNetworkAccessManager()), _urlNzbUpload(nullptr), _urlNzbUploadStr(),
+    _netMgr(), _urlNzbUpload(nullptr), _urlNzbUploadStr(),
     _doShutdownWhenDone(false), _shutdownProc(nullptr),
 #if defined(WIN32) || defined(__MINGW64__)
     _shutdownCmd(sDefaultShutdownCmdWindows),
@@ -270,6 +270,9 @@ NgPost::NgPost(int &argc, char *argv[]):
     connect(this, &NgPost::error, this, &NgPost::onError, Qt::QueuedConnection);
 
     _loadTanslators();
+
+    connect(&_netMgr, &QNetworkAccessManager::networkAccessibleChanged,
+            this, &NgPost::onNetworkAccessibleChanged);
 }
 
 void NgPost::_startMonitoring(const QString &folderPath)
@@ -319,7 +322,6 @@ NgPost::~NgPost()
 
     if (_urlNzbUpload)
         delete _urlNzbUpload;
-    delete _netMgr;
     delete _app;
 }
 
@@ -512,7 +514,7 @@ void NgPost::checkForNewVersion()
     QNetworkRequest req(proFileURL);
     req.setRawHeader( "User-Agent" , "ngPost C++ app" );
 
-    QNetworkReply *reply = _netMgr->get(req);
+    QNetworkReply *reply = _netMgr.get(req);
     QObject::connect(reply, &QNetworkReply::finished, this, &NgPost::onCheckForNewVersion);
 }
 
@@ -740,6 +742,24 @@ void NgPost::onShutdownProcFinished(int exitCode)
 void NgPost::onShutdownProcError(QProcess::ProcessError error)
 {
     _error(QString("Shutdown process Error: %1").arg(error));
+}
+
+void NgPost::onNetworkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility accessible)
+{
+    qDebug() << "[NgPost::onNetworkAccessibleChanged] accessible: " << accessible;
+    QString msg(tr("Network access changed: %1"));
+    if (accessible == QNetworkAccessManager::NetworkAccessibility::Accessible)
+    {
+        _log(msg.arg("ON"));
+        if (_activeJob && _activeJob->isPaused())
+            _activeJob->resume();
+    }
+    else
+    {
+        _error(msg.arg("OFF"));
+        if (_activeJob)
+            _activeJob->pause();
+    }
 }
 
 void NgPost::_log(const QString &aMsg, bool newline) const

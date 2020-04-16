@@ -86,7 +86,7 @@ PostingJob::PostingJob(NgPost *ngPost,
     _secureDiskAccess(), _posters(),
     _overwriteNzb(overwriteNzb),
     _grpList(grpList), _groups(groups), _from(from),
-    _use7z(false)
+    _use7z(false), _isPaused(false)
 {
 #ifdef __DEBUG__
     qDebug() << "[PostingJob] >>>> Construct " << this;
@@ -138,6 +138,16 @@ PostingJob::~PostingJob()
         delete _nzb;
     if (_file)
         delete _file;
+}
+
+void PostingJob::pause()
+{
+    _ngPost->_log("Pause posting...");
+}
+
+void PostingJob::resume()
+{
+    _ngPost->_log("Resume posting...");
 }
 
 

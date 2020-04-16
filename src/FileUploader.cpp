@@ -23,7 +23,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QHttpMultiPart>
-FileUploader::FileUploader(QNetworkAccessManager *netMgr, const QString &nzbFilePath):
+FileUploader::FileUploader(QNetworkAccessManager &netMgr, const QString &nzbFilePath):
     QObject(), _netMgr(netMgr), _reply(nullptr),
     _nzbFilePath(nzbFilePath), _nzbFile(nzbFilePath), _nzbUrl()
 {}
@@ -54,7 +54,7 @@ void FileUploader::startUpload(const QUrl &serverUrl)
             qDebug() << "FileUploader FTP url: " << _nzbUrl.url();
     #endif
 
-            _reply = _netMgr->put(QNetworkRequest(_nzbUrl), &_nzbFile);
+            _reply = _netMgr.put(QNetworkRequest(_nzbUrl), &_nzbFile);
         }
         else if (protocol.startsWith("http"))
         {
@@ -66,7 +66,7 @@ void FileUploader::startUpload(const QUrl &serverUrl)
 
              QNetworkRequest req(_nzbUrl);
             req.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/octet-stream"));
-            _reply = _netMgr->post(req, &_nzbFile);
+            _reply = _netMgr.post(req, &_nzbFile);
 
             //https://forum.qt.io/topic/56708/solved-qnetworkaccessmanager-adding-a-multipart-form-data-to-a-post-request/9
 //            QHttpMultiPart *multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
@@ -83,7 +83,7 @@ void FileUploader::startUpload(const QUrl &serverUrl)
 
 //            fileDataPart.setBodyDevice(&_nzbFile);
 
-//            _reply = _netMgr->post(QNetworkRequest(_nzbUrl), multiPart);
+//            _reply = _netMgr.post(QNetworkRequest(_nzbUrl), multiPart);
         }
         else
         {

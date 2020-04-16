@@ -32,6 +32,7 @@
 #include <QQueue>
 #include <QCommandLineOption>
 #include <QProcess>
+#include <QNetworkAccessManager>
 class QTranslator;
 class NntpConnection;
 class NntpServerParams;
@@ -41,7 +42,6 @@ class QCoreApplication;
 class MainWindow;
 class PostingJob;
 class FoldersMonitorForNewFiles;
-class QNetworkAccessManager;
 
 #define NB_ARTICLES_TO_PREPARE_PER_CONNECTION 3
 
@@ -172,7 +172,7 @@ private:
     QString       _lang;
     QMap<QString, QTranslator*> _translators;
 
-    QNetworkAccessManager *_netMgr;
+    QNetworkAccessManager _netMgr;
     QUrl *_urlNzbUpload;
     QString _urlNzbUploadStr;
 
@@ -326,6 +326,8 @@ public slots:
 //    void onShutdownProcStarted();
 //    void onShutdownProcStateChanged(QProcess::ProcessState newState);
     void onShutdownProcError(QProcess::ProcessError error);
+
+    void onNetworkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility accessible);
 
 private slots:
     void onLog(QString msg, bool newline);
