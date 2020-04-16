@@ -530,6 +530,26 @@ void NgPost::uploadNzb(const QString &nzbFilePath)
     }
 }
 
+bool NgPost::isPaused() const
+{
+    if (_activeJob && _activeJob->isPaused())
+        return true;
+    else
+        return false;
+}
+
+void NgPost::pause() const
+{
+    if (_activeJob && !_activeJob->isPaused())
+        _activeJob->pause();
+}
+
+void NgPost::resume() const
+{
+    if (_activeJob && _activeJob->isPaused())
+        _activeJob->resume();
+}
+
 
 
 void NgPost::_post(const QFileInfo &fileInfo, const QString &monitorFolder)

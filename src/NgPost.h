@@ -274,6 +274,7 @@ public:
 
     inline QList<QString> languages() const;
 
+    inline bool isPosting() const;
     inline bool hasPostingJobs() const;
     void closeAllPostingJobs();
 
@@ -305,7 +306,9 @@ public:
 
     inline bool removeRarRootFolder() const;
 
-
+    bool isPaused() const;
+    void pause() const;
+    void resume() const;
 
 signals:
     void log(QString msg, bool newline); //!< in case we signal from another thread
@@ -440,6 +443,7 @@ QString NgPost::asciiArtWithVersion()
 
 QList<QString> NgPost::languages() const{ return _translators.keys(); }
 
+bool NgPost::isPosting() const { return _activeJob != nullptr; }
 bool NgPost::hasPostingJobs() const { return (_activeJob || _pendingJobs.size()) ? true : false;}
 
 bool NgPost::debugMode() const     { return _debug != 0; }

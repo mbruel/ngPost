@@ -146,6 +146,8 @@ private slots:
 
     void onShutdownToggled(bool checked);
 
+    void onPauseClicked();
+
 private:
     void _initServerBox();
     void _initPostingBox();

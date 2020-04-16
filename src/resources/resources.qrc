@@ -28,5 +28,7 @@
         <file>icons/flag_PT.png</file>
         <file>lang/ngPost_pt.qm</file>
         <file>icons/close.jpg</file>
+        <file>icons/play.png</file>
+        <file>icons/pause.png</file>
     </qresource>
 </RCC>

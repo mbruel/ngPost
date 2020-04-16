@@ -120,6 +120,8 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
 //    _ui->postTabWidget->setCurrentIndex(1);
 
     setJobLabel(1);
+
+    connect(_ui->pauseButton, &QAbstractButton::clicked, this, &MainWindow::onPauseClicked);
 }
 
 MainWindow::~MainWindow()
@@ -853,6 +855,23 @@ void MainWindow::onShutdownToggled(bool checked)
     }
     else
         _ngPost->_doShutdownWhenDone = false;
+}
+
+void MainWindow::onPauseClicked()
+{
+    if (_ngPost->isPosting())
+    {
+        if (_ngPost->isPaused())
+        {
+            _ngPost->resume();
+            _ui->pauseButton->setIcon(QIcon(":/icons/pause.png"));
+        }
+        else
+        {
+            _ngPost->pause();
+            _ui->pauseButton->setIcon(QIcon(":/icons/play.png"));
+        }
+    }
 }
 
 

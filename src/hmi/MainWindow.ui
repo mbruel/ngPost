@@ -653,6 +653,23 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="pauseButton">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="../resources/resources.qrc">
+           <normaloff>:/icons/pause.png</normaloff>:/icons/pause.png</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>24</width>
+           <height>24</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QProgressBar" name="progressBar">
          <property name="maximumSize">
           <size>
