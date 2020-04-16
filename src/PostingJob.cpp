@@ -143,11 +143,21 @@ PostingJob::~PostingJob()
 void PostingJob::pause()
 {
     _ngPost->_log("Pause posting...");
+
+    for (NntpConnection *con : _nntpConnections)
+        emit con->killConnection();
+
+    _isPaused = true;
 }
 
 void PostingJob::resume()
 {
     _ngPost->_log("Resume posting...");
+
+    for (NntpConnection *con : _nntpConnections)
+        emit con->startConnection();
+
+    _isPaused = false;
 }
 
 

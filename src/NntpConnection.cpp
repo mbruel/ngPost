@@ -112,6 +112,9 @@ void NntpConnection::onKillConnection()
 #endif
     if (_socket)
     {
+        if (_ngPost->debugFull())
+            _log("Killing connection..");
+
         disconnect(_socket, &QIODevice::readyRead, this, &NntpConnection::onReadyRead);
         disconnect(_socket, &QAbstractSocket::disconnected, this, &NntpConnection::onDisconnected);
         _socket->disconnectFromHost();
@@ -119,6 +122,10 @@ void NntpConnection::onKillConnection()
             _socket->waitForDisconnected();
         _socket->deleteLater();
         _socket = nullptr;
+
+        // Coming from PostingJob::pause
+        if (_currentArticle)
+            _currentArticle->genNewId();
     }
 }
 
