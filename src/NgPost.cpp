@@ -1503,7 +1503,7 @@ QString NgPost::_parseConfig(const QString &configPath)
                         if (ok)
                         {
                             int timeout = nb *1000;
-                            if (nb > sDefaultSocketTimeOut)
+                            if (timeout > sDefaultSocketTimeOut)
                                 _socketTimeOut = timeout;
                         }
                     }

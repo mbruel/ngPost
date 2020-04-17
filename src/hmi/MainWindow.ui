@@ -23,6 +23,9 @@
        </property>
        <widget class="QGroupBox" name="serverBox">
         <layout class="QVBoxLayout" name="verticalLayout_2">
+         <property name="topMargin">
+          <number>20</number>
+         </property>
          <item>
           <widget class="QTableWidget" name="serversTable">
            <property name="sizePolicy">
@@ -81,6 +84,9 @@
        </widget>
        <widget class="QGroupBox" name="postingBox">
         <layout class="QVBoxLayout" name="verticalLayout_4">
+         <property name="topMargin">
+          <number>20</number>
+         </property>
          <item>
           <layout class="QHBoxLayout" name="posterLayout">
            <item>
@@ -531,6 +537,9 @@
        </property>
        <widget class="QGroupBox" name="fileBox">
         <layout class="QVBoxLayout" name="verticalLayout_3">
+         <property name="topMargin">
+          <number>20</number>
+         </property>
          <item>
           <widget class="QTabWidget" name="postTabWidget">
            <property name="currentIndex">
@@ -556,6 +565,9 @@
        </widget>
        <widget class="QGroupBox" name="logBox">
         <layout class="QVBoxLayout" name="verticalLayout">
+         <property name="topMargin">
+          <number>20</number>
+         </property>
          <item>
           <widget class="QTextBrowser" name="logBrowser"/>
          </item>
