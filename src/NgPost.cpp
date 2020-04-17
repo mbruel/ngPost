@@ -1501,7 +1501,7 @@ QString NgPost::_parseConfig(const QString &configPath)
                     {
                         int nb = val.toInt(&ok);
                         if (ok)
-                            _socketTimeOut = nb;
+                            _socketTimeOut = nb * 1000;
                     }
                     else if (opt == sOptionNames[Opt::MONITOR_FOLDERS])
                     {
@@ -2070,8 +2070,8 @@ void NgPost::saveConfig()
         stream << "#PAR2_PATH = <your_path>\parpar.exe\n"
                << "#PAR2_PATH = <your_path>\par2j64.exe\n";
 #else
-        stream << "#/usr/bin/par2\n"
-               << "#<your_path>/parpar\n";
+        stream << "#PAR2_PATH = /usr/bin/par2\n"
+               << "#PAR2_PATH = <your_path>/parpar\n";
 #endif
         stream << "\n"
                << tr("## fixed parameters for the par2 (or alternative) command") << endl

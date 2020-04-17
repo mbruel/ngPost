@@ -457,7 +457,13 @@ void NntpConnection::_sendNextArticle()
         _socket->write(Nntp::POST);
     }
     else
+    {
         _postingState = PostingState::IDLE;
+#ifdef __USE_CONNECTION_TIMEOUT__
+        if (_timeout)
+            _timeout->stop();
+#endif
+    }
 }
 
 
