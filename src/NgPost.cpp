@@ -1501,7 +1501,11 @@ QString NgPost::_parseConfig(const QString &configPath)
                     {
                         int nb = val.toInt(&ok);
                         if (ok)
-                            _socketTimeOut = nb * 1000;
+                        {
+                            int timeout = nb *1000;
+                            if (nb > sDefaultSocketTimeOut)
+                                _socketTimeOut = timeout;
+                        }
                     }
                     else if (opt == sOptionNames[Opt::MONITOR_FOLDERS])
                     {
