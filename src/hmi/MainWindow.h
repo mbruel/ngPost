@@ -58,10 +58,10 @@ private:
 
 
 public:
-    explicit MainWindow(NgPost *ngPost, QWidget *parent = nullptr);
-    ~MainWindow();
+    explicit MainWindow(QWidget *parent = nullptr);
+    ~MainWindow() override;
 
-    void init();
+    void init(NgPost *ngPost);
 
     void updateProgressBar(uint nbArticlesTotal, uint nbArticlesUploaded, const QString &avgSpeed);
 

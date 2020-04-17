@@ -41,7 +41,7 @@
 #include <QRegularExpression>
 #include <QDir>
 
-const QString NgPost::sAppName     = "ngPost";
+const char *NgPost::sAppName       = "ngPost";
 const QString NgPost::sVersion     = QString::number(APP_VERSION);
 const QString NgPost::sProFileURL  = "https://raw.githubusercontent.com/mbruel/ngPost/master/src/ngPost.pro";
 const QString NgPost::sDonationURL = "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=W2C236U6JNTUA&item_name=ngPost&currency_code=EUR";
@@ -198,10 +198,7 @@ const QList<QCommandLineOption> NgPost::sCmdOptions = {
 #include <QNetworkConfigurationManager>
 #endif
 NgPost::NgPost(int &argc, char *argv[]):
-    QObject (),
-    _app(nullptr),
-    _mode(argc > 1 ? AppMode::CMD : AppMode::HMI),
-    _hmi(nullptr),
+    QObject (), CmdOrGuiApp(argc, argv),
     _cout(stdout),
     _cerr(stderr),
 #ifdef __DEBUG__
@@ -251,14 +248,8 @@ NgPost::NgPost(int &argc, char *argv[]):
 {
     QThread::currentThread()->setObjectName(sMainThreadName);
 
-    if (_mode == AppMode::CMD)
-        _app =  new QCoreApplication(argc, argv);
-    else
-    {
-        _app = new QApplication(argc, argv);
-        _hmi = new MainWindow(this);
-        _hmi->setWindowTitle(QString("%1_v%2").arg(sAppName).arg(sVersion));
-    }    
+    if (_hmi)
+        _hmi->setWindowTitle(QString("%1_v%2").arg(sAppName).arg(sVersion));       
 
     // in case we want to generate random uploader (_from not provided)
     std::srand(static_cast<uint>(QDateTime::currentMSecsSinceEpoch()));
@@ -378,10 +369,6 @@ void NgPost::updateGroups(const QString &groups)
 }
 
 
-int NgPost::startEventLoop()
-{
-    return _app->exec();
-}
 
 int NgPost::startHMI()
 {
@@ -394,7 +381,7 @@ int NgPost::startHMI()
 #ifdef __DEBUG__
     _dumpParams();
 #endif
-    _hmi->init();
+    _hmi->init(this);
     _hmi->show();
     changeLanguage(_lang); // reforce lang set up...
 

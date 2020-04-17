@@ -21,6 +21,8 @@
 
 #ifndef NGPOST_H
 #define NGPOST_H
+#include "utils/CmdOrGuiApp.h"
+
 #include <QSet>
 #include <QVector>
 #include <QQueue>
@@ -62,7 +64,7 @@ class FoldersMonitorForNewFiles;
  * 8.: it handles properly the shutdown
  *
  */
-class NgPost : public QObject
+class NgPost : public QObject, public CmdOrGuiApp
 {
     Q_OBJECT
 
@@ -93,10 +95,6 @@ class NgPost : public QObject
 
 
 private:
-    QCoreApplication     *_app;  //!< Application instance (either a QCoreApplication or a QApplication in HMI mode)
-    const AppMode         _mode; //!< CMD or HMI (for Windowser...)
-    MainWindow           *_hmi;  //!< potential HMI
-
     mutable QTextStream   _cout; //!< stream for stdout
     mutable QTextStream   _cerr; //!< stream for stderr
 
@@ -197,7 +195,7 @@ private:
     static const QString sSpace;
 
 
-    static const QString sAppName;
+    static const char *sAppName;
     static const QString sVersion;
     static const QString sProFileURL;
 
@@ -248,20 +246,22 @@ private:
 
 
 public:
-    NgPost(int &argc, char *argv[]);
-    ~NgPost();
+    explicit NgPost(int &argc, char *argv[]);
+    ~NgPost() override;
 
-    int startEventLoop();
-    inline bool useHMI() const;
+    // pure virtual from CmdOrGuiApp
+    bool parseCommandLine(int argc, char *argv[]) override;
+    inline const char * appName() override;
 
-    int startHMI();
+    void checkForNewVersion() override;
+    int startHMI() override;
+
+
     QString parseDefaultConfig();
 
     bool startPostingJob(PostingJob *job);
 
-    void updateGroups(const QString &groups);
-
-    bool parseCommandLine(int argc, char *argv[]);
+    void updateGroups(const QString &groups);    
 
 
     inline int nbThreads() const;
@@ -300,7 +300,6 @@ public:
 
     void changeLanguage(const QString &lang);
 
-    void checkForNewVersion();
 
     void uploadNzb(const QString &nzbFilePath);
 
@@ -423,9 +422,8 @@ bool NgPost::removeRarRootFolder() const { return _rarNoRootFolder; }
 bool NgPost::tryResumePostWhenConnectionLost() const { return _tryResumePostWhenConnectionLost; }
 ushort NgPost::waitDurationBeforeAutoResume() const { return _waitDurationBeforeAutoResume; }
 
-bool NgPost::useHMI() const { return _mode == AppMode::HMI; }
-
 const std::string &NgPost::aticleSignature() { return sArticleIdSignature; }
+const char *NgPost::appName() { return sAppName; }
 
 int NgPost::nbThreads() const { return _nbThreads; }
 int NgPost::getSocketTimeout() const { return _socketTimeOut; }

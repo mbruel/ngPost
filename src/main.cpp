@@ -1,15 +1,15 @@
+#include "NgPost.h"
 #include <csignal>
 #include <iostream>
 #include <QCoreApplication>
 #include <QLoggingCategory>
-#include "NgPost.h"
 
 #if defined( Q_OS_WIN )
 #include <windows.h>
 #endif
 void handleShutdown(int signal)
 {
-    Q_UNUSED(signal);
+    Q_UNUSED(signal)
     std::cout << "Closing the application...\n";
     std::cout.flush();
     qApp->quit();
@@ -24,21 +24,23 @@ int main(int argc, char *argv[])
     signal(SIGTERM, &handleShutdown);// shut down on killall
 
 //    qDebug() << "argc: " << argc;
-    NgPost ngPost(argc, argv);
-    ngPost.checkForNewVersion();
+    NgPost app(argc, argv);
+    app.checkForNewVersion();
 
-    if (ngPost.useHMI())
+    if (app.useHMI())
     {
 #if defined( Q_OS_WIN )
     ::ShowWindow( ::GetConsoleWindow(), SW_HIDE ); //hide console window
 #endif
-        return ngPost.startHMI();
+        return app.startHMI();
     }
-    else if (ngPost.parseCommandLine(argc, argv))
+    else if (app.parseCommandLine(argc, argv))
     {
-        ngPost.startEventLoop();
-        if (ngPost.debugMode())
-            qCritical()<< "ngPost closed properly!\n";
+        app.startEventLoop();
+#ifdef __DEBUG__
+            std::cout << app.appName() << " closed properly!\n";
+            std::cout.flush();
+#endif
         return 0;
     }
     else

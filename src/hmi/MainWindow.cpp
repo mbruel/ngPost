@@ -57,13 +57,13 @@ const QList<const char *> MainWindow::sServerListHeaders = {
 };
 const QVector<int> MainWindow::sServerListSizes   = {30, 200, 50, 30, 100, 150, 150, sDeleteColumnWidth};
 
-MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
+MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     _ui(new Ui::MainWindow),
-    _ngPost(ngPost),
+    _ngPost(nullptr),
     _state(STATE::IDLE),
-    _quickJobTab(new PostingWidget(ngPost, this, 1)),
-    _autoPostTab(new AutoPostWidget(ngPost, this))
+    _quickJobTab(nullptr),
+    _autoPostTab(nullptr)
 {
     setAcceptDrops(true);
 
@@ -97,10 +97,24 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
     setGeometry((screenSize.width() - width())/2,  (screenSize.height() - height())/2, width(), height());
 
     connect(_ui->clearLogButton, &QAbstractButton::clicked, _ui->logBrowser, &QTextEdit::clear);
-    connect(_ui->debugBox,       &QAbstractButton::toggled, this, &MainWindow::onDebugToggled);
+    connect(_ui->debugBox,       &QAbstractButton::toggled, this,            &MainWindow::onDebugToggled);
+    connect(_ui->pauseButton,    &QAbstractButton::clicked, this,            &MainWindow::onPauseClicked);
+}
+
+MainWindow::~MainWindow()
+{
+    delete _ui;
+}
+
+void MainWindow::init(NgPost *ngPost)
+{
+    _ngPost = ngPost;
+
+    _quickJobTab = new PostingWidget(ngPost, this, 1);
+    _autoPostTab = new AutoPostWidget(ngPost, this);
+
     _ui->debugBox->setChecked(_ngPost->debugMode());
     _ui->debugSB->setEnabled(_ngPost->debugMode());
-
 
     QTabBar *tabBar = _ui->postTabWidget->tabBar();
     tabBar->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -121,16 +135,7 @@ MainWindow::MainWindow(NgPost *ngPost, QWidget *parent) :
 
     setJobLabel(1);
 
-    connect(_ui->pauseButton, &QAbstractButton::clicked, this, &MainWindow::onPauseClicked);
-}
 
-MainWindow::~MainWindow()
-{
-    delete _ui;
-}
-
-void MainWindow::init()
-{
     for (const QString &lang : _ngPost->languages())
         _ui->langCB->addItem(QIcon(QString(":/icons/flag_%1.png").arg(lang.toUpper())), lang.toUpper(), lang);
     _ui->langCB->setCurrentText(_ngPost->_lang.toUpper());

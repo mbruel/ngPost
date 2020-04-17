@@ -50,7 +50,7 @@
         <string/>
        </property>
        <property name="pixmap">
-        <pixmap resource="../resources/resources.qrc">:/icons/ngPost.png</pixmap>
+        <pixmap>:/icons/ngPost.png</pixmap>
        </property>
        <property name="scaledContents">
         <bool>true</bool>
@@ -102,7 +102,7 @@
         <string/>
        </property>
        <property name="icon">
-        <iconset resource="../resources/resources.qrc">
+        <iconset>
          <normaloff>:/icons/close.jpg</normaloff>:/icons/close.jpg</iconset>
        </property>
        <property name="flat">
@@ -176,7 +176,7 @@
         <string>Donate</string>
        </property>
        <property name="icon">
-        <iconset resource="../resources/resources.qrc">
+        <iconset>
          <normaloff>:/icons/donate.png</normaloff>:/icons/donate.png</iconset>
        </property>
       </widget>
@@ -237,8 +237,6 @@
    </item>
   </layout>
  </widget>
- <resources>
-  <include location="../resources/resources.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

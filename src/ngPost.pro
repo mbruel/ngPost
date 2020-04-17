@@ -77,6 +77,7 @@ SOURCES += \
         nntp/Nntp.cpp \
         nntp/NntpArticle.cpp \
         nntp/NntpFile.cpp \
+        utils/CmdOrGuiApp.cpp \
         utils/Yenc.cpp \
         hmi/MainWindow.cpp
 
@@ -103,6 +104,7 @@ HEADERS += \
     nntp/NntpArticle.h \
     nntp/NntpFile.h \
     nntp/NntpServerParams.h \
+    utils/CmdOrGuiApp.h \
     utils/PureStaticClass.h \
     utils/Yenc.h \
     hmi/MainWindow.h

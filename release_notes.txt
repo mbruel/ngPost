@@ -16,6 +16,25 @@ TODO: include ParPar instead of par2cmdline?
 
 TODO: auto RAR size and par2 parameters depending on the inputs size?
 
+
+####################################################
+###       Release: ngPost v4.7                   ###
+###       date:    2020/04/??                    ###
+####################################################
+
+- Auto Resume of the Posts when the Network is down
+ngPost will keep trying until it's back
+cf configs: RESUME_WAIT and NO_RESUME_AUTO
+
+- Add a Timeout on the NntpConnections (default 5 sec)
+it will disconnect and reconnect if we don't receive anything from the server
+
+- Add a Pause / Resume button in the HMI (before the progress bar)
+
+- Refactoring: introduce CmdOrGuiApp for reuse in other apps
+
+
+
 ####################################################
 ###       Release: ngPost v4.6                   ###
 ###       date:    2020/04/14                    ###
@@ -74,6 +93,7 @@ binaries will now be uploaded as Release files on GitHub. No need to have them i
 - add README_FR.md and ngPost_fr.conf
 
 
+
 ####################################################
 ###       Release: ngPost v4.3                   ###
 ###       date:    2020/02/17                    ###
@@ -115,7 +135,6 @@ binaries will now be uploaded as Release files on GitHub. No need to have them i
 - limit characters allowed in nzb name
 
 - fix rar command on windows for shared folder
-
 
 
 
