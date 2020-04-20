@@ -1488,7 +1488,7 @@ QString NgPost::_parseConfig(const QString &configPath)
                     else if (opt == sOptionNames[Opt::RESUME_WAIT])
                     {
                         ushort nb = val.toUShort(&ok);
-                        if (ok)
+                        if (ok && nb > sDefaultResumeWaitInSec)
                             _waitDurationBeforeAutoResume = nb;
                     }
                     else if (opt == sOptionNames[Opt::NO_RESUME_AUTO])
@@ -1503,7 +1503,7 @@ QString NgPost::_parseConfig(const QString &configPath)
                         if (ok)
                         {
                             int timeout = nb *1000;
-                            if (timeout > sDefaultSocketTimeOut)
+                            if (timeout > sMinSocketTimeOut)
                                 _socketTimeOut = timeout;
                         }
                     }
@@ -2001,7 +2001,8 @@ void NgPost::saveConfig()
                << (_autoCloseTabs  ? "" : "#") << "AUTO_CLOSE_TABS = true\n"
                << "\n"
                << "\n"
-               << tr("## Time to wait (seconds) before trying to resume a Post automatically in case of loss of Network") << endl
+               << tr("## Time to wait (seconds) before trying to resume a Post automatically in case of loss of Network (min: %1)").arg(
+                      sDefaultResumeWaitInSec) << endl
                << "RESUME_WAIT = " << _waitDurationBeforeAutoResume << endl
                << "\n"
                << tr("## By default, ngPost tries to resume a Post if the network is down.") << endl
@@ -2010,8 +2011,8 @@ void NgPost::saveConfig()
                << (_tryResumePostWhenConnectionLost  ? "#" : "") << "NO_RESUME_AUTO = true\n"
                << "\n"
                << tr("## if there is no activity on a connection it will be closed and restarted") << endl
-               << tr("## The duration is in second.") << endl
-               << "SOCK_TIMEOUT = " << _socketTimeOut << endl
+               << tr("## The duration is in second, default: %1, min: %2)").arg(sDefaultSocketTimeOut/1000).arg(sMinSocketTimeOut/1000) << endl
+               << "SOCK_TIMEOUT = " << _socketTimeOut / 1000 << endl
                << "\n"
                << "\n"
                << "\n"

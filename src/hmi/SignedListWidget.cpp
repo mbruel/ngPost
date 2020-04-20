@@ -28,7 +28,9 @@ SignedListWidget::SignedListWidget(QWidget *parent) :
     _asciiLbl(new QLabel(this)),
     _fileIcon(":/icons/file.png"),
     _folderIcon(":/icons/folder.png")
-{}
+{
+//    installEventFilter(this);
+}
 
 
 void SignedListWidget::setSignature(const QString &str)
@@ -63,8 +65,8 @@ void SignedListWidget::removeItemWidget2(QListWidgetItem *item)
 //    qDebug() << "[removeItemWidget2] count: " << count();
     if (count() == 1)
     {
-//        removeItemWidget(item);
-//        _asciiLbl->show();
+        removeItemWidget(item);
+        _asciiLbl->show();
         emit empty();
     }
     else
@@ -75,6 +77,15 @@ void SignedListWidget::clear2()
 {
     clear();
     _asciiLbl->show();
+}
+
+void SignedListWidget::onDeleteSelectedItems()
+{
+    for (QListWidgetItem *item : selectedItems())
+    {
+        removeItemWidget2(item);
+        delete item;
+    }
 }
 
 void SignedListWidget::resizeEvent(QResizeEvent *e)
@@ -91,5 +102,19 @@ void SignedListWidget::mousePressEvent(QMouseEvent *e)
 {
     QListWidget::mousePressEvent(e);
     if (e->button() == Qt::RightButton)
+    {
         emit rightClick();
+        e->accept();
+    }
+}
+
+bool SignedListWidget::eventFilter(QObject *obj, QEvent *event)
+{
+    if (event->type() == QEvent::KeyPress)
+    {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+        if(keyEvent->key() == Qt::Key_Delete || keyEvent->key() == Qt::Key_Backspace)
+            onDeleteSelectedItems();
+    }
+    return QListWidget::eventFilter(obj, event);       
 }

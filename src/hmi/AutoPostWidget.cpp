@@ -453,18 +453,4 @@ void AutoPostWidget::handleDropEvent(QDropEvent *e)
         QString fileName = url.toLocalFile();
         _ui->filesList->addPathIfNotInList(fileName, currentNbFiles, QFileInfo(fileName).isDir());
     }
-//    if (e->mimeData()->urls().count() == 1)
-//    {
-//        QString folderPath =e->mimeData()->urls().first().toLocalFile();
-//        QFileInfo fi(folderPath);
-//        if (fi.exists() && fi.isDir())
-//        {
-//            _ui->autoDirEdit->setText(fi.absoluteFilePath());
-//            onScanAutoDirClicked();
-//        }
-//        else
-//            emit _ngPost->error(tr("You can only drag ONE folder on the Auto Posting widget..."));
-//    }
-//    else
-//        emit _ngPost->error(tr("You can only drag ONE folder on the Auto Posting widget..."));
 }

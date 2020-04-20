@@ -203,7 +203,8 @@ private:
 
     static const int sDefaultResumeWaitInSec     = 30;
     static const int sDefaultNumberOfConnections = 15;
-    static const int sDefaultSocketTimeOut       = 5000;
+    static const int sDefaultSocketTimeOut       = 30000;
+    static const int sMinSocketTimeOut           = 5000;
     static const int sDefaultArticleSize         = 716800;
     static constexpr const char *sDefaultGroups  = "alt.binaries.test,alt.binaries.misc";
     static constexpr const char *sDefaultSpace   = "  ";
@@ -376,10 +377,6 @@ private:
 // Static functions
 public:
     inline static const QString &space();
-    inline static QString escapeXML(const char *str);
-    inline static QString escapeXML(const QString &str);
-    inline static QString xml2txt(const char *str);
-    inline static QString xml2txt(const QString &str);
 
     inline static qint64 articleSize();
     inline static const std::string &aticleSignature();
@@ -465,49 +462,7 @@ bool NgPost::dispPostingFile() const { return _dispFilesPosting; }
 qint64 NgPost::articleSize()  { return sArticleSize; }
 const QString &NgPost::space(){ return sSpace; }
 
-QString NgPost::escapeXML(const char *str)
-{
-    QString escaped(str);
-    escaped.replace('&',  "&amp;");
-    escaped.replace('<',  "&lt;");
-    escaped.replace('>',  "&gt;");
-    escaped.replace('"',  "&quot;");
-    escaped.replace('\'', "&apos;");
-    return escaped;
-}
 
-QString NgPost::escapeXML(const QString &str)
-{
-    QString escaped(str);
-    escaped.replace('&',  "&amp;");
-    escaped.replace('<',  "&lt;");
-    escaped.replace('>',  "&gt;");
-    escaped.replace('"',  "&quot;");
-    escaped.replace('\'', "&apos;");
-    return escaped;
-}
-
-QString NgPost::xml2txt(const char *str)
-{
-    QString escaped(str);
-    escaped.replace("&amp;",  "&");
-    escaped.replace("&lt;",   "<");
-    escaped.replace("&gt;",   ">");
-    escaped.replace("&quot;", "\"");
-    escaped.replace("&apos;", "'");
-    return escaped;
-}
-
-QString NgPost::xml2txt(const QString &str)
-{
-    QString escaped(str);
-    escaped.replace("&amp;",  "&");
-    escaped.replace("&lt;",   "<");
-    escaped.replace("&gt;",   ">");
-    escaped.replace("&quot;", "\"");
-    escaped.replace("&apos;", "'");
-    return escaped;
-}
 
 QString NgPost::randomFrom(ushort length) const { return QString::fromStdString(randomStdFrom(length));}
 

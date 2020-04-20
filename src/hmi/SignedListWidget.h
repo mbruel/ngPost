@@ -37,16 +37,21 @@ public:
     bool addPathIfNotInList(const QString &path, int lastIndexToCheck, bool isDir = false);
 
     void removeItemWidget2(QListWidgetItem *item);
-    void clear2();
 
 signals:
     void rightClick();
     void empty();
 
+public slots:
+    void clear2();
+    void onDeleteSelectedItems();
+
+
 
 protected:
     void resizeEvent(QResizeEvent *e) override;
-    void mousePressEvent(QMouseEvent * e) override;
+    void mousePressEvent(QMouseEvent * e) override;    
+    bool eventFilter(QObject *obj, QEvent *event) override;
 
 
 private:

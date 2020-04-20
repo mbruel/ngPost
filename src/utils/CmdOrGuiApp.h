@@ -21,10 +21,10 @@
 
 #ifndef CMDORGUIAPP_H
 #define CMDORGUIAPP_H
+#include <QString>
 
 class MainWindow;
 class QCoreApplication;
-class QString;
 
 class CmdOrGuiApp
 {
@@ -49,8 +49,58 @@ public:
 
     inline bool useHMI() const;
     int startEventLoop(); //!< to start in CMD
+
+    inline static QString escapeXML(const char *str);
+    inline static QString escapeXML(const QString &str);
+    inline static QString xml2txt(const char *str);
+    inline static QString xml2txt(const QString &str);
 };
 
 bool CmdOrGuiApp::useHMI() const { return _mode == AppMode::HMI; }
+
+
+QString CmdOrGuiApp::escapeXML(const char *str)
+{
+    QString escaped(str);
+    escaped.replace('&',  "&amp;");
+    escaped.replace('<',  "&lt;");
+    escaped.replace('>',  "&gt;");
+    escaped.replace('"',  "&quot;");
+    escaped.replace('\'', "&apos;");
+    return escaped;
+}
+
+QString CmdOrGuiApp::escapeXML(const QString &str)
+{
+    QString escaped(str);
+    escaped.replace('&',  "&amp;");
+    escaped.replace('<',  "&lt;");
+    escaped.replace('>',  "&gt;");
+    escaped.replace('"',  "&quot;");
+    escaped.replace('\'', "&apos;");
+    return escaped;
+}
+
+QString CmdOrGuiApp::xml2txt(const char *str)
+{
+    QString escaped(str);
+    escaped.replace("&amp;",  "&");
+    escaped.replace("&lt;",   "<");
+    escaped.replace("&gt;",   ">");
+    escaped.replace("&quot;", "\"");
+    escaped.replace("&apos;", "'");
+    return escaped;
+}
+
+QString CmdOrGuiApp::xml2txt(const QString &str)
+{
+    QString escaped(str);
+    escaped.replace("&amp;",  "&");
+    escaped.replace("&lt;",   "<");
+    escaped.replace("&gt;",   ">");
+    escaped.replace("&quot;", "\"");
+    escaped.replace("&apos;", "'");
+    return escaped;
+}
 
 #endif // CMDORGUIAPP_H
