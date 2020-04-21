@@ -19,7 +19,7 @@ TODO: auto RAR size and par2 parameters depending on the inputs size?
 
 ####################################################
 ###       Release: ngPost v4.7                   ###
-###       date:    2020/04/??                    ###
+###       date:    2020/04/21                    ###
 ####################################################
 
 - Auto Resume of the Posts when the Network is down
