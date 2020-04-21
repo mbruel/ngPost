@@ -1,6 +1,6 @@
 <img align="left" width="80" height="80" src="https://raw.githubusercontent.com/mbruel/ngPost/master/src/resources/icons/ngPost.png" alt="ngPost">
 
-# ngPost v4.6
+# ngPost v4.7
 
 ngPost est un posteur pour Usenet en ligne de commande ou via une interface graphique développé en C++11/Qt5.<br/>
 Il a été conçu pour être le plus rapide possible et offrir toutes les fonctionnalités utiles pour poster facilement et en toute sécurité.<br/>
@@ -187,17 +187,17 @@ Une alternative pour compiler est [d'installer QT](https://www.qt.io/download) e
 
 
 ### version Linux portable: AppImage compilée avec Qt v5.12.6, GLIBC 2.24
-- téléchargez [ngPost_v4.6-x86_64.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.6/ngPost_v4.6-x86_64.AppImage)
-- chmod 755 ngPost_v4.6-x86_64.AppImage
+- téléchargez [ngPost_v4.7-x86_64.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.7/ngPost_v4.7-x86_64.AppImage)
+- chmod 755 ngPost_v4.7-x86_64.AppImage
 - si vous le lancez sans paramètres, l'interface graphique s'ouvrira, sinon c'est en mode ligne de commande. (cf ngPost --help -l fr)
 - pour le fichier de configuration, éditez le fichier **~/.ngPost** et copiez [ce modèle](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost_fr.conf) (ne pas mettre l'extension .conf!)
 
-PS: pour des systèmes plus vieux GLIBC < 2.24, voici une version compilée sous Debian8 avec GLIBC 2.19 et Qt v5.8.0: [ngPost_v4.6-x86_64_debian8.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.6/ngPost_v4.6-x86_64_debian8.AppImage)
+PS: pour des systèmes plus vieux GLIBC < 2.24, voici une version compilée sous Debian8 avec GLIBC 2.19 et Qt v5.8.0: [ngPost_v4.7-x86_64_debian8.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.7/ngPost_v4.7-x86_64_debian8.AppImage)
 
 
 ### version Raspbian portable (armhf pour Raspberry PI)
-- téléchargez [ngPost_v4.6-armhf.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.6/ngPost_v4.6-armhf.AppImage)
-- chmod 755 ngPost_v4.6-armhf.AppImage
+- téléchargez [ngPost_v4.7-armhf.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.7/ngPost_v4.7-armhf.AppImage)
+- chmod 755 ngPost_v4.7-armhf.AppImage
 - si vous le lancez sans paramètres, l'interface graphique s'ouvrira, sinon c'est en mode ligne de commande. (cf ngPost --help -l fr)
 - pour le fichier de configuration, éditez le fichier **~/.ngPost** et copiez [ce modèle](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost_fr.conf) (ne pas mettre l'extension .conf!)
 
@@ -218,7 +218,7 @@ RAR_EXTRA = -mx0 -mhe=on
 </pre>
 
 ### Windows installer
-- Utilisez l'installeur [ngPost_v4.6_x64_setup.exe](https://github.com/mbruel/ngPost/releases/download/v4.6/ngPost_v4.6_x64_setup.exe) ou [ngPost_v4.6_x86_setup.exe](https://github.com/mbruel/ngPost/releases/download/v4.6/ngPost_v4.6_x86_setup.exe) pour la version 32bit
+- Utilisez l'installeur [ngPost_v4.7_x64_setup.exe](https://github.com/mbruel/ngPost/releases/download/v4.7/ngPost_v4.7_x64_setup.exe) ou [ngPost_v4.7_x86_setup.exe](https://github.com/mbruel/ngPost/releases/download/v4.7/ngPost_v4.7_x86_setup.exe) pour la version 32bit
 - lancez l'application **ngPost.exe**, l'interface graphique s'ouvrira. Changez tous vos paramètres dont la langue puis cliquez sur **sauver**
 - vous pouvez bien sûr ensuite l'utiliser en ligne de commande. cf ngPost --help
 
@@ -226,7 +226,7 @@ RAR_EXTRA = -mx0 -mhe=on
 
 
 ### MacOS release built on High Sierra (v10.13)
-- téléchargez [ngPost_v4.6.dmg](https://github.com/mbruel/ngPost/releases/download/v4.6/ngPost_v4.6.dmg)
+- téléchargez [ngPost_v4.7.dmg](https://github.com/mbruel/ngPost/releases/download/v4.7/ngPost_v4.7.dmg)
 - si vous le lancez sans paramètres, l'interface graphique s'ouvrira, sinon c'est en mode ligne de commande. (cf ngPost --help -l fr)
 - pour le fichier de configuration, éditez le fichier **~/.ngPost** et copiez [ce modèle](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost_fr.conf) (ne pas mettre l'extension .conf!)
 
@@ -288,5 +288,6 @@ If you'd like to translate ngPost in your language, it's easy to do (there is a 
 ### Donations
 I'm Freelance nowadays, working on several personal projects, so if you use the app and would like to contribute to the effort, feel free to donate what you can.<br/>
 <br/>
-[![](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=W2C236U6JNTUA&item_name=ngPost&currency_code=EUR)
-<br/> or in Bitcoin on this address: **3BGbnvnnBCCqrGuq1ytRqUMciAyMXjXAv6** ![](https://raw.githubusercontent.com/mbruel/ngPost/master/pics/btc_qr.gif)
+<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=W2C236U6JNTUA&item_name=ngPost&currency_code=EUR"><img align="left" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" alt="ex0days"></a>
+ or in Bitcoin at this address: **3BGbnvnnBCCqrGuq1ytRqUMciAyMXjXAv6**
+<img align="right" align="bottom" width="120" height="120" src="https://raw.githubusercontent.com/mbruel/ngPost/master/pics/btc_qr.gif" alt="ngPost_QR">
