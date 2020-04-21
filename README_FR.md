@@ -19,7 +19,7 @@ Voici la liste des principales fonctionnalités et atouts de ngPost:
 ![ngPost_v4.3](https://raw.githubusercontent.com/mbruel/ngPost/master/pics/ngPost_v4.3.png)
 
 
-[Les versions pour chacun des OS sont disponibles ici](https://github.com/mbruel/ngPost/tree/master/release), pour: Linux 64bit, Windows (32bit et 64bit), MacOS et Raspbian (RPI 4). Bientôt pour Android et iOS...
+[Les versions pour chacun des OS sont disponibles ici](https://github.com/mbruel/ngPost/releases/tag/v4.7), pour: Linux 64bit, Windows (32bit et 64bit), MacOS et Raspbian (RPI 4). Bientôt pour Android et iOS...
 
 
 ### Fichier de configuration
