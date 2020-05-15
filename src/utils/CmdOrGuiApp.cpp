@@ -60,3 +60,14 @@ int CmdOrGuiApp::startEventLoop()
 {
     return _app->exec();
 }
+
+void CmdOrGuiApp::hideOrShowGUI()
+{
+    if (_hmi)
+    {
+        if (_hmi->isVisible())
+            _hmi->hide();
+        else
+            _hmi->show();
+    }
+}

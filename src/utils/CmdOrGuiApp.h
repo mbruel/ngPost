@@ -50,6 +50,9 @@ public:
     inline bool useHMI() const;
     int startEventLoop(); //!< to start in CMD
 
+    void hideOrShowGUI();
+
+
     inline static QString escapeXML(const char *str);
     inline static QString escapeXML(const QString &str);
     inline static QString xml2txt(const char *str);

@@ -7,13 +7,12 @@
 #if defined( Q_OS_WIN )
 #include <windows.h>
 #endif
-void handleShutdown(int signal)
-{
-    Q_UNUSED(signal)
-    std::cout << "Closing the application...\n";
-    std::cout.flush();
-    qApp->quit();
-}
+
+void handleSigUsr(int signal);
+void handleShutdown(int signal);
+
+static NgPost *app = nullptr;
+
 
 int main(int argc, char *argv[])
 {
@@ -22,26 +21,27 @@ int main(int argc, char *argv[])
 
     signal(SIGINT,  &handleShutdown);// shut down on ctrl-c
     signal(SIGTERM, &handleShutdown);// shut down on killall
+    signal(SIGUSR1, &handleSigUsr);// shut down on killall
 
 //    qDebug() << "argc: " << argc;
-    NgPost app(argc, argv);
-    app.checkForNewVersion();
+    app = new NgPost(argc, argv);
+    app->checkForNewVersion();
 
-    if (app.useHMI())
+    int exitCode = 0;
+    if (app->useHMI())
     {
 #if defined( Q_OS_WIN )
     ::ShowWindow( ::GetConsoleWindow(), SW_HIDE ); //hide console window
 #endif
-        return app.startHMI();
+        exitCode = app->startHMI();
     }
-    else if (app.parseCommandLine(argc, argv))
+    else if (app->parseCommandLine(argc, argv))
     {
-        app.startEventLoop();
+        exitCode = app->startEventLoop();
 #ifdef __DEBUG__
-            std::cout << app.appName() << " closed properly!\n";
+            std::cout << app->appName() << " closed properly!\n";
             std::cout.flush();
 #endif
-        return 0;
     }
     else
     {
@@ -49,6 +49,25 @@ int main(int argc, char *argv[])
         std::cout << "Nothing to do...\n";
         std::cout.flush();
 #endif
-        return 0;
     }
+
+    delete app;
+    return exitCode;
+}
+
+
+void handleSigUsr(int signal)
+{
+    std::cout << "intercept SIGUSR1 :)\n";
+    std::cout.flush();
+    app->hideOrShowGUI();
+}
+
+
+void handleShutdown(int signal)
+{
+    Q_UNUSED(signal)
+    std::cout << "Closing the application...\n";
+    std::cout.flush();
+    qApp->quit();
 }
