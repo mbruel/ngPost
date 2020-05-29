@@ -151,13 +151,12 @@ void NntpFile::writeToNZB(QTextStream &stream, const QString &from)
         stream << tab << tab << "</groups>\n";
 
         stream << tab << tab << "<segments>\n";
-        QString articleIdSignature = QString::fromStdString(NgPost::aticleSignature());
         for (NntpArticle *article : _articles)
         {
             stream << tab << tab << tab << "<segment"
                    << " bytes=\""  << article->_fileBytes << "\""
                    << " number=\"" << article->_part << "\">"
-                   << article->id() << "@" << articleIdSignature
+                   << article->_msgId
                    << "</segment>\n";
         }
         stream << tab << tab << "</segments>\n";

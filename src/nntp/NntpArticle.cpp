@@ -37,7 +37,8 @@ NntpArticle::NntpArticle(NntpFile *file, uint part, qint64 pos, qint64 bytes,
     _subject(nullptr),
     _body(nullptr),
     _filePos(pos), _fileBytes(bytes),
-    _nbTrySending(0)
+    _nbTrySending(0),
+    _msgId()
 {
     file->addArticle(this);
     connect(this, &NntpArticle::posted, _nntpFile, &NntpFile::onArticlePosted, Qt::QueuedConnection);
@@ -104,7 +105,7 @@ NntpArticle::~NntpArticle()
 QString NntpArticle::str() const
 {
     return QString("%5 - Article #%1/%2 <id: %3, nbTrySend: %4>").arg(
-                _part).arg(_nntpFile->nbArticles()).arg(id()).arg(
+                _part).arg(_nntpFile->nbArticles()).arg(_msgId).arg(
                 _nbTrySending).arg(_nntpFile->name());
 }
 
@@ -140,6 +141,7 @@ std::string NntpArticle::header(const std::string &idSignature) const
        << "Subject: "     << (_subject == nullptr ? msgId.constData() : _subject) << Nntp::ENDLINE
        << "Message-ID: <" << msgId.constData() << "@" << idSignature << ">" << Nntp::ENDLINE
        << Nntp::ENDLINE;
+    _msgId = QString("%1@%2").arg(msgId.constData()).arg(idSignature.c_str());
     return ss.str();
 }
 

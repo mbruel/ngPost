@@ -59,6 +59,8 @@ private:
 
     ushort _nbTrySending;
 
+    mutable QString _msgId; //!< using the UUID but the server could rewrite it...
+
 signals:
     void posted(quint64 size); //!< to warn the main thread (async upload)
     void failed(quint64 size); //!< to warn the main thread (async upload)
@@ -95,6 +97,8 @@ public:
 
     inline void genNewId();
 
+    inline void overwriteMsgId(const QString &serverMsgID);
+
     inline static ushort nbMaxTrySending();
     inline static void setNbMaxRetry(ushort nbMax);
 
@@ -116,11 +120,7 @@ void NntpArticle::freeMemory()
 
 std::string NntpArticle::body() const { return _body; }
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
-QString NntpArticle::id() const { return _id.toString(sMsgIdFormat); }
-#else
-QString NntpArticle::id() const { return _id.toString(); }
-#endif
+QString NntpArticle::id() const { return _msgId; }
 uint NntpArticle::part() const{ return _part; }
 NntpFile *NntpArticle::nntpFile() const { return _nntpFile; }
 
@@ -128,6 +128,8 @@ bool NntpArticle::isFirstArticle() const { return _part == 1; }
 
 quint64 NntpArticle::size() const { return static_cast<quint64>(_fileBytes); }
 void NntpArticle::genNewId() { _id = QUuid::createUuid(); }
+
+void NntpArticle::overwriteMsgId(const QString &serverMsgID){ _msgId = serverMsgID; }
 
 ushort NntpArticle::nbMaxTrySending() { return sNbMaxTrySending; }
 void NntpArticle::setNbMaxRetry(ushort nbMax) { sNbMaxTrySending = nbMax; }
