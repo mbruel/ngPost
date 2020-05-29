@@ -502,7 +502,7 @@ void PostingWidget::udatePostingParams()
     _ngPost->_doCompress = _ui->compressCB->isChecked();
     _ngPost->_rarPath    = _ui->rarEdit->text();
     _ngPost->_rarName    = _ui->compressNameEdit->text();
-    if (_ui->nzbPassCB->isEnabled())
+    if (_ui->nzbPassCB->isChecked())
         _ngPost->_rarPass = _ui->nzbPassEdit->text().toLocal8Bit();
     else
         _ngPost->_rarPass = QString();
