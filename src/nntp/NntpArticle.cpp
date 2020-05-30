@@ -104,6 +104,12 @@ NntpArticle::~NntpArticle()
 
 QString NntpArticle::str() const
 {
+    if (_msgId.isEmpty())
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
+        _msgId = _id.toString(sMsgIdFormat);
+#else
+        _msgId = _id.toString();
+#endif
     return QString("%5 - Article #%1/%2 <id: %3, nbTrySend: %4>").arg(
                 _part).arg(_nntpFile->nbArticles()).arg(_msgId).arg(
                 _nbTrySending).arg(_nntpFile->name());
