@@ -317,6 +317,22 @@ void NntpConnection::onReadyRead()
         {
             if(strncmp(line.constData(), Nntp::getResponse(240), 3) == 0)
             {
+                // Check if the server overwrite the Message-ID
+                const char *lt= strchr(line.constData(), '<');
+                if (lt)
+                {
+                    const char *gt= strchr(lt, '>');
+                    if (gt)
+                    {
+                        line[static_cast<int>(gt - line.data())] = '\0';
+                        QString newMsgId(lt+1);
+#ifdef __DEBUG__
+                        _log(QString("the server has overwritten the Message-ID to : %1").arg(newMsgId));
+#endif
+                        _currentArticle->overwriteMsgId(newMsgId);
+                    }
+                }
+
                 _postingState = PostingState::IDLE;
 #if defined(__DEBUG__) && defined(LOG_POSTING_STEPS)
                 _log(tr("POSTED: %1").arg(_currentArticle->str()));
