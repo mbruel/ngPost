@@ -324,14 +324,20 @@ void NntpConnection::onReadyRead()
                     const char *gt= strchr(lt, '>');
                     if (gt)
                     {
-                        line[static_cast<int>(gt - line.data())] = '\0';
+                        line[static_cast<int>(gt - line.constData())] = '\0';
                         QString newMsgId(lt+1);
                         if (_ngPost->debugFull())
                             _log(QString("the server has overwritten the Message-ID to : %1 (article: %2)").arg(
                                      newMsgId).arg(_currentArticle->id()));
                         _currentArticle->overwriteMsgId(newMsgId);
                     }
+                    else if (_ngPost->debugMode())
+                        _log(QString("[DEBUG_Speedium]> No overwrite for article %1, server resp: %2").arg(
+                                 _currentArticle->id()).arg(line.constData()));
                 }
+                else if (_ngPost->debugMode())
+                    _log(QString("[DEBUG_Speedium]< No overwrite for article %1, server resp: %2").arg(
+                             _currentArticle->id()).arg(line.constData()));
 
                 _postingState = PostingState::IDLE;
 #if defined(__DEBUG__) && defined(LOG_POSTING_STEPS)
