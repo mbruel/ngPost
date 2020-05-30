@@ -134,6 +134,7 @@ private slots:
     void onAutoCompressToggled(bool checked);
 
     void onDebugToggled(bool checked);
+    void onDebugValue(int value);
 
     void onSaveConfig();
 

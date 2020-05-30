@@ -326,9 +326,8 @@ void NntpConnection::onReadyRead()
                     {
                         line[static_cast<int>(gt - line.data())] = '\0';
                         QString newMsgId(lt+1);
-#ifdef __DEBUG__
-                        _log(QString("the server has overwritten the Message-ID to : %1").arg(newMsgId));
-#endif
+                        if (_ngPost->debugFull())
+                            _log(QString("the server has overwritten the Message-ID to : %1").arg(newMsgId));
                         _currentArticle->overwriteMsgId(newMsgId);
                     }
                 }

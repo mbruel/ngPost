@@ -98,6 +98,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(_ui->clearLogButton, &QAbstractButton::clicked, _ui->logBrowser, &QTextEdit::clear);
     connect(_ui->debugBox,       &QAbstractButton::toggled, this,            &MainWindow::onDebugToggled);
+    connect(_ui->debugSB,   qOverload<int>(&QSpinBox::valueChanged),   this,    &MainWindow::onDebugValue);
     connect(_ui->pauseButton,    &QAbstractButton::clicked, this,            &MainWindow::onPauseClicked);
 }
 
@@ -750,6 +751,11 @@ void MainWindow::onDebugToggled(bool checked)
     else
         _ngPost->setDebug(0);
     _ui->debugSB->setEnabled(checked);
+}
+
+void MainWindow::onDebugValue(int value)
+{
+    _ngPost->setDebug(static_cast<ushort>(value));
 }
 
 
