@@ -331,14 +331,7 @@ void NntpConnection::onReadyRead()
                                      newMsgId).arg(_currentArticle->id()));
                         _currentArticle->overwriteMsgId(newMsgId);
                     }
-                    else if (_ngPost->debugMode())
-                        _log(QString("[DEBUG_Speedium]> No overwrite for article %1, server resp: %2").arg(
-                                 _currentArticle->id()).arg(line.constData()));
                 }
-                else if (_ngPost->debugMode())
-                    _log(QString("[DEBUG_Speedium]< No overwrite for article %1, server resp: %2").arg(
-                             _currentArticle->id()).arg(line.constData()));
-
                 _postingState = PostingState::IDLE;
 #if defined(__DEBUG__) && defined(LOG_POSTING_STEPS)
                 _log(tr("POSTED: %1").arg(_currentArticle->str()));
