@@ -30,5 +30,8 @@
         <file>icons/close.jpg</file>
         <file>icons/play.png</file>
         <file>icons/pause.png</file>
+        <file>icons/cmd.png</file>
+        <file>lang/ngPost_zh.qm</file>
+        <file>icons/flag_ZH.png</file>
     </qresource>
 </RCC>
