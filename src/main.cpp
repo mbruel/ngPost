@@ -8,7 +8,9 @@
 #include <windows.h>
 #endif
 
+#ifdef __linux__
 void handleSigUsr(int signal);
+#endif
 void handleShutdown(int signal);
 
 static NgPost *app = nullptr;
@@ -21,8 +23,9 @@ int main(int argc, char *argv[])
 
     signal(SIGINT,  &handleShutdown);// shut down on ctrl-c
     signal(SIGTERM, &handleShutdown);// shut down on killall
+#ifdef __linux__
     signal(SIGUSR1, &handleSigUsr);// shut down on killall
-
+#endif
 //    qDebug() << "argc: " << argc;
     app = new NgPost(argc, argv);
     app->checkForNewVersion();
@@ -55,15 +58,6 @@ int main(int argc, char *argv[])
     return exitCode;
 }
 
-
-void handleSigUsr(int signal)
-{
-    std::cout << "intercept SIGUSR1 :)\n";
-    std::cout.flush();
-    app->hideOrShowGUI();
-}
-
-
 void handleShutdown(int signal)
 {
     Q_UNUSED(signal)
@@ -71,3 +65,12 @@ void handleShutdown(int signal)
     std::cout.flush();
     qApp->quit();
 }
+
+#ifdef __linux__
+void handleSigUsr(int signal)
+{
+    std::cout << "intercept SIGUSR1 :)\n";
+    std::cout.flush();
+    app->hideOrShowGUI();
+}
+#endif
