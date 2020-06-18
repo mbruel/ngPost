@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 
     signal(SIGINT,  &handleShutdown);// shut down on ctrl-c
     signal(SIGTERM, &handleShutdown);// shut down on killall
-    signal(SIGUSR1, &handleSigUsr);// shut down on killall
+    signal(SIGUSR1, &handleSigUsr);  // kill -s SIGUSR1 $(pidof ngPost) to hide/show the GUI
 
 //    qDebug() << "argc: " << argc;
     app = new NgPost(argc, argv);
