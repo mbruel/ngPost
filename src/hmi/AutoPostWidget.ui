@@ -138,6 +138,12 @@
          </item>
          <item>
           <widget class="QCheckBox" name="rarMaxCB">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="toolTip">
+            <string>Check the configuration file and define or comment RAR_MAX to activate/deactivate this feature</string>
+           </property>
            <property name="text">
             <string>limit rar number</string>
            </property>
@@ -180,8 +186,7 @@
     </layout>
    </item>
    <item>
-    <widget class="SignedListWidget" name="filesList">
-    </widget>
+    <widget class="SignedListWidget" name="filesList"/>
    </item>
    <item>
     <layout class="QHBoxLayout" name="autoDirLayout">

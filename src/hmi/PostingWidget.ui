@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
+  <property name="toolTip">
+   <string>Check the configuration file and define or comment RAR_MAX to activate/deactivate this feature</string>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_6">
@@ -138,6 +141,9 @@
          </item>
          <item>
           <widget class="QCheckBox" name="rarMaxCB">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="toolTip">
             <string/>
            </property>
