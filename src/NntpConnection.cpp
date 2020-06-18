@@ -318,6 +318,7 @@ void NntpConnection::onReadyRead()
             if(strncmp(line.constData(), Nntp::getResponse(240), 3) == 0)
             {
                 // Check if the server overwrite the Message-ID
+                // 240 <5ed10f42$0$7342$f56682d5@speedium.nl> Article posted
                 const char *lt= strchr(line.constData(), '<');
                 if (lt)
                 {

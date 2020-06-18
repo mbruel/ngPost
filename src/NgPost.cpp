@@ -244,7 +244,8 @@ NgPost::NgPost(int &argc, char *argv[]):
     _autoCloseTabs(false),
     _rarNoRootFolder(false),
     _tryResumePostWhenConnectionLost(true),
-    _waitDurationBeforeAutoResume(sDefaultResumeWaitInSec)
+    _waitDurationBeforeAutoResume(sDefaultResumeWaitInSec),
+    _nzbPostCmd()
 {
     QThread::currentThread()->setObjectName(sMainThreadName);
 
@@ -531,8 +532,9 @@ void NgPost::checkForNewVersion()
     QObject::connect(reply, &QNetworkReply::finished, this, &NgPost::onCheckForNewVersion);
 }
 
-void NgPost::uploadNzb(const QString &nzbFilePath)
+void NgPost::doNzbPostCMD(const QString &nzbFilePath)
 {
+    // first NZB_UPLOAD_URL
     if (_urlNzbUpload)
     {
         FileUploader *testUpload = new FileUploader(_netMgr, nzbFilePath);
@@ -541,6 +543,18 @@ void NgPost::uploadNzb(const QString &nzbFilePath)
         connect(testUpload, &FileUploader::readyToDie, testUpload, &QObject::deleteLater, Qt::QueuedConnection);
         testUpload->startUpload(*_urlNzbUpload);
     }
+
+    // second NZB_POST_CMD
+    if (!_nzbPostCmd.isEmpty())
+    {
+        QString cmd = _nzbPostCmd.arg(nzbFilePath);
+        int res = QProcess::execute(cmd);
+        if (debugMode())
+            _log(tr("NZB Post cmd: %1 exitcode: %2").arg(cmd).arg(res));
+        else
+            _log(cmd);
+    }
+
 }
 
 bool NgPost::isPaused() const
@@ -1601,6 +1615,10 @@ QString NgPost::_parseConfig(const QString &configPath)
                     else if (opt == sOptionNames[Opt::SHUTDOWN_CMD])
                         _shutdownCmd = val;
 
+                    else if (opt == sOptionNames[Opt::NZB_POST_CMD])
+                        _nzbPostCmd = val;
+
+
                     else if (opt == sOptionNames[Opt::INPUT_DIR])
                         _inputDir = val;
 
@@ -1937,6 +1955,13 @@ void NgPost::saveConfig()
                << tr("## only http, https or ftp (neither ftps or sftp are supported)") << endl
                << tr("#NZB_UPLOAD_URL = ftp://user:pass@url_or_ip:21") << endl
                << (_urlNzbUploadStr.isEmpty() ? QString() : QString("NZB_UPLOAD_URL = %1\n").arg(_urlNzbUpload->url()))
+               << "\n"
+               << tr("## launch a command or script at the end of each Post (cf examples)") << endl
+               << tr("## the full path of the nzb file is provided in the %1 placeholder (Qt style)") << endl
+               << "#NZB_POST_CMD = scp %1 myBox.com:~/nzbs/\n"
+               << "#NZB_POST_CMD = zip ~/nzbZip/$(basename %1).zip %1; rm %1\n"
+               << "#NZB_POST_CMD = ~/scripts/postNZB.sh %1\n"
+               << (_nzbPostCmd.isEmpty() ? "" : QString("NZB_POST_CMD = %1\n").arg(_nzbPostCmd))
                << "\n"
                << tr("## nzb files are normally all created in nzbPath") << endl
                << tr("## but using this option, the nzb of each monitoring folder will be stored in their own folder (created in nzbPath)") << endl

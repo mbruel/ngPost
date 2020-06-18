@@ -186,6 +186,8 @@ private:
     bool       _tryResumePostWhenConnectionLost;
     ushort     _waitDurationBeforeAutoResume;
 
+    QString    _nzbPostCmd;
+
     static constexpr const char *sDefaultShutdownCmdLinux   = "sudo -n /sbin/poweroff";
     static constexpr const char *sDefaultShutdownCmdWindows = "shutdown /s /f /t 0";
     static constexpr const char *sDefaultShutdownCmdMacOS   = "sudo -n shutdown -h now";
@@ -302,7 +304,7 @@ public:
     void changeLanguage(const QString &lang);
 
 
-    void uploadNzb(const QString &nzbFilePath);
+    void doNzbPostCMD(const QString &nzbFilePath);
 
 
 
@@ -493,9 +495,9 @@ QString NgPost::desc(bool useHTML)
 {
     QString desc;
     if (useHTML)
-        desc = QString("%1 %2<br/>%3<br/><br/>%4<ul><li>%5</li><li>%6</li><li>%7</li><li>%8</li><li>%9</li><li>%10</li><li>%11</li></ul>%12<br/><br/>");
+        desc = QString("%1 %2<br/>%3<br/><br/>%4<ul><li>%5</li><li>%6</li><li>%7</li><li>%8</li><li>%9</li><li>%10</li><li>%11</li></ul>%12<br/><br/>%13<br/>");
     else
-        desc = QString("%1 %2\n%3\n\n%4\n    - %5\n    - %6\n    - %7\n    - %8\n    - %9\n    - %10\n    - %11\n%12\n");
+        desc = QString("%1 %2\n%3\n\n%4\n    - %5\n    - %6\n    - %7\n    - %8\n    - %9\n    - %10\n    - %11\n%12\n\n%13\n");
     return desc.arg(sAppName).arg(
             tr("is a CMD/GUI Usenet binary poster developped in C++11/Qt5:")).arg(
             tr("It is designed to be as fast as possible and offer all the main features to post data easily and safely.")).arg(
@@ -509,7 +511,8 @@ QString NgPost::desc(bool useHTML)
             "...").arg(
             tr("for more details, cf %1").arg(
                     useHTML ? "<a href=\"https://github.com/mbruel/ngPost/\">https://github.com/mbruel/ngPost</a>"
-                            : "https://github.com/mbruel/ngPost"));
+                            : "https://github.com/mbruel/ngPost")).arg(
+                tr("If you'd like to translate ngPost in your language, it's easy, please contact me at Matthieu.Bruel@gmail.com"));
 }
 
 #endif // NGPOST_H
