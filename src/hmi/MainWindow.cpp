@@ -89,8 +89,6 @@ MainWindow::MainWindow(QWidget *parent) :
     _ui->progressBar->setRange(0, 100);
     updateProgressBar(0, 0, "");
 
-    statusBar()->hide();
-
     QSize screenSize = QDesktopWidget().availableGeometry(this).size();
     resize(screenSize * 0.8);
     setWindowIcon(QIcon(":/icons/ngPost.png"));
@@ -146,6 +144,9 @@ void MainWindow::init(NgPost *ngPost)
     _initPostingBox();
     _quickJobTab->init();
     _autoPostTab->init();
+
+    _ui->goCmdButton->hide();
+//    connect(_ui->goCmdButton, &QAbstractButton::clicked, _ngPost, &NgPost::onGoCMD, Qt::QueuedConnection);
 }
 
 
@@ -412,8 +413,9 @@ void MainWindow::_initPostingBox()
     }
     else
     {
-        _ui->rarPassCB->setChecked(true);
+	// Issue #48 we should set the text first!
         _ui->rarPassEdit->setText(_ngPost->_rarPassFixed);
+        _ui->rarPassCB->setChecked(true);
     }
 
     _ui->autoCompressCB->setChecked(_ngPost->_autoCompress);

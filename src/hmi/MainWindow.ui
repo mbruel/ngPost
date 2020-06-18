@@ -701,6 +701,29 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QPushButton" name="goCmdButton">
+         <property name="toolTip">
+          <string>go command line (close the GUI and continue in the shell)</string>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="../resources/resources.qrc">
+           <normaloff>:/icons/cmd.png</normaloff>:/icons/cmd.png</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>32</width>
+           <height>24</height>
+          </size>
+         </property>
+         <property name="flat">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </item>
@@ -716,7 +739,6 @@
     </rect>
    </property>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources>
   <include location="../resources/resources.qrc"/>
