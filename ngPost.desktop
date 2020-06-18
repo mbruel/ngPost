@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=ngPost
+Exec=ngPost %F
+Icon=ngPost
+Comment=Edit this default file
+Terminal=true
+Categories=Network;
+X-AppImage-Version=
