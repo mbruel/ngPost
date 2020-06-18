@@ -41,6 +41,7 @@ CmdOrGuiApp::~CmdOrGuiApp()
 {
     if (_hmi)
         delete  _hmi;
+    delete _app;
 }
 
 void CmdOrGuiApp::checkForNewVersion()

@@ -340,7 +340,6 @@ NgPost::~NgPost()
 
     if (_urlNzbUpload)
         delete _urlNzbUpload;
-    delete _app;
 }
 
 void NgPost::_finishPosting()
@@ -2072,8 +2071,8 @@ void NgPost::saveConfig()
         if (!_par2PathConfig.isEmpty())
             stream << "PAR2_PATH = " << _par2PathConfig << "\n";
 #if defined(WIN32) || defined(__MINGW64__)
-        stream << "#PAR2_PATH = <your_path>\parpar.exe\n"
-               << "#PAR2_PATH = <your_path>\par2j64.exe\n";
+        stream << "#PAR2_PATH = <your_path>parpar.exe\n"
+               << "#PAR2_PATH = <your_path>par2j64.exe\n";
 #else
         stream << "#PAR2_PATH = /usr/bin/par2\n"
                << "#PAR2_PATH = <your_path>/parpar\n";
