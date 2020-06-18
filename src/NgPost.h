@@ -76,7 +76,7 @@ class NgPost : public QObject, public CmdOrGuiApp
 
     enum class Opt {HELP = 0, LANG, VERSION, CONF, SHUTDOWN_CMD,
                     DISP_PROGRESS, DEBUG, DEBUG_FULL, POST_HISTORY, NZB_RM_ACCENTS,
-                    RESUME_WAIT, NO_RESUME_AUTO, SOCK_TIMEOUT,
+                    RESUME_WAIT, NO_RESUME_AUTO, SOCK_TIMEOUT, PREPARE_PACKING,
                     INPUT, OUTPUT, NZB_PATH, THREAD, NZB_UPLOAD_URL, NZB_POST_CMD,
                     MONITOR_FOLDERS, MONITOR_EXT, MONITOR_IGNORE_DIR,
                     MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY, GEN_FROM,
@@ -153,6 +153,7 @@ private:
     // Thread safe, only main thread is using this (NgPost or HMI)
     PostingJob         *_activeJob;
     QQueue<PostingJob*> _pendingJobs;
+    PostingJob         *_packingJob;
 
     QString     _postHistoryFile;
     QList<QDir> _autoDirs;
@@ -187,6 +188,7 @@ private:
     ushort     _waitDurationBeforeAutoResume;
 
     QString    _nzbPostCmd;
+    bool       _preparePacking;
 
     static constexpr const char *sDefaultShutdownCmdLinux   = "sudo -n /sbin/poweroff";
     static constexpr const char *sDefaultShutdownCmdWindows = "shutdown /s /f /t 0";
@@ -331,6 +333,7 @@ public slots:
 
 
     void onPostingJobStarted();
+    void onPackingDone();
     void onPostingJobFinished();
 
     void onShutdownProcReadyReadStandardOutput();
@@ -356,6 +359,9 @@ private:
 
     void _post(const QFileInfo &fileInfo, const QString &monitorFolder = "");
     void _finishPosting();
+
+    void _prepareNextPacking();
+
 
     void _startMonitoring(const QString &folderPath);
     void _stopMonitoring();

@@ -69,15 +69,16 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::DEBUG_FULL,     "fulldebug"},
     {Opt::POST_HISTORY,   "post_history"},
     {Opt::NZB_UPLOAD_URL, "nzb_upload_url"},
-    {Opt::NZB_POST_CMD,   "nzb_post_cmd"},    // TODO: to allow posting nzb by scp or using curl ;)
+    {Opt::NZB_POST_CMD,   "nzb_post_cmd"},
     {Opt::NZB_RM_ACCENTS, "nzb_rm_accents"},
     {Opt::AUTO_CLOSE_TABS,"auto_close_tabs"},
     {Opt::RAR_NO_ROOT_FOLDER, "rar_no_root_folder"},
 
+    {Opt::NO_RESUME_AUTO,  "no_resume_auto"},
+    {Opt::RESUME_WAIT,     "resume_wait"},
+    {Opt::SOCK_TIMEOUT,    "sock_timeout"},
+    {Opt::PREPARE_PACKING, "prepare_packing"},
 
-    {Opt::NO_RESUME_AUTO, "no_resume_auto"},
-    {Opt::RESUME_WAIT,    "resume_wait"},
-    {Opt::SOCK_TIMEOUT,   "sock_timeout"},
 
     {Opt::INPUT,        "input"},
     {Opt::AUTO_DIR,     "auto"},
@@ -223,7 +224,7 @@ NgPost::NgPost(int &argc, char *argv[]):
     _lengthName(sDefaultLengthName), _lengthPass(sDefaultLengthPass),
     _rarName(), _rarPass(), _rarPassFixed(),
     _inputDir(),
-    _activeJob(nullptr), _pendingJobs(),
+    _activeJob(nullptr), _pendingJobs(), _packingJob(nullptr),
     _postHistoryFile(),
     _autoDirs(),
     _folderMonitor(nullptr), _monitorThread(nullptr),
@@ -245,7 +246,7 @@ NgPost::NgPost(int &argc, char *argv[]):
     _rarNoRootFolder(false),
     _tryResumePostWhenConnectionLost(true),
     _waitDurationBeforeAutoResume(sDefaultResumeWaitInSec),
-    _nzbPostCmd()
+    _nzbPostCmd(), _preparePacking(false)
 {
     QThread::currentThread()->setObjectName(sMainThreadName);
 
@@ -683,6 +684,48 @@ void NgPost::onPostingJobStarted()
     }
 }
 
+void NgPost::onPackingDone()
+{
+    if (_preparePacking)
+    {
+        PostingJob *job = static_cast<PostingJob*>(sender());
+        if (job == _activeJob)
+        {
+#ifdef __DEBUG__
+            _log("[NgPost::onPackingDone] Active Job packed :)");
+#endif
+            // The previous active Job finished posting before the packing of the next one
+            if (_packingJob == nullptr)
+            {
+                if (!job->hasPostStarted())
+                {
+#ifdef __DEBUG__
+            _log("[NgPost::onPackingDone] Active Job didn't start posting...");
+#endif
+                    job->_postFiles();
+                }
+                _prepareNextPacking();
+            }
+        }
+        else if (job != _packingJob)
+            _error("unexpected job finished packing..."); // should never happen...
+#ifdef __DEBUG__
+        else
+            _log("[NgPost::onPackingDone] Packing Job done :)");
+#endif
+    }
+}
+
+void NgPost::_prepareNextPacking()
+{
+    if (_pendingJobs.size())
+    {
+        _packingJob = _pendingJobs.first();
+        if (_packingJob->hasCompressed())
+            emit _packingJob->startPosting();
+    }
+}
+
 void NgPost::onPostingJobFinished()
 {
     PostingJob *job = static_cast<PostingJob*>(sender());
@@ -725,9 +768,26 @@ void NgPost::onPostingJobFinished()
         if (_pendingJobs.size())
         {
             _activeJob = _pendingJobs.dequeue();
+
             if (_hmi)
                 _hmi->setTab(_activeJob->widget());
-            emit _activeJob->startPosting();
+
+            if (_preparePacking)
+            {
+                if (_packingJob == _activeJob)
+                {
+                    if (_packingJob->isPacked())
+                        _packingJob->_postFiles();
+                    // otherwise it will be triggered automatically when the packing is finished
+                    // as it is now the active job ;)
+                    _packingJob = nullptr;
+                    _prepareNextPacking();
+                }
+                else
+                    _error("next active job different to the packing one..."); // should never happen...
+            }
+            else
+                emit _activeJob->startPosting();
         }
         else if (_doShutdownWhenDone && !_shutdownCmd.isEmpty())
         {
@@ -1510,6 +1570,12 @@ QString NgPost::_parseConfig(const QString &configPath)
                         if (val == "true" || val == "on" || val == "1")
                             _tryResumePostWhenConnectionLost = false;
                     }
+                    else if (opt == sOptionNames[Opt::PREPARE_PACKING])
+                    {
+                        val = val.toLower();
+                        if (val == "true" || val == "on" || val == "1")
+                            _preparePacking = true;
+                    }
                     else if (opt == sOptionNames[Opt::SOCK_TIMEOUT])
                     {
                         int nb = val.toInt(&ok);
@@ -1865,6 +1931,11 @@ bool NgPost::startPostingJob(PostingJob *job)
     if (_activeJob)
     {
         _pendingJobs << job;
+        if (_preparePacking)
+        {
+            if (_packingJob == nullptr)
+                _prepareNextPacking();
+        }
         return false;
     }
     else
@@ -2037,6 +2108,9 @@ void NgPost::saveConfig()
                << tr("## if there is no activity on a connection it will be closed and restarted") << endl
                << tr("## The duration is in second, default: %1, min: %2)").arg(sDefaultSocketTimeOut/1000).arg(sMinSocketTimeOut/1000) << endl
                << "SOCK_TIMEOUT = " << _socketTimeOut / 1000 << endl
+               << "\n"
+               << tr("## when several Posts are queued, prepare the packing of the next Post while uploading the current one") << endl
+               << (_preparePacking ? "" : "#") << "PREPARE_PACKING = true" << endl
                << "\n"
                << "\n"
                << "\n"

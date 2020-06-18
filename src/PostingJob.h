@@ -52,6 +52,7 @@ class PostingJob : public QObject
     Q_OBJECT
     friend class Poster;
     friend class ArticleBuilder;
+    friend class NgPost;
 
 private:
     NgPost *const _ngPost; //!< handle on the application to access global configs
@@ -113,6 +114,8 @@ private:
     QAtomicBool _stopPosting;
     QAtomicBool _noMoreFiles;
 
+    bool _postStarted;
+    bool _packed;
     bool _postFinished;
 
     const bool _obfuscateArticles;
@@ -187,6 +190,8 @@ public:
     inline QString postSize() const;
 
     inline bool hasCompressed() const;
+    inline bool isPacked() const;
+    inline bool hasPostStarted() const;
     inline bool hasPostFinished() const;
     inline bool hasPostFinishedSuccessfully() const;
 
@@ -216,6 +221,8 @@ signals:
     void articlesNumber(uint nbArticles);
 
     void filePosted(QString filePath, uint nbArticles, uint nbFailed);
+
+    void packingDone();
 
 
 public slots:
@@ -372,6 +379,8 @@ QString PostingJob::postSize() const
 }
 
 bool PostingJob::hasCompressed() const { return _doCompress; }
+bool PostingJob::isPacked() const { return _packed; }
+bool PostingJob::hasPostStarted() const { return _postStarted; }
 bool PostingJob::hasPostFinished() const { return _postFinished; }
 bool PostingJob::hasPostFinishedSuccessfully() const { return _postFinished && !_nbArticlesFailed; }
 

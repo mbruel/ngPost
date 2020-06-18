@@ -79,7 +79,7 @@ PostingJob::PostingJob(NgPost *ngPost,
     _nbArticlesUploaded(0), _nbArticlesFailed(0),
     _uploadedSize(0), _nbArticlesTotal(0),
     _stopPosting(0x0), _noMoreFiles(0x0),
-    _postFinished(false),
+    _postStarted(false), _packed(false), _postFinished(false),
     _obfuscateArticles(obfuscateArticles), _obfuscateFileName(obfuscateFileName),
     _delFilesAfterPost(delFilesAfterPost ? 0x1 : 0x0),
     _originalFiles(!postWidget || delFilesAfterPost  || obfuscateFileName ? files : QFileInfoList()),
@@ -94,6 +94,7 @@ PostingJob::PostingJob(NgPost *ngPost,
     connect(this, &PostingJob::startPosting,     this,    &PostingJob::onStartPosting,   Qt::QueuedConnection);
     connect(this, &PostingJob::stopPosting,      this,    &PostingJob::onStopPosting,    Qt::QueuedConnection);
     connect(this, &PostingJob::postingStarted,   _ngPost, &NgPost::onPostingJobStarted,  Qt::QueuedConnection);
+    connect(this, &PostingJob::packingDone,      _ngPost, &NgPost::onPackingDone,        Qt::QueuedConnection);
     connect(this, &PostingJob::postingFinished,  _ngPost, &NgPost::onPostingJobFinished, Qt::QueuedConnection);
     connect(this, &PostingJob::noMoreConnection, _ngPost, &NgPost::onPostingJobFinished, Qt::QueuedConnection);
 
@@ -194,7 +195,9 @@ void PostingJob::onStartPosting()
 
 #include "Poster.h"
 void PostingJob::_postFiles()
-{
+{    
+    _postStarted = true;
+
     if (_postWidget) // in case we were in Pending mode
         _postWidget->setPosting();
 
@@ -749,7 +752,8 @@ bool PostingJob::startCompressFiles(const QString &cmdRar,
     _extProc = new QProcess(this);
     connect(_extProc, &QProcess::readyReadStandardOutput, this, &PostingJob::onExtProcReadyReadStandardOutput, Qt::DirectConnection);
     connect(_extProc, &QProcess::readyReadStandardError,  this, &PostingJob::onExtProcReadyReadStandardError,  Qt::DirectConnection);
-    connect(_extProc, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished), this, &PostingJob::onCompressionFinished);
+    connect(_extProc, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+            this, &PostingJob::onCompressionFinished, Qt::QueuedConnection);
 
     _use7z = false;
     if (_rarPath.contains("7z"))
@@ -932,8 +936,12 @@ void PostingJob::onCompressionFinished(int exitCode)
         }
         else
         {
+            _packed = true;
             _cleanExtProc();
-            _postFiles();
+            if (this == _ngPost->_activeJob)
+                _postFiles();
+
+            emit packingDone();
         }
     }
 }
@@ -998,7 +1006,8 @@ bool PostingJob::startGenPar2(const QString &tmpFolder,
 //            args << file;
     }
 
-    connect(_extProc, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished), this, &PostingJob::onGenPar2Finished);
+    connect(_extProc, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+            this, &PostingJob::onGenPar2Finished, Qt::QueuedConnection);
 
     if (_ngPost->debugMode() || !_postWidget)
         _log(QString("[%1] %2: %3 %4").arg(timestamp()).arg(tr("Generating par2")).arg(_ngPost->_par2Path).arg(args.join(" ")));
@@ -1028,7 +1037,13 @@ void PostingJob::onGenPar2Finished(int exitCode)
         emit postingFinished();
     }
     else
-        _postFiles();
+    {
+        _packed = true;
+        if (this == _ngPost->_activeJob)
+            _postFiles();
+
+        emit packingDone();
+    }
 }
 
 
