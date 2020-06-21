@@ -1,6 +1,6 @@
 <img align="left" width="80" height="80" src="https://raw.githubusercontent.com/mbruel/ngPost/master/src/resources/icons/ngPost.png" alt="ngPost">
 
-# ngPost v4.7
+# ngPost v4.8
 
 [Pour la version Française cliquez ici ;)](https://github.com/mbruel/ngPost/blob/master/README_FR.md)<br/>
 <br/>
@@ -11,16 +11,18 @@
 it is designed to be **as fast as possible** and offer ALL the main features **to post data easily and safely**.</br>
 it can **compress** (using your external rar binary) and **generate the par2** before posting!<br/>
 it has a **posting queue** to allow you to prepare several posts (especially using the GUI using Tabs).<br/>
+it **packs the next Post while uploading the current one** (compression + par2 generation) <br/>
 it can **automate posts** by **scanning folder(s)** and posting each file/folder individually after having them compressed (with a potential random archive name and password) and generated the par2!<br/>
 it can **monitor folder(s) to post each new file/folder** individually after having them compressed.<br/>
 it can **auto delete files/folders once posted** (only for monitoring with the HMI and with both --auto and --monitor in cmd)<br/>
+it can **execute a COMMAND or script after each Post** (cf NZB_POST_CMD in the configuration file)<br/>
 it can **switch off the computer** when all the posts are finished<br/>
-it is **translated in French, German and Spanish**.
+it is **translated in Chinese, English, French, German, Portuguese and Spanish**.
 
 
 ![ngPost_v4.3](https://raw.githubusercontent.com/mbruel/ngPost/master/pics/ngPost_v4.3.png)
 
-[Releases are availables](https://github.com/mbruel/ngPost/releases/tag/v4.7) for: Linux 64bit, Windows (both 32bit and 64bit), MacOS and Raspbian (RPI 4). Soon for Android then iOS...
+[Releases are availables](https://github.com/mbruel/ngPost/releases/tag/v4.8) for: Linux 64bit, Windows (both 32bit and 64bit), MacOS and Raspbian (RPI 4). Soon for Android then iOS...
 
 Here are the main features and advantages of ngPost:
 -   **full obfuscation of the Article Header** : the Subject will be a UUID (as the msg-id) and a random Poster will be used. **Be Careful**, using this, you won't be able to find your post on Usenet (or any Indexers) if you lose the NZB file. But using this method is **completely safe**, **no need to obfuscate your files or even tp use a password**.
@@ -148,17 +150,17 @@ The following ones are for experimented posters:
 
 ### Linux 64bit portable release (compiled with Qt v5.12.6)
 if you don't want to build it and install the dependencies, you can also the portable release that includes everything.<br/>
-- download [ngPost_v4.7-x86_64.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.7/ngPost_v4.7-x86_64.AppImage)
-- chmod 755 ngPost_v4.7-x86_64.AppImage
+- download [ngPost_v4.8-x86_64.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.8/ngPost_v4.8-x86_64.AppImage)
+- chmod 755 ngPost_v4.8-x86_64.AppImage
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
-PS: for older system with GLIBC < 2.24, here is a version compiled on Debian8 with GLIBC 2.19 and Qt v5.8.0: [ngPost_v4.7-x86_64_debian8.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.7/ngPost_v4.7-x86_64_debian8.AppImage)
+PS: for older system with GLIBC < 2.24, here is a version compiled on Debian8 with GLIBC 2.19 and Qt v5.8.0: [ngPost_v4.8-x86_64_debian8.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.8/ngPost_v4.8-x86_64_debian8.AppImage)
 
 
 ### Raspbian release (armhf for Raspberry PI)
-- download [ngPost_v4.7-armhf.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.7/ngPost_v4.7-armhf.AppImage)
-- chmod 755 ngPost_v4.7-armhf.AppImage
+- download [ngPost_v4.8-armhf.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.8/ngPost_v4.8-armhf.AppImage)
+- chmod 755 ngPost_v4.8-armhf.AppImage
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
@@ -180,7 +182,7 @@ RAR_EXTRA = -mx0 -mhe=on
 
 
 ### Windows installer
-- just use the packager [ngPost_v4.7_x64_setup.exe](https://github.com/mbruel/ngPost/releases/download/v4.7/ngPost_v4.7_x64_setup.exe) or [ngPost_v4.7_x86_setup.exe](https://github.com/mbruel/ngPost/releases/download/v4.7/ngPost_v4.7_x86_setup.exe) for the 32bit version
+- just use the packager [ngPost_v4.8_x64_setup.exe](https://github.com/mbruel/ngPost/releases/download/v4.8/ngPost_v4.8_x64_setup.exe) or [ngPost_v4.8_x86_setup.exe](https://github.com/mbruel/ngPost/releases/download/v4.8/ngPost_v4.8_x86_setup.exe) for the 32bit version
 - edit **ngPost.conf** (in the installation folder) to add your server settings (you can put several).
 - launch **ngPost.exe** (GUI version)
 - or you can use it with the command line: **ngPost.exe** -i "your file or directory"
@@ -194,7 +196,7 @@ By default:
 
 
 ### MacOS release built on High Sierra (v10.13)
-- download [ngPost_v4.7.dmg](https://github.com/mbruel/ngPost/releases/download/v4.7/ngPost_v4.7.dmg)
+- download [ngPost_v4.8.dmg](https://github.com/mbruel/ngPost/releases/download/v4.8/ngPost_v4.8.dmg)
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
@@ -238,7 +240,7 @@ Here is my email: Matthieu.Bruel@gmail.com
 
 
 ### Supported Languages
-For now, ngPost is translated in German, French, Portuguese and Spanish.<br/>
+For now, ngPost is translated in Chinese, English, French, German, Portuguese and Spanish.<br/>
 If you'd like to translate ngPost in your language, it's easy to do (there is a nice GUI for that: QtLinguist), please get in touch with me (Matthieu.Bruel@gmail.com)
 
 
@@ -250,6 +252,7 @@ If you'd like to translate ngPost in your language, it's easy to do (there is a 
 - noobcoder1983 for the German translation
 - tiriclote for the Spanish translation
 - hunesco for the Portuguese translation
+- Peng for the Chinese translation
 - all ngPost users ;)
 
 

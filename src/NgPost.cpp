@@ -722,7 +722,7 @@ void NgPost::_prepareNextPacking()
     {
         _packingJob = _pendingJobs.first();
         if (_packingJob->hasCompressed())
-            emit _packingJob->startPosting();
+            emit _packingJob->startPosting(false);
     }
 }
 
@@ -787,7 +787,7 @@ void NgPost::onPostingJobFinished()
                     _error("next active job different to the packing one..."); // should never happen...
             }
             else
-                emit _activeJob->startPosting();
+                emit _activeJob->startPosting(true);
         }
         else if (_doShutdownWhenDone && !_shutdownCmd.isEmpty())
         {
@@ -1046,9 +1046,9 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
 
     if (parser.isSet(sOptionNames[Opt::AUTO_DIR]))
     {
-        if (!parser.isSet(sOptionNames[Opt::COMPRESS]))
+        if (!_autoCompress && !parser.isSet(sOptionNames[Opt::COMPRESS]))
         {
-            _error("Error syntax: --auto only works with --compress");
+            _error("Error syntax: --auto only works with --compress or AUTO_COMPRESS in config");
             return false;
         }
         for (const QString &filePath : parser.values(sOptionNames[Opt::AUTO_DIR]))
@@ -1941,7 +1941,7 @@ bool NgPost::startPostingJob(PostingJob *job)
     else
     {
         _activeJob = job;
-        emit job->startPosting();
+        emit job->startPosting(true);
         return true;
     }
 }

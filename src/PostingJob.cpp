@@ -86,7 +86,7 @@ PostingJob::PostingJob(NgPost *ngPost,
     _secureDiskAccess(), _posters(),
     _overwriteNzb(overwriteNzb),
     _grpList(grpList), _groups(groups), _from(from),
-    _use7z(false), _isPaused(false), _resumeTimer()
+    _use7z(false), _isPaused(false), _resumeTimer(), _isActiveJob(false)
 {
 #ifdef __DEBUG__
     qDebug() << "[PostingJob] >>>> Construct " << this;
@@ -172,8 +172,10 @@ void PostingJob::onResumeTriggered()
     }
 }
 
-void PostingJob::onStartPosting()
+void PostingJob::onStartPosting(bool isActiveJob)
 {
+    _isActiveJob = isActiveJob;
+
     if (_postWidget)
         _log(tr("<h3>Start Post #%1: %2</h3>").arg(_postWidget->jobNumber()).arg(_nzbName));
     else
@@ -1092,18 +1094,16 @@ void PostingJob::onExtProcReadyReadStandardOutput()
 {
     if (_ngPost->debugMode())
         _log(_extProc->readAllStandardOutput(), false);
-    else
+    else if (_isActiveJob)
     {
         if (!_limitProcDisplay || ++_nbProcDisp%42 == 0)
             _log("*", false);
     }
-//    qApp->processEvents();
 }
 
 void PostingJob::onExtProcReadyReadStandardError()
 {
     _error(_extProc->readAllStandardError());
-//    qApp->processEvents();
 }
 
 

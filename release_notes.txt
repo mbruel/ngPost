@@ -8,13 +8,28 @@
 
 
 
-TODO: implement NZB_POST_CMD to be able to launch an external CMD with the nzb path
-
 TODO: --nfo option (cf github issue #10 and NewsUp dev)
 
 TODO: include ParPar instead of par2cmdline?
 
 TODO: auto RAR size and par2 parameters depending on the inputs size?
+
+
+####################################################
+###       Release: ngPost v4.8                   ###
+###       date:    2020/06/??                    ###
+####################################################
+
+- new config PREPARE_PACKING to parallelize the current upload with the packing of the next one!
+
+- new config NZB_POST_CMD to be able to launch an external CMD with the nzb path
+
+- support Usenet providers that overwrite the Message-IDs of the Articles
+
+- Chinese translation \o/
+
+- few GitHub issues
+
 
 
 ####################################################

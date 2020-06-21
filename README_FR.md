@@ -1,6 +1,6 @@
 <img align="left" width="80" height="80" src="https://raw.githubusercontent.com/mbruel/ngPost/master/src/resources/icons/ngPost.png" alt="ngPost">
 
-# ngPost v4.7
+# ngPost v4.8
 
 ngPost est un posteur pour Usenet en ligne de commande ou via une interface graphique développé en C++11/Qt5.<br/>
 Il a été conçu pour être le plus rapide possible et offrir toutes les fonctionnalités utiles pour poster facilement et en toute sécurité.<br/>
@@ -9,17 +9,19 @@ Voici la liste des principales fonctionnalités et atouts de ngPost:
   - **compression** (utilisant rar en tant qu'application externe) et **génération des par2** avant de poster!
   - **scan de dossier(s)** afin de poster chaque fichier/dossier individuellement après les avoir compressés
   - **surveillance de dossier(s)** afin de poster chaque nouveau fichier/dossier individuellement après les avoir compressés
+  - **parallélisation de l'upload avec le packing du Post suivant**
   - **suppression automatique** des fichiers/dossiers une fois postés (uniquement avec --auto et --monitor)
   - génération du **fichier nzb** et écriture d'un **fichier csv d'historique des posts**
   - **mode invisible**: obfuscation complète des Articles : impossible de (re)trouver un post sans avoir le fichier nzb
+  - **exécution d'une commande ou un script une fois les nzb générés**
   - possibilité **d'éteindre l'ordinateur** lorsque tous les posts sont finis
-  - multi-langues (Français, Anglais, Allemand et Espagnol)
+  - multi-langues (Français, Anglais, Allemand, Espagnol, Portugais, Chinois)
   - ...
 
 ![ngPost_v4.3](https://raw.githubusercontent.com/mbruel/ngPost/master/pics/ngPost_v4.3.png)
 
 
-[Les versions pour chacun des OS sont disponibles ici](https://github.com/mbruel/ngPost/releases/tag/v4.7), pour: Linux 64bit, Windows (32bit et 64bit), MacOS et Raspbian (RPI 4). Bientôt pour Android et iOS...
+[Les versions pour chacun des OS sont disponibles ici](https://github.com/mbruel/ngPost/releases/tag/v4.8), pour: Linux 64bit, Windows (32bit et 64bit), MacOS et Raspbian (RPI 4). Bientôt pour Android et iOS...
 
 
 ### Fichier de configuration
@@ -187,17 +189,17 @@ Une alternative pour compiler est [d'installer QT](https://www.qt.io/download) e
 
 
 ### version Linux portable: AppImage compilée avec Qt v5.12.6, GLIBC 2.24
-- téléchargez [ngPost_v4.7-x86_64.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.7/ngPost_v4.7-x86_64.AppImage)
-- chmod 755 ngPost_v4.7-x86_64.AppImage
+- téléchargez [ngPost_v4.8-x86_64.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.8/ngPost_v4.8-x86_64.AppImage)
+- chmod 755 ngPost_v4.8-x86_64.AppImage
 - si vous le lancez sans paramètres, l'interface graphique s'ouvrira, sinon c'est en mode ligne de commande. (cf ngPost --help -l fr)
 - pour le fichier de configuration, éditez le fichier **~/.ngPost** et copiez [ce modèle](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost_fr.conf) (ne pas mettre l'extension .conf!)
 
-PS: pour des systèmes plus vieux GLIBC < 2.24, voici une version compilée sous Debian8 avec GLIBC 2.19 et Qt v5.8.0: [ngPost_v4.7-x86_64_debian8.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.7/ngPost_v4.7-x86_64_debian8.AppImage)
+PS: pour des systèmes plus vieux GLIBC < 2.24, voici une version compilée sous Debian8 avec GLIBC 2.19 et Qt v5.8.0: [ngPost_v4.8-x86_64_debian8.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.8/ngPost_v4.8-x86_64_debian8.AppImage)
 
 
 ### version Raspbian portable (armhf pour Raspberry PI)
-- téléchargez [ngPost_v4.7-armhf.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.7/ngPost_v4.7-armhf.AppImage)
-- chmod 755 ngPost_v4.7-armhf.AppImage
+- téléchargez [ngPost_v4.8-armhf.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.8/ngPost_v4.8-armhf.AppImage)
+- chmod 755 ngPost_v4.8-armhf.AppImage
 - si vous le lancez sans paramètres, l'interface graphique s'ouvrira, sinon c'est en mode ligne de commande. (cf ngPost --help -l fr)
 - pour le fichier de configuration, éditez le fichier **~/.ngPost** et copiez [ce modèle](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost_fr.conf) (ne pas mettre l'extension .conf!)
 
@@ -218,7 +220,7 @@ RAR_EXTRA = -mx0 -mhe=on
 </pre>
 
 ### Windows installer
-- Utilisez l'installeur [ngPost_v4.7_x64_setup.exe](https://github.com/mbruel/ngPost/releases/download/v4.7/ngPost_v4.7_x64_setup.exe) ou [ngPost_v4.7_x86_setup.exe](https://github.com/mbruel/ngPost/releases/download/v4.7/ngPost_v4.7_x86_setup.exe) pour la version 32bit
+- Utilisez l'installeur [ngPost_v4.8_x64_setup.exe](https://github.com/mbruel/ngPost/releases/download/v4.8/ngPost_v4.8_x64_setup.exe) ou [ngPost_v4.8_x86_setup.exe](https://github.com/mbruel/ngPost/releases/download/v4.8/ngPost_v4.8_x86_setup.exe) pour la version 32bit
 - lancez l'application **ngPost.exe**, l'interface graphique s'ouvrira. Changez tous vos paramètres dont la langue puis cliquez sur **sauver**
 - vous pouvez bien sûr ensuite l'utiliser en ligne de commande. cf ngPost --help
 
@@ -226,7 +228,7 @@ RAR_EXTRA = -mx0 -mhe=on
 
 
 ### MacOS release built on High Sierra (v10.13)
-- téléchargez [ngPost_v4.7.dmg](https://github.com/mbruel/ngPost/releases/download/v4.7/ngPost_v4.7.dmg)
+- téléchargez [ngPost_v4.8.dmg](https://github.com/mbruel/ngPost/releases/download/v4.8/ngPost_v4.8.dmg)
 - si vous le lancez sans paramètres, l'interface graphique s'ouvrira, sinon c'est en mode ligne de commande. (cf ngPost --help -l fr)
 - pour le fichier de configuration, éditez le fichier **~/.ngPost** et copiez [ce modèle](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost_fr.conf) (ne pas mettre l'extension .conf!)
 
@@ -262,16 +264,17 @@ Voici une liste des posteurs alternatif sur le [github de Nyuu](https://github.c
 
 
 ### Questions / Issues / Requests
-- if you've any troubles to build or run ngPost, feel free to drop me an email
-- if you've some comments on the code, any questions on the implementation or any proposal for improvements, I'll be happy to discuss it with you so idem, feel free to drop me an email
-- if you'd like some other features, same same (but different), drop me an email ;)
-
-Here is my email: Matthieu.Bruel@gmail.com
+n'hésitez pas à m'envoyer un mail
+- si vous avez un problème pour compiler ou lancer ngPost
+- si vous avez des commentaires sur le code, des questions sur l'implémentation ou des propositions d'amélioration.
+- si vous avez des idées pour de nouvelles fonctionalités.
+<br/>
+Voici mon email: Matthieu.Bruel@gmail.com
 
 
 ### Supported Languages
-For now, ngPost is translated in German, French, Portuguese and Spanish.<br/>
-If you'd like to translate ngPost in your language, it's easy to do (there is a nice GUI for that: QtLinguist), please get in touch with me (Matthieu.Bruel@gmail.com)
+Pour l'instant ngPost est traduit en Anglais, Allemand, Chinois, Espagnol, Français et Portugais.<br/>
+Si vous shouhaitez le traduire dans une autre langue, c'est très simple (Qt fourni un GUI pour cela: QtLinguist), contactez moi pour plus d'information (Matthieu.Bruel@gmail.com)
 
 
 ### Thanks
@@ -282,12 +285,14 @@ If you'd like to translate ngPost in your language, it's easy to do (there is a 
 - noobcoder1983 for the German translation
 - tiriclote for the Spanish translation
 - hunesco for the Portuguese translation
+- Peng for the Chinese translation
 - all ngPost users ;)
 
 
 ### Donations
-I'm Freelance nowadays, working on several personal projects, so if you use the app and would like to contribute to the effort, feel free to donate what you can.<br/>
+Je suis Freelance (auto-entrepreneur) depuis fin 2019, travaillant sur plusieurs projets perso. Si vous utilisez ngPost et que vous souhaitez contribuer à l'effort et sa future évolution, merci de penser à faire une petite donation.<br/>
 <br/>
 <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=W2C236U6JNTUA&item_name=ngPost&currency_code=EUR"><img align="left" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" alt="ex0days"></a>
- or in Bitcoin at this address: **3BGbnvnnBCCqrGuq1ytRqUMciAyMXjXAv6**
+ ou en Bitcoin à cette adresse: **3BGbnvnnBCCqrGuq1ytRqUMciAyMXjXAv6**
 <img align="right" align="bottom" width="120" height="120" src="https://raw.githubusercontent.com/mbruel/ngPost/master/pics/btc_qr.gif" alt="ngPost_QR">
+

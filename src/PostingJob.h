@@ -144,6 +144,8 @@ private:
 
     QTimer _resumeTimer;
 
+    bool _isActiveJob;
+
 
 public:
     PostingJob(NgPost *ngPost,
@@ -210,7 +212,7 @@ public:
 
 
 signals:
-    void startPosting();    //!< connected to onStartPosting (to be able to run on a different Thread)
+    void startPosting(bool isActiveJob);    //!< connected to onStartPosting (to be able to run on a different Thread)
     void stopPosting();
 
     void postingStarted();  //!< emitted at the end of onStartPosting
@@ -229,7 +231,7 @@ public slots:
     void onStopPosting(); //!< for HMI
 
 private slots:
-    void onStartPosting();
+    void onStartPosting(bool isActiveJob);
     void onDisconnectedConnection(NntpConnection *con);
 
     void onNntpFileStartPosting();
