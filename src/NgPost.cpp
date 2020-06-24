@@ -1933,7 +1933,7 @@ bool NgPost::startPostingJob(PostingJob *job)
         _pendingJobs << job;
         if (_preparePacking)
         {
-            if (_packingJob == nullptr)
+            if (_activeJob->isPacked() && !_packingJob)
                 _prepareNextPacking();
         }
         return false;

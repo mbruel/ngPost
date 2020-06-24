@@ -190,7 +190,10 @@ void PostingJob::onStartPosting(bool isActiveJob)
             emit postingFinished();
     }
     else
+    {
+        _packed = true;
         _postFiles();
+    }
 
 }
 
