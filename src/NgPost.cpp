@@ -776,12 +776,14 @@ void NgPost::onPostingJobFinished()
             {
                 if (_packingJob == _activeJob)
                 {
-                    if (_packingJob->isPacked())
-                        _packingJob->_postFiles();
+                    _packingJob = nullptr;
+                    if (_activeJob->isPacked())
+                    {
+                        _activeJob->_postFiles();
+                        _prepareNextPacking();
+                    }
                     // otherwise it will be triggered automatically when the packing is finished
                     // as it is now the active job ;)
-                    _packingJob = nullptr;
-                    _prepareNextPacking();
                 }
                 else
                     _error("next active job different to the packing one..."); // should never happen...
