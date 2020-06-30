@@ -50,6 +50,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./src/ngPost.AppImage
+        asset_path: ./src/ngPost*.AppImage
         asset_name: ngPost_latest-x86_64.AppImage
         asset_content_type: application/octet-stream
