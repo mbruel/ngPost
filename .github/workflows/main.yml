@@ -19,8 +19,9 @@ jobs:
         sudo apt-get update -qq
         sudo apt --assume-yes install \
           build-essential \
-          wget \
-          qt512base
+          libgl1-mesa-dev \
+          qt512base \
+          wget
     - name: Build AppImage
       run: |
         cd src
