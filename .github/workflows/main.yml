@@ -26,11 +26,22 @@ jobs:
       run: |
         mv ./ngPost.desktop ./src
         cd src
+        ls -ltrah
         /opt/qt512/bin/qmake
         make
         wget -c https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
         chmod +x linuxdeployqt-continuous-x86_64.AppImage
+        ls -ltrah
         ./linuxdeployqt-continuous-x86_64.AppImage ./ngPost.desktop -appimage -qmake=/opt/qt512/bin/qmake
+        ls -ltrah
+        # Remove trash
+        rm -rf ./hmi
+        rm -rf ./lang
+        rm -rf ./nntp
+        rm -rf ./resources
+        rm -rf ./utils
+        rm -rf ./linuxdeployqt-continuous-x86_64.AppImage
+        find ./ \( -name "moc_*" -or -name "*.o" -or -name "*.h" -or -name "*.cpp" -or -name "qrc_*" -or -name "Makefile*" -or -name "*.a" \) -exec rm -rf {} \;
     - name: Create Release
       id: create_release
       uses: meeDamian/github-release@2.0
@@ -42,7 +53,7 @@ jobs:
         name: Continuous build
         body: |
           Release ${{ github.sha }}
-        files: ./src/ngPost-*-x86_64.AppImage
+        files: ./src/ngPost-*-x86_64.AppImage/ngPost-*-x86_64.AppImage
         draft: false
         prerelease: true
         allow_override: true
