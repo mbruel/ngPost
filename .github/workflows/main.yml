@@ -23,11 +23,11 @@ jobs:
           qt512base
     - name: Build AppImage
       run: |
-        /opt/qt512/bin/bin/qmake
+        /opt/qt512/bin/qmake
         make
         wget -c https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
         chmod +x linuxdeployqt-continuous-x86_64.AppImage
-        ./linuxdeployqt-continuous-x86_64.AppImage ./ngPost.desktop -appimage -qmake=/opt/qt512/bin/bin/qmake
+        ./linuxdeployqt-continuous-x86_64.AppImage ./ngPost.desktop -appimage -qmake=/opt/qt512/bin/qmake
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
