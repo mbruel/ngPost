@@ -1,29 +1,16 @@
-# This is a basic workflow to help you get started with Actions
-
 name: AppImage CI
-
-# Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the master branch
 on:
   push:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
     name: Build AppImage
     #Ubuntu 16.04 use glibc 2.23
     runs-on: ubuntu-16.04
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
-
-    # Runs a single command using the runners shell
     - name: Setup QT environment
       env:
         DEBIAN_FRONTEND: noninteractive
@@ -34,9 +21,10 @@ jobs:
           build-essential \
           wget \
           qt512base
-    # Runs a set of commands using the runners shell
     - name: Build AppImage
       run: |
+        qmake
+        make
         wget -c https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
         chmod +x linuxdeployqt-continuous-x86_64.AppImage
         ./linuxdeployqt-continuous-x86_64.AppImage ./ngPost.desktop -appimage -qmake=/opt/qt512/bin/bin/qmake
@@ -58,7 +46,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./ngPost.AppImage
         asset_name: ngPost_latest-x86_64.AppImage
         asset_content_type: application/octet-stream
