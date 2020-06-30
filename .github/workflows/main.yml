@@ -33,23 +33,16 @@ jobs:
         ./linuxdeployqt-continuous-x86_64.AppImage ./ngPost.desktop -appimage -qmake=/opt/qt512/bin/qmake
     - name: Create Release
       id: create_release
-      uses: actions/create-release@v1
+      uses: meeDamian/github-release@2.0
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
+        token: ${{ secrets.GITHUB_TOKEN }}
         tag_name: continuous
         release_name: Continuous build
         body: |
           Release ${{ github.sha }}
+        files: ./src/ngPost-*-x86_64.AppImage
         draft: false
         prerelease: true
-    - name: Upload Release Asset
-      id: upload-release-asset 
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./src/ngPost-*-x86_64.AppImage
-        asset_name: ngPost_latest-x86_64.AppImage
-        asset_content_type: application/octet-stream
+        allow_override: true
