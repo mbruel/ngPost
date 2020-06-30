@@ -34,7 +34,6 @@ jobs:
         rm -rf ./hmi
         rm -rf ./lang
         rm -rf ./nntp
-        rm -rf ./resources
         rm -rf ./utils
         find ./ \( -name "moc_*" -or -name "*.o" -or -name "*.h" -or -name "*.cpp" -or -name "qrc_*" -or -name "Makefile*" -or -name "*.a" \) -exec rm -rf {} \;
         cd ..
