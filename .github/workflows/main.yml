@@ -37,7 +37,6 @@ jobs:
     # Runs a set of commands using the runners shell
     - name: Build AppImage
       run: |
-        source /opt/qt*/bin/qt*-env.sh
         wget -c https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
         chmod +x linuxdeployqt-continuous-x86_64.AppImage
         ./linuxdeployqt-continuous-x86_64.AppImage ./ngPost.desktop -appimage -qmake=/opt/qt512/bin/bin/qmake
