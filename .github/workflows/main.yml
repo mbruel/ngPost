@@ -27,7 +27,6 @@ jobs:
     - name: Setup QT environment
       env:
         DEBIAN_FRONTEND: noninteractive
-        _WORKSPACE: ${{ GITHUB_WORKSPACE }}
       run: |
         sudo add-apt-repository ppa:beineri/opt-qt-5.12.0-xenial -y
         sudo apt-get update -qq
@@ -40,8 +39,8 @@ jobs:
       run: |
         wget -c https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
         chmod +x linuxdeployqt-continuous-x86_64.AppImage
-        ls -ltrah ${{ _WORKSPACE }}
-        ./linuxdeployqt-continuous-x86_64.AppImage ${{ _WORKSPACE }}/ngPost.desktop -appimage -qmake=/opt/qt512/bin/bin/qmake
+        ls -ltrah ${{ env.GITHUB_WORKSPACE }}
+        ./linuxdeployqt-continuous-x86_64.AppImage ${{ env.GITHUB_WORKSPACE }}/ngPost.desktop -appimage -qmake=/opt/qt512/bin/bin/qmake
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
