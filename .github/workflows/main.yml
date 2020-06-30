@@ -38,8 +38,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        tag_name: continuous
-        release_name: Continuous build
+        tag: continuous
+        name: Continuous build
         body: |
           Release ${{ github.sha }}
         files: ./src/ngPost-*-x86_64.AppImage
