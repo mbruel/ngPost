@@ -39,8 +39,7 @@ jobs:
       run: |
         wget -c https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
         chmod +x linuxdeployqt-continuous-x86_64.AppImage
-        ls -ltrah ${{ env.GITHUB_WORKSPACE }}
-        ./linuxdeployqt-continuous-x86_64.AppImage ${{ env.GITHUB_WORKSPACE }}/ngPost.desktop -appimage -qmake=/opt/qt512/bin/bin/qmake
+        ./linuxdeployqt-continuous-x86_64.AppImage ./ngPost.desktop -appimage -qmake=/opt/qt512/bin/bin/qmake
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
