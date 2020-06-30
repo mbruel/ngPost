@@ -26,10 +26,8 @@ jobs:
       run: |
         mv ./ngPost.desktop ./src
         cd src
-        ls -ltrah
         /opt/qt512/bin/qmake
         make
-        ls -ltrah
         # Remove trash
         rm -rf ./hmi
         rm -rf ./lang
@@ -39,11 +37,8 @@ jobs:
         cd ..
         wget -c https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
         chmod +x linuxdeployqt-continuous-x86_64.AppImage
-        ls -ltrah ./src
         ./linuxdeployqt-continuous-x86_64.AppImage ./src/ngPost.desktop -appimage -qmake=/opt/qt512/bin/qmake
-        ls -ltrah ./src
         mv ./ngPost-*-x86_64.AppImage ./ngPost-latest-x86_64.AppImage
-        ls -ltrah
     - name: Create Release
       id: create_release
       uses: meeDamian/github-release@2.0
