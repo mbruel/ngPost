@@ -42,6 +42,7 @@ jobs:
         ls -ltrah ./src
         ./linuxdeployqt-continuous-x86_64.AppImage ./src/ngPost.desktop -appimage -qmake=/opt/qt512/bin/qmake
         ls -ltrah ./src
+        mv ./ngPost-*-x86_64.AppImage ./ngPost-latest-x86_64.AppImage
         ls -ltrah
     - name: Create Release
       id: create_release
@@ -54,7 +55,7 @@ jobs:
         name: Continuous build
         body: |
           Release ${{ github.sha }}
-        files: ./ngPost-*-x86_64.AppImage
+        files: ./ngPost-latest-x86_64.AppImage
         draft: false
         prerelease: true
         allow_override: true
