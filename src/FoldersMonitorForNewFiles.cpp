@@ -70,8 +70,12 @@ void FoldersMonitorForNewFiles::onDirectoryChanged(const QString &folderPath)
     qDebug() << "[directoryChanged] " << folderPath
              << " (lastUpdate: " << folderScan->lastUpdate << ", now: " << currentUpdate << ")";
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
+    PathSet newScan  = QDir(folderPath).entryList(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot).toSet();
+#else
     QStringList newScanTmpList = QDir(folderPath).entryList(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot);
     PathSet newScan(newScanTmpList.begin(), newScanTmpList.end());
+#endif
 
     // iterate new paths
     PathSet newFiles = newScan; // this will detach!
@@ -156,8 +160,14 @@ qint64 FoldersMonitorForNewFiles::_dirSize(const QString &path) const
 FolderScan::FolderScan(const QString &folderPath) :
     path(folderPath),
     lastUpdate(QDateTime::currentDateTime()),
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
+    previousScan(QDir(folderPath).entryList(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot).toSet())
+#else
     previousScan()
+#endif
 {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     QStringList scanList = QDir(folderPath).entryList(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot);
     previousScan = PathSet(scanList.begin(), scanList.end());
+#endif
 }
