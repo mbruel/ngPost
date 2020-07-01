@@ -612,7 +612,7 @@ qDebug() << "[MB_TRACE][PostingJob::_finishPosting]";
 #endif
     _stopPosting = 0x1;
 
-    if (!_timeStart.isValid() && _postFinished)
+    if (_timeStart.isValid() && _postFinished)
     {
         _nbArticlesUploaded = _nbArticlesTotal; // we might not have processed the last onArticlePosted
         _uploadedSize       = _totalSize;
@@ -625,7 +625,7 @@ qDebug() << "[MB_TRACE][PostingJob::_finishPosting]";
     _ngPost->_finishPosting(); // to update progress bar
 
     // 1.: print stats
-    if (!_timeStart.isValid())
+    if (_timeStart.isValid())
         _printStats();
 
 

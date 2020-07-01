@@ -303,9 +303,9 @@ QString PostingJob::avgSpeed() const
     QString power = " ";
     double bandwidth = 0.;
 
-    if (!_timeStart.isValid())
+    if (_timeStart.isValid())
     {
-        double sec = _timeStart.elapsed()/1000.;
+        double sec = static_cast<double>(_timeStart.elapsed())/1000.;
         bandwidth = _uploadedSize / sec;
 
         if (bandwidth > 1024)
