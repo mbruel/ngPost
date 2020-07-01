@@ -498,7 +498,7 @@ void NgPost::_loadTanslators()
             if (lang == "en")
                 _translators.insert(lang, nullptr);
             else
-                _cerr << tr("error loading translator %1").arg(qmFile.absoluteFilePath()) << Qt::endl;
+                _cerr << tr("error loading translator %1").arg(qmFile.absoluteFilePath()) << "\n" << MB_FLUSH;
             delete translator;
         }
     }
@@ -510,7 +510,7 @@ void NgPost::_loadTanslators()
             _app->installTranslator(_translators[_lang]);
         else
         {
-            _cerr << tr("ERROR: couldn't find translator for lang %1").arg(_lang) << Qt::endl;
+            _cerr << tr("ERROR: couldn't find translator for lang %1").arg(_lang) << "\n" << MB_FLUSH;
             _lang = "en";
         }
     }
@@ -754,9 +754,10 @@ void NgPost::onPostingJobFinished()
                            << sHistoryLogFieldSeparator << _activeJob->rarPass();
                 else
                     stream << sHistoryLogFieldSeparator << sHistoryLogFieldSeparator;
+
                 stream << sHistoryLogFieldSeparator << _activeJob->groups()
                        << sHistoryLogFieldSeparator << _activeJob->from()
-                       << Qt::endl;
+                       << "\n" << MB_FLUSH;
                 hist.close();
             }
         }
@@ -829,14 +830,14 @@ void NgPost::onPostingJobFinished()
 void NgPost::onShutdownProcReadyReadStandardOutput()
 {
     QString line(_shutdownProc->readAllStandardOutput());
-//    _cout << "Shutdown out: " << line << Qt::endl;
+//    _cout << "Shutdown out: " << line << "\n" << MB_FLUSH;
     _log(QString("Shutdown out: %1").arg(QString(line)));
 }
 
 void NgPost::onShutdownProcReadyReadStandardError()
 {
     QString line(_shutdownProc->readAllStandardError());
-//    _cout << "Shutdown ERROR: " << line << Qt::endl;
+//    _cout << "Shutdown ERROR: " << line << "\n" << MB_FLUSH;
     _error(QString("Shutdown ERROR: %1").arg(line));
 }
 
@@ -896,7 +897,7 @@ void NgPost::_log(const QString &aMsg, bool newline) const
         _cout << aMsg;
         if (newline)
             _cout << "\n";
-        _cout << Qt::flush;
+        _cout << MB_FLUSH;
     }
 }
 
@@ -905,7 +906,7 @@ void NgPost::_error(const QString &error) const
     if (_hmi)
         _hmi->logError(error);
     else
-        _cerr << error << "\n" << Qt::flush;
+        _cerr << error << "\n" << MB_FLUSH;
 }
 
 
@@ -1017,7 +1018,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     if (parser.isSet(sOptionNames[Opt::LANG]))
     {
         QString lang = parser.value(sOptionNames[Opt::LANG]).toLower();
-        _cout << "Lang: " << lang << Qt::endl;
+        _cout << "Lang: " << lang << "\n" << MB_FLUSH;
         changeLanguage(lang);
     }
 
@@ -1087,7 +1088,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
             }
             else
             {
-                _cout << "[FolderMonitor] start monitoring: " << fi.absoluteFilePath() << Qt::endl;
+                _cout << "[FolderMonitor] start monitoring: " << fi.absoluteFilePath() << "\n" << MB_FLUSH;
                 if (_folderMonitor)
                     _folderMonitor->addFolder(fi.absoluteFilePath());
                 else
@@ -1099,18 +1100,18 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     if (parser.isSet(sOptionNames[Opt::OBFUSCATE]))
     {
         _obfuscateArticles = true;
-        _cout << "Do article obfuscation (the subject of each Article will be a UUID)\n" << Qt::flush;
+        _cout << "Do article obfuscation (the subject of each Article will be a UUID)\n" << MB_FLUSH;
     }
 
     if (parser.isSet(sOptionNames[Opt::DEBUG]))
     {
         _debug = 1;
-        _cout << "Extra logs are ON\n" << Qt::flush;
+        _cout << "Extra logs are ON\n" << MB_FLUSH;
     }
     if (parser.isSet(sOptionNames[Opt::DEBUG_FULL]))
     {
         _debug = 2;
-        _cout << "Full debug logs are ON\n" << Qt::flush;
+        _cout << "Full debug logs are ON\n" << MB_FLUSH;
     }
 
     if (parser.isSet(sOptionNames[Opt::THREAD]))
@@ -1155,7 +1156,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     {
         _genFrom = true;
         if (_debug)
-            _cout << tr("Generate new random poster for each post") << "\n" << Qt::flush;
+            _cout << tr("Generate new random poster for each post") << "\n" << MB_FLUSH;
     }
     else if (_from.empty())
         _from = randomStdFrom();
@@ -1443,7 +1444,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     {
         for (const QDir &dir : _autoDirs)
         {
-            _cout << "===> Auto dir: " << dir.absolutePath() << Qt::endl;
+            _cout << "===> Auto dir: " << dir.absolutePath() << "\n" << MB_FLUSH;
             for (const QFileInfo & fileInfo : dir.entryInfoList(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot, QDir::Name))
                 _post(fileInfo);
         }
@@ -1675,7 +1676,7 @@ QString NgPost::_parseConfig(const QString &configPath)
                         {
                             _genFrom = true;
                             if (_debug)
-                                _cout << tr("Generate new random poster for each post") << "\n" << Qt::flush;
+                                _cout << tr("Generate new random poster for each post") << "\n" << MB_FLUSH;
                         }
                     }
                     else if (opt == sOptionNames[Opt::GROUPS])
@@ -1902,7 +1903,7 @@ void NgPost::_syntax(char *appName)
           << "\n"
           << tr("If you don't provide the output file (nzb file), we will create it in the nzbPath with the name of the first file or folder given in the command line.") << "\n"
           << tr("so in the second example above, the nzb would be: /tmp/file1.nzb") << "\n"
-          << Qt::flush;
+          << MB_FLUSH;
 }
 
 QString NgPost::parseDefaultConfig()
@@ -1993,7 +1994,7 @@ void NgPost::_dumpParams() const
 void NgPost::_showVersionASCII() const
 {
     _cout << sNgPostASCII
-          << "                          v" << sVersion << "\n\n" << Qt::flush;
+          << "                          v" << sVersion << "\n\n" << MB_FLUSH;
 }
 
 void NgPost::saveConfig()

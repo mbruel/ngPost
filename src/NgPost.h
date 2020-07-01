@@ -22,6 +22,7 @@
 #ifndef NGPOST_H
 #define NGPOST_H
 #include "utils/CmdOrGuiApp.h"
+#include "utils/Macros.h"
 
 #include <QSet>
 #include <QVector>
@@ -46,6 +47,7 @@ class PostingJob;
 class FoldersMonitorForNewFiles;
 
 #define NB_ARTICLES_TO_PREPARE_PER_CONNECTION 3
+
 
 //using QAtomicBool = QAtomicInteger<unsigned short>; // 16 bit only (faster than using 8 bit variable...)
 

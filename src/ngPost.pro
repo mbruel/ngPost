@@ -105,6 +105,7 @@ HEADERS += \
     nntp/NntpFile.h \
     nntp/NntpServerParams.h \
     utils/CmdOrGuiApp.h \
+    utils/Macros.h \
     utils/PureStaticClass.h \
     utils/Yenc.h \
     hmi/MainWindow.h

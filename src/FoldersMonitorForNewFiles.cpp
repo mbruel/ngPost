@@ -20,6 +20,7 @@
 //========================================================================
 
 #include "FoldersMonitorForNewFiles.h"
+#include "utils/Macros.h"
 #include <QDebug>
 #include <QDir>
 #include <QDateTime>
@@ -60,11 +61,7 @@ void FoldersMonitorForNewFiles::stopListening()
 
 void FoldersMonitorForNewFiles::onDirectoryChanged(const QString &folderPath)
 {
-#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-    if (_stopListening.load())
-#else
-    if (_stopListening.loadRelaxed())
-#endif
+    if (MB_LoadAtomic(_stopListening))
         return;
 
     FolderScan *folderScan  = _folders[folderPath];
@@ -81,11 +78,7 @@ void FoldersMonitorForNewFiles::onDirectoryChanged(const QString &folderPath)
     newFiles.subtract(folderScan->previousScan);
     for (const QString &fileName : newFiles)
     {
-#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-        if (_stopListening.load())
-#else
-        if (_stopListening.loadRelaxed())
-#endif
+        if (MB_LoadAtomic(_stopListening))
             break;
 
         QString filePath = QString("%1/%2").arg(folderPath).arg(fileName);
@@ -118,11 +111,7 @@ void FoldersMonitorForNewFiles::onDirectoryChanged(const QString &folderPath)
                      << "ready to process file: " << filePath
                      << ", size: " << size << ", lastModif: " << fi.lastModified();
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-            if (!_stopListening.load())
-#else
-            if (!_stopListening.loadRelaxed())
-#endif
+            if (!MB_LoadAtomic(_stopListening))
                 emit newFileToProcess(fi);
 #ifdef __DEBUG__
             if (fi.isDir())
@@ -140,7 +129,6 @@ void FoldersMonitorForNewFiles::onDirectoryChanged(const QString &folderPath)
 
     folderScan->lastUpdate   = currentUpdate;
     folderScan->previousScan = newScan;
-
 }
 
 qint64 FoldersMonitorForNewFiles::_pathSize(QFileInfo &fileInfo) const

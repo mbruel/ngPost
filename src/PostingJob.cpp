@@ -258,7 +258,7 @@ void PostingJob::_postFiles()
                 _nzbStream << tab << tab << "<meta type=\"password\">" << _rarPass << "</meta>\n";
             _nzbStream << tab << "</head>\n\n";
         }
-        _nzbStream << Qt::flush;
+        _nzbStream << MB_FLUSH;
     }
 
 
@@ -328,11 +328,7 @@ void PostingJob::onStopPosting()
 
 void PostingJob::onDisconnectedConnection(NntpConnection *con)
 {
-#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-    if (_stopPosting.load())
-#else
-    if (_stopPosting.loadRelaxed())
-#endif
+    if (MB_LoadAtomic(_stopPosting))
         return; // we're destructing all the connections
 
     _error(tr("Error: disconnected connection: #%1\n").arg(con->getId()));
@@ -472,11 +468,7 @@ void PostingJob::_preparePostersArticles()
 
     for (int i = 0 ; i < _ngPost->sNbPreparedArticlePerConnection ; ++i)
     {
-#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-        if (_noMoreFiles.load())
-#else
-        if (_noMoreFiles.loadRelaxed())
-#endif
+        if (MB_LoadAtomic(_noMoreFiles))
             break;
         for (Poster *poster : _posters)
         {
@@ -687,12 +679,7 @@ qDebug() << "[MB_TRACE][PostingJob::_finishPosting]";
         }
         _error(tr("you can try to repost only those and concatenate the nzb with the current one ;)"));
     }
-    else if (_postFinished &&
-         #if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-             _delFilesAfterPost.load())
-         #else
-             _delFilesAfterPost.loadRelaxed())
-         #endif
+    else if (_postFinished && MB_LoadAtomic(_delFilesAfterPost))
         _delOriginalFiles();
 }
 
@@ -927,12 +914,7 @@ void PostingJob::onCompressionFinished(int exitCode)
     _log("[PostingJob::_compressFiles] compression finished...");
 #endif
 
-    if (_obfuscateFileName &&
-        #if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-            !_delFilesAfterPost.load())
-        #else
-            !_delFilesAfterPost.loadRelaxed())
-        #endif
+    if (_obfuscateFileName && !MB_LoadAtomic(_delFilesAfterPost) )
     {
         for (auto it = _obfuscatedFileNames.cbegin(), itEnd = _obfuscatedFileNames.cend(); it != itEnd; ++it)
             QFile::rename(it.key(), it.value());

@@ -21,6 +21,8 @@
 
 #ifndef POSTINGJOB_H
 #define POSTINGJOB_H
+#include "utils/Macros.h"
+
 #include <QFileInfoList>
 #include <QVector>
 #include <QSet>
@@ -407,11 +409,7 @@ QString PostingJob::from() const { return _obfuscateArticles ? QString() : QStri
 
 bool PostingJob::isPosting() const
 {
-#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-    return _stopPosting.load() == 0x0;
-#else
-    return _stopPosting.loadRelaxed() == 0x0;
-#endif
+    return MB_LoadAtomic(_stopPosting) == 0x0;
 }
 bool PostingJob::isPaused() const { return _isPaused; }
 
