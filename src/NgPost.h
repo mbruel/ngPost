@@ -343,7 +343,9 @@ public slots:
 //    void onShutdownProcStateChanged(QProcess::ProcessState newState);
     void onShutdownProcError(QProcess::ProcessError error);
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
     void onNetworkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility accessible);
+#endif
 
 private slots:
     void onLog(QString msg, bool newline);

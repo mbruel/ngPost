@@ -60,7 +60,11 @@ void FoldersMonitorForNewFiles::stopListening()
 
 void FoldersMonitorForNewFiles::onDirectoryChanged(const QString &folderPath)
 {
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
     if (_stopListening.load())
+#else
+    if (_stopListening.loadRelaxed())
+#endif
         return;
 
     FolderScan *folderScan  = _folders[folderPath];
@@ -69,14 +73,19 @@ void FoldersMonitorForNewFiles::onDirectoryChanged(const QString &folderPath)
     qDebug() << "[directoryChanged] " << folderPath
              << " (lastUpdate: " << folderScan->lastUpdate << ", now: " << currentUpdate << ")";
 
-    PathSet newScan  = QDir(folderPath).entryList(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot).toSet();
+    QStringList newScanTmpList = QDir(folderPath).entryList(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot);
+    PathSet newScan(newScanTmpList.begin(), newScanTmpList.end());
 
     // iterate new paths
     PathSet newFiles = newScan; // this will detach!
     newFiles.subtract(folderScan->previousScan);
     for (const QString &fileName : newFiles)
     {
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
         if (_stopListening.load())
+#else
+        if (_stopListening.loadRelaxed())
+#endif
             break;
 
         QString filePath = QString("%1/%2").arg(folderPath).arg(fileName);
@@ -109,7 +118,11 @@ void FoldersMonitorForNewFiles::onDirectoryChanged(const QString &folderPath)
                      << "ready to process file: " << filePath
                      << ", size: " << size << ", lastModif: " << fi.lastModified();
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
             if (!_stopListening.load())
+#else
+            if (!_stopListening.loadRelaxed())
+#endif
                 emit newFileToProcess(fi);
 #ifdef __DEBUG__
             if (fi.isDir())
@@ -155,5 +168,8 @@ qint64 FoldersMonitorForNewFiles::_dirSize(const QString &path) const
 FolderScan::FolderScan(const QString &folderPath) :
     path(folderPath),
     lastUpdate(QDateTime::currentDateTime()),
-    previousScan(QDir(folderPath).entryList(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot).toSet())
-{}
+    previousScan()
+{
+    QStringList scanList = QDir(folderPath).entryList(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot);
+    previousScan = PathSet(scanList.begin(), scanList.end());
+}

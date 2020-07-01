@@ -273,7 +273,7 @@ NgPost::NgPost(int &argc, char *argv[]):
 
     _loadTanslators();
 
-#ifdef __DEBUG__
+#if defined(__DEBUG__) && QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
     QNetworkConfigurationManager netConfMgr;
     for (const QNetworkConfiguration &conf : netConfMgr.allConfigurations())
     {
@@ -292,7 +292,9 @@ NgPost::NgPost(int &argc, char *argv[]):
              << ", state: " << conf.state();
 #endif
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
     connect(&_netMgr, &QNetworkAccessManager::networkAccessibleChanged, this, &NgPost::onNetworkAccessibleChanged);
+#endif
 }
 
 void NgPost::_startMonitoring(const QString &folderPath)
@@ -496,7 +498,7 @@ void NgPost::_loadTanslators()
             if (lang == "en")
                 _translators.insert(lang, nullptr);
             else
-                _cerr << tr("error loading translator %1").arg(qmFile.absoluteFilePath()) << endl << flush;
+                _cerr << tr("error loading translator %1").arg(qmFile.absoluteFilePath()) << Qt::endl;
             delete translator;
         }
     }
@@ -508,7 +510,7 @@ void NgPost::_loadTanslators()
             _app->installTranslator(_translators[_lang]);
         else
         {
-            _cerr << tr("ERROR: couldn't find translator for lang %1").arg(_lang) << endl << flush;
+            _cerr << tr("ERROR: couldn't find translator for lang %1").arg(_lang) << Qt::endl;
             _lang = "en";
         }
     }
@@ -754,7 +756,7 @@ void NgPost::onPostingJobFinished()
                     stream << sHistoryLogFieldSeparator << sHistoryLogFieldSeparator;
                 stream << sHistoryLogFieldSeparator << _activeJob->groups()
                        << sHistoryLogFieldSeparator << _activeJob->from()
-                       << endl << flush;
+                       << Qt::endl;
                 hist.close();
             }
         }
@@ -827,14 +829,14 @@ void NgPost::onPostingJobFinished()
 void NgPost::onShutdownProcReadyReadStandardOutput()
 {
     QString line(_shutdownProc->readAllStandardOutput());
-//    _cout << "Shutdown out: " << line << endl << flush;
+//    _cout << "Shutdown out: " << line << Qt::endl;
     _log(QString("Shutdown out: %1").arg(QString(line)));
 }
 
 void NgPost::onShutdownProcReadyReadStandardError()
 {
     QString line(_shutdownProc->readAllStandardError());
-//    _cout << "Shutdown ERROR: " << line << endl << flush;
+//    _cout << "Shutdown ERROR: " << line << Qt::endl;
     _error(QString("Shutdown ERROR: %1").arg(line));
 }
 
@@ -861,6 +863,7 @@ void NgPost::onShutdownProcError(QProcess::ProcessError error)
     _error(QString("Shutdown process Error: %1").arg(error));
 }
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
 void NgPost::onNetworkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility accessible)
 {
     qDebug() << "[NgPost::onNetworkAccessibleChanged] accessible: " << accessible;
@@ -882,6 +885,7 @@ void NgPost::onNetworkAccessibleChanged(QNetworkAccessManager::NetworkAccessibil
 #endif
     }
 }
+#endif
 
 void NgPost::_log(const QString &aMsg, bool newline) const
 {
@@ -892,7 +896,7 @@ void NgPost::_log(const QString &aMsg, bool newline) const
         _cout << aMsg;
         if (newline)
             _cout << "\n";
-        _cout << flush;
+        _cout << Qt::flush;
     }
 }
 
@@ -901,7 +905,7 @@ void NgPost::_error(const QString &error) const
     if (_hmi)
         _hmi->logError(error);
     else
-        _cerr << error << flush << "\n" << flush;
+        _cerr << error << "\n" << Qt::flush;
 }
 
 
@@ -1013,7 +1017,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     if (parser.isSet(sOptionNames[Opt::LANG]))
     {
         QString lang = parser.value(sOptionNames[Opt::LANG]).toLower();
-        _cout << "Lang: " << lang << endl << flush;
+        _cout << "Lang: " << lang << Qt::endl;
         changeLanguage(lang);
     }
 
@@ -1083,7 +1087,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
             }
             else
             {
-                _cout << "[FolderMonitor] start monitoring: " << fi.absoluteFilePath() << endl << flush;
+                _cout << "[FolderMonitor] start monitoring: " << fi.absoluteFilePath() << Qt::endl;
                 if (_folderMonitor)
                     _folderMonitor->addFolder(fi.absoluteFilePath());
                 else
@@ -1095,18 +1099,18 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     if (parser.isSet(sOptionNames[Opt::OBFUSCATE]))
     {
         _obfuscateArticles = true;
-        _cout << "Do article obfuscation (the subject of each Article will be a UUID)\n" << flush;
+        _cout << "Do article obfuscation (the subject of each Article will be a UUID)\n" << Qt::flush;
     }
 
     if (parser.isSet(sOptionNames[Opt::DEBUG]))
     {
         _debug = 1;
-        _cout << "Extra logs are ON\n" << flush;
+        _cout << "Extra logs are ON\n" << Qt::flush;
     }
     if (parser.isSet(sOptionNames[Opt::DEBUG_FULL]))
     {
         _debug = 2;
-        _cout << "Full debug logs are ON\n" << flush;
+        _cout << "Full debug logs are ON\n" << Qt::flush;
     }
 
     if (parser.isSet(sOptionNames[Opt::THREAD]))
@@ -1151,7 +1155,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     {
         _genFrom = true;
         if (_debug)
-            _cout << tr("Generate new random poster for each post") << "\n" << flush;
+            _cout << tr("Generate new random poster for each post") << "\n" << Qt::flush;
     }
     else if (_from.empty())
         _from = randomStdFrom();
@@ -1439,7 +1443,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     {
         for (const QDir &dir : _autoDirs)
         {
-            _cout << "===> Auto dir: " << dir.absolutePath() << endl << flush;
+            _cout << "===> Auto dir: " << dir.absolutePath() << Qt::endl;
             for (const QFileInfo & fileInfo : dir.entryInfoList(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot, QDir::Name))
                 _post(fileInfo);
         }
@@ -1671,7 +1675,7 @@ QString NgPost::_parseConfig(const QString &configPath)
                         {
                             _genFrom = true;
                             if (_debug)
-                                _cout << tr("Generate new random poster for each post") << "\n" << flush;
+                                _cout << tr("Generate new random poster for each post") << "\n" << Qt::flush;
                         }
                     }
                     else if (opt == sOptionNames[Opt::GROUPS])
@@ -1720,7 +1724,7 @@ QString NgPost::_parseConfig(const QString &configPath)
                                                << sHistoryLogFieldSeparator << tr("archive name")
                                                << sHistoryLogFieldSeparator << tr("archive pass")
                                                << sHistoryLogFieldSeparator << tr("groups")
-                                               << sHistoryLogFieldSeparator << tr("from") << endl;
+                                               << sHistoryLogFieldSeparator << tr("from") << "\n";
 
                                         file.close();
                                     }
@@ -1872,15 +1876,15 @@ void NgPost::_syntax(char *appName)
     for (const QCommandLineOption & opt : sCmdOptions)
     {
         if (opt.valueName() == sOptionNames[Opt::HOST])
-            _cout << "\n// " << tr("without config file, you can provide all the parameters to connect to ONE SINGLE server") << endl;
+            _cout << "\n// " << tr("without config file, you can provide all the parameters to connect to ONE SINGLE server") << "\n";
         else if (opt.valueName() == sOptionNames[Opt::TMP_DIR])
-            _cout << "\n// " << tr("for compression and par2 support") << endl;
+            _cout << "\n// " << tr("for compression and par2 support") << "\n";
         else if (opt.valueName() == sOptionNames[Opt::AUTO_DIR])
-            _cout << "\n// " << tr("automated posting (scanning and/or monitoring)") << endl;
+            _cout << "\n// " << tr("automated posting (scanning and/or monitoring)") << "\n";
         else if (opt.valueName() == sOptionNames[Opt::INPUT])
-            _cout << "\n// " << tr("quick posting (several files/folders)") << endl;
+            _cout << "\n// " << tr("quick posting (several files/folders)") << "\n";
         else if (opt.valueName() == sOptionNames[Opt::OBFUSCATE])
-            _cout << "\n// " << tr("general options") << endl;
+            _cout << "\n// " << tr("general options") << "\n";
 
         if (opt.names().size() == 1)
             _cout << QString("\t--%1: %2\n").arg(opt.names().first(), -17).arg(tr(opt.description().toLocal8Bit().constData()));
@@ -1888,17 +1892,17 @@ void NgPost::_syntax(char *appName)
             _cout << QString("\t-%1: %2\n").arg(opt.names().join(" or --"), -18).arg(tr(opt.description().toLocal8Bit().constData()));
     }
 
-    _cout << endl << tr("Examples:") << endl
+    _cout << "\n" << tr("Examples:") << "\n"
           << "  - " << tr("with monitoring") << ": " << app << " --monitor --rm_posted /Downloads/testNgPost --compress --gen_par2 --gen_name --gen_pass --rar_size 42 --disp_progress files\n"
           << "  - " << tr("with auto post")  << ": " << app << " --auto /Downloads/testNgPost --compress --gen_par2 --gen_name --gen_pass --rar_size 42 --disp_progress files\n"
           << "  - " << tr("with compression, filename obfuscation, random password and par2") << ": " << app << " -i /tmp/file1 -i /tmp/folder1 -o /nzb/myPost.nzb --compress --gen_name --gen_pass --gen_par2\n"
           << "  - " << tr("with config file") << ": " << app << " -c ~/.ngPost -m \"password=qwerty42\" -f ngPost@nowhere.com -i /tmp/file1 -i /tmp/file2 -i /tmp/folderToPost1 -i /tmp/folderToPost2\n"
           << "  - " << tr("with all params") << ":  " << app << " -t 1 -m \"password=qwerty42\" -m \"metaKey=someValue\" -h news.newshosting.com -P 443 -s -u user -p pass -n 30 -f ngPost@nowhere.com \
  -g \"alt.binaries.test,alt.binaries.test2\" -a 64000 -i /tmp/folderToPost -o /tmp/folderToPost.nzb\n"
-          << endl
-          << tr("If you don't provide the output file (nzb file), we will create it in the nzbPath with the name of the first file or folder given in the command line.") << endl
-          << tr("so in the second example above, the nzb would be: /tmp/file1.nzb") << endl
-          << flush;
+          << "\n"
+          << tr("If you don't provide the output file (nzb file), we will create it in the nzbPath with the name of the first file or folder given in the command line.") << "\n"
+          << tr("so in the second example above, the nzb would be: /tmp/file1.nzb") << "\n"
+          << Qt::flush;
 }
 
 QString NgPost::parseDefaultConfig()
@@ -1989,7 +1993,7 @@ void NgPost::_dumpParams() const
 void NgPost::_showVersionASCII() const
 {
     _cout << sNgPostASCII
-          << "                          v" << sVersion << "\n\n" << flush;
+          << "                          v" << sVersion << "\n\n" << Qt::flush;
 }
 
 void NgPost::saveConfig()
@@ -2004,115 +2008,115 @@ void NgPost::saveConfig()
     if (file.open(QIODevice::WriteOnly|QIODevice::Text))
     {
         QTextStream stream(&file);
-        stream << tr("# ngPost configuration file") << endl
+        stream << tr("# ngPost configuration file") << "\n"
                << "#\n"
                << "#\n"
                << "\n"
-               << tr("## Lang for the app. Currently supported: EN, FR, ES, DE") << endl
-               << "lang = " << _lang.toUpper() << endl
+               << tr("## Lang for the app. Currently supported: EN, FR, ES, DE") << "\n"
+               << "lang = " << _lang.toUpper() << "\n"
                << "\n"
-               << tr("## destination folder for all your nzb") << endl
-               << tr("## if you don't put anything, the nzb will be generated in the folder of ngPost on Windows and in /tmp on Linux") << endl
-               << tr("## this will be overwritten if you use the option -o with the full path of the nzb") << endl
+               << tr("## destination folder for all your nzb") << "\n"
+               << tr("## if you don't put anything, the nzb will be generated in the folder of ngPost on Windows and in /tmp on Linux") << "\n"
+               << tr("## this will be overwritten if you use the option -o with the full path of the nzb") << "\n"
                << "nzbPath  = " << (_nzbPath.isEmpty() ? _nzbPathConf : _nzbPath) << "\n"
                << "\n"
-               << tr("## Shutdown command to switch off the computer when ngPost is done with all its queued posting") << endl
-               << tr("## this should mainly used with the auto posting") << endl
-               << tr("## you could use whatever script instead (like to send a mail...)") << endl
-               << tr("#SHUTDOWN_CMD = shutdown /s /f /t 0  (Windows)") << endl
-               << tr("#SHUTDOWN_CMD = sudo -n /sbin/poweroff  (Linux, make sure poweroff has sudo rights without any password or change the command)") << endl
-               << tr("#SHUTDOWN_CMD = sudo -n shutdown -h now (MacOS, same make sure you've sudo rights)") << endl
+               << tr("## Shutdown command to switch off the computer when ngPost is done with all its queued posting") << "\n"
+               << tr("## this should mainly used with the auto posting") << "\n"
+               << tr("## you could use whatever script instead (like to send a mail...)") << "\n"
+               << tr("#SHUTDOWN_CMD = shutdown /s /f /t 0  (Windows)") << "\n"
+               << tr("#SHUTDOWN_CMD = sudo -n /sbin/poweroff  (Linux, make sure poweroff has sudo rights without any password or change the command)") << "\n"
+               << tr("#SHUTDOWN_CMD = sudo -n shutdown -h now (MacOS, same make sure you've sudo rights)") << "\n"
                << "SHUTDOWN_CMD = " << _shutdownCmd << "\n"
                << "\n"
-               << tr("## upload the nzb to a specific URL") << endl
-               << tr("## only http, https or ftp (neither ftps or sftp are supported)") << endl
-               << tr("#NZB_UPLOAD_URL = ftp://user:pass@url_or_ip:21") << endl
+               << tr("## upload the nzb to a specific URL") << "\n"
+               << tr("## only http, https or ftp (neither ftps or sftp are supported)") << "\n"
+               << tr("#NZB_UPLOAD_URL = ftp://user:pass@url_or_ip:21") << "\n"
                << (_urlNzbUploadStr.isEmpty() ? QString() : QString("NZB_UPLOAD_URL = %1\n").arg(_urlNzbUpload->url()))
                << "\n"
-               << tr("## launch a command or script at the end of each Post (cf examples)") << endl
-               << tr("## the full path of the nzb file is provided in the %1 placeholder (Qt style)") << endl
+               << tr("## launch a command or script at the end of each Post (cf examples)") << "\n"
+               << tr("## the full path of the nzb file is provided in the %1 placeholder (Qt style)") << "\n"
                << "#NZB_POST_CMD = scp %1 myBox.com:~/nzbs/\n"
                << "#NZB_POST_CMD = zip ~/nzbZip/$(basename %1).zip %1; rm %1\n"
                << "#NZB_POST_CMD = ~/scripts/postNZB.sh %1\n"
                << (_nzbPostCmd.isEmpty() ? "" : QString("NZB_POST_CMD = %1\n").arg(_nzbPostCmd))
                << "\n"
-               << tr("## nzb files are normally all created in nzbPath") << endl
-               << tr("## but using this option, the nzb of each monitoring folder will be stored in their own folder (created in nzbPath)") << endl
+               << tr("## nzb files are normally all created in nzbPath") << "\n"
+               << tr("## but using this option, the nzb of each monitoring folder will be stored in their own folder (created in nzbPath)") << "\n"
                << (_monitor_nzb_folders  ? "" : "#") << "MONITOR_NZB_FOLDERS = true\n"
                << "\n"
-               << tr("## for monitoring, extension file filter for new incoming files (coma separated, no dot)") << endl
+               << tr("## for monitoring, extension file filter for new incoming files (coma separated, no dot)") << "\n"
                << (_monitorExtensions.isEmpty()  ? "#" : "") << "MONITOR_EXTENSIONS = "
                << (_monitorExtensions.isEmpty() ? "mkv,mp4,avi,zip,tar,gz,iso" : _monitorExtensions.join(",")) << "\n"
                << "\n"
-               << tr("## for monitoring, ignore new incoming folders") << endl
+               << tr("## for monitoring, ignore new incoming folders") << "\n"
                << (_monitorIgnoreDir  ? "" : "#") << "MONITOR_IGNORE_DIR = true\n"
                << "\n\n"
-               << tr("## Default folder to open to select files from the HMI") << endl
+               << tr("## Default folder to open to select files from the HMI") << "\n"
                << "inputDir = " << _inputDir << "\n"
                << "\n"
-               << tr("## History posting file") << endl
-               << tr("## each succesful post will append a line with the date, the file name, the archive name, the password...") << endl
+               << tr("## History posting file") << "\n"
+               << tr("## each succesful post will append a line with the date, the file name, the archive name, the password...") << "\n"
                << (_postHistoryFile.isEmpty()  ? "#" : "") <<"POST_HISTORY = "
                << (_postHistoryFile.isEmpty()  ? "/nzb/ngPost_history.cvs" : _postHistoryFile) << "\n"
                << "\n"
                << "GROUPS   = " << _groups.c_str() << "\n"
                << "\n"
                << "\n"
-               << tr("## uncomment the next line if you want a fixed uploader email (in the nzb and in the header of each articles)") << endl
-               << tr("## if you let it commented, we'll generate ONE random email for all the posts of the session") << endl
-               << (_saveFrom  ? "" : "#") << "FROM = " << _from.c_str() << endl
+               << tr("## uncomment the next line if you want a fixed uploader email (in the nzb and in the header of each articles)") << "\n"
+               << tr("## if you let it commented, we'll generate ONE random email for all the posts of the session") << "\n"
+               << (_saveFrom  ? "" : "#") << "FROM = " << _from.c_str() << "\n"
                << "\n"
-               << tr("## Generate new random poster for each post (--auto or --monitor)") << endl
-               << tr("## if this option is set the FROM email just above will be ignored") << endl
-               << (_genFrom  ? "" : "#") << "GEN_FROM = true" << endl
+               << tr("## Generate new random poster for each post (--auto or --monitor)") << "\n"
+               << tr("## if this option is set the FROM email just above will be ignored") << "\n"
+               << (_genFrom  ? "" : "#") << "GEN_FROM = true" << "\n"
                << "\n"
                << "\n"
-               << tr("## uncomment the next line to limit the number of threads,  (by default it'll use the number of cores)") << endl
-               << tr("## all the connections are spread equally on those posting threads") << endl
+               << tr("## uncomment the next line to limit the number of threads,  (by default it'll use the number of cores)") << "\n"
+               << tr("## all the connections are spread equally on those posting threads") << "\n"
                << "thread  =  " << _nbThreads << "\n"
                << "\n"
                << "\n"
-               << tr("## How to display progressbar in command line: NONE, BAR, FILES") << endl
+               << tr("## How to display progressbar in command line: NONE, BAR, FILES") << "\n"
                << (_dispProgressBar  ? "" : "#") << "DISP_Progress = BAR\n"
                << (_dispFilesPosting ? "" : "#") << "DISP_Progress = FILES\n"
                << "\n"
                << "\n"
-               << tr("## suffix of the msg_id for all the articles (cf nzb file)") << endl
+               << tr("## suffix of the msg_id for all the articles (cf nzb file)") << "\n"
                << (sArticleIdSignature == "ngPost" ? "#msg_id  =  ngPost\n" : QString("msg_id  =  %1\n").arg(sArticleIdSignature.c_str()))
                << "\n"
-               << tr("## article size (default 700k)") << endl
+               << tr("## article size (default 700k)") << "\n"
                << "article_size = " << sArticleSize << "\n"
                << "\n"
-               << tr("## number of retry to post an Article in case of failure (probably due to an already existing msg-id)") << endl
+               << tr("## number of retry to post an Article in case of failure (probably due to an already existing msg-id)") << "\n"
                << "retry = " << NntpArticle::nbMaxTrySending() << "\n"
                << "\n"
                << "\n"
-               << tr("## uncomment the following line to obfuscate the subjects of each Article") << endl
-               << tr("## /!\\ CAREFUL you won't find your post if you lose the nzb file /!\\") << endl
+               << tr("## uncomment the following line to obfuscate the subjects of each Article") << "\n"
+               << tr("## /!\\ CAREFUL you won't find your post if you lose the nzb file /!\\") << "\n"
                << (_obfuscateArticles ? "" : "#") << "obfuscate = article\n"
                << "\n"
-               << tr("## remove accents and special characters from the nzb file names") << endl
+               << tr("## remove accents and special characters from the nzb file names") << "\n"
                << (_removeAccentsOnNzbFileName  ? "" : "#") << "NZB_RM_ACCENTS = true\n"
                << "\n"
-               << tr("## close Quick Post Tabs when posted successfully (for the GUI)") << endl
+               << tr("## close Quick Post Tabs when posted successfully (for the GUI)") << "\n"
                << (_autoCloseTabs  ? "" : "#") << "AUTO_CLOSE_TABS = true\n"
                << "\n"
                << "\n"
                << tr("## Time to wait (seconds) before trying to resume a Post automatically in case of loss of Network (min: %1)").arg(
-                      sDefaultResumeWaitInSec) << endl
-               << "RESUME_WAIT = " << _waitDurationBeforeAutoResume << endl
+                      sDefaultResumeWaitInSec) << "\n"
+               << "RESUME_WAIT = " << _waitDurationBeforeAutoResume << "\n"
                << "\n"
-               << tr("## By default, ngPost tries to resume a Post if the network is down.") << endl
-               << tr("## it won't stop trying until the network is back and the post is finished properly") << endl
-               << tr("## you can disable this feature and thus stop a post when you loose the network") << endl
+               << tr("## By default, ngPost tries to resume a Post if the network is down.") << "\n"
+               << tr("## it won't stop trying until the network is back and the post is finished properly") << "\n"
+               << tr("## you can disable this feature and thus stop a post when you loose the network") << "\n"
                << (_tryResumePostWhenConnectionLost  ? "#" : "") << "NO_RESUME_AUTO = true\n"
                << "\n"
-               << tr("## if there is no activity on a connection it will be closed and restarted") << endl
-               << tr("## The duration is in second, default: %1, min: %2)").arg(sDefaultSocketTimeOut/1000).arg(sMinSocketTimeOut/1000) << endl
-               << "SOCK_TIMEOUT = " << _socketTimeOut / 1000 << endl
+               << tr("## if there is no activity on a connection it will be closed and restarted") << "\n"
+               << tr("## The duration is in second, default: %1, min: %2)").arg(sDefaultSocketTimeOut/1000).arg(sMinSocketTimeOut/1000) << "\n"
+               << "SOCK_TIMEOUT = " << _socketTimeOut / 1000 << "\n"
                << "\n"
-               << tr("## when several Posts are queued, prepare the packing of the next Post while uploading the current one") << endl
-               << (_preparePacking ? "" : "#") << "PREPARE_PACKING = true" << endl
+               << tr("## when several Posts are queued, prepare the packing of the next Post while uploading the current one") << "\n"
+               << (_preparePacking ? "" : "#") << "PREPARE_PACKING = true" << "\n"
                << "\n"
                << "\n"
                << "\n"
@@ -2121,54 +2125,54 @@ void NgPost::saveConfig()
                << "##           Compression and par2 section                   ##\n"
                << "##############################################################\n"
                << "\n"
-               << tr("## Auto compression for all posts with random archive name, password and par2 generation") << endl
+               << tr("## Auto compression for all posts with random archive name, password and par2 generation") << "\n"
                << (_autoCompress  ? "" : "#") << "AUTO_COMPRESS = true\n"
                << "\n"
-               << tr("## use the same Password for all your Posts using compression") << endl
+               << tr("## use the same Password for all your Posts using compression") << "\n"
                << (_hmi?(_hmi->useFixedPassword()?"":"#"):(_rarPassFixed.isEmpty()  ? "#" : ""))
-               << "RAR_PASS = " << (_rarPassFixed.isEmpty()  ? "yourPassword" : _rarPassFixed) << endl
+               << "RAR_PASS = " << (_rarPassFixed.isEmpty()  ? "yourPassword" : _rarPassFixed) << "\n"
                << "\n"
-               << tr("## temporary folder where the compressed files and par2 will be stored") << endl
-               << tr("## so we can post directly a compressed (obfuscated or not) archive of the selected files") << endl
-               << tr("## /!\\ The directory MUST HAVE WRITE PERMISSION /!\\") << endl
-               << tr("## this is set for Linux environment, Windows users MUST change it") << endl
+               << tr("## temporary folder where the compressed files and par2 will be stored") << "\n"
+               << tr("## so we can post directly a compressed (obfuscated or not) archive of the selected files") << "\n"
+               << tr("## /!\\ The directory MUST HAVE WRITE PERMISSION /!\\") << "\n"
+               << tr("## this is set for Linux environment, Windows users MUST change it") << "\n"
                << "TMP_DIR = " << _tmpPath << "\n"
                << "\n"
-               << tr("## RAR or 7zip absolute file path (external application)") << endl
-               << tr("## /!\\ The file MUST EXIST and BE EXECUTABLE /!\\") << endl
-               << tr("## this is set for Linux environment, Windows users MUST change it") << endl
+               << tr("## RAR or 7zip absolute file path (external application)") << "\n"
+               << tr("## /!\\ The file MUST EXIST and BE EXECUTABLE /!\\") << "\n"
+               << tr("## this is set for Linux environment, Windows users MUST change it") << "\n"
                << "RAR_PATH = " << _rarPath << "\n"
                << "\n"
-               << tr("## RAR EXTRA options (the first 'a' and '-idp' will be added automatically)") << endl
-               << tr("## -hp will be added if you use a password with --gen_pass, --rar_pass or using the HMI") << endl
-               << tr("## -v42m will be added with --rar_size or using the HMI") << endl
-               << tr("## you could change the compression level, lock the archive, add redundancy...") << endl
+               << tr("## RAR EXTRA options (the first 'a' and '-idp' will be added automatically)") << "\n"
+               << tr("## -hp will be added if you use a password with --gen_pass, --rar_pass or using the HMI") << "\n"
+               << tr("## -v42m will be added with --rar_size or using the HMI") << "\n"
+               << tr("## you could change the compression level, lock the archive, add redundancy...") << "\n"
                << "#RAR_EXTRA = -ep1 -m0 -k -rr5p\n"
                << "#RAR_EXTRA = -mx0 -mhe=on   (for 7-zip)\n"
                << (_rarArgs.isEmpty() ? "" : QString("RAR_EXTRA = %1\n").arg(_rarArgs) )
                << "\n"
-               << tr("## size in MB of the RAR volumes (0 by default meaning NO split)") << endl
-               << tr("## feel free to change the value or to comment the next line if you don't want to split the archive") << endl
+               << tr("## size in MB of the RAR volumes (0 by default meaning NO split)") << "\n"
+               << tr("## feel free to change the value or to comment the next line if you don't want to split the archive") << "\n"
                << "RAR_SIZE = " << _rarSize << "\n"
                << "\n"
-               << tr("## maximum number of archive volumes") << endl
-               << tr("## we'll use RAR_SIZE except if it genereates too many volumes") << endl
-               << tr("## in that case we'll update rar_size to be <size of post> / rar_max") << endl
+               << tr("## maximum number of archive volumes") << "\n"
+               << tr("## we'll use RAR_SIZE except if it genereates too many volumes") << "\n"
+               << tr("## in that case we'll update rar_size to be <size of post> / rar_max") << "\n"
                << "RAR_MAX = " << _rarMax << "\n"
                << "\n"
-               << tr("##  keep rar folder after posting (otherwise it is automatically deleted uppon successful post)") << endl
+               << tr("##  keep rar folder after posting (otherwise it is automatically deleted uppon successful post)") << "\n"
                << (_keepRar  ? "" : "#") << "KEEP_RAR = true\n"
                << "\n"
-               << "## " << tr("Remove root (parent) folder when compressing Folders using RAR") << endl
+               << "## " << tr("Remove root (parent) folder when compressing Folders using RAR") << "\n"
                << (_rarNoRootFolder  ? "" : "#") << "RAR_NO_ROOT_FOLDER = true\n"
                << "\n"
-               << tr("## par2 redundancy percentage (0 by default meaning NO par2 generation)") << endl
+               << tr("## par2 redundancy percentage (0 by default meaning NO par2 generation)") << "\n"
                << "PAR2_PCT = " << _par2Pct << "\n"
                << "\n"
-               << tr("## par2 (or alternative) absolute file path") << endl
-               << tr("## this is only useful if you compile from source (as par2 is included on Windows and the AppImage)") << endl
-               << tr("## or if you wish to use an alternative to par2 (for exemple Multipar on Windows)") << endl
-               << tr("## (in that case, you may need to set also PAR2_ARGS)") << endl;
+               << tr("## par2 (or alternative) absolute file path") << "\n"
+               << tr("## this is only useful if you compile from source (as par2 is included on Windows and the AppImage)") << "\n"
+               << tr("## or if you wish to use an alternative to par2 (for exemple Multipar on Windows)") << "\n"
+               << tr("## (in that case, you may need to set also PAR2_ARGS)") << "\n";
         if (!_par2PathConfig.isEmpty())
             stream << "PAR2_PATH = " << _par2PathConfig << "\n";
 #if defined(WIN32) || defined(__MINGW64__)
@@ -2179,18 +2183,18 @@ void NgPost::saveConfig()
                << "#PAR2_PATH = <your_path>/parpar\n";
 #endif
         stream << "\n"
-               << tr("## fixed parameters for the par2 (or alternative) command") << endl
-               << tr("## you could for exemple use Multipar on Windows") << endl
+               << tr("## fixed parameters for the par2 (or alternative) command") << "\n"
+               << tr("## you could for exemple use Multipar on Windows") << "\n"
                << "#PAR2_ARGS = -s5M -r1n*0.6 -m2048M -p1l --progress stdout -q   (for parpar)\n"
                << "#PAR2_ARGS = c -l -m1024 -r8 -s768000                 (for par2cmdline)\n"
                << "#PAR2_ARGS = create /rr8 /lc40 /lr /rd2               (for Multipar)\n"
                << (_par2Args.isEmpty() ? "" : QString("PAR2_ARGS = %1\n").arg(_par2Args))
                << "\n"
                << "\n"
-               << tr("## length of the random generated archive's file name") << endl
+               << tr("## length of the random generated archive's file name") << "\n"
                << "LENGTH_NAME = " << _lengthName << "\n"
                << "\n"
-               << tr("## length of the random archive's passsword") << endl
+               << tr("## length of the random archive's passsword") << "\n"
                << "LENGTH_PASS = "<< _lengthPass << "\n"
                << "\n"
                << "\n"
@@ -2213,7 +2217,7 @@ void NgPost::saveConfig()
                    << "enabled = " << (param->enabled ? "true":"false") << "\n"
                    << "\n\n";
         }
-        stream << tr("## You can add as many server if you have several providers by adding other \"server\" sections") << endl
+        stream << tr("## You can add as many server if you have several providers by adding other \"server\" sections") << "\n"
                << "#[server]\n"
                << "#host = news.otherprovider.com\n"
                << "#port = 563\n"

@@ -67,7 +67,11 @@ NntpArticle *Poster::getNextArticle(const QString &conPrefix)
 
     QMutexLocker lock(&_secureArticles); // thread safety (coming from a posting thread)
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
     if (_job->_stopPosting.load())
+#else
+    if (_job->_stopPosting.loadRelaxed())
+#endif
         return nullptr;
 
     if (_ngPost->debugFull())
@@ -78,7 +82,11 @@ NntpArticle *Poster::getNextArticle(const QString &conPrefix)
         article = _articles.dequeue();
     else
     {
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
         if (!_job->_noMoreFiles.load())
+#else
+        if (!_job->_noMoreFiles.loadRelaxed())
+#endif
         {
             // we should never come here as the goal is to have articles prepared in advance in the queue
             if (_ngPost->debugFull())

@@ -258,7 +258,7 @@ void PostingJob::_postFiles()
                 _nzbStream << tab << tab << "<meta type=\"password\">" << _rarPass << "</meta>\n";
             _nzbStream << tab << "</head>\n\n";
         }
-        _nzbStream << flush;
+        _nzbStream << Qt::flush;
     }
 
 
@@ -328,7 +328,11 @@ void PostingJob::onStopPosting()
 
 void PostingJob::onDisconnectedConnection(NntpConnection *con)
 {
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
     if (_stopPosting.load())
+#else
+    if (_stopPosting.loadRelaxed())
+#endif
         return; // we're destructing all the connections
 
     _error(tr("Error: disconnected connection: #%1\n").arg(con->getId()));
@@ -468,7 +472,11 @@ void PostingJob::_preparePostersArticles()
 
     for (int i = 0 ; i < _ngPost->sNbPreparedArticlePerConnection ; ++i)
     {
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
         if (_noMoreFiles.load())
+#else
+        if (_noMoreFiles.loadRelaxed())
+#endif
             break;
         for (Poster *poster : _posters)
         {
@@ -612,7 +620,7 @@ qDebug() << "[MB_TRACE][PostingJob::_finishPosting]";
 #endif
     _stopPosting = 0x1;
 
-    if (!_timeStart.isNull() && _postFinished)
+    if (!_timeStart.isValid() && _postFinished)
     {
         _nbArticlesUploaded = _nbArticlesTotal; // we might not have processed the last onArticlePosted
         _uploadedSize       = _totalSize;
@@ -625,7 +633,7 @@ qDebug() << "[MB_TRACE][PostingJob::_finishPosting]";
     _ngPost->_finishPosting(); // to update progress bar
 
     // 1.: print stats
-    if (!_timeStart.isNull())
+    if (!_timeStart.isValid())
         _printStats();
 
 
@@ -679,7 +687,12 @@ qDebug() << "[MB_TRACE][PostingJob::_finishPosting]";
         }
         _error(tr("you can try to repost only those and concatenate the nzb with the current one ;)"));
     }
-    else if (_postFinished && _delFilesAfterPost.load())
+    else if (_postFinished &&
+         #if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
+             _delFilesAfterPost.load())
+         #else
+             _delFilesAfterPost.loadRelaxed())
+         #endif
         _delOriginalFiles();
 }
 
@@ -703,7 +716,7 @@ void PostingJob::_printStats() const
 {
     QString size = postSize();
 
-    int duration = _timeStart.elapsed();
+    int duration = static_cast<int>(_timeStart.elapsed());
     double sec = duration/1000;
 
     QString msgEnd("\n"), ts = QString("[%1] ").arg(timestamp());
@@ -914,7 +927,12 @@ void PostingJob::onCompressionFinished(int exitCode)
     _log("[PostingJob::_compressFiles] compression finished...");
 #endif
 
-    if (_obfuscateFileName && !_delFilesAfterPost.load())
+    if (_obfuscateFileName &&
+        #if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
+            !_delFilesAfterPost.load())
+        #else
+            !_delFilesAfterPost.loadRelaxed())
+        #endif
     {
         for (auto it = _obfuscatedFileNames.cbegin(), itEnd = _obfuscatedFileNames.cend(); it != itEnd; ++it)
             QFile::rename(it.key(), it.value());

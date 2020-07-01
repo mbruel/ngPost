@@ -29,6 +29,7 @@
 #include <QMutex>
 #include <QTime>
 #include <QTimer>
+#include <QElapsedTimer>
 class QProcess;
 class NgPost;
 class NntpConnection;
@@ -99,8 +100,8 @@ private:
     QFile       *_file;     //!< file handler on the file getting processed
     uint         _part;     //!< part number (Article) on the current file
 
-    QTime       _timeStart; //!< to get some stats (upload time and avg speed)
-    quint64     _totalSize; //!< total size (in Bytes) to be uploaded
+    QElapsedTimer _timeStart; //!< to get some stats (upload time and avg speed)
+    quint64       _totalSize; //!< total size (in Bytes) to be uploaded
 
     int     _nbConnections; //!< available number of NntpConnection (we may loose some)
     int     _nbThreads;     //!< size of the ThreadPool
@@ -300,7 +301,7 @@ QString PostingJob::avgSpeed() const
     QString power = " ";
     double bandwidth = 0.;
 
-    if (!_timeStart.isNull())
+    if (!_timeStart.isValid())
     {
         double sec = _timeStart.elapsed()/1000.;
         bandwidth = _uploadedSize / sec;
@@ -404,7 +405,14 @@ void PostingJob::setDelFilesAfterPosted(bool delFiles)
 QString PostingJob::groups() const { return QString::fromStdString(_groups); }
 QString PostingJob::from() const { return _obfuscateArticles ? QString() : QString::fromStdString(_from); }
 
-bool PostingJob::isPosting() const { return _stopPosting.load() == 0x0; }
+bool PostingJob::isPosting() const
+{
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
+    return _stopPosting.load() == 0x0;
+#else
+    return _stopPosting.loadRelaxed() == 0x0;
+#endif
+}
 bool PostingJob::isPaused() const { return _isPaused; }
 
 
