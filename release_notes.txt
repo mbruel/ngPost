@@ -16,6 +16,19 @@ TODO: auto RAR size and par2 parameters depending on the inputs size?
 
 
 ####################################################
+###       Release: ngPost v4.9                   ###
+###       date:    2020/07/02                    ###
+####################################################
+
+- Issue #56, fix PREPARE_PACKING to only start one packing at a time!
+
+- update code to remove deprecated methods of Qt v5.15.0 to be ready for the v6
+
+- upgrade Linux, MacOS and Windows releases to Qt v5.15.0
+
+
+
+####################################################
 ###       Release: ngPost v4.8                   ###
 ###       date:    2020/06/21 vive la Musique!   ###
 ####################################################
