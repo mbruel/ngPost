@@ -404,6 +404,9 @@ public:
     inline static QString donationTooltip();
 
     inline static std::string randomStdFrom(ushort length = 13);
+
+    inline static QStringList parseCombinedArgString(const QString &program);
+
 };
 
 QString NgPost::quickJobName() { return tr(sQuickJobName); }
@@ -489,6 +492,46 @@ std::string NgPost::randomStdFrom(ushort length) {
     randomFrom.append(".com");
 
     return randomFrom;
+}
+
+QStringList NgPost::parseCombinedArgString(const QString &program)
+{
+    // from Qt old code (https://code.woboq.org/qt5/qtbase/src/corelib/io/qprocess.cpp.html#_ZL22parseCombinedArgStringRK7QString)
+    // cf https://forum.qt.io/topic/116527/deprecation-of-qprocess-start-and-execute-without-argument-list
+    QStringList args;
+    QString tmp;
+    int quoteCount = 0;
+    bool inQuote = false;
+    // handle quoting. tokens can be surrounded by double quotes
+    // "hello world". three consecutive double quotes represent
+    // the quote character itself.
+    for (int i = 0; i < program.size(); ++i) {
+        if (program.at(i) == QLatin1Char('"')) {
+            ++quoteCount;
+            if (quoteCount == 3) {
+                // third consecutive quote
+                quoteCount = 0;
+                tmp += program.at(i);
+            }
+            continue;
+        }
+        if (quoteCount) {
+            if (quoteCount == 1)
+                inQuote = !inQuote;
+            quoteCount = 0;
+        }
+        if (!inQuote && program.at(i).isSpace()) {
+            if (!tmp.isEmpty()) {
+                args += tmp;
+                tmp.clear();
+            }
+        } else {
+            tmp += program.at(i);
+        }
+    }
+    if (!tmp.isEmpty())
+        args += tmp;
+    return args;
 }
 
 void NgPost::_enableAutoCompress()

@@ -550,12 +550,15 @@ void NgPost::doNzbPostCMD(const QString &nzbFilePath)
     // second NZB_POST_CMD
     if (!_nzbPostCmd.isEmpty())
     {
-        QString cmd = _nzbPostCmd.arg(nzbFilePath);
-        int res = QProcess::execute(cmd);
+        QString  fullCmd = _nzbPostCmd.arg(nzbFilePath);
+        QStringList args = parseCombinedArgString(fullCmd);
+        QString     cmd  = args.takeFirst();
+        qDebug() << "cmd: " << cmd << ", args: " << args;
+        int res = QProcess::execute(cmd, args);
         if (debugMode())
-            _log(tr("NZB Post cmd: %1 exitcode: %2").arg(cmd).arg(res));
+            _log(tr("NZB Post cmd: %1 exitcode: %2").arg(fullCmd).arg(res));
         else
-            _log(cmd);
+            _log(fullCmd);
     }
 
 }
@@ -810,7 +813,12 @@ void NgPost::onPostingJobFinished()
 //            _shutdownProc->start("/usr/bin/sudo", QStringList() << "-n" << "/sbin/poweroff");
 
 //            qDebug() << " cmd: " << _shutdownCmd;
-            _shutdownProc->start(_shutdownCmd);
+
+//            QStringList args = _shutdownCmd.split(QRegularExpression("\\s+"));
+            QStringList args = parseCombinedArgString(_shutdownCmd);
+            QString     cmd  = args.takeFirst();
+            qDebug() << "cmd: " << cmd << ", args: " << args;
+            _shutdownProc->start(cmd, args);
         }
         else if (!_folderMonitor && !_hmi)
         {

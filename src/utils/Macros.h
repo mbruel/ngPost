@@ -14,5 +14,4 @@
     #define MB_LoadAtomic(atom) atom.loadRelaxed()
 #endif
 
-
 #endif // MACROS_H
