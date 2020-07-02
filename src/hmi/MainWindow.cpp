@@ -98,14 +98,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(_ui->debugBox,       &QAbstractButton::toggled, this,            &MainWindow::onDebugToggled);
     connect(_ui->pauseButton,    &QAbstractButton::clicked, this,            &MainWindow::onPauseClicked);
 
-
-    connect(_ui->debugSB,   qOverload<int>(&QSpinBox::valueChanged),   this,    &MainWindow::onDebugValue);
 #if QT_VERSION < QT_VERSION_CHECK(5, 12, 0)
     connect(_ui->debugSB, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &MainWindow::onDebugValue);
 #else
     connect(_ui->debugSB,   qOverload<int>(&QSpinBox::valueChanged),   this,    &MainWindow::onDebugValue);
 #endif
-
 }
 
 MainWindow::~MainWindow()
