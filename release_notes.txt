@@ -14,6 +14,8 @@ TODO: include ParPar instead of par2cmdline?
 
 TODO: auto RAR size and par2 parameters depending on the inputs size?
 
+TODO: Req #61: multi server in command line:  -S user:pass@news.provider.com:563:15:ssl
+
 
 ####################################################
 ###       Release: ngPost v4.9                   ###

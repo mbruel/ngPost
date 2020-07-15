@@ -2066,7 +2066,7 @@ void NgPost::saveConfig()
                << tr("## History posting file") << "\n"
                << tr("## each succesful post will append a line with the date, the file name, the archive name, the password...") << "\n"
                << (_postHistoryFile.isEmpty()  ? "#" : "") <<"POST_HISTORY = "
-               << (_postHistoryFile.isEmpty()  ? "/nzb/ngPost_history.cvs" : _postHistoryFile) << "\n"
+               << (_postHistoryFile.isEmpty()  ? "/nzb/ngPost_history.csv" : _postHistoryFile) << "\n"
                << "\n"
                << "GROUPS   = " << _groups.c_str() << "\n"
                << "\n"
