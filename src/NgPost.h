@@ -88,7 +88,7 @@ class NgPost : public QObject, public CmdOrGuiApp
                     COMPRESS, GEN_PAR2, GEN_NAME, GEN_PASS, LENGTH_NAME, LENGTH_PASS,
                     RAR_NAME, RAR_PASS, RAR_NO_ROOT_FOLDER,
                     AUTO_CLOSE_TABS, AUTO_COMPRESS,
-                    HOST, PORT, SSL, USER, PASS, CONNECTION, ENABLED
+                    SERVER, HOST, PORT, SSL, USER, PASS, CONNECTION, ENABLED
                    };
 
     static const QMap<Opt, QString> sOptionNames;
@@ -246,6 +246,8 @@ private:
 
     static const char sHistoryLogFieldSeparator = ';';
     static constexpr const char *sTranslationPath = ":/lang";
+
+    static constexpr const char *sNntpServerStrRegExp = "^((\\w+):([^@]+)@)?([\\w\\.\\-_]+):(\\d+):(\\d+):(no)?ssl$";
 
 
     static std::string sArticleIdSignature; //!< signature for Article message id (must be as a email address)

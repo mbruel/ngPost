@@ -125,7 +125,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::LENGTH_NAME,  "length_name"},
     {Opt::LENGTH_PASS,  "length_pass"},
 
-
+    {Opt::SERVER,       "server"},
     {Opt::HOST,         "host"},
     {Opt::PORT,         "port"},
     {Opt::SSL,          "ssl"},
@@ -185,6 +185,7 @@ const QList<QCommandLineOption> NgPost::sCmdOptions = {
     { sOptionNames[Opt::RAR_NO_ROOT_FOLDER],  tr( "Remove root (parent) folder when compressing Folders using RAR")},
 
 
+    {{"S", sOptionNames[Opt::SERVER]},        tr("NNTP server following the format (<user>:<pass>@)?<host>:<port>:<nbCons>:(no)?ssl"), sOptionNames[Opt::SERVER]},
 // without config file, you can provide all the parameters to connect to ONE SINGLE server
     {{"h", sOptionNames[Opt::HOST]},          tr("NNTP server hostname (or IP)"), sOptionNames[Opt::HOST]},
     {{"P", sOptionNames[Opt::PORT]},          tr("NNTP server port"), sOptionNames[Opt::PORT]},
@@ -1311,6 +1312,44 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
 
 
 
+    if (parser.isSet(sOptionNames[Opt::SERVER]))
+    {
+        _nntpServers.clear();
+        QRegularExpression regExp(sNntpServerStrRegExp,  QRegularExpression::CaseInsensitiveOption);
+        for (const QString &serverParam : parser.values(sOptionNames[Opt::SERVER]))
+        {
+            QRegularExpressionMatch match = regExp.match(serverParam);
+            if (match.hasMatch())
+            {
+                bool    auth  = !match.captured(1).isEmpty();
+                QString user  = match.captured(2);
+                QString pass  = match.captured(3);
+                QString host  = match.captured(4);
+                ushort  port  = match.captured(5).toUShort();
+                int     nbCon = match.captured(6).toInt();
+                bool    ssl   = match.captured(7).isEmpty();
+
+                qDebug() << "NNTP Server: " << user << ":" << pass
+                         << "@" << host << ":" << port << ":" << nbCon << ":" << ssl;
+
+                NntpServerParams *server = new NntpServerParams(host,
+                                                                port,
+                                                                auth,
+                                                                user.toStdString(),
+                                                                pass.toStdString(),
+                                                                nbCon,
+                                                                ssl);
+                _nntpServers << server;
+            }
+            else
+            {
+                _error(tr("Syntax error on server details for %1, the format should be: %2").arg(
+                           serverParam).arg("(<user>:<pass>@)?<host>:<port>:<nbCons>:(no)?ssl"));
+                return false;
+            }
+        }
+    }
+
     // Server Section under
     // check if the server params are given in the command line
     if (parser.isSet(sOptionNames[Opt::HOST]))
@@ -1318,7 +1357,8 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         QString host = parser.value(sOptionNames[Opt::HOST]);
 
 
-        _nntpServers.clear();
+        if (!parser.isSet(sOptionNames[Opt::SERVER]))
+            _nntpServers.clear();
         NntpServerParams *server = new NntpServerParams(host);
         _nntpServers << server;
 
@@ -1884,8 +1924,8 @@ void NgPost::_syntax(char *appName)
           << tr("Syntax: ") << app << " (options)* (-i <file or folder> | --auto <folder> | --monitor <folder>)+\n";
     for (const QCommandLineOption & opt : sCmdOptions)
     {
-        if (opt.valueName() == sOptionNames[Opt::HOST])
-            _cout << "\n// " << tr("without config file, you can provide all the parameters to connect to ONE SINGLE server") << "\n";
+        if (opt.valueName() == sOptionNames[Opt::SERVER])
+            _cout << "\n// " << tr("you can provide servers in one string using -S and/or split the parameters for ONE SINGLE server (this will overwrite the configuration file)") << "\n";
         else if (opt.valueName() == sOptionNames[Opt::TMP_DIR])
             _cout << "\n// " << tr("for compression and par2 support") << "\n";
         else if (opt.valueName() == sOptionNames[Opt::AUTO_DIR])
