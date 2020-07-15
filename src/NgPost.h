@@ -95,11 +95,19 @@ class NgPost : public QObject, public CmdOrGuiApp
 
     enum class AppMode {CMD = 0, HMI = 1}; //!< supposed to be CMD but a simple HMI has been added
 
+    enum class ERROR_CODE : ushort {NONE=0, ERR_CONF_FILE, ERR_WRONG_ARG, ERR_NO_INPUT,
+                                    ERR_DEL_AUTO, ERR_AUTO_NO_COMPRESS, ERR_AUTO_INPUT,
+                                    ERR_MONITOR_NO_COMPRESS, ERR_MONITOR_INPUT,
+                                    ERR_NB_THREAD, ERR_ARTICLE_SIZE, ERR_NB_RETRY, ERR_PAR2_ARGS,
+                                    ERR_SERVER_REGEX, ERR_SERVER_PORT, ERR_SERVER_CONS,
+                                    ERR_INPUT_READ
+                                   };
 
 private:
     mutable QTextStream   _cout; //!< stream for stdout
     mutable QTextStream   _cerr; //!< stream for stderr
 
+    ERROR_CODE            _err;
     ushort                _debug;
     bool                  _dispProgressBar;
     bool                  _dispFilesPosting;
@@ -265,6 +273,8 @@ public:
     void checkForNewVersion() override;
     int startHMI() override;
 
+    inline int errCode() const;
+
 
     QString parseDefaultConfig();
 
@@ -374,6 +384,7 @@ private:
 
     void _log(const QString &aMsg, bool newline = true) const; //!< log function for QString
     void _error(const QString &error) const;    
+    void _error(const QString &error, ERROR_CODE code);
 
 
     void _syntax(char *appName);
@@ -438,6 +449,8 @@ ushort NgPost::waitDurationBeforeAutoResume() const { return _waitDurationBefore
 
 const std::string &NgPost::aticleSignature() { return sArticleIdSignature; }
 const char *NgPost::appName() { return sAppName; }
+
+int NgPost::errCode() const     { return static_cast<int>(_err); }
 
 int NgPost::nbThreads() const { return _nbThreads; }
 int NgPost::getSocketTimeout() const { return _socketTimeOut; }

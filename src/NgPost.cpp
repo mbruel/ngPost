@@ -203,6 +203,7 @@ NgPost::NgPost(int &argc, char *argv[]):
     QObject (), CmdOrGuiApp(argc, argv),
     _cout(stdout),
     _cerr(stderr),
+    _err(ERROR_CODE::NONE),
 #ifdef __DEBUG__
     _debug(2),
 #else
@@ -918,6 +919,12 @@ void NgPost::_error(const QString &error) const
         _cerr << error << "\n" << MB_FLUSH;
 }
 
+void NgPost::_error(const QString &error, NgPost::ERROR_CODE code)
+{
+    _err = code;
+    _error(error);
+}
+
 
 QString NgPost::randomPass(uint length) const
 {
@@ -1004,7 +1011,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         QString err = _parseConfig(parser.value(sOptionNames[Opt::CONF]));
         if (!err.isEmpty())
         {
-            _error(err);
+            _error(err, ERROR_CODE::ERR_CONF_FILE);
             return false;
         }
     }
@@ -1013,14 +1020,15 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         QString err = parseDefaultConfig();
         if (!err.isEmpty())
         {
-            _error(err);
+            _error(err, ERROR_CODE::ERR_CONF_FILE);
             return false;
         }
     }
 
     if (!parser.parse(args))
     {
-        _error(tr("Error syntax: %1\nTo list the available options use: %2 --help\n").arg(parser.errorText()).arg(argv[0]));
+        _error(tr("Error syntax: %1\nTo list the available options use: %2 --help\n").arg(parser.errorText()).arg(argv[0]),
+                ERROR_CODE::ERR_WRONG_ARG);
         return false;
     }
 
@@ -1046,14 +1054,16 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
 
     if (!parser.isSet(sOptionNames[Opt::INPUT]) && !parser.isSet(sOptionNames[Opt::AUTO_DIR]) && !parser.isSet(sOptionNames[Opt::MONITOR_DIR]))
     {
-        _error("Error syntax: you should provide at least one input file or directory using the option -i, --auto or --monitor");
+        _error(tr("Error syntax: you should provide at least one input file or directory using the option -i, --auto or --monitor"),
+               ERROR_CODE::ERR_NO_INPUT);
         return false;
     }
     if (parser.isSet(sOptionNames[Opt::DEL_AUTO]))
     {
         if ( !parser.isSet(sOptionNames[Opt::AUTO_DIR]) && !parser.isSet(sOptionNames[Opt::MONITOR_DIR]))
         {
-            _error("Error syntax: --del option is only available with --auto or --monitor");
+            _error(tr("Error syntax: --del option is only available with --auto or --monitor"),
+                   ERROR_CODE::ERR_DEL_AUTO);
             return false;
         }
         else
@@ -1064,7 +1074,8 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     {
         if (!_autoCompress && !parser.isSet(sOptionNames[Opt::COMPRESS]))
         {
-            _error("Error syntax: --auto only works with --compress or AUTO_COMPRESS in config");
+            _error(tr("Error syntax: --auto only works with --compress or AUTO_COMPRESS in config"),
+                   ERROR_CODE::ERR_AUTO_NO_COMPRESS);
             return false;
         }
         for (const QString &filePath : parser.values(sOptionNames[Opt::AUTO_DIR]))
@@ -1072,19 +1083,21 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
             QFileInfo fi(filePath);
             if (!fi.exists() || !fi.isDir())
             {
-                _error("Error syntax: --auto only uses folders as argument...");
+                _error(tr("Error syntax: --auto only uses folders as argument..."),
+                       ERROR_CODE::ERR_AUTO_INPUT);
                 return false;
             }
             else
                 _autoDirs << QDir(fi.absoluteFilePath());
         }
-    }
+    }        
 
     if (parser.isSet(sOptionNames[Opt::MONITOR_DIR]))
     {
         if (!parser.isSet(sOptionNames[Opt::COMPRESS]))
         {
-            _error("Error syntax: --monitor only works with --compress");
+            _error(tr("Error syntax: --monitor only works with --compress"),
+                   ERROR_CODE::ERR_MONITOR_NO_COMPRESS);
             return false;
         }
         for (const QString &filePath : parser.values(sOptionNames[Opt::MONITOR_DIR]))
@@ -1092,12 +1105,13 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
             QFileInfo fi(filePath);
             if (!fi.exists() || !fi.isDir())
             {
-                _error("Error syntax: --monitor only uses folders as argument...");
+                _error(tr("Error syntax: --monitor only uses folders as argument..."),
+                       ERROR_CODE::ERR_MONITOR_INPUT);
                 return false;
             }
             else
             {
-                _cout << "[FolderMonitor] start monitoring: " << fi.absoluteFilePath() << "\n" << MB_FLUSH;
+                _cout << "[FolderMonitor] " << tr("start monitoring: ") << fi.absoluteFilePath() << "\n" << MB_FLUSH;
                 if (_folderMonitor)
                     _folderMonitor->addFolder(fi.absoluteFilePath());
                 else
@@ -1109,18 +1123,18 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     if (parser.isSet(sOptionNames[Opt::OBFUSCATE]))
     {
         _obfuscateArticles = true;
-        _cout << "Do article obfuscation (the subject of each Article will be a UUID)\n" << MB_FLUSH;
+        _cout << tr("Do article obfuscation (the subject of each Article will be a UUID)\n") << MB_FLUSH;
     }
 
     if (parser.isSet(sOptionNames[Opt::DEBUG]))
     {
         _debug = 1;
-        _cout << "Extra logs are ON\n" << MB_FLUSH;
+        _cout << tr("Extra logs are ON\n") << MB_FLUSH;
     }
     if (parser.isSet(sOptionNames[Opt::DEBUG_FULL]))
     {
         _debug = 2;
-        _cout << "Full debug logs are ON\n" << MB_FLUSH;
+        _cout << tr("Full debug logs are ON\n") << MB_FLUSH;
     }
 
     if (parser.isSet(sOptionNames[Opt::THREAD]))
@@ -1131,7 +1145,8 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
             _nbThreads = 1;
         if (!ok)
         {
-            _error(tr("You should give an integer for the number of threads (option -t)"));
+            _error(tr("You should give an integer for the number of threads (option -t)"),
+                   ERROR_CODE::ERR_NB_THREAD);
             return false;
         }
     }
@@ -1205,7 +1220,8 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
             sArticleSize = size;
         else
         {
-            _error(tr("You should give an integer for the article size (option -a)"));
+            _error(tr("You should give an integer for the article size (option -a)"),
+                   ERROR_CODE::ERR_ARTICLE_SIZE);
             return false;
         }
     }
@@ -1218,7 +1234,8 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
             NntpArticle::setNbMaxRetry(nbRetry);
         else
         {
-            _error(tr("You should give an unisgned integer for the number of retry for posting an Article (option -r)"));
+            _error(tr("You should give an unisgned integer for the number of retry for posting an Article (option -r)"),
+                   ERROR_CODE::ERR_NB_RETRY);
             return false;
         }
     }
@@ -1283,7 +1300,8 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
 
     if (_doPar2 && _par2Pct == 0 && _par2Args.isEmpty())
     {
-        _error(tr("Error: can't generate par2 if the redundancy percentage is null or PAR2_ARGS is not provided...\nEither use --par2_pct or set PAR2_PCT or PAR2_ARGS in the config file."));
+        _error(tr("Error: can't generate par2 if the redundancy percentage is null or PAR2_ARGS is not provided...\nEither use --par2_pct or set PAR2_PCT or PAR2_ARGS in the config file."),
+               ERROR_CODE::ERR_PAR2_ARGS);
         return false;
     }
 
@@ -1328,10 +1346,10 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
                 ushort  port  = match.captured(5).toUShort();
                 int     nbCon = match.captured(6).toInt();
                 bool    ssl   = match.captured(7).isEmpty();
-
+#ifdef __DEBUG__
                 qDebug() << "NNTP Server: " << user << ":" << pass
                          << "@" << host << ":" << port << ":" << nbCon << ":" << ssl;
-
+#endif
                 NntpServerParams *server = new NntpServerParams(host,
                                                                 port,
                                                                 auth,
@@ -1344,7 +1362,8 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
             else
             {
                 _error(tr("Syntax error on server details for %1, the format should be: %2").arg(
-                           serverParam).arg("(<user>:<pass>@)?<host>:<port>:<nbCons>:(no)?ssl"));
+                           serverParam).arg("(<user>:<pass>@)?<host>:<port>:<nbCons>:(no)?ssl"),
+                       ERROR_CODE::ERR_SERVER_REGEX);
                 return false;
             }
         }
@@ -1376,7 +1395,8 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
                 server->port = port;
             else
             {
-                _error(tr("You should give an integer for the port (option -P)"));
+                _error(tr("You should give an integer for the port (option -P)"),
+                       ERROR_CODE::ERR_SERVER_PORT);
                 return false;
             }
         }
@@ -1399,7 +1419,8 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
                 server->nbCons = nbCons;
             else
             {
-                _error(tr("You should give an integer for the number of connections (option -n)"));
+                _error(tr("You should give an integer for the number of connections (option -n)"),
+                       ERROR_CODE::ERR_SERVER_CONS);
                 return false;
             }
         }
@@ -1414,7 +1435,8 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         QFileInfo fileInfo(filePath);
         if (!fileInfo.exists() || !fileInfo.isReadable())
         {
-            _error(tr("Error: the input file '%1' is not readable...").arg(parser.value("input")));
+            _error(tr("Error: the input file '%1' is not readable...").arg(parser.value("input")),
+                   ERROR_CODE::ERR_INPUT_READ);
             return false;
         }
         else
@@ -1438,7 +1460,8 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
                     }
                     else
                     {
-                        _error(tr("Error: the input file '%1' is not readable...").arg(subFile.absoluteFilePath()));
+                        _error(tr("Error: the input file '%1' is not readable...").arg(subFile.absoluteFilePath()),
+                               ERROR_CODE::ERR_INPUT_READ);
                         return false;
                     }
                 }

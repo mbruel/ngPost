@@ -49,6 +49,7 @@ int main(int argc, char *argv[])
     }
     else
     {
+        exitCode = app->errCode();
 #ifdef __DEBUG__
         std::cout << "Nothing to do...\n";
         std::cout.flush();
