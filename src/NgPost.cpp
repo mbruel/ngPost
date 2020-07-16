@@ -401,13 +401,13 @@ void NgPost::onLog(QString msg, bool newline)
 
 void NgPost::onError(QString msg)
 {
-    _error(msg);
+    _error(msg, ERROR_CODE::COMPLETED_WITH_ERRORS);
 }
 
 
 void NgPost::onErrorConnecting(QString err)
 {
-    _error(err);
+    _error(err, ERROR_CODE::COMPLETED_WITH_ERRORS);
 }
 
 

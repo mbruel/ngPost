@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
     signal(SIGUSR1, &handleSigUsr); // kill -s SIGUSR1 $(pidof ngPost) to hide/show the GUI
 #endif
 
-//    qDebug() << "argc: " << argc;
+    //    qDebug() << "argc: " << argc;
     app = new NgPost(argc, argv);
     app->checkForNewVersion();
 
@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
     if (app->useHMI())
     {
 #if defined( Q_OS_WIN )
-    ::ShowWindow( ::GetConsoleWindow(), SW_HIDE ); //hide console window
+        ::ShowWindow( ::GetConsoleWindow(), SW_HIDE ); //hide console window
 #endif
         exitCode = app->startHMI();
     }
@@ -43,18 +43,20 @@ int main(int argc, char *argv[])
     {
         exitCode = app->startEventLoop();
 #ifdef __DEBUG__
-            std::cout << app->appName() << " closed properly!\n";
-            std::cout.flush();
+        std::cout << app->appName() << " closed properly!\n";
+        std::cout.flush();
 #endif
     }
     else
     {
-        exitCode = app->errCode();
 #ifdef __DEBUG__
         std::cout << "Nothing to do...\n";
         std::cout.flush();
 #endif
     }
+
+    if (app->errCode() != 0)
+        exitCode = app->errCode();
 
     delete app;
     return exitCode;
