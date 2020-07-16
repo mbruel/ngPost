@@ -255,7 +255,7 @@ private:
     static const char sHistoryLogFieldSeparator = ';';
     static constexpr const char *sTranslationPath = ":/lang";
 
-    static constexpr const char *sNntpServerStrRegExp = "^((\\w+):([^@]+)@)?([\\w\\.\\-_]+):(\\d+):(\\d+):(no)?ssl$";
+    static constexpr const char *sNntpServerStrRegExp = "^(([^:]+):([^@]+)@@@)?([\\w\\.\\-_]+):(\\d+):(\\d+):(no)?ssl$";
 
 
     static std::string sArticleIdSignature; //!< signature for Article message id (must be as a email address)

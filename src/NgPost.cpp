@@ -185,7 +185,7 @@ const QList<QCommandLineOption> NgPost::sCmdOptions = {
     { sOptionNames[Opt::RAR_NO_ROOT_FOLDER],  tr( "Remove root (parent) folder when compressing Folders using RAR")},
 
 
-    {{"S", sOptionNames[Opt::SERVER]},        tr("NNTP server following the format (<user>:<pass>@)?<host>:<port>:<nbCons>:(no)?ssl"), sOptionNames[Opt::SERVER]},
+    {{"S", sOptionNames[Opt::SERVER]},        tr("NNTP server following the format (<user>:<pass>@@@)?<host>:<port>:<nbCons>:(no)?ssl"), sOptionNames[Opt::SERVER]},
 // without config file, you can provide all the parameters to connect to ONE SINGLE server
     {{"h", sOptionNames[Opt::HOST]},          tr("NNTP server hostname (or IP)"), sOptionNames[Opt::HOST]},
     {{"P", sOptionNames[Opt::PORT]},          tr("NNTP server port"), sOptionNames[Opt::PORT]},
@@ -1362,7 +1362,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
             else
             {
                 _error(tr("Syntax error on server details for %1, the format should be: %2").arg(
-                           serverParam).arg("(<user>:<pass>@)?<host>:<port>:<nbCons>:(no)?ssl"),
+                           serverParam).arg("(<user>:<pass>@@@)?<host>:<port>:<nbCons>:(no)?ssl"),
                        ERROR_CODE::ERR_SERVER_REGEX);
                 return false;
             }
