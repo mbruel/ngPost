@@ -67,6 +67,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::DISP_PROGRESS,  "disp_progress"},
     {Opt::DEBUG,          "debug"},
     {Opt::DEBUG_FULL,     "fulldebug"},
+    {Opt::FIELD_SEPARATOR,  "field_separator"},
     {Opt::POST_HISTORY,   "post_history"},
     {Opt::NZB_UPLOAD_URL, "nzb_upload_url"},
     {Opt::NZB_POST_CMD,   "nzb_post_cmd"},
@@ -227,6 +228,7 @@ NgPost::NgPost(int &argc, char *argv[]):
     _rarName(), _rarPass(), _rarPassFixed(),
     _inputDir(),
     _activeJob(nullptr), _pendingJobs(), _packingJob(nullptr),
+    _historyFieldSeparator(sDefaultFieldSeparator),
     _postHistoryFile(),
     _autoDirs(),
     _folderMonitor(nullptr), _monitorThread(nullptr),
@@ -761,17 +763,17 @@ void NgPost::onPostingJobFinished()
             {
                 QTextStream stream(&hist);
                 stream << QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss")
-                       << sHistoryLogFieldSeparator << _activeJob->nzbName()
-                       << sHistoryLogFieldSeparator << _activeJob->postSize()
-                       << sHistoryLogFieldSeparator << _activeJob->avgSpeed();
+                       << _historyFieldSeparator << _activeJob->nzbName()
+                       << _historyFieldSeparator << _activeJob->postSize()
+                       << _historyFieldSeparator << _activeJob->avgSpeed();
                 if (_activeJob->hasCompressed())
-                    stream << sHistoryLogFieldSeparator << _activeJob->rarName()
-                           << sHistoryLogFieldSeparator << _activeJob->rarPass();
+                    stream << _historyFieldSeparator << _activeJob->rarName()
+                           << _historyFieldSeparator << _activeJob->rarPass();
                 else
-                    stream << sHistoryLogFieldSeparator << sHistoryLogFieldSeparator;
+                    stream << _historyFieldSeparator << _historyFieldSeparator;
 
-                stream << sHistoryLogFieldSeparator << _activeJob->groups()
-                       << sHistoryLogFieldSeparator << _activeJob->from()
+                stream << _historyFieldSeparator << _activeJob->groups()
+                       << _historyFieldSeparator << _activeJob->from()
                        << "\n" << MB_FLUSH;
                 hist.close();
             }
@@ -1772,7 +1774,6 @@ QString NgPost::_parseConfig(const QString &configPath)
                     else if (opt == sOptionNames[Opt::NZB_POST_CMD])
                         _nzbPostCmd = val;
 
-
                     else if (opt == sOptionNames[Opt::INPUT_DIR])
                         _inputDir = val;
 
@@ -1793,6 +1794,9 @@ QString NgPost::_parseConfig(const QString &configPath)
                                 err += tr("the post history file '%1' is not writable...\n").arg(val);
                         }
                     }
+
+                    else if (opt == sOptionNames[Opt::FIELD_SEPARATOR])
+                        _historyFieldSeparator = val;
 
                     // compression section
                     else if (opt == sOptionNames[Opt::TMP_DIR])
@@ -2137,6 +2141,8 @@ void NgPost::saveConfig()
                << "\n"
                << tr("## History posting file") << "\n"
                << tr("## each succesful post will append a line with the date, the file name, the archive name, the password...") << "\n"
+               << (_historyFieldSeparator.isEmpty()  ? "#" : "") <<"FIELD_SEPARATOR = "
+               << (_historyFieldSeparator.isEmpty()  ? ";" : _historyFieldSeparator) << "\n"
                << (_postHistoryFile.isEmpty()  ? "#" : "") <<"POST_HISTORY = "
                << (_postHistoryFile.isEmpty()  ? "/nzb/ngPost_history.csv" : _postHistoryFile) << "\n"
                << "\n"

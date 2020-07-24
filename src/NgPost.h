@@ -77,7 +77,7 @@ class NgPost : public QObject, public CmdOrGuiApp
     friend class AboutNgPost;
 
     enum class Opt {HELP = 0, LANG, VERSION, CONF, SHUTDOWN_CMD,
-                    DISP_PROGRESS, DEBUG, DEBUG_FULL, POST_HISTORY, NZB_RM_ACCENTS,
+                    DISP_PROGRESS, DEBUG, DEBUG_FULL, FIELD_SEPARATOR, POST_HISTORY, NZB_RM_ACCENTS,
                     RESUME_WAIT, NO_RESUME_AUTO, SOCK_TIMEOUT, PREPARE_PACKING,
                     INPUT, OUTPUT, NZB_PATH, THREAD, NZB_UPLOAD_URL, NZB_POST_CMD,
                     MONITOR_FOLDERS, MONITOR_EXT, MONITOR_IGNORE_DIR,
@@ -166,6 +166,7 @@ private:
     QQueue<PostingJob*> _pendingJobs;
     PostingJob         *_packingJob;
 
+    QString     _historyFieldSeparator;
     QString     _postHistoryFile;
     QList<QDir> _autoDirs;
 
@@ -253,7 +254,7 @@ private:
 
     static const char *sDonationTooltip;
 
-    static const char sHistoryLogFieldSeparator = ';';
+    static const char sDefaultFieldSeparator = ';';
     static constexpr const char *sTranslationPath = ":/lang";
 
     static constexpr const char *sNntpServerStrRegExp = "^(([^:]+):([^@]+)@@@)?([\\w\\.\\-_]+):(\\d+):(\\d+):(no)?ssl$";
