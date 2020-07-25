@@ -67,8 +67,8 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::DISP_PROGRESS,  "disp_progress"},
     {Opt::DEBUG,          "debug"},
     {Opt::DEBUG_FULL,     "fulldebug"},
-    {Opt::FIELD_SEPARATOR,"field_separator"},
     {Opt::POST_HISTORY,   "post_history"},
+    {Opt::FIELD_SEPARATOR,"field_separator"},
     {Opt::NZB_UPLOAD_URL, "nzb_upload_url"},
     {Opt::NZB_POST_CMD,   "nzb_post_cmd"},
     {Opt::NZB_RM_ACCENTS, "nzb_rm_accents"},
@@ -1938,13 +1938,13 @@ QString NgPost::_parseConfig(const QString &configPath)
         {
             QTextStream stream(&file);
             stream << tr("date")
-                   << sHistoryLogFieldSeparator << tr("nzb name")
-                   << sHistoryLogFieldSeparator << tr("size")
-                   << sHistoryLogFieldSeparator << tr("avg. speed")
-                   << sHistoryLogFieldSeparator << tr("archive name")
-                   << sHistoryLogFieldSeparator << tr("archive pass")
-                   << sHistoryLogFieldSeparator << tr("groups")
-                   << sHistoryLogFieldSeparator << tr("from") << "\n";
+                   << _historyFieldSeparator << tr("nzb name")
+                   << _historyFieldSeparator << tr("size")
+                   << _historyFieldSeparator << tr("avg. speed")
+                   << _historyFieldSeparator << tr("archive name")
+                   << _historyFieldSeparator << tr("archive pass")
+                   << _historyFieldSeparator << tr("groups")
+                   << _historyFieldSeparator << tr("from") << "\n";
 
             file.close();
         }
@@ -2139,13 +2139,13 @@ void NgPost::saveConfig()
                << tr("## Default folder to open to select files from the HMI") << "\n"
                << "inputDir = " << _inputDir << "\n"
                << "\n"
-               << tr("## Character used to separate fields in the history posting file (see below)") << "\n"
-               << (_historyFieldSeparator == sDefaultFieldSeparator ? "#" : "") << "FIELD_SEPARATOR = " << _historyFieldSeparator << "\n"
-               << "\n"
                << tr("## History posting file") << "\n"
                << tr("## each succesful post will append a line with the date, the file name, the archive name, the password...") << "\n"
                << (_postHistoryFile.isEmpty()  ? "#" : "") <<"POST_HISTORY = "
                << (_postHistoryFile.isEmpty()  ? "/nzb/ngPost_history.csv" : _postHistoryFile) << "\n"
+               << "\n"
+               << tr("## Character used to separate fields in the history posting file") << "\n"
+               << (_historyFieldSeparator == sDefaultFieldSeparator ? "#" : "") << "FIELD_SEPARATOR = " << _historyFieldSeparator << "\n"
                << "\n"
                << "GROUPS   = " << _groups.c_str() << "\n"
                << "\n"
