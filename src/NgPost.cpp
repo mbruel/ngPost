@@ -1789,29 +1789,8 @@ QString NgPost::_parseConfig(const QString &configPath)
                                 if (!fi.isWritable())
                                     err += tr("the post history file '%1' is not writable...\n").arg(val);
                             }
-                            else
-                            {
-                                if (!QFileInfo(fi.absolutePath()).isWritable())
-                                    err += tr("the post history file '%1' is not writable...\n").arg(val);
-                                else
-                                {
-                                    QFile file(val);
-                                    if (file.open(QIODevice::WriteOnly|QIODevice::Text))
-                                    {
-                                        QTextStream stream(&file);
-                                        stream << tr("date")
-                                               << sHistoryLogFieldSeparator << tr("nzb name")
-                                               << sHistoryLogFieldSeparator << tr("size")
-                                               << sHistoryLogFieldSeparator << tr("avg. speed")
-                                               << sHistoryLogFieldSeparator << tr("archive name")
-                                               << sHistoryLogFieldSeparator << tr("archive pass")
-                                               << sHistoryLogFieldSeparator << tr("groups")
-                                               << sHistoryLogFieldSeparator << tr("from") << "\n";
-
-                                        file.close();
-                                    }
-                                }
-                            }
+                            else if (!QFileInfo(fi.absolutePath()).isWritable())
+                                err += tr("the post history file '%1' is not writable...\n").arg(val);
                         }
                     }
 
@@ -1947,6 +1926,26 @@ QString NgPost::_parseConfig(const QString &configPath)
         }
         file.close();
     }
+
+    if (err.isEmpty() && !_postHistoryFile.isEmpty())
+    {
+        QFile file(_postHistoryFile);
+        if (!file.exists() && file.open(QIODevice::WriteOnly|QIODevice::Text))
+        {
+            QTextStream stream(&file);
+            stream << tr("date")
+                   << sHistoryLogFieldSeparator << tr("nzb name")
+                   << sHistoryLogFieldSeparator << tr("size")
+                   << sHistoryLogFieldSeparator << tr("avg. speed")
+                   << sHistoryLogFieldSeparator << tr("archive name")
+                   << sHistoryLogFieldSeparator << tr("archive pass")
+                   << sHistoryLogFieldSeparator << tr("groups")
+                   << sHistoryLogFieldSeparator << tr("from") << "\n";
+
+            file.close();
+        }
+    }
+
     return err;
 }
 
