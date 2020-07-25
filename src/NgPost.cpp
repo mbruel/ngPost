@@ -67,7 +67,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::DISP_PROGRESS,  "disp_progress"},
     {Opt::DEBUG,          "debug"},
     {Opt::DEBUG_FULL,     "fulldebug"},
-    {Opt::FIELD_SEPARATOR,  "field_separator"},
+    {Opt::FIELD_SEPARATOR,"field_separator"},
     {Opt::POST_HISTORY,   "post_history"},
     {Opt::NZB_UPLOAD_URL, "nzb_upload_url"},
     {Opt::NZB_POST_CMD,   "nzb_post_cmd"},
@@ -2139,10 +2139,11 @@ void NgPost::saveConfig()
                << tr("## Default folder to open to select files from the HMI") << "\n"
                << "inputDir = " << _inputDir << "\n"
                << "\n"
+               << tr("## Character used to separate fields in the history posting file (see below)") << "\n"
+               << (_historyFieldSeparator == sDefaultFieldSeparator ? "#" : "") << "FIELD_SEPARATOR = " << _historyFieldSeparator << "\n"
+               << "\n"
                << tr("## History posting file") << "\n"
                << tr("## each succesful post will append a line with the date, the file name, the archive name, the password...") << "\n"
-               << (_historyFieldSeparator.isEmpty()  ? "#" : "") <<"FIELD_SEPARATOR = "
-               << (_historyFieldSeparator.isEmpty()  ? ";" : _historyFieldSeparator) << "\n"
                << (_postHistoryFile.isEmpty()  ? "#" : "") <<"POST_HISTORY = "
                << (_postHistoryFile.isEmpty()  ? "/nzb/ngPost_history.csv" : _postHistoryFile) << "\n"
                << "\n"
