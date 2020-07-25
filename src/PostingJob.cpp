@@ -73,7 +73,7 @@ PostingJob::PostingJob(NgPost *ngPost,
 
     _nzbFilePath(nzbFilePath), _nzb(nullptr), _nzbStream(),
     _nntpFile(nullptr), _file(nullptr), _part(0),
-    _timeStart(), _totalSize(0),
+    _timeStart(), _totalSize(0), _pauseTimer(), _pauseDuration(0),
 
     _nbConnections(0), _nbThreads(_ngPost->_nbThreads),
     _nbArticlesUploaded(0), _nbArticlesFailed(0),
@@ -151,6 +151,7 @@ void PostingJob::pause()
         emit con->killConnection();
 
     _isPaused = true;
+    _pauseTimer.start();
 }
 
 void PostingJob::resume()
@@ -160,6 +161,7 @@ void PostingJob::resume()
         emit con->startConnection();
 
     _isPaused = false;
+    _pauseDuration += _pauseTimer.elapsed();
 }
 
 void PostingJob::onResumeTriggered()
@@ -703,7 +705,7 @@ void PostingJob::_printStats() const
 {
     QString size = postSize();
 
-    int duration = static_cast<int>(_timeStart.elapsed());
+    int duration = static_cast<int>(_timeStart.elapsed() - _pauseDuration);
     double sec = duration/1000;
 
     QString msgEnd("\n"), ts = QString("[%1] ").arg(timestamp());

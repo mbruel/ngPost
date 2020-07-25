@@ -104,6 +104,8 @@ private:
 
     QElapsedTimer _timeStart; //!< to get some stats (upload time and avg speed)
     quint64       _totalSize; //!< total size (in Bytes) to be uploaded
+    QElapsedTimer _pauseTimer;   //!< to record the time when ngPost is in pause
+    qint64        _pauseDuration; //!< total duration of all pauses
 
     int     _nbConnections; //!< available number of NntpConnection (we may loose some)
     int     _nbThreads;     //!< size of the ThreadPool
@@ -305,7 +307,7 @@ QString PostingJob::avgSpeed() const
 
     if (_timeStart.isValid())
     {
-        double sec = static_cast<double>(_timeStart.elapsed())/1000.;
+        double sec = (_timeStart.elapsed()-_pauseDuration)/1000.;
         bandwidth = _uploadedSize / sec;
 
         if (bandwidth > 1024)
