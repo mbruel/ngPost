@@ -11,9 +11,11 @@ CONFIG -= app_bundle
 
 
 DEFINES += __USE_CONNECTION_TIMEOUT__
+DEFINES += __COMPUTE_IMMEDIATE_SPEED__
+
 
 TRANSLATIONS = lang/ngPost_en.ts lang/ngPost_fr.ts lang/ngPost_es.ts lang/ngPost_de.ts\
-               lang/ngPost_pt.ts lang/ngPost_zh.ts
+               lang/ngPost_nl.ts lang/ngPost_pt.ts lang/ngPost_zh.ts
 
 win32: {
     RC_ICONS += ngPost.ico
@@ -38,7 +40,7 @@ CONFIG(debug, debug|release) :{
     DEFINES -= LOG_CONNECTION_ERRORS_BEFORE_EMIT_SIGNALS
     DEFINES += LOG_NEWS_AUTH
     DEFINES -= LOG_NEWS_DATA
-    DEFINES += LOG_CONSTRUCTORS
+    DEFINES += LOG_CONSTRUCTORS    
 
     DEFINES -= __SAVE_ARTICLES__
 }

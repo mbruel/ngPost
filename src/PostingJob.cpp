@@ -87,6 +87,9 @@ PostingJob::PostingJob(NgPost *ngPost,
     _overwriteNzb(overwriteNzb),
     _grpList(grpList), _groups(groups), _from(from),
     _use7z(false), _isPaused(false), _resumeTimer(), _isActiveJob(false)
+  #ifdef __COMPUTE_IMMEDIATE_SPEED__
+    ,_immediateSize(0), _immediateSpeedTimer(), _immediateSpeed("0 B/s"), _useHMI(_ngPost->useHMI())
+  #endif
 {
 #ifdef __DEBUG__
     qDebug() << "[PostingJob] >>>> Construct " << this;
@@ -110,6 +113,10 @@ PostingJob::PostingJob(NgPost *ngPost,
     }
 
     connect(&_resumeTimer, &QTimer::timeout, this, &PostingJob::onResumeTriggered);
+#ifdef __COMPUTE_IMMEDIATE_SPEED__
+    if (_useHMI)
+        connect(&_immediateSpeedTimer, &QTimer::timeout, this, &PostingJob::onImmediateSpeedComputation, Qt::QueuedConnection);
+#endif
 }
 
 PostingJob::~PostingJob()
@@ -173,6 +180,28 @@ void PostingJob::onResumeTriggered()
         _ngPost->resume();
     }
 }
+
+#ifdef __COMPUTE_IMMEDIATE_SPEED__
+void PostingJob::onImmediateSpeedComputation()
+{
+    QString power = " ";
+    double bandwidth = 1000. * _immediateSize / sImmediateSpeedDurationMs;
+    if (bandwidth > 1024)
+    {
+        bandwidth /= 1024;
+        power = "k";
+    }
+    if (bandwidth > 1024)
+    {
+        bandwidth /= 1024;
+        power = "M";
+    }
+
+    _immediateSpeed = QString("%1 %2B/s").arg(bandwidth, 6, 'f', 2).arg(power);
+    _immediateSize  = 0;
+    _immediateSpeedTimer.start(sImmediateSpeedDurationMs);
+}
+#endif
 
 void PostingJob::onStartPosting(bool isActiveJob)
 {
@@ -303,6 +332,11 @@ void PostingJob::_postFiles()
 
     // Prepare 2 Articles for each connections
     _preparePostersArticles();
+
+
+#ifdef __COMPUTE_IMMEDIATE_SPEED__
+    _immediateSpeedTimer.start(sImmediateSpeedDurationMs);
+#endif
 
     for (Poster *poster : _posters)
         poster->unlockQueue();

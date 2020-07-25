@@ -415,14 +415,24 @@ void NgPost:: onRefreshprogressbarBar()
 {
     uint nbArticlesUploaded = 0,  nbArticlesTotal = 0;
     QString avgSpeed;
+#ifdef __COMPUTE_IMMEDIATE_SPEED__
+    QString immediateSpeed("0 B/s");
+#endif
     if (_activeJob)
     {
         nbArticlesTotal    = _activeJob->nbArticlesTotal();
         nbArticlesUploaded = _activeJob->nbArticlesUploaded();
         avgSpeed           = _activeJob->avgSpeed();
+#ifdef __COMPUTE_IMMEDIATE_SPEED__
+        immediateSpeed     = _activeJob->immediateSpeed();
+#endif
     }
     if (_hmi)
+#ifdef __COMPUTE_IMMEDIATE_SPEED__
+        _hmi->updateProgressBar(nbArticlesTotal, nbArticlesUploaded, avgSpeed, immediateSpeed);
+#else
         _hmi->updateProgressBar(nbArticlesTotal, nbArticlesUploaded, avgSpeed);
+#endif
     else
     {
         float progressbar = static_cast<float>(nbArticlesUploaded);

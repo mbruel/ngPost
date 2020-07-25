@@ -155,15 +155,29 @@ void MainWindow::init(NgPost *ngPost)
 }
 
 
-void MainWindow::updateProgressBar(uint nbArticlesTotal, uint nbArticlesUploaded, const QString &avgSpeed)
+void MainWindow::updateProgressBar(uint nbArticlesTotal, uint nbArticlesUploaded, const QString &avgSpeed
+                                   #ifdef __COMPUTE_IMMEDIATE_SPEED__
+                                       , const QString &immediateSpeed
+                                   #endif
+                                   )
 {
 //    qDebug() << "[MainWindow::updateProgressBar] _nbArticlesUploaded: " << nbArticlesUploaded;
     _ui->progressBar->setValue(static_cast<int>(nbArticlesUploaded));
+
+#ifdef __COMPUTE_IMMEDIATE_SPEED__
+    _ui->uploadLbl->setText(QString("%5 (%1 / %2) %3: %4").arg(
+                                nbArticlesUploaded).arg(
+                                nbArticlesTotal).arg(
+                                tr("avg speed")).arg(
+                                avgSpeed).arg(
+                                immediateSpeed));
+#else
     _ui->uploadLbl->setText(QString("(%1 / %2) %3: %4").arg(
                                 nbArticlesUploaded).arg(
                                 nbArticlesTotal).arg(
                                 tr("avg speed")).arg(
                                 avgSpeed));
+#endif
 }
 
 

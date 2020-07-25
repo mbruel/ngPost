@@ -63,7 +63,11 @@ public:
 
     void init(NgPost *ngPost);
 
-    void updateProgressBar(uint nbArticlesTotal, uint nbArticlesUploaded, const QString &avgSpeed);
+    void updateProgressBar(uint nbArticlesTotal, uint nbArticlesUploaded, const QString &avgSpeed
+                       #ifdef __COMPUTE_IMMEDIATE_SPEED__
+                           , const QString &immediateSpeed = "0 B/s"
+                       #endif
+                           );
 
     void updateServers();
     void updateParams();

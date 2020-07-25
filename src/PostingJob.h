@@ -152,6 +152,15 @@ private:
     bool _isActiveJob;
 
 
+#ifdef __COMPUTE_IMMEDIATE_SPEED__
+    quint64    _immediateSize;       //!< bytes posted (to compute the avg speed)
+    QTimer     _immediateSpeedTimer;
+    QString    _immediateSpeed;
+    const bool _useHMI;
+
+    static const int sImmediateSpeedDurationMs = 5000;
+#endif
+
 public:
     PostingJob(NgPost *ngPost,
                const QString &nzbFilePath,
@@ -215,6 +224,9 @@ public:
 
     inline bool isPaused() const;
 
+#ifdef __COMPUTE_IMMEDIATE_SPEED__
+    inline const QString &immediateSpeed() const;
+#endif
 
 signals:
     void startPosting(bool isActiveJob);    //!< connected to onStartPosting (to be able to run on a different Thread)
@@ -250,6 +262,10 @@ private slots:
     void onGenPar2Finished(int exitCode);
 
     void onResumeTriggered();
+
+#ifdef __COMPUTE_IMMEDIATE_SPEED__
+    void onImmediateSpeedComputation();
+#endif
 
 
 private:
@@ -346,6 +362,10 @@ void PostingJob::articlePosted(quint64 size)
 {
     _uploadedSize += size;
     ++_nbArticlesUploaded;
+#ifdef __COMPUTE_IMMEDIATE_SPEED__
+    if (_useHMI)
+        _immediateSize += size;
+#endif
 }
 
 void PostingJob::articleFailed(quint64 size)
@@ -353,6 +373,10 @@ void PostingJob::articleFailed(quint64 size)
     _uploadedSize += size;
     ++_nbArticlesUploaded;
     ++_nbArticlesFailed;
+#ifdef __COMPUTE_IMMEDIATE_SPEED__
+    if (_useHMI)
+        _immediateSize += size;
+#endif
 }
 
 uint PostingJob::nbArticlesTotal() const { return _nbArticlesTotal; }
@@ -415,5 +439,8 @@ bool PostingJob::isPosting() const
 }
 bool PostingJob::isPaused() const { return _isPaused; }
 
+#ifdef __COMPUTE_IMMEDIATE_SPEED__
+const QString &PostingJob::immediateSpeed() const { return _immediateSpeed; }
+#endif
 
 #endif // POSTINGJOB_H
