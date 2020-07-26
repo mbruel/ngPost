@@ -657,14 +657,14 @@
        <property name="bottomMargin">
         <number>5</number>
        </property>
-       <item>
+       <item alignment="Qt::AlignVCenter">
         <widget class="QLabel" name="jobLabel">
          <property name="text">
           <string>TextLabel</string>
          </property>
         </widget>
        </item>
-       <item>
+       <item alignment="Qt::AlignVCenter">
         <widget class="QPushButton" name="pauseButton">
          <property name="text">
           <string/>
@@ -681,7 +681,7 @@
          </property>
         </widget>
        </item>
-       <item>
+       <item alignment="Qt::AlignVCenter">
         <widget class="QProgressBar" name="progressBar">
          <property name="maximumSize">
           <size>
@@ -694,14 +694,10 @@
          </property>
         </widget>
        </item>
-       <item>
-        <widget class="QLabel" name="uploadLbl">
-         <property name="text">
-          <string>(0 / 0) avg speed: 0 MB/s</string>
-         </property>
-        </widget>
+       <item alignment="Qt::AlignRight|Qt::AlignVCenter">
+        <widget class="QLabel" name="uploadLbl"/>
        </item>
-       <item>
+       <item alignment="Qt::AlignRight|Qt::AlignVCenter">
         <widget class="QPushButton" name="goCmdButton">
          <property name="toolTip">
           <string>go command line (close the GUI and continue in the shell)</string>

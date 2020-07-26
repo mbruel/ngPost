@@ -413,8 +413,11 @@ void NgPost::onErrorConnecting(QString err)
 
 void NgPost:: onRefreshprogressbarBar()
 {
+    if (_activeJob && _activeJob->isPaused())
+        return;
+
     uint nbArticlesUploaded = 0,  nbArticlesTotal = 0;
-    QString avgSpeed;
+    QString avgSpeed("0 B/s");
 #ifdef __COMPUTE_IMMEDIATE_SPEED__
     QString immediateSpeed("0 B/s");
 #endif
@@ -593,13 +596,15 @@ void NgPost::pause() const
     }
 }
 
-void NgPost::resume() const
+void NgPost::resume()
 {
     if (_activeJob && _activeJob->isPaused())
     {
         _activeJob->resume();
         if (_hmi)
             _hmi->setPauseIcon(true);
+
+        _progressbarTimer.start(_refreshRate);
     }
 }
 

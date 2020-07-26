@@ -262,6 +262,10 @@ private:
     static std::string sArticleIdSignature; //!< signature for Article message id (must be as a email address)
     static const std::string sRandomAlphabet;
 
+#ifdef __COMPUTE_IMMEDIATE_SPEED__
+    static const int sImmediateSpeedDurationMs = 5000;
+#endif
+
 
 public:
     explicit NgPost(int &argc, char *argv[]);
@@ -332,7 +336,7 @@ public:
 
     bool isPaused() const;
     void pause() const;
-    void resume() const;
+    void resume();
 
     inline bool tryResumePostWhenConnectionLost() const;
     inline ushort waitDurationBeforeAutoResume() const;
@@ -420,6 +424,11 @@ public:
     inline static std::string randomStdFrom(ushort length = 13);
 
     inline static QStringList parseCombinedArgString(const QString &program);
+
+#ifdef __COMPUTE_IMMEDIATE_SPEED__
+    inline static int immediateSpeedDuration();
+    inline static int immediateSpeedDurationMs();
+#endif
 
 };
 
@@ -559,6 +568,10 @@ void NgPost::_enableAutoCompress()
     _doPar2       = true;
 }
 
+#ifdef __COMPUTE_IMMEDIATE_SPEED__
+int NgPost::immediateSpeedDuration() { return sImmediateSpeedDurationMs / 1000; }
+int NgPost::immediateSpeedDurationMs(){ return sImmediateSpeedDurationMs; }
+#endif
 
 QString NgPost::desc(bool useHTML)
 {

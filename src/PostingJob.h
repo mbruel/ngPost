@@ -157,8 +157,6 @@ private:
     QTimer     _immediateSpeedTimer;
     QString    _immediateSpeed;
     const bool _useHMI;
-
-    static const int sImmediateSpeedDurationMs = 5000;
 #endif
 
 public:

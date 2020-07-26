@@ -185,7 +185,8 @@ void PostingJob::onResumeTriggered()
 void PostingJob::onImmediateSpeedComputation()
 {
     QString power = " ";
-    double bandwidth = 1000. * _immediateSize / sImmediateSpeedDurationMs;
+    int immediateSpeedDurationMs = NgPost::immediateSpeedDurationMs();
+    double bandwidth = 1000. * _immediateSize / immediateSpeedDurationMs;
     if (bandwidth > 1024)
     {
         bandwidth /= 1024;
@@ -199,7 +200,7 @@ void PostingJob::onImmediateSpeedComputation()
 
     _immediateSpeed = QString("%1 %2B/s").arg(bandwidth, 6, 'f', 2).arg(power);
     _immediateSize  = 0;
-    _immediateSpeedTimer.start(sImmediateSpeedDurationMs);
+    _immediateSpeedTimer.start(immediateSpeedDurationMs);
 }
 #endif
 
@@ -335,7 +336,7 @@ void PostingJob::_postFiles()
 
 
 #ifdef __COMPUTE_IMMEDIATE_SPEED__
-    _immediateSpeedTimer.start(sImmediateSpeedDurationMs);
+    _immediateSpeedTimer.start(NgPost::immediateSpeedDurationMs());
 #endif
 
     for (Poster *poster : _posters)
