@@ -183,7 +183,7 @@
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="382"/>
         <source>generate random password</source>
-        <translation>generereer willekeurige wachtwoord</translation>
+        <translation>genereer willekeurige wachtwoord</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="389"/>
@@ -214,7 +214,7 @@
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="466"/>
         <source>delete files once posted (only for Monitoring)</source>
-        <translation>verwijder bestanden zodra ze zijn gepost (alleen voor monitoring)</translation>
+        <translation>verwijder bestanden die  zijn gepost (alleen voor monitoring)</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.ui" line="490"/>
@@ -494,7 +494,7 @@ Bestanden worden definitief verwijderd...</translation>
     <message>
         <location filename="../hmi/MainWindow.ui" line="200"/>
         <source>generate random password</source>
-        <translation>genereer willekeurig wachtwoord</translation>
+        <translation>maak willekeurig wachtwoord</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="226"/>
@@ -550,7 +550,7 @@ Bestanden worden definitief verwijderd...</translation>
     <message>
         <location filename="../hmi/MainWindow.ui" line="342"/>
         <source>Article&apos;s obfuscation: Subject changed to be a UUID + random From</source>
-        <translation>Versleuteling van het artikel: Onderwerp gewijzigd in een UUID + willekeurige From</translation>
+        <translation>Verandering van artikel (willekeurig onderwerp en poster)</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="352"/>
@@ -560,7 +560,7 @@ Bestanden worden definitief verwijderd...</translation>
     <message>
         <location filename="../hmi/MainWindow.ui" line="355"/>
         <source>file name obfuscation</source>
-        <translation>bestandsnaam versleuteling</translation>
+        <translation>bestandsnaam verandering</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="375"/>
@@ -1007,7 +1007,7 @@ Weet je zeker dat je wilt stoppen?</translation>
     <message>
         <location filename="../NgPost.cpp" line="189"/>
         <source>NNTP server following the format (&lt;user&gt;:&lt;pass&gt;@@@)?&lt;host&gt;:&lt;port&gt;:&lt;nbCons&gt;:(no)?ssl</source>
-        <translation>NNTP-server met de indeling (&lt;user&gt;:&lt;pass&gt;@@@)?&lt;host&gt;:&lt;port&gt;:&lt;nbCons&gt;:(no)? Ssl</translation>
+        <translation>NNTP-server met de indeling (&lt;user&gt;:&lt;pass&gt;@@@)?&lt;host&gt;:&lt;port&gt;:&lt;nbCons&gt;:(no)?ssl</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="191"/>
@@ -1141,7 +1141,7 @@ Gebruik om de beschikbare opties weer te geven: %2 --help
     <message>
         <location filename="../NgPost.cpp" line="1103"/>
         <source>Error syntax: --auto only uses folders as argument...</source>
-        <translation>Syntax fout:--auto post gebruikt alleen mappen als argument</translation>
+        <translation>Syntax fout:--auto post gebruikt alleen mappen als argument...</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="1116"/>
@@ -1768,7 +1768,7 @@ Gebruik --par2_pct of stel PAR2_PCT of PAR2_ARGS in het configuratiebestand in.<
     <message>
         <location filename="../NgPost.h" line="588"/>
         <source>compress (using your external rar binary) and generate the par2 before posting!</source>
-        <translation>comprimeer (met behulp van uw externe rar-binaire bestand) en genereer de par2 voordat u deze plaatst</translation>
+        <translation>comprimeer (met behulp van uw externe rar-binaire bestand) en genereer de par2 voordat u deze plaatst!</translation>
     </message>
     <message>
         <location filename="../NgPost.h" line="589"/>
@@ -2097,7 +2097,7 @@ Gebruik --par2_pct of stel PAR2_PCT of PAR2_ARGS in het configuratiebestand in.<
     <message>
         <location filename="../PostingJob.cpp" line="1192"/>
         <source>ERROR: the RAR path is not executable...</source>
-        <translation>FOUT: het RAR-pad is niet uitvoerbaar ..</translation>
+        <translation>FOUT: het RAR-pad is niet uitvoerbaar...</translation>
     </message>
     <message>
         <location filename="../PostingJob.cpp" line="1209"/>
@@ -2246,7 +2246,7 @@ Gebruik --par2_pct of stel PAR2_PCT of PAR2_ARGS in het configuratiebestand in.<
     <message>
         <location filename="../hmi/PostingWidget.ui" line="359"/>
         <source>generate random password</source>
-        <translation>genereer willekeurig wachtwoord</translation>
+        <translation>maak willekeurig wachtwoord</translation>
     </message>
     <message>
         <location filename="../hmi/PostingWidget.ui" line="393"/>
