@@ -264,7 +264,7 @@ private:
     static const std::string sRandomAlphabet;
 
 #ifdef __COMPUTE_IMMEDIATE_SPEED__
-    static const int sImmediateSpeedDurationMs = 5000;
+    static const int sImmediateSpeedDurationMs = 3000;
 #endif
 
 

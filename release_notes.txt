@@ -14,7 +14,27 @@ TODO: include ParPar instead of par2cmdline?
 
 TODO: auto RAR size and par2 parameters depending on the inputs size?
 
-TODO: Req #61: multi server in command line:  -S user:pass@news.provider.com:563:15:ssl
+
+####################################################
+###       Release: ngPost v4.10                  ###
+###       date:    2020/08/07                    ###
+####################################################
+
+- Adding Dutch translation
+
+- PR #66: Make history file separator configurable
+
+- Req #67: display immediate speed (macro __COMPUTE_IMMEDIATE_SPEED__)
+
+- Issue #64: remove pause duration from the avg speed
+
+- Req #61: Allow several servers as command line parameters
+
+- Issue #63: introduce ERR_CODE when issue parsing arguments from command line
+
+- Issue #62: wrong file extension for POST_HISTORY
+
+
 
 
 ####################################################

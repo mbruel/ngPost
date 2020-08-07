@@ -1,6 +1,6 @@
 <img align="left" width="80" height="80" src="https://raw.githubusercontent.com/mbruel/ngPost/master/src/resources/icons/ngPost.png" alt="ngPost">
 
-# ngPost v4.9
+# ngPost v4.10
 
 [Pour la version Française cliquez ici ;)](https://github.com/mbruel/ngPost/blob/master/README_FR.md)<br/>
 <br/>
@@ -22,7 +22,7 @@ it is **translated in Chinese, English, French, German, Portuguese and Spanish**
 
 ![ngPost_v4.3](https://raw.githubusercontent.com/mbruel/ngPost/master/pics/ngPost_v4.3.png)
 
-[Releases are availables](https://github.com/mbruel/ngPost/releases/tag/v4.9) for: Linux 64bit, Windows (both 32bit and 64bit), MacOS and Raspbian (RPI 4). Soon for Android then iOS...
+[Releases are availables](https://github.com/mbruel/ngPost/releases/tag/v4.10) for: Linux 64bit, Windows (both 32bit and 64bit), MacOS and Raspbian (RPI 4). Soon for Android then iOS...
 
 Here are the main features and advantages of ngPost:
 -   **full obfuscation of the Article Header** : the Subject will be a UUID (as the msg-id) and a random Poster will be used. **Be Careful**, using this, you won't be able to find your post on Usenet (or any Indexers) if you lose the NZB file. But using this method is **completely safe**, **no need to obfuscate your files or even tp use a password**.
@@ -113,14 +113,14 @@ Syntax: ngPost (options)* (-i <file or folder> | --auto <folder> | --monitor <fo
 	--length_pass      : length of the random RAR password (to be used with --gen_pass), default: 13
 	--rar_no_root_folder: Remove root (parent) folder when compressing Folders using RAR
 
-// without config file, you can provide all the parameters to connect to ONE SINGLE server
+// you can provide servers in one string using -S and/or split the parameters for ONE SINGLE server (this will overwrite the configuration file)
+	-S or --server     : NNTP server following the format (&lt;user&gt;:&lt;pass&gt;@@@)?&lt;host&gt;:&lt;port&gt;:&lt;nbCons&gt;:(no)?ssl
 	-h or --host       : NNTP server hostname (or IP)
 	-P or --port       : NNTP server port
 	-s or --ssl        : use SSL
 	-u or --user       : NNTP server username
 	-p or --pass       : NNTP server password
 	-n or --connection : number of NNTP connections
-
 
 Examples:
   - with monitoring: ngPost --monitor --rm_posted /Downloads/testNgPost --compress --gen_par2 --gen_name --gen_pass --rar_size 42 --disp_progress files
@@ -150,17 +150,17 @@ The following ones are for experimented posters:
 
 ### Linux 64bit portable release (compiled with Qt v5.12.6)
 if you don't want to build it and install the dependencies, you can also the portable release that includes everything.<br/>
-- download [ngPost_v4.9-x86_64.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.9/ngPost_v4.9-x86_64.AppImage)
-- chmod 755 ngPost_v4.9-x86_64.AppImage
+- download [ngPost_v4.10-x86_64.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.10/ngPost_v4.10-x86_64.AppImage)
+- chmod 755 ngPost_v4.10-x86_64.AppImage
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
-PS: for older system with GLIBC < 2.24, here is a version compiled on Debian8 with GLIBC 2.19 and Qt v5.8.0: [ngPost_v4.9-x86_64_debian8.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.9/ngPost_v4.9-x86_64_debian8.AppImage)
+PS: for older system with GLIBC < 2.24, here is a version compiled on Debian8 with GLIBC 2.19 and Qt v5.8.0: [ngPost_v4.10-x86_64_debian8.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.10/ngPost_v4.10-x86_64_debian8.AppImage)
 
 
 ### Raspbian release (armhf for Raspberry PI)
-- download [ngPost_v4.9-armhf.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.9/ngPost_v4.9-armhf.AppImage)
-- chmod 755 ngPost_v4.9-armhf.AppImage
+- download [ngPost_v4.10-armhf.AppImage](https://github.com/mbruel/ngPost/releases/download/v4.10/ngPost_v4.10-armhf.AppImage)
+- chmod 755 ngPost_v4.10-armhf.AppImage
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
@@ -182,7 +182,7 @@ RAR_EXTRA = -mx0 -mhe=on
 
 
 ### Windows installer
-- just use the packager [ngPost_v4.9_x64_setup.exe](https://github.com/mbruel/ngPost/releases/download/v4.9/ngPost_v4.9_x64_setup.exe) or [ngPost_v4.9_x86_setup.exe](https://github.com/mbruel/ngPost/releases/download/v4.9/ngPost_v4.9_x86_setup.exe) for the 32bit version
+- just use the packager [ngPost_v4.10_x64_setup.exe](https://github.com/mbruel/ngPost/releases/download/v4.10/ngPost_v4.10_x64_setup.exe) or [ngPost_v4.10_x86_setup.exe](https://github.com/mbruel/ngPost/releases/download/v4.10/ngPost_v4.10_x86_setup.exe) for the 32bit version
 - edit **ngPost.conf** (in the installation folder) to add your server settings (you can put several).
 - launch **ngPost.exe** (GUI version)
 - or you can use it with the command line: **ngPost.exe** -i "your file or directory"
@@ -196,7 +196,7 @@ By default:
 
 
 ### MacOS release built on High Sierra (v10.13)
-- download [ngPost_v4.9.dmg](https://github.com/mbruel/ngPost/releases/download/v4.9/ngPost_v4.9.dmg)
+- download [ngPost_v4.10.dmg](https://github.com/mbruel/ngPost/releases/download/v4.10/ngPost_v4.10.dmg)
 - launch it using the same syntax than describe in the section above
 - if you wish to keep the configuration file, edit the file **~/.ngPost** using [this model](https://raw.githubusercontent.com/mbruel/ngPost/master/ngPost.conf) (don't put the .conf extension)
 
