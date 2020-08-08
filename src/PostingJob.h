@@ -171,6 +171,7 @@ public:
                bool obfuscateFileName,
                const QString &tmpPath,
                const QString &rarPath,
+               const QString &rarArgs,
                uint rarSize,
                bool useRarMax,
                uint par2Pct,

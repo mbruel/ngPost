@@ -638,7 +638,7 @@ void NgPost::_post(const QFileInfo &fileInfo, const QString &monitorFolder)
     startPostingJob(new PostingJob(this, nzbFilePath, {fileInfo}, nullptr,
                                    _grpList, _groups, from(),
                                    _obfuscateArticles, _obfuscateFileName,
-                                   _tmpPath, _rarPath,
+                                   _tmpPath, _rarPath, _rarArgs,
                                    _rarSize, _useRarMax, _par2Pct,
                                    _doCompress, _doPar2, _rarName, _rarPass,
                                    _keepRar, _delAuto, false));
@@ -1522,7 +1522,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         startPostingJob(new PostingJob(this, nzbFilePath, filesToUpload, nullptr,
                                        _grpList, _groups, from(),
                                        _obfuscateArticles, _obfuscateFileName,
-                                       _tmpPath, _rarPath,
+                                       _tmpPath, _rarPath, _rarArgs,
                                        _rarSize, _useRarMax, _par2Pct,
                                        _doCompress, _doPar2, _rarName, _rarPass,
                                        _keepRar, _delAuto, false));

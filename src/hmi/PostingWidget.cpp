@@ -177,7 +177,7 @@ void PostingWidget::postFiles(bool updateMainParams)
                                      _ngPost->_grpList, _ngPost->_groups,
                                      _ngPost->from(),
                                      _ngPost->_obfuscateArticles, _ngPost->_obfuscateFileName,
-                                     _ngPost->_tmpPath, _ngPost->_rarPath,
+                                     _ngPost->_tmpPath, _ngPost->_rarPath, _ngPost->_rarArgs,
                                      _ngPost->_rarSize, _ngPost->_useRarMax, _ngPost->_par2Pct,
                                      _ngPost->_doCompress, _ngPost->_doPar2,
                                      _ngPost->_rarName, _ngPost->_rarPass,

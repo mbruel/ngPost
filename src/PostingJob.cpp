@@ -45,6 +45,7 @@ PostingJob::PostingJob(NgPost *ngPost,
                        bool obfuscateFileName,
                        const QString &tmpPath,
                        const QString &rarPath,
+                       const QString &rarArgs,
                        uint rarSize,
                        bool useRarMax,
                        uint par2Pct,
@@ -61,7 +62,7 @@ PostingJob::PostingJob(NgPost *ngPost,
 
     _extProc(nullptr), _compressDir(nullptr), _limitProcDisplay(false), _nbProcDisp(42),
 
-    _tmpPath(tmpPath), _rarPath(rarPath), _rarSize(rarSize), _useRarMax(useRarMax), _par2Pct(par2Pct),
+    _tmpPath(tmpPath), _rarPath(rarPath), _rarArgs(rarArgs), _rarSize(rarSize), _useRarMax(useRarMax), _par2Pct(par2Pct),
     _doCompress(doCompress), _doPar2(doPar2), _rarName(rarName), _rarPass(rarPass), _keepRar(keepRar),
 
     _nntpConnections(), _closedConnections(),
