@@ -1,6 +1,8 @@
 //========================================================================
 //
 // Copyright (C) 2019 Matthieu Bruel <Matthieu.Bruel@gmail.com>
+// Copyright (C) 2015-2018 David Emanuel Santiago and NewsUP contributors
+// Code derived from NewsUP project
 //
 // This file is a part of ngPost : https://github.com/mbruel/ngPost
 //
