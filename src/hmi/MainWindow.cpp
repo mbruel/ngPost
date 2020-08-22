@@ -356,7 +356,11 @@ void MainWindow::onTabContextMenu(const QPoint &point)
 //    int tabIndex = tabBar->tabAt(point);
 //    PostingWidget *currentPostWidget = _getPostWidget(tabIndex);
     QMenu menu(tr("Quick Tabs Menu"), this);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
     QAction *action = menu.addAction(QIcon(":/icons/clear.png"), tr("Close All finished Tabs"), this, &MainWindow::onCloseAllFinishedQuickTabs);
+#else
+    QAction *action = menu.addAction(QIcon(":/icons/clear.png"), tr("Close All finished Tabs"), this, SLOT(onCloseAllFinishedQuickTabs));
+#endif
     action->setEnabled(hasFinishedPosts());
     menu.exec(QCursor::pos());
 }

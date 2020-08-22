@@ -283,7 +283,9 @@ NgPost::NgPost(int &argc, char *argv[]):
     {
         qDebug() << "net conf: " << conf.name()
                  << ", bearerType: " << conf.bearerTypeName()
+            #if QT_VERSION >= QT_VERSION_CHECK(5, 9, 0)
                  << ", timeout: " << conf.connectTimeout()
+            #endif
                  << ", isValid: " << conf.isValid()
                  << ", state: " << conf.state();
     }
@@ -291,7 +293,9 @@ NgPost::NgPost(int &argc, char *argv[]):
     QNetworkConfiguration conf = netConfMgr.defaultConfiguration();
     qDebug() << "DEFAULT conf: " << conf.name()
              << ", bearerType: " << conf.bearerTypeName()
+          #if QT_VERSION >= QT_VERSION_CHECK(5, 9, 0)
              << ", timeout: " << conf.connectTimeout()
+          #endif
              << ", isValid: " << conf.isValid()
              << ", state: " << conf.state();
 #endif
@@ -827,7 +831,9 @@ void NgPost::onPostingJobFinished()
             connect(_shutdownProc, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished), this, &NgPost::onShutdownProcFinished, Qt::QueuedConnection);
 //            connect(_shutdownProc, &QProcess::started, this, &NgPost::onShutdownProcStarted, Qt::DirectConnection);
 //            connect(_shutdownProc, &QProcess::stateChanged,  this, &NgPost::onShutdownProcStateChanged,  Qt::DirectConnection);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
             connect(_shutdownProc, &QProcess::errorOccurred,  this, &NgPost::onShutdownProcError, Qt::DirectConnection);
+#endif
 //            _shutdownProc->start("/bin/ls", QStringList() << "-al");
 //            _shutdownProc->start("/usr/bin/sudo", QStringList() << "-n" << "/sbin/poweroff");
 
@@ -2150,7 +2156,7 @@ void NgPost::saveConfig()
                << (_postHistoryFile.isEmpty()  ? "/nzb/ngPost_history.csv" : _postHistoryFile) << "\n"
                << "\n"
                << tr("## Character used to separate fields in the history posting file") << "\n"
-               << (_historyFieldSeparator == sDefaultFieldSeparator ? "#" : "") << "FIELD_SEPARATOR = " << _historyFieldSeparator << "\n"
+               << (_historyFieldSeparator == QString(sDefaultFieldSeparator) ? "#" : "") << "FIELD_SEPARATOR = " << _historyFieldSeparator << "\n"
                << "\n"
                << "GROUPS   = " << _groups.c_str() << "\n"
                << "\n"
