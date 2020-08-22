@@ -1480,7 +1480,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
                 if (_doCompress)
                 {
                     if (_debug)
-                        _log(tr("+ Adding folder to Compress: %1").arg(fileInfo.fileName()));
+                        _log(tr("+ Adding folder to Compress: %1").arg(fileInfo.absoluteFilePath()));
                     filesToUpload << fileInfo;
                     filesPath     << fileInfo.absoluteFilePath();
                 }
@@ -1505,7 +1505,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
 
                     if (filesToUpload.isEmpty())
                     {
-                        _error(tr("Error: the input folder '%1' has no files... (no recursivity without --compress)").arg(fileInfo.fileName()),
+                        _error(tr("Error: the input folder '%1' has no files... (no recursivity without --compress)").arg(fileInfo.absoluteFilePath()),
                                ERROR_CODE::ERR_INPUT_READ);
                         return false;
                     }
