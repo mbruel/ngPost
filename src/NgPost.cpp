@@ -1115,6 +1115,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         }
     }        
 
+    bool isMonitoring = false;
     if (parser.isSet(sOptionNames[Opt::MONITOR_DIR]))
     {
         if (!parser.isSet(sOptionNames[Opt::COMPRESS]))
@@ -1135,6 +1136,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
             else
             {
                 _cout << "[FolderMonitor] " << tr("start monitoring: ") << fi.absoluteFilePath() << "\n" << MB_FLUSH;
+                isMonitoring = true;
                 if (_folderMonitor)
                     _folderMonitor->addFolder(fi.absoluteFilePath());
                 else
@@ -1470,20 +1472,40 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
             {
                 filesToUpload << fileInfo;
                 filesPath     << fileInfo.absoluteFilePath();
+                if (_debug)
+                    _log(tr("+ File to %2: %1").arg(fileInfo.fileName()).arg(_doCompress?"compress":"post"));
             }
             else
             {
-                QDir dir(fileInfo.absoluteFilePath());
-                for (const QFileInfo &subFile : dir.entryInfoList(QDir::Files, QDir::Name))
+                if (_doCompress)
                 {
-                    if (subFile.isReadable())
+                    if (_debug)
+                        _log(tr("+ Adding folder to Compress: %1").arg(fileInfo.fileName()));
+                    filesToUpload << fileInfo;
+                    filesPath     << fileInfo.absoluteFilePath();
+                }
+                else {
+                    QDir dir(fileInfo.absoluteFilePath());
+                    for (const QFileInfo &subFile : dir.entryInfoList(QDir::Files, QDir::Name))
                     {
-                        filesToUpload << subFile;
-                        filesPath     << subFile.absoluteFilePath();
+                        if (subFile.isReadable())
+                        {
+                            filesToUpload << subFile;
+                            filesPath     << subFile.absoluteFilePath();
+                            if (_debug)
+                                _log(tr("+ subFile to post: %1").arg(subFile.fileName()));
+                        }
+                        else
+                        {
+                            _error(tr("Error: the input file '%1' is not readable...").arg(subFile.absoluteFilePath()),
+                                   ERROR_CODE::ERR_INPUT_READ);
+                            return false;
+                        }
                     }
-                    else
+
+                    if (filesToUpload.isEmpty())
                     {
-                        _error(tr("Error: the input file '%1' is not readable...").arg(subFile.absoluteFilePath()),
+                        _error(tr("Error: the input folder '%1' has no files... (no recursivity without --compress)").arg(fileInfo.fileName()),
                                ERROR_CODE::ERR_INPUT_READ);
                         return false;
                     }
@@ -1519,6 +1541,12 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     _dumpParams();
 #endif
 
+
+    if (filesToUpload.isEmpty() && _autoDirs.isEmpty() && !isMonitoring)
+    {
+        _error(tr("Nothing to do..."));
+        return false;
+    }
 
     if (filesToUpload.size())
     { // input files provided with -i
