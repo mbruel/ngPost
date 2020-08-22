@@ -562,6 +562,7 @@ QStringList NgPost::parseCombinedArgString(const QString &program)
 
 void NgPost::_enableAutoCompress()
 {
+    _log(tr("Auto compress is ON (--compress --gen_name --gen_pass --gen_par2)"));
     _autoCompress = true;
     _doCompress   = true;
     _genName      = true;
