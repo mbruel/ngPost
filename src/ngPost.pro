@@ -28,7 +28,7 @@ win32: {
 macx: {
     ICON = ngPost.icns
     CONFIG += app_bundle
-    ExtraFiles.files = $$PWD/par2
+    ExtraFiles.files = $$PWD/par2 $$PWD/parpar
     ExtraFiles.path = Contents/MacOS
     QMAKE_BUNDLE_DATA += ExtraFiles
 } 

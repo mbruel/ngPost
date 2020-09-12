@@ -99,7 +99,7 @@ Syntaxe: ngPost (options)* (-i <file or folder> | --auto <folder> | --monitor <f
 
 
 Exemples:
-  - surveillance d'un dossier: ngPost --monitor --rm_posted /Downloads/testNgPost --compress --gen_par2 --gen_name --gen_pass --rar_size 42 --disp_progress files
+  - surveillance d'un dossier: ngPost --monitor /Downloads/testNgPost --rm_posted --compress --gen_par2 --gen_name --gen_pass --rar_size 42 --disp_progress files
   - post automatique: ngPost --auto /Downloads/testNgPost --compress --gen_par2 --gen_name --gen_pass --rar_size 42 --disp_progress files
   - avec compression, obfuscation, password et par2: ngPost -i /tmp/file1 -i /tmp/folder1 -o /nzb/myPost.nzb --compress --gen_name --gen_pass --gen_par2
   - avec fichier de configuration: ngPost -c ~/.ngPost -m "password=qwerty42" -f ngPost@nowhere.com -i /tmp/file1 -i /tmp/file2 -i /tmp/folderToPost1 -i /tmp/folderToPost2

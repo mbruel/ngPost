@@ -2017,7 +2017,7 @@ void NgPost::_syntax(char *appName)
     }
 
     _cout << "\n" << tr("Examples:") << "\n"
-          << "  - " << tr("with monitoring") << ": " << app << " --monitor --rm_posted /Downloads/testNgPost --compress --gen_par2 --gen_name --gen_pass --rar_size 42 --disp_progress files\n"
+          << "  - " << tr("with monitoring") << ": " << app << " --monitor /Downloads/testNgPost --rm_posted --compress --gen_par2 --gen_name --gen_pass --rar_size 42 --disp_progress files\n"
           << "  - " << tr("with auto post")  << ": " << app << " --auto /Downloads/testNgPost --compress --gen_par2 --gen_name --gen_pass --rar_size 42 --disp_progress files\n"
           << "  - " << tr("with compression, filename obfuscation, random password and par2") << ": " << app << " -i /tmp/file1 -i /tmp/folder1 -o /nzb/myPost.nzb --compress --gen_name --gen_pass --gen_par2\n"
           << "  - " << tr("with config file") << ": " << app << " -c ~/.ngPost -m \"password=qwerty42\" -f ngPost@nowhere.com -i /tmp/file1 -i /tmp/file2 -i /tmp/folderToPost1 -i /tmp/folderToPost2\n"
