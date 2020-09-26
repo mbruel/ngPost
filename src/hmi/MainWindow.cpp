@@ -122,12 +122,16 @@ void MainWindow::init(NgPost *ngPost)
 
     QTabBar *tabBar = _ui->postTabWidget->tabBar();
     tabBar->setContextMenuPolicy(Qt::CustomContextMenu);
+    tabBar->setElideMode(Qt::TextElideMode::ElideNone);
 
     _ui->postTabWidget->clear();
     _ui->postTabWidget->setUsesScrollButtons(true);
     _ui->postTabWidget->addTab(_quickJobTab, QIcon(":/icons/quick.png"), _ngPost->quickJobName());
+    _ui->postTabWidget->setTabToolTip(0, tr("Default %1").arg(_ngPost->quickJobName()));
     _ui->postTabWidget->addTab(_autoPostTab, QIcon(":/icons/auto.png"), _ngPost->folderMonitoringName());
+    _ui->postTabWidget->setTabToolTip(1, _ngPost->folderMonitoringName());
     _ui->postTabWidget->addTab(new QWidget(_ui->postTabWidget), QIcon(":/icons/plus.png"), tr("New"));
+    _ui->postTabWidget->setTabToolTip(2, tr("Create a new %1").arg(_ngPost->quickJobName()));
     tabBar->setTabToolTip(2, QString("Create a new %1").arg(_ngPost->quickJobName()));
 
 //    connect(_ui->postTabWidget,           &QTabWidget::currentChanged, this, &MainWindow::onJobTabClicked);
@@ -570,10 +574,12 @@ PostingWidget *MainWindow::addNewQuickTab(int lastTabIdx, const QFileInfoList &f
         lastTabIdx = _ui->postTabWidget->count() -1;
     PostingWidget *newPostingWidget = new PostingWidget(_ngPost, this, static_cast<uint>(lastTabIdx));
     newPostingWidget->init();
+    QString tabName = QString("%1 #%2").arg(_ngPost->quickJobName()).arg(lastTabIdx);
     _ui->postTabWidget->insertTab(lastTabIdx,
                                   newPostingWidget ,
                                   QIcon(":/icons/quick.png"),
-                                  QString("%1 #%2").arg(_ngPost->quickJobName()).arg(lastTabIdx));
+                                  tabName);
+    _ui->postTabWidget->setTabToolTip(lastTabIdx, tabName);
 
     for (const QFileInfo &file : files)
         newPostingWidget->addPath(file.absoluteFilePath(), 0, file.isDir());
