@@ -126,6 +126,8 @@ void MainWindow::init(NgPost *ngPost)
 
     _ui->postTabWidget->clear();
     _ui->postTabWidget->setUsesScrollButtons(true);
+    _ui->postTabWidget->setStyleSheet("QTabBar { font-size: 14pt; font-family: Times; }");
+    _ui->postTabWidget->setTabShape(QTabWidget::TabShape::Rounded);
     _ui->postTabWidget->addTab(_quickJobTab, QIcon(":/icons/quick.png"), _ngPost->quickJobName());
     _ui->postTabWidget->setTabToolTip(0, tr("Default %1").arg(_ngPost->quickJobName()));
     _ui->postTabWidget->addTab(_autoPostTab, QIcon(":/icons/auto.png"), _ngPost->folderMonitoringName());
