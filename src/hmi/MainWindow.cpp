@@ -124,6 +124,7 @@ void MainWindow::init(NgPost *ngPost)
     tabBar->setContextMenuPolicy(Qt::CustomContextMenu);
 
     _ui->postTabWidget->clear();
+    _ui->postTabWidget->setUsesScrollButtons(true);
     _ui->postTabWidget->addTab(_quickJobTab, QIcon(":/icons/quick.png"), _ngPost->quickJobName());
     _ui->postTabWidget->addTab(_autoPostTab, QIcon(":/icons/auto.png"), _ngPost->folderMonitoringName());
     _ui->postTabWidget->addTab(new QWidget(_ui->postTabWidget), QIcon(":/icons/plus.png"), tr("New"));
