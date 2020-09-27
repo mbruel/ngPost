@@ -123,17 +123,16 @@ void MainWindow::init(NgPost *ngPost)
     QTabBar *tabBar = _ui->postTabWidget->tabBar();
     tabBar->setContextMenuPolicy(Qt::CustomContextMenu);
     tabBar->setElideMode(Qt::TextElideMode::ElideNone);
+    tabBar->setIconSize({18, 18});
 
     _ui->postTabWidget->clear();
     _ui->postTabWidget->setUsesScrollButtons(true);
-    _ui->postTabWidget->setStyleSheet("QTabBar { font-size: 14pt; font-family: Times; }");
-    _ui->postTabWidget->setTabShape(QTabWidget::TabShape::Rounded);
+    _ui->postTabWidget->setStyleSheet(sTabWidgetStyle);
     _ui->postTabWidget->addTab(_quickJobTab, QIcon(":/icons/quick.png"), _ngPost->quickJobName());
-    _ui->postTabWidget->setTabToolTip(0, tr("Default %1").arg(_ngPost->quickJobName()));
+    tabBar->setTabToolTip(0, tr("Default %1").arg(_ngPost->quickJobName()));
     _ui->postTabWidget->addTab(_autoPostTab, QIcon(":/icons/auto.png"), _ngPost->folderMonitoringName());
-    _ui->postTabWidget->setTabToolTip(1, _ngPost->folderMonitoringName());
+    tabBar->setTabToolTip(1, _ngPost->folderMonitoringName());
     _ui->postTabWidget->addTab(new QWidget(_ui->postTabWidget), QIcon(":/icons/plus.png"), tr("New"));
-    _ui->postTabWidget->setTabToolTip(2, tr("Create a new %1").arg(_ngPost->quickJobName()));
     tabBar->setTabToolTip(2, QString("Create a new %1").arg(_ngPost->quickJobName()));
 
 //    connect(_ui->postTabWidget,           &QTabWidget::currentChanged, this, &MainWindow::onJobTabClicked);
@@ -295,10 +294,13 @@ void MainWindow::changeEvent(QEvent *event)
             _ui->logBox->setTitle(tr("Posting Log"));
 
             tabBar->setTabText(0, _ngPost->quickJobName());
+            tabBar->setTabToolTip(0, tr("Default %1").arg(_ngPost->quickJobName()));
             tabBar->setTabText(1, _ngPost->folderMonitoringName());
+            tabBar->setTabToolTip(1, _ngPost->folderMonitoringName());
             for (int i = 2 ; i < lastTabIdx; ++i)
                 tabBar->setTabText(i, _ngPost->quickJobName());
             tabBar->setTabText(lastTabIdx, tr("New"));
+            tabBar->setTabToolTip(2, QString("Create a new %1").arg(_ngPost->quickJobName()));
 
             setJobLabel(_ui->postTabWidget->currentIndex());
 
@@ -938,3 +940,73 @@ const QString MainWindow::sGroupBoxStyle =  "\
         left: 7px;\
         padding: 0 5px 0 5px;\
         }";
+
+// from https://doc.qt.io/qt-5/stylesheet-examples.html#customizing-qtabwidget-and-qtabbar
+const QString MainWindow::sTabWidgetStyle = "\
+        QTabWidget::pane { /* The tab widget frame */\
+            border-top: 2px solid #C2C7CB;\
+        }\
+        \
+        QTabWidget::tab-bar {\
+            left: 5px; /* move to the right by 5px */\
+        }\
+        \
+        /* Style the tab using the tab sub-control. Note that\
+            it reads QTabBar _not_ QTabWidget */ \
+        QTabBar::tab { \
+            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,\
+                                        stop: 0 #E1E1E1, stop: 0.4 #DDDDDD,\
+                                        stop: 0.5 #D8D8D8, stop: 1.0 #D3D3D3);\
+            border: 2px solid #C4C4C3;\
+            border-bottom-color: #C2C7CB; /* same as the pane color */\
+            border-top-left-radius: 4px;\
+            border-top-right-radius: 4px;\
+            min-width: 8ex;\
+            padding: 2px;\
+        }\
+        \
+        QTabBar::tab:selected, QTabBar::tab:hover {\
+            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,\
+                                        stop: 0 #fafafa, stop: 0.4 #f4f4f4,\
+                                        stop: 0.5 #e7e7e7, stop: 1.0 #fafafa);\
+        }\
+        \
+        QTabBar::tab:selected {\
+            border-color: #9B9B9B;\
+            border-bottom-color: #C2C7CB; /* same as pane color */\
+        }\
+        \
+        QTabBar::tab:!selected {\
+            margin-top: 2px; /* make non-selected tabs look smaller */\
+        }\
+        \
+        /* make use of negative margins for overlapping tabs */\
+        QTabBar::tab:selected {\
+            /* expand/overlap to the left and right by 4px */\
+            margin-left: -4px;\
+            margin-right: -4px;\
+        }\
+        \
+        QTabBar::tab:first:selected {\
+            margin-left: 0; /* the first selected tab has nothing to overlap with on the left */\
+        }\
+        \
+        QTabBar::tab:last:selected {\
+            margin-right: 0; /* the last selected tab has nothing to overlap with on the right */\
+        }\
+        \
+        QTabBar::tab:only-one {\
+            margin: 0; /* if there is only one tab, we don't want overlapping margins */\
+        }\
+        \
+        QTabBar::scroller { /* the width of the scroll buttons */\
+            width: 40px;\
+        }\
+        QTabBar QToolButton::right-arrow { /* the arrow mark in the tool buttons */\
+            image: url(:/icons/right.png);\
+        }\
+        \
+        QTabBar QToolButton::left-arrow {\
+            image: url(:/icons/left.png);\
+        }\
+";

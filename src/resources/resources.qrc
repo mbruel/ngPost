@@ -35,5 +35,7 @@
         <file>icons/flag_ZH.png</file>
         <file>icons/flag_NL.png</file>
         <file>lang/ngPost_nl.qm</file>
+        <file>icons/left.png</file>
+        <file>icons/right.png</file>
     </qresource>
 </RCC>
