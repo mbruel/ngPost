@@ -1568,7 +1568,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         {
             _cout << "===> Auto dir: " << dir.absolutePath() << "\n" << MB_FLUSH;
             for (const QFileInfo & fileInfo : dir.entryInfoList(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot, QDir::Name))
-                _post(fileInfo);
+                _post(fileInfo, _monitor_nzb_folders ? QDir(fileInfo.absolutePath()).dirName() : QString());
         }
     }
 
