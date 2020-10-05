@@ -729,7 +729,7 @@ void PostingJob::_closeNzb()
         {
             _nzbStream << "</nzb>\n";
             _nzb->close();
-            _ngPost->doNzbPostCMD(_nzbFilePath);
+            _ngPost->doNzbPostCMD(this);
         }
         delete _nzb;
         _nzb = nullptr;

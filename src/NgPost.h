@@ -199,8 +199,8 @@ private:
     bool       _tryResumePostWhenConnectionLost;
     ushort     _waitDurationBeforeAutoResume;
 
-    QString    _nzbPostCmd;
-    bool       _preparePacking;
+    QStringList _nzbPostCmd;
+    bool        _preparePacking;
 
     static constexpr const char *sDefaultShutdownCmdLinux   = "sudo -n /sbin/poweroff";
     static constexpr const char *sDefaultShutdownCmdWindows = "shutdown /s /f /t 0";
@@ -326,7 +326,7 @@ public:
     void changeLanguage(const QString &lang);
 
 
-    void doNzbPostCMD(const QString &nzbFilePath);
+    void doNzbPostCMD(PostingJob *job);
 
 
 

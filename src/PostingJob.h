@@ -199,9 +199,9 @@ public:
     inline uint nbArticlesFailed() const;
     inline bool hasUploaded() const;
 
-    inline QString nzbName() const;
-    inline QString rarName() const;
-    inline QString rarPass() const;
+    inline const QString &nzbName() const;
+    inline const QString &rarName() const;
+    inline const QString &rarPass() const;
     inline QString postSize() const;
 
     inline bool hasCompressed() const;
@@ -222,6 +222,8 @@ public:
     inline bool isPosting() const;
 
     inline bool isPaused() const;
+
+    inline const QString &nzbFilePath() const;
 
 #ifdef __COMPUTE_IMMEDIATE_SPEED__
     inline const QString &immediateSpeed() const;
@@ -383,9 +385,9 @@ uint PostingJob::nbArticlesUploaded() const { return _nbArticlesUploaded; }
 uint PostingJob::nbArticlesFailed() const{ return _nbArticlesFailed; }
 bool PostingJob::hasUploaded() const{ return _nbArticlesTotal > 0; }
 
-QString PostingJob::nzbName() const { return _nzbName; }
-QString PostingJob::rarName() const { return _rarName; }
-QString PostingJob::rarPass() const { return _rarPass; }
+const QString &PostingJob::nzbName() const { return _nzbName; }
+const QString &PostingJob::rarName() const { return _rarName; }
+const QString &PostingJob::rarPass() const { return _rarPass; }
 QString PostingJob::postSize() const
 {
     QString unit = "B";
@@ -437,6 +439,8 @@ bool PostingJob::isPosting() const
     return MB_LoadAtomic(_stopPosting) == 0x0;
 }
 bool PostingJob::isPaused() const { return _isPaused; }
+
+const QString &PostingJob::nzbFilePath() const { return _nzbFilePath; }
 
 #ifdef __COMPUTE_IMMEDIATE_SPEED__
 const QString &PostingJob::immediateSpeed() const { return _immediateSpeed; }

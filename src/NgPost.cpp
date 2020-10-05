@@ -556,12 +556,12 @@ void NgPost::checkForNewVersion()
     QObject::connect(reply, &QNetworkReply::finished, this, &NgPost::onCheckForNewVersion);
 }
 
-void NgPost::doNzbPostCMD(const QString &nzbFilePath)
+void NgPost::doNzbPostCMD(PostingJob *job)
 {
     // first NZB_UPLOAD_URL
     if (_urlNzbUpload)
     {
-        FileUploader *testUpload = new FileUploader(_netMgr, nzbFilePath);
+        FileUploader *testUpload = new FileUploader(_netMgr, job->nzbFilePath());
         connect(testUpload, &FileUploader::error,      this,       &NgPost::onError,      Qt::DirectConnection);
         connect(testUpload, &FileUploader::log,        this,       &NgPost::onLog,        Qt::DirectConnection);
         connect(testUpload, &FileUploader::readyToDie, testUpload, &QObject::deleteLater, Qt::QueuedConnection);
@@ -571,15 +571,29 @@ void NgPost::doNzbPostCMD(const QString &nzbFilePath)
     // second NZB_POST_CMD
     if (!_nzbPostCmd.isEmpty())
     {
-        QString  fullCmd = _nzbPostCmd.arg(nzbFilePath);
-        QStringList args = parseCombinedArgString(fullCmd);
-        QString     cmd  = args.takeFirst();
-        qDebug() << "cmd: " << cmd << ", args: " << args;
-        int res = QProcess::execute(cmd, args);
-        if (debugMode())
-            _log(tr("NZB Post cmd: %1 exitcode: %2").arg(fullCmd).arg(res));
-        else
-            _log(fullCmd);
+        for (const QString &nzbPostCmd : _nzbPostCmd)
+        {
+            QString fullCmd(nzbPostCmd);
+            fullCmd.replace("%1",                   job->nzbFilePath()); // for backwards compatibility
+            fullCmd.replace("__nzbPath__",          job->nzbFilePath());
+            fullCmd.replace("__nzbName__",          job->nzbName());
+            fullCmd.replace("__rarName__",          job->rarName());
+            fullCmd.replace("__rarPass__",          job->rarPass());
+            fullCmd.replace("__nbArticles__",       QString::number(job->nbArticlesTotal()));
+            fullCmd.replace("__nbArticlesFailed__", QString::number(job->nbArticlesFailed()));
+            fullCmd.replace("__sizeInByte__",       QString::number(job->_totalSize));
+            fullCmd.replace("__nbFiles__",          QString::number(job->_nbFiles));
+            fullCmd.replace("__groups__",           job->groups());
+
+            QStringList args = parseCombinedArgString(fullCmd);
+            QString     cmd  = args.takeFirst();
+            qDebug() << "cmd: " << cmd << ", args: " << args;
+            int res = QProcess::execute(cmd, args);
+            if (debugMode())
+                _log(tr("NZB Post cmd: %1 exitcode: %2").arg(fullCmd).arg(res));
+            else
+                _log(fullCmd);
+        }
     }
 
 }
@@ -1811,7 +1825,7 @@ QString NgPost::_parseConfig(const QString &configPath)
                         _shutdownCmd = val;
 
                     else if (opt == sOptionNames[Opt::NZB_POST_CMD])
-                        _nzbPostCmd = val;
+                        _nzbPostCmd << val;
 
                     else if (opt == sOptionNames[Opt::INPUT_DIR])
                         _inputDir = val;
@@ -2157,13 +2171,28 @@ void NgPost::saveConfig()
                << tr("#NZB_UPLOAD_URL = ftp://user:pass@url_or_ip:21") << "\n"
                << (_urlNzbUploadStr.isEmpty() ? QString() : QString("NZB_UPLOAD_URL = %1\n").arg(_urlNzbUpload->url()))
                << "\n"
-               << tr("## launch a command or script at the end of each Post (cf examples)") << "\n"
-               << tr("## the full path of the nzb file is provided in the %1 placeholder (Qt style)") << "\n"
-               << "#NZB_POST_CMD = scp %1 myBox.com:~/nzbs/\n"
-               << "#NZB_POST_CMD = zip ~/nzbZip/$(basename %1).zip %1; rm %1\n"
-               << "#NZB_POST_CMD = ~/scripts/postNZB.sh %1\n"
-               << (_nzbPostCmd.isEmpty() ? "" : QString("NZB_POST_CMD = %1\n").arg(_nzbPostCmd))
-               << "\n"
+               << tr("## execute a command or script at the end of each post (see examples)") << "\n"
+               << tr("## you can use several post commands by defining several NZB_POST_CMD") << "\n"
+               << tr("## here is the list of the available placehoders") << "\n"
+               << "##   __nzbPath__          : " << tr("full path of the written nzb file") << "\n"
+               << "##   __nzbName__          : " << tr("name of the nzb without the extension (original source name)") << "\n"
+
+               << "##   __rarName__          : name of the archive files (in case of obfuscation)"
+               << "##   __rarPass__          : archive password"
+               << "##   __sizeInByte__       : size of the post (before yEnc encoding)"
+               << "##   __groups__           : list of groups (coma separated)"
+               << "##   __nbFiles__          : number of files in the post"
+               << "##   __nbArticles__       : number of Articles"
+               << "##   __nbArticlesFailed__ : number of Articles that failed to be posted"
+               << "#\n"
+               << "#NZB_POST_CMD = scp \"__nzbPath__\" myBox.com:~/nzbs/\n"
+               << "#NZB_POST_CMD = zip \"__nzbPath__.zip\" \"__nzbPath__\"\n"
+               << "#NZB_POST_CMD = ~/scripts/postNZB.sh \"__nzbPath__\" \"__groups__\" __rarName__ __rarPass__ __sizeInByte__ __nbFiles__ __nbArticles__ __nbArticlesFailed__\n"
+               << "#NZB_POST_CMD = mysql -h localhost -D myDB -u myUser -pmyPass-e \"INSERT INTO POST (release, rarName, rarPass, size) VALUES('__nzbName__', '__rarName__', '__rarPass__', '__sizeInByte__')\"\n"
+               << "" ;
+        for (const QString &nzbPostCmd : _nzbPostCmd)
+            stream << "NZB_POST_CMD = " << nzbPostCmd << "\n";
+        stream << "\n"
                << tr("## nzb files are normally all created in nzbPath") << "\n"
                << tr("## but using this option, the nzb of each monitoring folder will be stored in their own folder (created in nzbPath)") << "\n"
                << (_monitor_nzb_folders  ? "" : "#") << "MONITOR_NZB_FOLDERS = true\n"
