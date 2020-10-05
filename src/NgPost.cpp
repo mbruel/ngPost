@@ -196,6 +196,17 @@ const QList<QCommandLineOption> NgPost::sCmdOptions = {
     {{"n", sOptionNames[Opt::CONNECTION]},    tr("number of NNTP connections"), sOptionNames[Opt::CONNECTION]},
 };
 
+const QMap<NgPost::PostCmdPlaceHolders, QString> NgPost::sPostCmdPlaceHolders = {
+    {PostCmdPlaceHolders::nzbPath,          "__nzbPath__"},
+    {PostCmdPlaceHolders::nzbName,          "__nzbName__"},
+    {PostCmdPlaceHolders::rarName,          "__rarName__"},
+    {PostCmdPlaceHolders::rarPass,          "__rarPass__"},
+    {PostCmdPlaceHolders::nbArticles,       "__nbArticles__"},
+    {PostCmdPlaceHolders::nbArticlesFailed, "__nbArticlesFailed__"},
+    {PostCmdPlaceHolders::sizeInByte,       "__sizeInByte__"},
+    {PostCmdPlaceHolders::nbFiles,          "__nbFiles__"},
+    {PostCmdPlaceHolders::groups,           "__groups__"}
+};
 
 #ifdef __DEBUG__
 #include <QNetworkConfigurationManager>
@@ -575,15 +586,15 @@ void NgPost::doNzbPostCMD(PostingJob *job)
         {
             QString fullCmd(nzbPostCmd);
             fullCmd.replace("%1",                   job->nzbFilePath()); // for backwards compatibility
-            fullCmd.replace("__nzbPath__",          job->nzbFilePath());
-            fullCmd.replace("__nzbName__",          job->nzbName());
-            fullCmd.replace("__rarName__",          job->rarName());
-            fullCmd.replace("__rarPass__",          job->rarPass());
-            fullCmd.replace("__nbArticles__",       QString::number(job->nbArticlesTotal()));
-            fullCmd.replace("__nbArticlesFailed__", QString::number(job->nbArticlesFailed()));
-            fullCmd.replace("__sizeInByte__",       QString::number(job->_totalSize));
-            fullCmd.replace("__nbFiles__",          QString::number(job->_nbFiles));
-            fullCmd.replace("__groups__",           job->groups());
+            fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::nzbPath],          job->nzbFilePath());
+            fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::nzbName],          QFileInfo(job->nzbFilePath()).completeBaseName());
+            fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::rarName],          job->rarName());
+            fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::rarPass],          job->rarPass());
+            fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::nbArticles],       QString::number(job->nbArticlesTotal()));
+            fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::nbArticlesFailed], QString::number(job->nbArticlesFailed()));
+            fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::sizeInByte],       QString::number(job->_totalSize));
+            fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::nbFiles],          QString::number(job->_nbFiles));
+            fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::groups],           job->groups());
 
             QStringList args = parseCombinedArgString(fullCmd);
             QString     cmd  = args.takeFirst();
@@ -2174,16 +2185,15 @@ void NgPost::saveConfig()
                << tr("## execute a command or script at the end of each post (see examples)") << "\n"
                << tr("## you can use several post commands by defining several NZB_POST_CMD") << "\n"
                << tr("## here is the list of the available placehoders") << "\n"
-               << "##   __nzbPath__          : " << tr("full path of the written nzb file") << "\n"
-               << "##   __nzbName__          : " << tr("name of the nzb without the extension (original source name)") << "\n"
-
-               << "##   __rarName__          : name of the archive files (in case of obfuscation)"
-               << "##   __rarPass__          : archive password"
-               << "##   __sizeInByte__       : size of the post (before yEnc encoding)"
-               << "##   __groups__           : list of groups (coma separated)"
-               << "##   __nbFiles__          : number of files in the post"
-               << "##   __nbArticles__       : number of Articles"
-               << "##   __nbArticlesFailed__ : number of Articles that failed to be posted"
+               << "##   "<< sPostCmdPlaceHolders[PostCmdPlaceHolders::nzbPath] <<"          : " << tr("full path of the written nzb file") << "\n"
+               << "##   "<< sPostCmdPlaceHolders[PostCmdPlaceHolders::nzbName] <<"          : " << tr("name of the nzb without the extension (original source name)") << "\n"
+               << "##   "<< sPostCmdPlaceHolders[PostCmdPlaceHolders::rarName] <<"          : " << tr("name of the archive files (in case of obfuscation)") << "\n"
+               << "##   "<< sPostCmdPlaceHolders[PostCmdPlaceHolders::rarPass] <<"          : " << tr("archive password") << "\n"
+               << "##   "<< sPostCmdPlaceHolders[PostCmdPlaceHolders::sizeInByte] <<"       : " << tr("size of the post (before yEnc encoding)") << "\n"
+               << "##   "<< sPostCmdPlaceHolders[PostCmdPlaceHolders::groups] <<"           : " << tr("list of groups (comma separated)") << "\n"
+               << "##   "<< sPostCmdPlaceHolders[PostCmdPlaceHolders::nbFiles] <<"          : " << tr("number of files in the post") << "\n"
+               << "##   "<< sPostCmdPlaceHolders[PostCmdPlaceHolders::nbArticles] <<"       : " << tr("number of Articles") << "\n"
+               << "##   "<< sPostCmdPlaceHolders[PostCmdPlaceHolders::nbArticlesFailed] <<" : " << tr("number of Articles that failed to be posted") << "\n"
                << "#\n"
                << "#NZB_POST_CMD = scp \"__nzbPath__\" myBox.com:~/nzbs/\n"
                << "#NZB_POST_CMD = zip \"__nzbPath__.zip\" \"__nzbPath__\"\n"

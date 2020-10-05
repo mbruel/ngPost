@@ -93,6 +93,11 @@ class NgPost : public QObject, public CmdOrGuiApp
 
     static const QMap<Opt, QString> sOptionNames;
 
+    enum class PostCmdPlaceHolders {nzbPath, nzbName, rarName, rarPass, groups,
+                                   nbArticles, nbArticlesFailed, sizeInByte, nbFiles};
+
+    static const QMap<PostCmdPlaceHolders, QString> sPostCmdPlaceHolders;
+
     enum class AppMode {CMD = 0, HMI = 1}; //!< supposed to be CMD but a simple HMI has been added
 
     enum class ERROR_CODE : ushort {NONE=0, COMPLETED_WITH_ERRORS,
