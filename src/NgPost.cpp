@@ -1487,7 +1487,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
                 filesToUpload << fileInfo;
                 filesPath     << fileInfo.absoluteFilePath();
                 if (_debug)
-                    _log(tr("+ File to %2: %1").arg(fileInfo.fileName()).arg(_doCompress?"compress":"post"));
+                    _log(tr("+ File to %2: %1").arg(fileInfo.fileName()).arg(_doCompress?tr("compress"):tr("post")));
             }
             else
             {

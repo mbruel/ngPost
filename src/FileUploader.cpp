@@ -50,9 +50,9 @@ void FileUploader::startUpload(const QUrl &serverUrl)
         if (protocol == "ftp")
         {
             _nzbUrl = QUrl(QString("%1/%2").arg(serverUrl.url()).arg(_nzbFilePath.fileName()));
-    #ifdef __DEBUG__
+#ifdef __DEBUG__
             qDebug() << "FileUploader FTP url: " << _nzbUrl.url();
-    #endif
+#endif
 
             _reply = _netMgr.put(QNetworkRequest(_nzbUrl), &_nzbFile);
         }
@@ -61,29 +61,24 @@ void FileUploader::startUpload(const QUrl &serverUrl)
             _nzbUrl = serverUrl;
 
 #ifdef __DEBUG__
-        qDebug() << "FileUploader POST on url: " << _nzbUrl.url();
-#endif
+            qDebug() << "FileUploader POST on url: " << _nzbUrl.url();
+#endif                        
+            QHttpMultiPart *multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
+            QString fileKey("file"), fileName = QFileInfo(_nzbFilePath).fileName();
+            fileName.replace('"', '\'');
+            QHttpPart filePart;
+            filePart.setHeader(QNetworkRequest::ContentDispositionHeader,
+                               QString("form-data; name=\"%1\"; filename=\"%2\"").arg(fileKey).arg(fileName));
+            filePart.setBodyDevice(&_nzbFile);
+            multiPart->append(filePart);
 
-             QNetworkRequest req(_nzbUrl);
-            req.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/octet-stream"));
-            _reply = _netMgr.post(req, &_nzbFile);
 
-            //https://forum.qt.io/topic/56708/solved-qnetworkaccessmanager-adding-a-multipart-form-data-to-a-post-request/9
-//            QHttpMultiPart *multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
+            QNetworkRequest req(_nzbUrl);
+            req.setRawHeader( "User-Agent" , "ngPost C++ app" );
 
-//            QHttpPart textPart;
-//            textPart.setHeader(QNetworkRequest::ContentTypeHeader,"application/x-www-form-urlencoded");
-//            textPart.setBody("my text");
-//            //    textPart.setBody(QByteArray); //How to set parameters like with QUrlQuery
-//            postData.addQueryItem("access_token", access_token);
+            _reply = _netMgr.post(req, multiPart);
 
-//            QHttpPart fileDataPart;
-//            fileDataPart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"file\"; filename=\"test.nzb\""));
-//            fileDataPart.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/octet-stream"));
-
-//            fileDataPart.setBodyDevice(&_nzbFile);
-
-//            _reply = _netMgr.post(QNetworkRequest(_nzbUrl), multiPart);
+            multiPart->setParent(_reply); // multiPart deleted on the destruction of reply
         }
         else
         {

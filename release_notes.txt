@@ -14,6 +14,30 @@ TODO: include ParPar instead of par2cmdline?
 
 TODO: auto RAR size and par2 parameters depending on the inputs size?
 
+####################################################
+###       Release: ngPost v4.12                  ###
+###       date:    2020/10/??                    ###
+####################################################
+
+- Add proper placeholders to NZB_POST_CMD: __nzbPath__, __nzbName__, __rarName__,...
+- allow to define several NZB_POST_CMD (QStringList rather than QString)
+
+- Issue #77: Feature Request: MONITOR_NZB_FOLDERS = true - also for --auto flag
+
+- Issue #76, use a QTabWidget style for macOS issue
+
+- Adding log to warn about AUTO_COMPRESS
+
+- Issue #73: close the app instead of hanging if nothing to do (cmd)
+- recursive rar of a folder when -i AND --compress (cmd)
+
+- Issue #72, support old Qt versions. (tested with v5.5.1)
+
+- Add attribution to David for his yEnc code from NewsUP
+
+- Issue #69 RAR_EXTRA forgotten when PostingJob was introduced...
+
+
 
 ####################################################
 ###       Release: ngPost v4.11                  ###
