@@ -45,6 +45,9 @@ class QCoreApplication;
 class MainWindow;
 class PostingJob;
 class FoldersMonitorForNewFiles;
+#ifdef __USE_TMP_RAM__
+class QStorageInfo;
+#endif
 
 #define NB_ARTICLES_TO_PREPARE_PER_CONNECTION 3
 
@@ -84,6 +87,9 @@ class NgPost : public QObject, public CmdOrGuiApp
                     MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY, GEN_FROM,
                     OBFUSCATE, INPUT_DIR, AUTO_DIR, MONITOR_DIR, DEL_AUTO,
                     TMP_DIR, RAR_PATH, RAR_EXTRA, RAR_SIZE, RAR_MAX, KEEP_RAR,
+            #ifdef __USE_TMP_RAM__
+                    TMP_RAM, TMP_RAM_RATIO,
+            #endif
                     PAR2_PCT, PAR2_PATH, PAR2_ARGS,
                     COMPRESS, GEN_PAR2, GEN_NAME, GEN_PASS, LENGTH_NAME, LENGTH_PASS,
                     RAR_NAME, RAR_PASS, RAR_NO_ROOT_FOLDER,
@@ -146,6 +152,13 @@ private:
     QTimer    _progressbarTimer;      //!< timer to refresh the upload information (progressbar bar, avg. speed)
     const int _refreshRate;        //!< refresh rate
 
+#ifdef __USE_TMP_RAM__
+    static constexpr double sRamRatioMin = 1.10;
+    static constexpr double sRamRatioMax = 2.;
+    QStorageInfo *_storage;
+    QString       _ramPath;
+    double        _ramRatio;
+#endif
     QString     _tmpPath;
     QString     _rarPath;
     QString     _rarArgs;
@@ -361,6 +374,12 @@ public:
     inline QStringList getPostingGroups() const;
     inline bool groupPolicyPerFile() const;
 
+#ifdef __USE_TMP_RAM__
+    inline bool useTmpRam() const;
+    inline double ramRation() const;
+    qint64 ramAvailable() const;
+    static qint64 recursiveSize(const QFileInfo &fi);
+#endif
 
 signals:
     void log(QString msg, bool newline); //!< in case we signal from another thread
@@ -489,6 +508,11 @@ QStringList NgPost::getPostingGroups() const
 }
 
 bool NgPost::groupPolicyPerFile() const { return _groupPolicy == GROUP_POLICY::EACH_FILE; }
+
+#ifdef __USE_TMP_RAM__
+bool   NgPost::useTmpRam() const { return _storage != nullptr; }
+double NgPost::ramRation() const { return _ramRatio; }
+#endif
 
 const std::string &NgPost::aticleSignature() { return sArticleIdSignature; }
 const char *NgPost::appName() { return sAppName; }

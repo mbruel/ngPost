@@ -16,6 +16,17 @@ void handleShutdown(int signal);
 static NgPost *app = nullptr;
 
 
+#if defined(__USE_TMP_RAM__) && defined(__DEBUG__)
+#include "PostingJob.h"
+void dispFolderSize(const QFileInfo &folderPath)
+{
+    qint64 size = NgPost::recursiveSize(folderPath);
+    qDebug() << "size " << folderPath.absoluteFilePath()
+             << " : " << PostingJob::humanSize(static_cast<double>(size))
+             << " (" << size << ")";
+}
+#endif
+
 int main(int argc, char *argv[])
 {
     // disable SSL warnings

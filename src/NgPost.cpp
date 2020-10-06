@@ -40,6 +40,9 @@
 #include <QMessageBox>
 #include <QRegularExpression>
 #include <QDir>
+#ifdef __USE_TMP_RAM__
+  #include <QStorageInfo>
+#endif
 
 const char *NgPost::sAppName       = "ngPost";
 const QString NgPost::sVersion     = QString::number(APP_VERSION);
@@ -113,6 +116,10 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::RAR_SIZE,     "rar_size"},
     {Opt::RAR_MAX,      "rar_max"},
     {Opt::KEEP_RAR,     "keep_rar"},
+  #ifdef __USE_TMP_RAM__
+    {Opt::TMP_RAM,      "tmp_ram"},
+    {Opt::TMP_RAM_RATIO,"tmp_ram_ratio"},
+  #endif
 
     {Opt::PAR2_PCT,     "par2_pct"},
     {Opt::PAR2_PATH,    "par2_path"},
@@ -240,6 +247,9 @@ NgPost::NgPost(int &argc, char *argv[]):
     _nbThreads(QThread::idealThreadCount()),
     _socketTimeOut(sDefaultSocketTimeOut), _nzbPath(sDefaultNzbPath), _nzbPathConf(sDefaultNzbPath),
     _progressbarTimer(), _refreshRate(sDefaultRefreshRate),
+  #ifdef __USE_TMP_RAM__
+    _storage(nullptr), _ramPath(), _ramRatio(sRamRatioMin),
+  #endif
     _tmpPath(), _rarPath(), _rarArgs(), _rarSize(0), _rarMax(sDefaultRarMax), _useRarMax(false),
     _par2Pct(0), _par2Path(), _par2Args(), _par2PathConfig(),
     _doCompress(false), _doPar2(false), _genName(), _genPass(),
@@ -372,6 +382,11 @@ NgPost::~NgPost()
 
     if (_urlNzbUpload)
         delete _urlNzbUpload;
+
+#ifdef __USE_TMP_RAM__
+    if (_storage)
+        delete _storage;
+#endif
 }
 
 void NgPost::_finishPosting()
@@ -646,6 +661,33 @@ void NgPost::resume()
         _progressbarTimer.start(_refreshRate);
     }
 }
+
+
+
+#ifdef __USE_TMP_RAM__
+qint64 NgPost::ramAvailable() const { return _storage->bytesAvailable(); }
+
+qint64 NgPost::recursiveSize(const QFileInfo &fi)
+{
+    if (fi.isDir())
+    {
+        qint64 size = 4096; // size of a dir on Unix
+        QDir dir(fi.absoluteFilePath());
+        for (const QFileInfo &subFi : dir.entryInfoList(QDir::NoDotAndDotDot|QDir::AllEntries, QDir::Name|QDir::DirsLast))
+        {
+            if (subFi.isDir())
+                size += recursiveSize(subFi);
+            else
+                size += subFi.size();
+        }
+        return size;
+    }
+    else if (fi.isFile())
+        return fi.size();
+    else
+        return 0;
+}
+#endif
 
 
 
@@ -1887,6 +1929,30 @@ QString NgPost::_parseConfig(const QString &configPath)
                         _historyFieldSeparator = val;
 
                     // compression section
+
+#ifdef __USE_TMP_RAM__
+                    else if (opt == sOptionNames[Opt::TMP_RAM])
+                    {
+                        _ramPath = val;
+                        QFileInfo fi(_ramPath);
+                        if (!fi.isDir())
+                            err += QString("%1 %2\n").arg(sOptionNames[Opt::TMP_RAM].toUpper()).arg(tr("should be a directory!..."));
+                        else if (!fi.isWritable())
+                            err += QString("%1 %2\n").arg(sOptionNames[Opt::TMP_RAM].toUpper()).arg(tr("should be writable!..."));
+                        else
+                            _storage = new QStorageInfo(_ramPath);
+                    }
+                    else if (opt == sOptionNames[Opt::TMP_RAM])
+                    {
+                        double ratio = val.toDouble(&ok);
+                        if (!ok || ratio < sRamRatioMin || ratio > sRamRatioMax)
+                            err += QString("%1 %2\n").arg(
+                                        sOptionNames[Opt::TMP_RAM_RATIO].toUpper()).arg(
+                                        tr("should be a ratio between %1 and %2").arg(sRamRatioMin).arg(sRamRatioMax));
+                        else
+                            _ramRatio = ratio;
+                    }
+#endif
                     else if (opt == sOptionNames[Opt::TMP_DIR])
                         _tmpPath = val;
                     else if (opt == sOptionNames[Opt::RAR_PATH])
@@ -2142,12 +2208,16 @@ void NgPost::_dumpParams() const
 
              << "\n\nfrom: " << _from.c_str() << ", genFrom: " << _genFrom << ", saveFrom: " << _saveFrom
              << ", groups: " << _grpList.join(",")
+             << " policy: " << sGroupPolicies[_groupPolicy].toUpper()
              << "\narticleSize: " << sArticleSize
              << ", obfuscate articles: " << _obfuscateArticles
              << ", disp progress bar: " << _dispProgressBar
              << ", disp posting files: " << _dispFilesPosting
 
              << "\n\ncompression settings: <tmp_path: " << _tmpPath << ">"
+#ifdef __USE_TMP_RAM__
+             << " <ram_path: " << _ramPath << " ratio: " << _ramRatio << ">"
+#endif
              << ", <rar_path: " << _rarPath << ">"
              << ", <rar_size: " << _rarSize << ">"
              << "\n<par2_pct: " << _par2Pct << ">"
@@ -2333,8 +2403,20 @@ void NgPost::saveConfig()
                << tr("## /!\\ The directory MUST HAVE WRITE PERMISSION /!\\") << "\n"
                << tr("## this is set for Linux environment, Windows users MUST change it") << "\n"
                << "TMP_DIR = " << _tmpPath << "\n"
+               << "\n";
+#ifdef __USE_TMP_RAM__
+        stream << tr("## temporary folder with size constraint, typically a tmpfs partition") << "\n"
+               << tr("## the size of a post multiply by TMP_RAM_RATIO must available on the disk") << "\n"
+               << tr("## otherwise ngPost will use TMP_DIR (with no check there)") << "\n"
+               << tr("## (uncomment and define TMP_RAM to activate the feature, make sure the path is writable)") << "\n"
+               << (_ramPath.isEmpty() ? "#" : "") << "TMP_RAM = " << (_ramPath.isEmpty() ? "/mnt/ngPost_tmpfs" : _ramPath) << "\n"
                << "\n"
-               << tr("## RAR or 7zip absolute file path (external application)") << "\n"
+               << tr("## Ratio used on the source files size to compensate the par2 generation") << "\n"
+               << tr("## min is 10% to be sure (so 1.1), max 2.0") << "\n"
+               << "TMP_RAM_RATIO = " << _ramRatio << "\n"
+               << "\n";
+#endif
+        stream << tr("## RAR or 7zip absolute file path (external application)") << "\n"
                << tr("## /!\\ The file MUST EXIST and BE EXECUTABLE /!\\") << "\n"
                << tr("## this is set for Linux environment, Windows users MUST change it") << "\n"
                << "RAR_PATH = " << _rarPath << "\n"

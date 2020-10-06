@@ -68,7 +68,11 @@ private:
     bool        _limitProcDisplay;
     ushort      _nbProcDisp;
 
+#ifdef __USE_TMP_RAM__
+    QString        _tmpPath; //!< can be overwritten by _ngPost->_ramPath
+#else
     const QString  _tmpPath;
+#endif
     const QString  _rarPath;
     QString        _rarArgs;
     const uint     _rarSize;
@@ -222,6 +226,9 @@ public:
     inline bool isPaused() const;
 
     inline const QString &nzbFilePath() const;
+
+    inline static QString humanSize(double size);
+
 
 #ifdef __COMPUTE_IMMEDIATE_SPEED__
     inline const QString &immediateSpeed() const;
@@ -386,10 +393,11 @@ bool PostingJob::hasUploaded() const{ return _nbArticlesTotal > 0; }
 const QString &PostingJob::nzbName() const { return _nzbName; }
 const QString &PostingJob::rarName() const { return _rarName; }
 const QString &PostingJob::rarPass() const { return _rarPass; }
-QString PostingJob::postSize() const
+QString PostingJob::postSize() const { return humanSize(static_cast<double>(_totalSize)); }
+
+QString PostingJob::humanSize(double size)
 {
     QString unit = "B";
-    double size = static_cast<double>(_totalSize);
     if (size > 1024)
     {
         size /= 1024;

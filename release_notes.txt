@@ -22,7 +22,12 @@ TODO: auto RAR size and par2 parameters depending on the inputs size?
 - Add proper placeholders to NZB_POST_CMD: __nzbPath__, __nzbName__, __rarName__,...
 - allow to define several NZB_POST_CMD (QStringList rather than QString)
 
-- Issue #77: Feature Request: MONITOR_NZB_FOLDERS = true - also for --auto flag
+- Request #79: introduce TMP_RAM with TMP_RAM_RATIO that we'd first use a temporary folder
+  for posts that would fit on the disk. Typically for a tmpfs partition.
+
+- Request #78: post under different groups by introducing GROUP_POLICY in config
+
+- Request #77: MONITOR_NZB_FOLDERS = true - also for --auto flag
 
 - Issue #76, use a QTabWidget style for macOS issue
 

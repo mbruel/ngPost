@@ -13,6 +13,8 @@ CONFIG -= app_bundle
 DEFINES += __USE_CONNECTION_TIMEOUT__
 DEFINES += __COMPUTE_IMMEDIATE_SPEED__
 
+DEFINES += __USE_TMP_RAM__
+
 
 TRANSLATIONS = lang/ngPost_en.ts lang/ngPost_fr.ts lang/ngPost_es.ts lang/ngPost_de.ts\
                lang/ngPost_nl.ts lang/ngPost_pt.ts lang/ngPost_zh.ts

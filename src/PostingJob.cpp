@@ -215,6 +215,30 @@ void PostingJob::onStartPosting(bool isActiveJob)
 
     if (_doCompress)
     {
+#ifdef __USE_TMP_RAM__
+        if (_ngPost->useTmpRam())
+        {
+            int sourceSize = 0;
+            for (const QFileInfo &fi : _files)
+                sourceSize += NgPost::recursiveSize(fi);
+
+            double sourceSizeWithRatio = _ngPost->ramRation() * sourceSize,
+                    availableSize = static_cast<double>(_ngPost->ramAvailable());
+            if (sourceSizeWithRatio  <  availableSize)
+            {
+                _tmpPath = _ngPost->_ramPath;
+                _log(tr("Using TMP_RAM path as temporary folder. Post size: %1").arg(
+                         humanSize(static_cast<double>(sourceSize))));
+            }
+            else
+            {
+                _error(tr("Couldn't use TMP_RAM as there is not enough space: %1 available for a Post with ratio of %2").arg(
+                           humanSize(availableSize)).arg(humanSize(sourceSizeWithRatio)));
+            }
+        }
+#endif
+
+
 #ifdef __DEBUG__
         _log("[PostingJob::onStartPosting] Starting compression...");
 #endif
