@@ -30,7 +30,7 @@
 NntpFile::NntpFile(PostingJob *postingJob, const QFileInfo &file, uint num, uint nbFiles, const QList<QString> &grpList):
     QObject(),
     _postingJob(postingJob),
-    _file(file), _num(num), _nbFiles(nbFiles), _grpList(grpList),
+    _file(file), _num(num), _nbFiles(nbFiles), _grpList(grpList), _groups(grpList.join(",").toStdString()),
     _nbAticles(static_cast<uint>(std::ceil(static_cast<float>(file.size())/NgPost::articleSize()))),
     _articles(),
     _posted(), _failed()

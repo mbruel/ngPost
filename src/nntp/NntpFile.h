@@ -54,6 +54,7 @@ public:
     inline uint nbArticles() const;
     inline uint nbFailedArticles() const;
     inline bool hasFailedArticles() const;
+    inline const std::string &groups() const;
 
     QString missingArticles() const;
 
@@ -73,7 +74,8 @@ private:
     const QFileInfo         _file;      //!< original file
     const uint              _num;       //!< file number
     const uint              _nbFiles;   //!< total number of file
-    const QList<QString>   &_grpList;   //!< groups where the file is posted
+    const QList<QString>    _grpList;   //!< groups where the file is posted
+    const std::string       _groups;
     const uint              _nbAticles; //!< total number of articles
     QVector<NntpArticle*>   _articles;  //!< all articles (that are yEnc encoded)
 
@@ -94,7 +96,6 @@ qint64 NntpFile::fileSize() const { return _file.size(); }
 uint NntpFile::nbArticles() const { return _nbAticles; }
 uint NntpFile::nbFailedArticles() const { return static_cast<uint>(_failed.size()); }
 bool NntpFile::hasFailedArticles() const { return _failed.size() != 0; }
-
-
+const std::string &NntpFile::groups() const { return _groups; }
 
 #endif // NntpFile_H

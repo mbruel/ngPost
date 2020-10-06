@@ -437,7 +437,7 @@ void MainWindow::_initPostingBox()
     connect(_ui->rarPassEdit,       &QLineEdit::textChanged,   this, &MainWindow::onRarPassUpdated);
 
     _ui->fromEdit->setText(_ngPost->xml2txt(_ngPost->_from.c_str()));
-    _ui->groupsEdit->setText(QString::fromStdString(_ngPost->_groups));
+    _ui->groupsEdit->setText(_ngPost->groups());
     _ui->uniqueFromCB->setChecked(_ngPost->_genFrom);
     _ui->saveFromCB->setChecked(_ngPost->_saveFrom);
 
@@ -533,7 +533,6 @@ void MainWindow::updateParams()
     _ngPost->_autoCloseTabs = _ui->autoCloseCB->isChecked();
 
     _ngPost->updateGroups(_ui->groupsEdit->toPlainText());
-    _ngPost->_groups = _ui->groupsEdit->toPlainText().toStdString();
 
     _ngPost->_obfuscateArticles = _ui->obfuscateMsgIdCB->isChecked();
     _ngPost->_obfuscateFileName = _ui->obfuscateFileNameCB->isChecked();

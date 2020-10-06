@@ -140,7 +140,6 @@ private:
     QMap<QString, QString> _obfuscatedFileNames;
 
     const QList<QString> _grpList; //!< Newsgroup where we're posting in a list format to write in the nzb file
-    const std::string    _groups;             //!< Newsgroup where to post
     const std::string    _from;               //!< email of poster (if empty, random one will be used for each file)
 
     bool _use7z;
@@ -165,7 +164,6 @@ public:
                const QFileInfoList &files,
                PostingWidget *postWidget,
                const QList<QString> &grpList,
-               const std::string    &groups,
                const std::string    &from,
                bool obfuscateArticles,
                bool obfuscateFileName,
@@ -431,7 +429,7 @@ void PostingJob::setDelFilesAfterPosted(bool delFiles)
     _delFilesAfterPost = delFiles ? 0x1 : 0x0;
 }
 
-QString PostingJob::groups() const { return QString::fromStdString(_groups); }
+QString PostingJob::groups() const { return _grpList.join(","); }
 QString PostingJob::from() const { return _obfuscateArticles ? QString() : QString::fromStdString(_from); }
 
 bool PostingJob::isPosting() const

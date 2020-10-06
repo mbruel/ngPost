@@ -54,6 +54,8 @@ const char *NgPost::sDonationTooltip      = QT_TRANSLATE_NOOP("NgPost", "Donatio
 std::string NgPost::sArticleIdSignature   = sDefaultMsgIdSignature;
 const std::string NgPost::sRandomAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
+const QStringList NgPost::sDefaultGroups  = {"alt.binaries.test", "alt.binaries.misc" };
+
 qint64        NgPost::sArticleSize = sDefaultArticleSize;
 const QString NgPost::sSpace       = sDefaultSpace;
 
@@ -103,7 +105,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
 
     {Opt::OBFUSCATE,    "obfuscate"},
     {Opt::INPUT_DIR,    "inputdir"},
-
+    {Opt::GROUP_POLICY, "group_policy"},
 
     {Opt::TMP_DIR,      "tmp_dir"},
     {Opt::RAR_PATH,     "rar_path"},
@@ -208,6 +210,12 @@ const QMap<NgPost::PostCmdPlaceHolders, QString> NgPost::sPostCmdPlaceHolders = 
     {PostCmdPlaceHolders::groups,           "__groups__"}
 };
 
+const QMap<NgPost::GROUP_POLICY, QString> NgPost::sGroupPolicies = {
+    {GROUP_POLICY::ALL,       "all"},
+    {GROUP_POLICY::EACH_POST, "each_post"},
+    {GROUP_POLICY::EACH_FILE, "each_file"}
+};
+
 #ifdef __DEBUG__
 #include <QNetworkConfigurationManager>
 #endif
@@ -227,8 +235,8 @@ NgPost::NgPost(int &argc, char *argv[]):
     _nbFiles(0),
     _nntpServers(),
     _obfuscateArticles(false), _obfuscateFileName(false),
-    _genFrom(false), _saveFrom(false), _from(), _groups(sDefaultGroups),
-    _meta(), _grpList(),
+    _genFrom(false), _saveFrom(false), _from(),
+    _meta(), _grpList(sDefaultGroups), _nbGroups(sDefaultGroups.size()),
     _nbThreads(QThread::idealThreadCount()),
     _socketTimeOut(sDefaultSocketTimeOut), _nzbPath(sDefaultNzbPath), _nzbPathConf(sDefaultNzbPath),
     _progressbarTimer(), _refreshRate(sDefaultRefreshRate),
@@ -261,7 +269,8 @@ NgPost::NgPost(int &argc, char *argv[]):
     _rarNoRootFolder(false),
     _tryResumePostWhenConnectionLost(true),
     _waitDurationBeforeAutoResume(sDefaultResumeWaitInSec),
-    _nzbPostCmd(), _preparePacking(false)
+    _nzbPostCmd(), _preparePacking(false),
+    _groupPolicy(GROUP_POLICY::ALL)
 {
     QThread::currentThread()->setObjectName(sMainThreadName);
 
@@ -383,11 +392,10 @@ void NgPost::_finishPosting()
 
 void NgPost::updateGroups(const QString &groups)
 {
-    _groups = groups.toStdString();
-
     _grpList.clear();
     for (const QString &grp : groups.split(","))
         _grpList << grp;
+    _nbGroups = _grpList.size();
 }
 
 
@@ -665,7 +673,7 @@ void NgPost::_post(const QFileInfo &fileInfo, const QString &monitorFolder)
              << " (auto delete: " << _delAuto << ")";
 
     startPostingJob(new PostingJob(this, nzbFilePath, {fileInfo}, nullptr,
-                                   _grpList, _groups, from(),
+                                   getPostingGroups(), from(),
                                    _obfuscateArticles, _obfuscateFileName,
                                    _tmpPath, _rarPath, _rarArgs,
                                    _rarSize, _useRarMax, _par2Pct,
@@ -1579,7 +1587,7 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         if (!nzbFilePath.endsWith(".nzb"))
             nzbFilePath += ".nzb";
         startPostingJob(new PostingJob(this, nzbFilePath, filesToUpload, nullptr,
-                                       _grpList, _groups, from(),
+                                       getPostingGroups(), from(),
                                        _obfuscateArticles, _obfuscateFileName,
                                        _tmpPath, _rarPath, _rarArgs,
                                        _rarSize, _useRarMax, _par2Pct,
@@ -1775,6 +1783,22 @@ QString NgPost::_parseConfig(const QString &configPath)
                         {
                             _obfuscateArticles = true;
                             qDebug() << "Do article obfuscation (the subject of each Article will be a UUID)\n";
+                        }
+                    }
+                    else if (opt == sOptionNames[Opt::GROUP_POLICY])
+                    {
+                        val = val.toLower();
+                        if (val == sGroupPolicies[GROUP_POLICY::EACH_POST])
+                        {
+                            _groupPolicy = GROUP_POLICY::EACH_POST;
+                            if (_debug)
+                                _log(tr("Group Policy: one group per Post"));
+                        }
+                        else if (val == sGroupPolicies[GROUP_POLICY::EACH_FILE])
+                        {
+                            _groupPolicy = GROUP_POLICY::EACH_FILE;
+                            if (_debug)
+                                _log(tr("Group Policy: one group per File"));
                         }
                     }
                     else if (opt == sOptionNames[Opt::DISP_PROGRESS])
@@ -2117,7 +2141,7 @@ void NgPost::_dumpParams() const
              << ", auto_compress:" << _autoCompress << ", autoClose: " << _autoCloseTabs
 
              << "\n\nfrom: " << _from.c_str() << ", genFrom: " << _genFrom << ", saveFrom: " << _saveFrom
-             << ", groups: " << _groups.c_str()
+             << ", groups: " << _grpList.join(",")
              << "\narticleSize: " << sArticleSize
              << ", obfuscate articles: " << _obfuscateArticles
              << ", disp progress bar: " << _dispProgressBar
@@ -2225,7 +2249,13 @@ void NgPost::saveConfig()
                << tr("## Character used to separate fields in the history posting file") << "\n"
                << (_historyFieldSeparator == QString(sDefaultFieldSeparator) ? "#" : "") << "FIELD_SEPARATOR = " << _historyFieldSeparator << "\n"
                << "\n"
-               << "GROUPS   = " << _groups.c_str() << "\n"
+               << "GROUPS   = " << _grpList.join(",") << "\n"
+               << "\n"
+               << tr("## If you give several Groups (comma separated) you've 3 policies for posting:") << "\n"
+               << tr("##    ALL       : everything is posted on ALL the Groups") << "\n"
+               << tr("##    EACH_POST : each Post will be posted on a random Group from the list") << "\n"
+               << tr("##    EACH_FILE : each File will be posted on a random Group from the list") << "\n"
+               << "GROUP_POLICY = " << sGroupPolicies[_groupPolicy].toUpper()
                << "\n"
                << "\n"
                << tr("## uncomment the next line if you want a fixed uploader email (in the nzb and in the header of each articles)") << "\n"

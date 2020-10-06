@@ -87,9 +87,13 @@ class NgPost : public QObject, public CmdOrGuiApp
                     PAR2_PCT, PAR2_PATH, PAR2_ARGS,
                     COMPRESS, GEN_PAR2, GEN_NAME, GEN_PASS, LENGTH_NAME, LENGTH_PASS,
                     RAR_NAME, RAR_PASS, RAR_NO_ROOT_FOLDER,
-                    AUTO_CLOSE_TABS, AUTO_COMPRESS,
+                    AUTO_CLOSE_TABS, AUTO_COMPRESS, GROUP_POLICY,
                     SERVER, HOST, PORT, SSL, USER, PASS, CONNECTION, ENABLED
                    };
+
+    enum class GROUP_POLICY {ALL, EACH_POST, EACH_FILE};
+    static const QMap<GROUP_POLICY, QString> sGroupPolicies;
+
 
     static const QMap<Opt, QString> sOptionNames;
 
@@ -129,10 +133,10 @@ private:
     bool                 _genFrom;
     bool                 _saveFrom;
     std::string          _from;               //!< email of poster (if empty, random one will be used for each file)
-    std::string          _groups;             //!< Newsgroup where to post
 
     QMap<QString, QString> _meta;    //!< list of meta to add in the nzb header (typically a password)
     QList<QString>         _grpList; //!< Newsgroup where we're posting in a list format to write in the nzb file
+    int                    _nbGroups;
 
     int     _nbThreads;     //!< size of the ThreadPool
     int     _socketTimeOut; //!< socket timeout
@@ -207,6 +211,12 @@ private:
     QStringList _nzbPostCmd;
     bool        _preparePacking;
 
+    GROUP_POLICY _groupPolicy;
+
+
+
+
+
     static constexpr const char *sDefaultShutdownCmdLinux   = "sudo -n /sbin/poweroff";
     static constexpr const char *sDefaultShutdownCmdWindows = "shutdown /s /f /t 0";
     static constexpr const char *sDefaultShutdownCmdMacOS   = "sudo -n shutdown -h now";
@@ -221,13 +231,13 @@ private:
     static const QString sProFileURL;
 
     static const QList<QCommandLineOption> sCmdOptions;
+    static const QStringList sDefaultGroups;
 
     static const int sDefaultResumeWaitInSec     = 30;
     static const int sDefaultNumberOfConnections = 15;
     static const int sDefaultSocketTimeOut       = 30000;
     static const int sMinSocketTimeOut           = 5000;
     static const int sDefaultArticleSize         = 716800;
-    static constexpr const char *sDefaultGroups  = "alt.binaries.test,alt.binaries.misc";
     static constexpr const char *sDefaultSpace   = "  ";
     static constexpr const char *sDefaultMsgIdSignature = "ngPost";
 #if defined(WIN32) || defined(__MINGW64__)
@@ -347,6 +357,11 @@ public:
     inline bool tryResumePostWhenConnectionLost() const;
     inline ushort waitDurationBeforeAutoResume() const;
 
+    inline QString groups() const;
+    inline QStringList getPostingGroups() const;
+    inline bool groupPolicyPerFile() const;
+
+
 signals:
     void log(QString msg, bool newline); //!< in case we signal from another thread
     void error(QString msg); //!< in case we signal from another thread
@@ -462,6 +477,18 @@ void NgPost::setAutoCompress(bool checked)
 bool NgPost::removeRarRootFolder() const { return _rarNoRootFolder; }
 bool NgPost::tryResumePostWhenConnectionLost() const { return _tryResumePostWhenConnectionLost; }
 ushort NgPost::waitDurationBeforeAutoResume() const { return _waitDurationBeforeAutoResume; }
+
+QString NgPost::groups() const { return _grpList.join(","); }
+
+QStringList NgPost::getPostingGroups() const
+{
+    if (_groupPolicy == GROUP_POLICY::EACH_POST && _nbGroups > 1)
+        return QStringList(_grpList.at(std::rand() % _nbGroups));
+    else
+        return _grpList;
+}
+
+bool NgPost::groupPolicyPerFile() const { return _groupPolicy == GROUP_POLICY::EACH_FILE; }
 
 const std::string &NgPost::aticleSignature() { return sArticleIdSignature; }
 const char *NgPost::appName() { return sAppName; }

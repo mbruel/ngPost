@@ -30,10 +30,10 @@
 ushort NntpArticle::sNbMaxTrySending = 5;
 
 NntpArticle::NntpArticle(NntpFile *file, uint part, qint64 pos, qint64 bytes,
-                         const std::string *from, const std::string &groups, bool obfuscation):
+                         const std::string *from, bool obfuscation):
     _nntpFile(file), _part(part),
     _id(QUuid::createUuid()),
-    _from(from), _groups(groups),
+    _from(from),
     _subject(nullptr),
     _body(nullptr),
     _filePos(pos), _fileBytes(bytes),
@@ -143,7 +143,7 @@ std::string NntpArticle::header(const std::string &idSignature) const
 #endif
     std::stringstream ss;
     ss << "From: "        << (_from == nullptr ? NgPost::randomStdFrom() : *_from)    << Nntp::ENDLINE
-       << "Newsgroups: "  << _groups  << Nntp::ENDLINE
+       << "Newsgroups: "  << _nntpFile->groups()  << Nntp::ENDLINE
        << "Subject: "     << (_subject == nullptr ? msgId.constData() : _subject) << Nntp::ENDLINE
        << "Message-ID: <" << msgId.constData() << "@" << idSignature << ">" << Nntp::ENDLINE
        << Nntp::ENDLINE;

@@ -50,7 +50,6 @@ private:
     QUuid      _id;       //!< to generate a unique Message-ID for the Header
 
     const std::string *_from;    //!< NNTP header From (owned by PostingJob)
-    const std::string &_groups;  //!< NNTP header Newsgroups (owned by PostingJob)
     char *_subject;              //!< NNTP header Subject (if defined it won't be obfuscated)
     char *_body;                 //!< full body of the Article with the yEnc header
 
@@ -67,7 +66,7 @@ signals:
 
 public:
     NntpArticle(NntpFile *file, uint part, qint64 pos, qint64 bytes,
-                const std::string *from, const std::string &groups, bool obfuscation);
+                const std::string *from, bool obfuscation);
 
     void yEncBody(const char data[]);
 
