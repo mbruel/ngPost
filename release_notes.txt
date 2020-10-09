@@ -22,8 +22,9 @@ TODO: auto RAR size and par2 parameters depending on the inputs size?
 - Add proper placeholders to NZB_POST_CMD: __nzbPath__, __nzbName__, __rarName__,...
 - allow to define several NZB_POST_CMD (QStringList rather than QString)
 
-- Request #79: introduce TMP_RAM with TMP_RAM_RATIO that we'd first use a temporary folder
+- Request #79: introduce TMP_RAM with TMP_RAM_RATIO that we'd first use as temporary folder
   for posts that would fit on the disk. Typically for a tmpfs partition.
+  The goal is to use RAM I/O instead of SSD and thus preserve the disks ;)
 
 - Request #78: post under different groups by introducing GROUP_POLICY in config
 
