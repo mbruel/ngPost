@@ -19,6 +19,8 @@ TODO: auto RAR size and par2 parameters depending on the inputs size?
 ###       date:    2020/10/12                    ###
 ####################################################
 
+- include parpar build in Linux and Windows releases
+
 - Add proper placeholders to NZB_POST_CMD: __nzbPath__, __nzbName__, __rarName__,...
 - allow to define several NZB_POST_CMD (QStringList rather than QString)
 
