@@ -1940,9 +1940,18 @@ QString NgPost::_parseConfig(const QString &configPath)
                         else if (!fi.isWritable())
                             err += QString("%1 %2\n").arg(sOptionNames[Opt::TMP_RAM].toUpper()).arg(tr("should be writable!..."));
                         else
+                        {
                             _storage = new QStorageInfo(_ramPath);
+
+                            _log(tr("Using RAM Storage %1, root: %2, type: %3, size: %4, available: %5").arg(
+                                     _ramPath).arg(
+                                     _storage->rootPath()).arg(
+                                     QString(_storage->fileSystemType())).arg(
+                                     PostingJob::humanSize(static_cast<double>(_storage->bytesTotal()))).arg(
+                                     PostingJob::humanSize(static_cast<double>(_storage->bytesAvailable()))));
+                        }
                     }
-                    else if (opt == sOptionNames[Opt::TMP_RAM])
+                    else if (opt == sOptionNames[Opt::TMP_RAM_RATIO])
                     {
                         double ratio = val.toDouble(&ok);
                         if (!ok || ratio < sRamRatioMin || ratio > sRamRatioMax)
