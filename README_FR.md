@@ -15,7 +15,7 @@ Voici la liste des principales fonctionnalités et atouts de ngPost:
   - **mode invisible**: obfuscation complète des Articles : impossible de (re)trouver un post sans avoir le fichier nzb
   - **exécution d'une commande ou un script une fois les nzb générés**
   - possibilité **d'éteindre l'ordinateur** lorsque tous les posts sont finis
-  - multi-langues (Français, Anglais, Allemand, Espagnol, Portugais, Chinois)
+  - multi-langues (Français, Allemand, Anglais, Chinois, Espagnol, Néerlandais, Portugais)
   - ...
 
 ![ngPost_v4.3](https://raw.githubusercontent.com/mbruel/ngPost/master/pics/ngPost_v4.3.png)

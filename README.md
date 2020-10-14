@@ -17,7 +17,7 @@ it can **monitor folder(s) to post each new file/folder** individually after hav
 it can **auto delete files/folders once posted** (only for monitoring with the HMI and with both --auto and --monitor in cmd)<br/>
 it can **execute a COMMAND or script after each Post** (cf NZB_POST_CMD in the configuration file)<br/>
 it can **switch off the computer** when all the posts are finished<br/>
-it is **translated in Chinese, English, French, German, Portuguese and Spanish**.
+it is **translated in Chinese, Dutch, English, French, German, Portuguese and Spanish**.
 
 
 ![ngPost_v4.3](https://raw.githubusercontent.com/mbruel/ngPost/master/pics/ngPost_v4.3.png)
@@ -142,11 +142,19 @@ Most configuration keywords can be used in command line but few of them, are onl
 - **MONITOR_NZB_FOLDERS** : each monitoring post would go in its own folder created in nzbPath (Req/Issue #15)
 - **inputDir** : Default folder to open to select files from the HMI (it can be updated if you change the Auto Dir in the HMI and the SAVE)
 - **POST_HISTORY**: csv file where all successful post will append the date, the file name, its size, the upload speed, the archive name and its password
+- **GROUP_POLICY**: to define the policy for posting when several Groups are provided (on all, one per post or one per file)
+- **NZB_RM_ACCENTS**: remove accents and special characters from the nzb file names
+- **AUTO_CLOSE_TABS**: close Quick Post Tabs when posted successfully (for the GUI)
+- **RESUME_WAIT**: Time to wait (seconds) before trying to resume a Post automatically in case of loss of Network (min: 30)
+- **NO_RESUME_AUTO**: stop a post when you loose the network
+- ** PREPARE_PACKING**: when several posts are queued, prepare the packing of the next post while uploading the current one
 
 The following ones are for experimented posters:
 - **RAR_EXTRA** : to customize the rar command (no need to put the 'a', '-idp' or '-r'). No need to use it for 7-zip except if you wish to change the compession level.
 - **PAR2_CMD**  : to change the par2 generator and be able to use [Parpar](https://github.com/animetosho/ParPar) or [Multipar](http://hp.vector.co.jp/authors/VA021385/) if you wish. (par2cmdline is the default embedded generator)
 - **PAR2_ARGS** : to customize the par2 command, especially if you choose to use another one than the default par2cmdline
+- **TMP_RAM**: use a temporary folder with size constraint, typically a tmpfs partition, for posting files that would fit (otherwise TMP_DIR is used)
+- **TMP_RAM_RATIO**: Ratio used on the source files size to compensate the par2 generation
 
 ### Linux 64bit portable release (compiled with Qt v5.12.6)
 if you don't want to build it and install the dependencies, you can also the portable release that includes everything.<br/>

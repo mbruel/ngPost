@@ -207,6 +207,8 @@ void NntpConnection::onDisconnected()
         {
             emit _currentArticle->failed(_currentArticle->size());
             _currentArticle = nullptr;
+            if (_ngPost->debugMode())
+                _error(tr("Closing connection, Failed Article: %1").arg(_currentArticle->str()));
         }
         emit disconnected(this);
     }
@@ -372,9 +374,11 @@ void NntpConnection::onReadyRead()
             if(strncmp(line.constData(), Nntp::getResponse(200), 3) != 0){
                 QString err("Reading welcome message. Should start with 200... Server message: ");
                 err += line.constData();
-#if defined(__DEBUG__) && defined(LOG_CONNECTION_ERRORS_BEFORE_EMIT_SIGNALS)
-                _error(err);
-#endif
+                if (_ngPost->debugMode())
+                    _error(err);
+//#if defined(__DEBUG__) && defined(LOG_CONNECTION_ERRORS_BEFORE_EMIT_SIGNALS)
+//                _error(err);
+//#endif
                 emit errorConnecting(tr("[Connection #%1] Error connecting to server %2:%3").arg(
                                          _id).arg(_srvParams.host).arg(_srvParams.port));
                 _closeConnection();
@@ -410,9 +414,11 @@ void NntpConnection::onReadyRead()
                 err += Nntp::AUTHINFO_USER;
                 err += "' should start with 38... resp: ";
                 err += line.constData();
-#if defined(__DEBUG__) && defined(LOG_CONNECTION_ERRORS_BEFORE_EMIT_SIGNALS)
-                _error(err);
-#endif
+                if (_ngPost->debugMode())
+                    _error(err);
+//#if defined(__DEBUG__) && defined(LOG_CONNECTION_ERRORS_BEFORE_EMIT_SIGNALS)
+//                _error(err);
+//#endif
                 emit errorConnecting(tr("[Connection #%1] Error sending user '%4' to server %2:%3").arg(
                                          _id).arg(_srvParams.host).arg(_srvParams.port).arg(_srvParams.user.c_str()));
                 _closeConnection();
@@ -439,9 +445,11 @@ void NntpConnection::onReadyRead()
                 err += Nntp::AUTHINFO_PASS;
                 err += "' should start with 28... resp: ";
                 err += line.constData();
-#if defined(__DEBUG__) && defined(LOG_CONNECTION_ERRORS_BEFORE_EMIT_SIGNALS)
-                _error(err);
-#endif
+                if (_ngPost->debugMode())
+                    _error(err);
+//#if defined(__DEBUG__) && defined(LOG_CONNECTION_ERRORS_BEFORE_EMIT_SIGNALS)
+//                _error(err);
+//#endif
                 emit errorConnecting(tr("[Connection #%1] Error authentication to server %2:%3 with user '%4' and pass '%5'").arg(
                                          _id).arg(_srvParams.host).arg(_srvParams.port).arg(
                                          _srvParams.user.c_str()).arg(_srvParams.pass.c_str()));
