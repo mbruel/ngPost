@@ -172,6 +172,10 @@ void NntpConnection::_closeConnection(){
 
         if (_currentArticle && !_ngPost->tryResumePostWhenConnectionLost())
         {
+#ifdef __DISP_ARTICLE_SERVER__
+                if (_ngPost->debugMode())
+                    _log(tr("Article FAIL2: %1 (on %2)").arg(_currentArticle->id()).arg(_srvParams.host));
+#endif
             emit _currentArticle->failed(_currentArticle->size());
             _currentArticle = nullptr;
         }
@@ -205,6 +209,10 @@ void NntpConnection::onDisconnected()
     {
         if (_currentArticle)
         {
+#ifdef __DISP_ARTICLE_SERVER__
+                if (_ngPost->debugMode())
+                    _log(tr("Article FAIL3: %1 (on %2)").arg(_currentArticle->id()).arg(_srvParams.host));
+#endif
             emit _currentArticle->failed(_currentArticle->size());
             _currentArticle = nullptr;
             if (_ngPost->debugMode())
@@ -339,6 +347,10 @@ void NntpConnection::onReadyRead()
 #if defined(__DEBUG__) && defined(LOG_POSTING_STEPS)
                 _log(tr("POSTED: %1").arg(_currentArticle->str()));
 #endif
+#ifdef __DISP_ARTICLE_SERVER__
+                if (_ngPost->debugMode())
+                    _log(tr("Article posted: %1 (on %2) %3").arg(_currentArticle->id()).arg(_srvParams.host).arg(line.constData()));
+#endif
                 emit _currentArticle->posted(_currentArticle->size());
             }
             else
@@ -358,6 +370,10 @@ void NntpConnection::onReadyRead()
                 {
                     _postingState = PostingState::IDLE;
                     _error(tr("FAIL posting %1 (Error: '%2')").arg(_currentArticle->str()).arg(line.constData()));
+#ifdef __DISP_ARTICLE_SERVER__
+                if (_ngPost->debugMode())
+                    _log(tr("Article FAIL: %1 (on %2) %3").arg(_currentArticle->id()).arg(_srvParams.host).arg(line.constData()));
+#endif
                     emit _currentArticle->failed(_currentArticle->size());
                 }
 
