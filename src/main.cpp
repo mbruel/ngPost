@@ -53,6 +53,10 @@ int main(int argc, char *argv[])
     else if (app->parseCommandLine(argc, argv))
     {
         exitCode = app->startEventLoop();
+
+        if (app->nzbCheck())
+            exitCode = app->nbMissingArticles();
+
 #ifdef __DEBUG__
         std::cout << app->appName() << " closed properly!\n";
         std::cout.flush();

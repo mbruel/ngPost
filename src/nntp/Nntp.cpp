@@ -46,11 +46,17 @@ const std::map<unsigned short, const char *>  Nntp::sResponses = {
     {440, "440 posting not allowed"},
     {441, "441 posting failed"},
 
+
+    //rfc977: 6.2.4.  STAT
+    {223, "0|n message-id    Article exists"},
+    {430, "No article with that message-id"},
+
+
     //rfc977: 3.11.2  The QUIT command
     {205, "205 closing connection - goodbye!"},
 
 
-    //rfcrfc4643: 2.3.1
+    //rfc4643: 2.3.1
     {281, "281 Authentication accepted"},
     {380, "380 More Authentication Required"},
     {381, "381 Password required"},

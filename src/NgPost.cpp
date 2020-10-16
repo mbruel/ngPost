@@ -28,6 +28,7 @@
 #include "hmi/PostingWidget.h"
 #include "hmi/AutoPostWidget.h"
 #include "FileUploader.h"
+#include "NzbCheck.h"
 
 #include <cmath>
 #include <QApplication>
@@ -84,6 +85,8 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::RESUME_WAIT,     "resume_wait"},
     {Opt::SOCK_TIMEOUT,    "sock_timeout"},
     {Opt::PREPARE_PACKING, "prepare_packing"},
+    {Opt::CHECK,           "check"},
+    {Opt::QUIET,           "quiet"},
 
 
     {Opt::INPUT,        "input"},
@@ -143,6 +146,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::PASS,         "pass"},
     {Opt::CONNECTION,   "connection"},
     {Opt::ENABLED,      "enabled"},
+    {Opt::NZBCHECK,     "nzbcheck"},
 };
 
 const QList<QCommandLineOption> NgPost::sCmdOptions = {
@@ -153,6 +157,9 @@ const QList<QCommandLineOption> NgPost::sCmdOptions = {
     {{"d", sOptionNames[Opt::DEBUG]},         tr( "display extra information")},
     { sOptionNames[Opt::DEBUG_FULL],          tr( "display full debug information")},
     {{"l", sOptionNames[Opt::LANG]},          tr( "application language"), sOptionNames[Opt::LANG]},
+
+    { sOptionNames[Opt::CHECK],               tr( "check nzb file (if articles are available on Usenet) cf https://github.com/mbruel/nzbCheck"), sOptionNames[Opt::CHECK]},
+    { {"q", sOptionNames[Opt::QUIET]},        tr( "quiet mode (no output on stdout)")},
 
 // automated posting (scanning and/or monitoring)
     { sOptionNames[Opt::AUTO_DIR],            tr("parse directory and post every file/folder separately. You must use --compress, should add --gen_par2, --gen_name and --gen_pass"), sOptionNames[Opt::AUTO_DIR]},
@@ -280,7 +287,8 @@ NgPost::NgPost(int &argc, char *argv[]):
     _tryResumePostWhenConnectionLost(true),
     _waitDurationBeforeAutoResume(sDefaultResumeWaitInSec),
     _nzbPostCmd(), _preparePacking(false),
-    _groupPolicy(GROUP_POLICY::ALL)
+    _groupPolicy(GROUP_POLICY::ALL),
+    _nzbCheck(nullptr), _quiet(false)
 {
     QThread::currentThread()->setObjectName(sMainThreadName);
 
@@ -366,6 +374,9 @@ NgPost::~NgPost()
     _log("Destuction NgPost...");
 #endif
 
+    if (_nzbCheck)
+        delete _nzbCheck;
+
     _stopMonitoring();
 
 //    _finishPosting();
@@ -387,6 +398,11 @@ NgPost::~NgPost()
     if (_storage)
         delete _storage;
 #endif
+}
+
+int NgPost::nbMissingArticles() const
+{
+    return _nzbCheck->nbMissingArticles();
 }
 
 void NgPost::_finishPosting()
@@ -1104,6 +1120,9 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
              << "=> parsing: " << res << " (error: " << parser.errorText() << ")";
 #endif
 
+    if (parser.isSet(sOptionNames[Opt::QUIET]))
+        _quiet = true;
+
     if (parser.isSet(sOptionNames[Opt::CONF]))
     {
         QString err = _parseConfig(parser.value(sOptionNames[Opt::CONF]));
@@ -1121,6 +1140,13 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
             _error(err, ERROR_CODE::ERR_CONF_FILE);
             return false;
         }
+    }
+
+    if (_quiet)
+    {
+        _debug = 0;
+        _dispProgressBar  = false;
+        _dispFilesPosting = false;
     }
 
     if (!parser.parse(args))
@@ -1147,6 +1173,55 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     if (parser.isSet(sOptionNames[Opt::VERSION]))
     {
         _showVersionASCII();
+        return false;
+    }
+
+    if (parser.isSet(sOptionNames[Opt::DEBUG]))
+    {
+        _debug = 1;
+        _cout << tr("Extra logs are ON\n") << MB_FLUSH;
+    }
+    if (parser.isSet(sOptionNames[Opt::DEBUG_FULL]))
+    {
+        _debug = 2;
+        _cout << tr("Full debug logs are ON\n") << MB_FLUSH;
+    }
+
+    if (parser.isSet(sOptionNames[Opt::DISP_PROGRESS]))
+    {
+        QString val = parser.value(sOptionNames[Opt::DISP_PROGRESS]);
+        val = val.trimmed().toLower();
+        if (val == "bar")
+        {
+            _dispProgressBar  = true;
+            _dispFilesPosting = false;
+            qDebug() << "Display progressbar bar\n";
+        }
+        else if (val == "files")
+        {
+            _dispProgressBar  = false;
+            _dispFilesPosting = true;
+            qDebug() << "Display Files when start posting\n";
+        }
+        else if (val == "none")
+        { // force it in case in the config file something was on
+            _dispProgressBar  = false;
+            _dispFilesPosting = false;
+        }
+    }
+
+    if (parser.isSet(sOptionNames[Opt::CHECK]))
+    {
+        _nzbCheck = new NzbCheck();
+        _nzbCheck->setDebug(_debug);
+        _nzbCheck->setDispProgressBar(_dispProgressBar||_dispFilesPosting);
+        _nzbCheck->setQuiet(_quiet);
+        int nbArticles = _nzbCheck->parseNzb(parser.value(sOptionNames[Opt::CHECK]));
+        if (nbArticles > 0 )
+        {
+            _nzbCheck->checkPost(_nntpServers);
+            return true;
+        }
         return false;
     }
 
@@ -1226,16 +1301,6 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         _cout << tr("Do article obfuscation (the subject of each Article will be a UUID)\n") << MB_FLUSH;
     }
 
-    if (parser.isSet(sOptionNames[Opt::DEBUG]))
-    {
-        _debug = 1;
-        _cout << tr("Extra logs are ON\n") << MB_FLUSH;
-    }
-    if (parser.isSet(sOptionNames[Opt::DEBUG_FULL]))
-    {
-        _debug = 2;
-        _cout << tr("Full debug logs are ON\n") << MB_FLUSH;
-    }
 
     if (parser.isSet(sOptionNames[Opt::THREAD]))
     {
@@ -1285,29 +1350,6 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     else if (_from.empty())
         _from = randomStdFrom();
 
-
-    if (parser.isSet(sOptionNames[Opt::DISP_PROGRESS]))
-    {
-        QString val = parser.value(sOptionNames[Opt::DISP_PROGRESS]);
-        val = val.trimmed().toLower();
-        if (val == "bar")
-        {
-            _dispProgressBar  = true;
-            _dispFilesPosting = false;
-            qDebug() << "Display progressbar bar\n";
-        }
-        else if (val == "files")
-        {
-            _dispProgressBar  = false;
-            _dispFilesPosting = true;
-            qDebug() << "Display Files when start posting\n";
-        }
-        else if (val == "none")
-        { // force it in case in the config file something was on
-            _dispProgressBar  = false;
-            _dispFilesPosting = false;
-        }
-    }
 
     if (parser.isSet(sOptionNames[Opt::MSG_ID]))
         sArticleIdSignature = escapeXML(parser.value(sOptionNames[Opt::MSG_ID])).toStdString();
@@ -2072,6 +2114,14 @@ QString NgPost::_parseConfig(const QString &configPath)
                         else
                             serverParams->enabled = false;
                     }
+                    else if (opt == sOptionNames[Opt::NZBCHECK])
+                    {
+                        val = val.toLower();
+                        if (val == "true" || val == "on" || val == "1")
+                            serverParams->nzbCheck = true;
+                        else
+                            serverParams->nzbCheck = false;
+                    }
                     else if (opt == sOptionNames[Opt::USER])
                     {
                         serverParams->user = val.toStdString();
@@ -2164,7 +2214,8 @@ QString NgPost::parseDefaultConfig()
     QFileInfo defaultConf(conf);
     if (defaultConf.exists() && defaultConf.isFile())
     {
-        qCritical() << "Using default config file: " << conf;
+        if (!_quiet)
+            _cout << tr("Using default config file: %1").arg(conf) << "\n" << MB_FLUSH;
         err = _parseConfig(conf);
     }
     else
@@ -2502,6 +2553,7 @@ void NgPost::saveConfig()
                    << "pass = " << param->pass.c_str() << "\n"
                    << "connection = " << param->nbCons << "\n"
                    << "enabled = " << (param->enabled ? "true":"false") << "\n"
+                   << "nzbCheck = " << (param->nzbCheck ? "true":"false") << "\n"
                    << "\n\n";
         }
         stream << tr("## You can add as many server if you have several providers by adding other \"server\" sections") << "\n"

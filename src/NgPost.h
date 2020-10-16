@@ -48,6 +48,7 @@ class FoldersMonitorForNewFiles;
 #ifdef __USE_TMP_RAM__
 class QStorageInfo;
 #endif
+class NzbCheck;
 
 #define NB_ARTICLES_TO_PREPARE_PER_CONNECTION 3
 
@@ -79,7 +80,7 @@ class NgPost : public QObject, public CmdOrGuiApp
     friend class PostingJob;
     friend class AboutNgPost;
 
-    enum class Opt {HELP = 0, LANG, VERSION, CONF, SHUTDOWN_CMD,
+    enum class Opt {HELP = 0, LANG, VERSION, CONF, SHUTDOWN_CMD, CHECK, QUIET,
                     DISP_PROGRESS, DEBUG, DEBUG_FULL, POST_HISTORY, FIELD_SEPARATOR, NZB_RM_ACCENTS,
                     RESUME_WAIT, NO_RESUME_AUTO, SOCK_TIMEOUT, PREPARE_PACKING,
                     INPUT, OUTPUT, NZB_PATH, THREAD, NZB_UPLOAD_URL, NZB_POST_CMD,
@@ -94,7 +95,7 @@ class NgPost : public QObject, public CmdOrGuiApp
                     COMPRESS, GEN_PAR2, GEN_NAME, GEN_PASS, LENGTH_NAME, LENGTH_PASS,
                     RAR_NAME, RAR_PASS, RAR_NO_ROOT_FOLDER,
                     AUTO_CLOSE_TABS, AUTO_COMPRESS, GROUP_POLICY,
-                    SERVER, HOST, PORT, SSL, USER, PASS, CONNECTION, ENABLED
+                    SERVER, HOST, PORT, SSL, USER, PASS, CONNECTION, ENABLED, NZBCHECK
                    };
 
     enum class GROUP_POLICY {ALL, EACH_POST, EACH_FILE};
@@ -225,6 +226,9 @@ private:
     bool        _preparePacking;
 
     GROUP_POLICY _groupPolicy;
+
+    NzbCheck    *_nzbCheck;
+    bool         _quiet;
 
 
 
@@ -381,6 +385,9 @@ public:
     static qint64 recursiveSize(const QFileInfo &fi);
 #endif
 
+    inline bool nzbCheck() const;
+    int nbMissingArticles() const;
+
 signals:
     void log(QString msg, bool newline); //!< in case we signal from another thread
     void error(QString msg); //!< in case we signal from another thread
@@ -514,6 +521,9 @@ bool   NgPost::useTmpRam() const { return _storage != nullptr; }
 double NgPost::ramRation() const { return _ramRatio; }
 #endif
 
+bool NgPost::nzbCheck() const { return _nzbCheck != nullptr; }
+
+
 const std::string &NgPost::aticleSignature() { return sArticleIdSignature; }
 const char *NgPost::appName() { return sAppName; }
 
@@ -618,7 +628,7 @@ QStringList NgPost::parseCombinedArgString(const QString &program)
 
 void NgPost::_enableAutoCompress()
 {
-    if (!_hmi)
+    if (!_hmi && !_quiet)
         _log(tr("Auto compress is ON (--compress --gen_name --gen_pass --gen_par2)"));
     _autoCompress = true;
     _doCompress   = true;

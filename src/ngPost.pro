@@ -71,7 +71,9 @@ SOURCES += \
         FileUploader.cpp \
         FoldersMonitorForNewFiles.cpp \
         NgPost.cpp \
+        NntpCheckCon.cpp \
         NntpConnection.cpp \
+        NzbCheck.cpp \
         Poster.cpp \
         PostingJob.cpp \
         hmi/AboutNgPost.cpp \
@@ -98,7 +100,9 @@ HEADERS += \
     FileUploader.h \
     FoldersMonitorForNewFiles.h \
     NgPost.h \
+    NntpCheckCon.h \
     NntpConnection.h \
+    NzbCheck.h \
     Poster.h \
     PostingJob.h \
     hmi/AboutNgPost.h \

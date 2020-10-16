@@ -33,6 +33,7 @@ struct NntpServerParams{
     int         nbCons;
     bool        useSSL;
     bool        enabled;
+    bool        nzbCheck;
 
     static const ushort sDefaultPort = 119;
     static const ushort sDefaultSslPort = 563;
@@ -40,14 +41,14 @@ struct NntpServerParams{
 
     NntpServerParams():
         host(""), port(sDefaultPort), auth(false), user(""),
-        pass(""), nbCons(1), useSSL(false), enabled(true)
+        pass(""), nbCons(1), useSSL(false), enabled(true), nzbCheck(false)
     {}
 
     NntpServerParams(const QString & aHost, ushort aPort = sDefaultPort, bool aAuth = false,
                          const std::string &aUser = "", const std::string &aPass = "",
-                         int aNbCons = 1, bool aUseSSL = false):
+                         int aNbCons = 1, bool aUseSSL = false, bool aNzbCheck = false):
        host(aHost), port(aPort), auth(aAuth), user(aUser),
-       pass(aPass), nbCons(aNbCons), useSSL(aUseSSL), enabled(true)
+       pass(aPass), nbCons(aNbCons), useSSL(aUseSSL), enabled(true), nzbCheck(aNzbCheck)
     {}
 
     ~NntpServerParams() = default;
@@ -58,14 +59,15 @@ struct NntpServerParams{
     inline QString str() const;
 };
 
-#endif // NNTPSERVERPARAMS_H
 
 QString NntpServerParams::str() const
 {
     if (auth)
-        return QString("[%5con%6 on %1:%2@%3:%4 enabled:%7]").arg(user.c_str()).arg(pass.c_str()).arg(
-                    host).arg(port).arg(nbCons).arg(useSSL?" SSL":"").arg(enabled);
+        return QString("[%5con%6 on %1:%2@%3:%4 enabled:%7, nzbCheck:%8]").arg(user.c_str()).arg(pass.c_str()).arg(
+                    host).arg(port).arg(nbCons).arg(useSSL?" SSL":"").arg(enabled).arg(nzbCheck);
     else
-        return QString("[%3con%4 on %1:%2 enabled:%5]").arg(host).arg(port).arg(nbCons).arg(
-                    useSSL?" SSL":"").arg(enabled);
+        return QString("[%3con%4 on %1:%2 enabled:%5, nzbCheck:%6]").arg(host).arg(port).arg(nbCons).arg(
+                    useSSL?" SSL":"").arg(enabled).arg(nzbCheck);
 }
+
+#endif // NNTPSERVERPARAMS_H

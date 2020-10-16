@@ -37,6 +37,8 @@ public:
     static constexpr const char* AUTHINFO_PASS {"authinfo pass "};
     static constexpr const char* POST          {"post\r\n"};
     static constexpr const char* ENDLINE       {"\r\n"};
+    static constexpr const char* STAT          {"stat"};
+
 
     //! return the response associated to a certain code
     static const char* getResponse(unsigned short aCode);
