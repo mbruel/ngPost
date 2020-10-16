@@ -48,8 +48,8 @@ const std::map<unsigned short, const char *>  Nntp::sResponses = {
 
 
     //rfc977: 6.2.4.  STAT
-    {223, "0|n message-id    Article exists"},
-    {430, "No article with that message-id"},
+    {223, "223 0|n message-id    Article exists"},
+    {430, "430 No article with that message-id"},
 
 
     //rfc977: 3.11.2  The QUIT command
