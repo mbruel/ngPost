@@ -42,6 +42,8 @@ class NzbCheck : public QObject
     Q_OBJECT
 
 private:
+    static constexpr const char *sNntpArticleYencSubjectStrRegExp = "^\\[\\d+/\\d+\\]\\s+.+\\(\\d+/(\\d+)\\)$";
+
     QString           _nzbPath;
     QStack<QString>   _articles;
 
@@ -67,6 +69,7 @@ private:
 
     static const int sDefaultRefreshRate  = 200; //!< how often shall we refresh the progressbar bar?
     static const int sprogressbarBarWidth = 50;
+    static const QRegularExpression sNntpArticleYencSubjectRegExp;
 
 
 public slots:
@@ -123,8 +126,9 @@ void NzbCheck::setQuiet(bool quiet) { _quietMode = quiet; }
 
 void NzbCheck::missingArticle(const QString &article)
 {
-    _cout << (_dispProgressBar ? "\n" : "")
-          << tr("+ Missing Article: ") << article << "\n" << MB_FLUSH;
+    if (!_quietMode)
+        _cout << (_dispProgressBar ? "\n" : "")
+              << tr("+ Missing Article on server: ") << article << "\n" << MB_FLUSH;
     ++_nbMissingArticles;
 }
 

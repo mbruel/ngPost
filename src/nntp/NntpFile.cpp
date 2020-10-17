@@ -162,7 +162,7 @@ void NntpFile::writeToNZB(QTextStream &stream, const QString &from)
         stream << tab << tab << "</segments>\n";
 
 
-        stream << tab << "</file>\n";
+        stream << tab << "</file>\n" << MB_FLUSH;
     }
 }
 

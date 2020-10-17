@@ -30,6 +30,8 @@
 #include <QCoreApplication>
 #include <QRegularExpression>
 
+const QRegularExpression NzbCheck::sNntpArticleYencSubjectRegExp = QRegularExpression(sNntpArticleYencSubjectStrRegExp);
+
 void NzbCheck::onDisconnected(NntpCheckCon *con)
 {
     _connections.remove(con);
@@ -43,7 +45,7 @@ void NzbCheck::onDisconnected(NntpCheckCon *con)
         }
 
         if (!_quietMode)
-            _cout << tr("Nb Article Failed: %1/%2").arg(_nbMissingArticles).arg(_nbTotalArticles) << "\n" << MB_FLUSH;
+            _cout << tr("Nb Missing Article(s): %1/%2").arg(_nbMissingArticles).arg(_nbTotalArticles) << "\n" << MB_FLUSH;
         qApp->quit();
     }
 }
@@ -95,10 +97,41 @@ int NzbCheck::parseNzb()
         {
             QXmlStreamReader::TokenType type = xmlReader.readNext();
             if (type == QXmlStreamReader::TokenType::StartElement
-                    && xmlReader.name() == "segment")
+                    && xmlReader.name() == "file")
             {
-                xmlReader.readNext();
-                _articles.push(QString("<%1>").arg(xmlReader.text().toString()));
+                QString subject = xmlReader.attributes().value("subject").toString();
+                QRegularExpressionMatch match = sNntpArticleYencSubjectRegExp.match(subject);
+                int nbArticles = 0, nbExpectedArticles = 0;
+                if (match.hasMatch())
+                    nbExpectedArticles = match.captured(1).toInt();
+                while ( !xmlReader.atEnd() )
+                {
+                    QXmlStreamReader::TokenType type = xmlReader.readNext();
+                    if (type == QXmlStreamReader::TokenType::EndElement
+                            && xmlReader.name() == "file")
+                    {
+                        if (debugMode())
+                            _cout << tr("The file '%1' has %2 articles in the nzb (expected: %3)").arg(
+                                         subject).arg(nbArticles).arg(nbExpectedArticles) << "\n" << MB_FLUSH;
+                        if (nbArticles < nbExpectedArticles)
+                        {
+                            if (!_quietMode)
+                                _cout << tr("- %1 missing Article(s) in nzb for '%2'").arg(
+                                         nbExpectedArticles - nbArticles).arg(subject) << "\n" << MB_FLUSH;
+
+                            _nbMissingArticles += nbExpectedArticles - nbArticles;
+                        }
+
+                        break;
+                    }
+                    else if (type == QXmlStreamReader::TokenType::StartElement
+                            && xmlReader.name() == "segment")
+                    {
+                        ++nbArticles;
+                        xmlReader.readNext();
+                        _articles.push(QString("<%1>").arg(xmlReader.text().toString()));
+                    }
+                }
             }
         }
 
