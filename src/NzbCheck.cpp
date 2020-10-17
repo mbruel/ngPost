@@ -29,6 +29,7 @@
 #include <QXmlStreamReader>
 #include <QCoreApplication>
 #include <QRegularExpression>
+#include <QTime>
 
 const QRegularExpression NzbCheck::sNntpArticleYencSubjectRegExp = QRegularExpression(sNntpArticleYencSubjectStrRegExp);
 
@@ -45,7 +46,16 @@ void NzbCheck::onDisconnected(NntpCheckCon *con)
         }
 
         if (!_quietMode)
-            _cout << tr("Nb Missing Article(s): %1/%2").arg(_nbMissingArticles).arg(_nbTotalArticles) << "\n" << MB_FLUSH;
+        {
+            qint64 duration = _timeStart.elapsed();
+            _cout << tr("Nb Missing Article(s): %1/%2 (check done in %3 (%4 sec) using %5 connections on %6 server(s))").arg(
+                         _nbMissingArticles).arg(
+                         _nbTotalArticles).arg(
+                         QTime::fromMSecsSinceStartOfDay(static_cast<int>(duration)).toString("hh:mm:ss.zzz")).arg(
+                         std::round(1.*duration/1000)).arg(
+                         _nbCons).arg(
+                         nbCheckingServers()) << "\n" << MB_FLUSH;
+        }
         qApp->quit();
     }
 }
@@ -155,14 +165,16 @@ int NzbCheck::parseNzb()
 
 void NzbCheck::checkPost()
 {
-    int nbCons = 0;
+    _timeStart.start();
+
+    _nbCons = 0;
     for (NntpServerParams *srvParam : _nntpServers)
     {
         if (srvParam->nzbCheck)
-            nbCons += srvParam->nbCons;
+            _nbCons += srvParam->nbCons;
     }
 
-    nbCons = std::min(_nbTotalArticles, nbCons);
+    _nbCons = std::min(_nbTotalArticles, _nbCons);
 
     int nb = 0;
     for (NntpServerParams *srvParam : _nntpServers)
@@ -177,20 +189,31 @@ void NzbCheck::checkPost()
 
                 _connections.insert(con);
 
-                if (++nb == nbCons)
+                if (++nb == _nbCons)
                     break;
             }
-            if (nb == nbCons)
+            if (nb == _nbCons)
                 break;
         }
     }
 
     if (debugMode())
-        _cout << tr("Using %1 Connections").arg(nbCons) << "\n" << MB_FLUSH;
+        _cout << tr("Using %1 Connections").arg(_nbCons) << "\n" << MB_FLUSH;
 
     if (_dispProgressBar)
     {
         connect(&_progressbarTimer, &QTimer::timeout, this, &NzbCheck::onRefreshprogressbarBar, Qt::DirectConnection);
         _progressbarTimer.start(_refreshRate);
     }
+}
+
+int NzbCheck::nbCheckingServers()
+{
+    int nb = 0;
+    for (NntpServerParams *srvParam : _nntpServers)
+    {
+        if (srvParam->nzbCheck)
+            ++nb;
+    }
+    return nb;
 }

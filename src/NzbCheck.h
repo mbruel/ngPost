@@ -28,6 +28,7 @@
 #include <QSet>
 #include <QTimer>
 #include <QCommandLineOption>
+#include <QElapsedTimer>
 class NntpServerParams;
 class NntpCheckCon;
 
@@ -67,6 +68,9 @@ private:
 
     bool              _quietMode;
 
+    QElapsedTimer     _timeStart;
+    int               _nbCons;
+
     static const int sDefaultRefreshRate  = 200; //!< how often shall we refresh the progressbar bar?
     static const int sprogressbarBarWidth = 50;
     static const QRegularExpression sNntpArticleYencSubjectRegExp;
@@ -83,6 +87,7 @@ public:
 
     int parseNzb();
     void checkPost();
+    int nbCheckingServers();
 
 
     // For ngPost integration
