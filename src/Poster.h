@@ -66,8 +66,14 @@ public:
     ~Poster();
 
     void addConnection(NntpConnection *connection);
+#ifdef __RELEASE_ARTICLES_WHEN_CON_FAILS__
+    uint nbActiveConnections() const;
+#endif
 
     NntpArticle *getNextArticle(const QString &conPrefix);
+#ifdef __RELEASE_ARTICLES_WHEN_CON_FAILS__
+    void releaseArticle(const QString &conPrefix, NntpArticle *article);
+#endif
 
     inline void lockQueue();
     inline void unlockQueue();

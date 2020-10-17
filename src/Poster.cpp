@@ -62,6 +62,19 @@ void Poster::addConnection(NntpConnection *connection)
     emit connection->startConnection();
 }
 
+#ifdef __RELEASE_ARTICLES_WHEN_CON_FAILS__
+uint Poster::nbActiveConnections() const
+{
+    uint nbActives = 0;
+    for (NntpConnection *con : _nntpConnections)
+    {
+        if (con->isConnected())
+            ++nbActives;
+    }
+    return nbActives;
+}
+#endif
+
 NntpArticle *Poster::getNextArticle(const QString &conPrefix)
 {
 
@@ -94,6 +107,29 @@ NntpArticle *Poster::getNextArticle(const QString &conPrefix)
     return article;
 
 }
+
+#ifdef __RELEASE_ARTICLES_WHEN_CON_FAILS__
+void Poster::releaseArticle(const QString &conPrefix, NntpArticle *article)
+{
+    QMutexLocker lock(&_secureArticles); // thread safety (coming from a posting thread)
+    if (_ngPost->debugMode())
+        _job->_log(QString("[%1] releasing Article: %2").arg(conPrefix).arg(article->str()));
+
+    // the current NntpConnection releasing the Article will close
+    // so we need at least another one that would try to post the Article
+    if (nbActiveConnections() > 2)
+    {
+        article->resetNbTrySending();
+        _articles.enqueue(article);
+    }
+    else
+    {
+        _job->_error(QString("give up on Article: %1").arg(article->str()));
+        emit article->failed(article->size());
+    }
+
+}
+#endif
 
 bool Poster::prepareArticlesInAdvance()
 {

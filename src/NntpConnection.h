@@ -91,6 +91,7 @@ public:
     inline void write(const char *aBuffer); //!< write on the socket
 
     inline void resetErrorCount();
+    inline bool isConnected() const;
 
     void setPoster(Poster *poster);
 
@@ -145,6 +146,7 @@ void NntpConnection::write(const QByteArray &aBuffer){_socket->write(aBuffer);}
 void NntpConnection::write(const char *aBuffer){_socket->write(aBuffer);}
 
 void NntpConnection::resetErrorCount() { _nbDisconnected = 0; }
+bool NntpConnection::isConnected() const { return _isConnected; }
 
 void NntpConnection::_log(const char *aMsg) const
 {

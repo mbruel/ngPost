@@ -15,6 +15,10 @@ DEFINES += __COMPUTE_IMMEDIATE_SPEED__
 
 DEFINES += __USE_TMP_RAM__
 
+DEFINES += __RELEASE_ARTICLES_WHEN_CON_FAILS__
+
+
+# macro for debuging posting on multiple provides (no need anymore)
 #DEFINES -= __DISP_ARTICLE_SERVER__
 
 

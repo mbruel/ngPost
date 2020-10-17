@@ -78,6 +78,9 @@ public:
     QString str() const;
 
     bool tryResend();
+#ifdef __RELEASE_ARTICLES_WHEN_CON_FAILS__
+    inline void resetNbTrySending();
+#endif
 
     void write(NntpConnection *con, const std::string &idSignature);
     inline void freeMemory();
@@ -102,6 +105,10 @@ public:
     inline static void setNbMaxRetry(ushort nbMax);
 
 };
+
+#ifdef __RELEASE_ARTICLES_WHEN_CON_FAILS__
+void NntpArticle::resetNbTrySending() { _nbTrySending = 0; }
+#endif
 
 void NntpArticle::freeMemory()
 {

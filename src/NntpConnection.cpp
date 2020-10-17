@@ -142,6 +142,7 @@ void NntpConnection::onKillConnection()
         _socket->disconnectFromHost();
         if (_socket->state() != QAbstractSocket::UnconnectedState)
             _socket->waitForDisconnected();
+        _isConnected = false;
         _socket->deleteLater();
         _socket = nullptr;
 
@@ -163,12 +164,16 @@ void NntpConnection::_closeConnection(){
     if (_socket && _isConnected)
     {
         disconnect(_socket, &QIODevice::readyRead, this, &NntpConnection::onReadyRead);
-        _socket->disconnectFromHost();
+        _socket->disconnectFromHost(); // we will end up in NntpConnect::onDisconnected
     }
     else // wrong host info or network down
     {
-        _socket->deleteLater();
-        _socket = nullptr;
+        _isConnected = false;
+        if (_socket)
+        {
+            _socket->deleteLater();
+            _socket = nullptr;
+        }
 
         if (_currentArticle && !_ngPost->tryResumePostWhenConnectionLost())
         {
@@ -176,7 +181,11 @@ void NntpConnection::_closeConnection(){
                 if (_ngPost->debugMode())
                     _log(tr("Article FAIL2: %1 (on %2)").arg(_currentArticle->id()).arg(_srvParams.host));
 #endif
-            emit _currentArticle->failed(_currentArticle->size());
+#ifdef __RELEASE_ARTICLES_WHEN_CON_FAILS__
+                _poster->releaseArticle(_logPrefix, _currentArticle);
+#else
+                emit _currentArticle->failed(_currentArticle->size());
+#endif
             _currentArticle = nullptr;
         }
         emit disconnected(this);
@@ -210,10 +219,14 @@ void NntpConnection::onDisconnected()
         if (_currentArticle)
         {
 #ifdef __DISP_ARTICLE_SERVER__
-                if (_ngPost->debugMode())
-                    _log(tr("Article FAIL3: %1 (on %2)").arg(_currentArticle->id()).arg(_srvParams.host));
+            if (_ngPost->debugMode())
+                _log(tr("Article FAIL3: %1 (on %2)").arg(_currentArticle->id()).arg(_srvParams.host));
 #endif
+#ifdef __RELEASE_ARTICLES_WHEN_CON_FAILS__
+            _poster->releaseArticle(_logPrefix, _currentArticle);
+#else
             emit _currentArticle->failed(_currentArticle->size());
+#endif
             _currentArticle = nullptr;
             if (_ngPost->debugMode())
                 _error(tr("Closing connection, Failed Article: %1").arg(_currentArticle->str()));
@@ -371,10 +384,15 @@ void NntpConnection::onReadyRead()
                     _postingState = PostingState::IDLE;
                     _error(tr("FAIL posting %1 (Error: '%2')").arg(_currentArticle->str()).arg(line.constData()));
 #ifdef __DISP_ARTICLE_SERVER__
-                if (_ngPost->debugMode())
-                    _log(tr("Article FAIL: %1 (on %2) %3").arg(_currentArticle->id()).arg(_srvParams.host).arg(line.constData()));
+                    if (_ngPost->debugMode())
+                        _log(tr("Article FAIL: %1 (on %2) %3").arg(_currentArticle->id()).arg(_srvParams.host).arg(line.constData()));
 #endif
+
+#ifdef __RELEASE_ARTICLES_WHEN_CON_FAILS__
+                    _poster->releaseArticle(_logPrefix, _currentArticle);
+#else
                     emit _currentArticle->failed(_currentArticle->size());
+#endif
                 }
 
             }
