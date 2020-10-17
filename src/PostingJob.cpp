@@ -218,7 +218,7 @@ void PostingJob::onStartPosting(bool isActiveJob)
 #ifdef __USE_TMP_RAM__
         if (_ngPost->useTmpRam())
         {
-            int sourceSize = 0;
+            qint64 sourceSize = 0;
             for (const QFileInfo &fi : _files)
                 sourceSize += NgPost::recursiveSize(fi);
 
