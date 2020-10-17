@@ -120,7 +120,7 @@ void Poster::releaseArticle(const QString &conPrefix, NntpArticle *article)
     if (nbActiveConnections() > 2)
     {
         article->resetNbTrySending();
-        _articles.enqueue(article);
+        _articles.prepend(article);
     }
     else
     {
