@@ -625,7 +625,13 @@ void NgPost::doNzbPostCMD(PostingJob *job)
         {
             QString fullCmd(nzbPostCmd);
             fullCmd.replace("%1",                   job->nzbFilePath()); // for backwards compatibility
-            fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::nzbPath],          job->nzbFilePath());
+            fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::nzbPath],
+        #if defined( Q_OS_WIN )
+                    QString(job->nzbFilePath()).replace("/", "\\")
+        #else
+                    job->nzbFilePath()
+        #endif
+                    );
             fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::nzbName],          QFileInfo(job->nzbFilePath()).completeBaseName());
             fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::rarName],          job->rarName());
             fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::rarPass],          job->rarPass());
