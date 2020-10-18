@@ -814,10 +814,10 @@ void NgPost::onPackingDone()
     if (_preparePacking)
     {
         PostingJob *job = static_cast<PostingJob*>(sender());
-
+#ifdef __DEBUG__
 qDebug() << "[MB_TRACE][Issue#82][NgPost::onPackingDone] job: " << job
          << ", file: " << job->nzbName();
-
+#endif
         if (job == _activeJob)
         {
 #ifdef __DEBUG__
@@ -858,10 +858,10 @@ void NgPost::_prepareNextPacking()
 void NgPost::onPostingJobFinished()
 {
     PostingJob *job = static_cast<PostingJob*>(sender());
-
+#ifdef __DEBUG__
 qDebug() << "[MB_TRACE][Issue#82][NgPost::onPostingJobFinished] job: " << job
          << ", file: " << job->nzbName();
-
+#endif
     if (job == _activeJob)
     {
         if (_hmi && !job->widget())
@@ -2248,8 +2248,10 @@ QString NgPost::parseDefaultConfig()
 
 bool NgPost::startPostingJob(PostingJob *job)
 {
+#ifdef __DEBUG__
 qDebug() << "[MB_TRACE][Issue#82][NgPost::startPostingJob] job: " << job
          << ", file: " << job->nzbName();
+#endif
     if (_hmi)
     {
         connect(job, &PostingJob::articlesNumber, _hmi, &MainWindow::onSetProgressBarRange,  Qt::QueuedConnection);

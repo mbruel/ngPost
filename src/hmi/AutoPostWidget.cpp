@@ -259,9 +259,13 @@ void AutoPostWidget::onMonitoringClicked()
     _ui->startJobsCB->setEnabled(_isMonitoring);
     _ui->postButton->setEnabled(_isMonitoring);
 
-
     _isMonitoring = !_isMonitoring;
     _ui->addMonitoringFolderButton->setEnabled(_isMonitoring);
+
+    if (_isMonitoring)
+        _ui->filesList->setSelectionMode(QAbstractItemView::NoSelection);
+    else
+        _ui->filesList->setSelectionMode(QAbstractItemView::ExtendedSelection);
 }
 
 void AutoPostWidget::newFileToProcess(const QFileInfo &fileInfo)
@@ -322,14 +326,17 @@ void AutoPostWidget::onMonitorJobStart()
 
 void AutoPostWidget::onSelectFilesClicked()
 {
-    QStringList files = QFileDialog::getOpenFileNames(
-                this,
-                tr("Select one or more files"),
-                _ngPost->_inputDir);
+    if (!_isMonitoring)
+    {
+        QStringList files = QFileDialog::getOpenFileNames(
+                    this,
+                    tr("Select one or more files"),
+                    _ngPost->_inputDir);
 
-    int currentNbFiles = _ui->filesList->count();
-    for (const QString &file : files)
-        _ui->filesList->addPathIfNotInList(file, currentNbFiles);
+        int currentNbFiles = _ui->filesList->count();
+        for (const QString &file : files)
+            _ui->filesList->addPathIfNotInList(file, currentNbFiles);
+    }
 }
 
 void AutoPostWidget::udatePostingParams()
@@ -432,14 +439,17 @@ void AutoPostWidget::setAutoCompress(bool checked)
 
 void AutoPostWidget::handleKeyEvent(QKeyEvent *keyEvent)
 {
-    qDebug() << "[AutoPostWidget::handleKeyEvent] key event: " << keyEvent->key();
-    if(keyEvent->key() == Qt::Key_Delete || keyEvent->key() == Qt::Key_Backspace)
+    if (!_isMonitoring)
     {
-        for (QListWidgetItem *item : _ui->filesList->selectedItems())
+        qDebug() << "[AutoPostWidget::handleKeyEvent] key event: " << keyEvent->key();
+        if(keyEvent->key() == Qt::Key_Delete || keyEvent->key() == Qt::Key_Backspace)
         {
-            qDebug() << "[AutoPostWidget::handleKeyEvent] remove item: " << item->text();
-            _ui->filesList->removeItemWidget2(item);
-            delete item;
+            for (QListWidgetItem *item : _ui->filesList->selectedItems())
+            {
+                qDebug() << "[AutoPostWidget::handleKeyEvent] remove item: " << item->text();
+                _ui->filesList->removeItemWidget2(item);
+                delete item;
+            }
         }
     }
 }
@@ -447,10 +457,13 @@ void AutoPostWidget::handleKeyEvent(QKeyEvent *keyEvent)
 
 void AutoPostWidget::handleDropEvent(QDropEvent *e)
 {
-    int currentNbFiles = _ui->filesList->count();
-    for (const QUrl &url : e->mimeData()->urls())
+    if (!_isMonitoring)
     {
-        QString fileName = url.toLocalFile();
-        _ui->filesList->addPathIfNotInList(fileName, currentNbFiles, QFileInfo(fileName).isDir());
+        int currentNbFiles = _ui->filesList->count();
+        for (const QUrl &url : e->mimeData()->urls())
+        {
+            QString fileName = url.toLocalFile();
+            _ui->filesList->addPathIfNotInList(fileName, currentNbFiles, QFileInfo(fileName).isDir());
+        }
     }
 }
