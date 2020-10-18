@@ -208,6 +208,9 @@ void PostingJob::onStartPosting(bool isActiveJob)
 {
     _isActiveJob = isActiveJob;
 
+qDebug() << "[MB_TRACE][Issue#82][PostingJob::onStartPosting] job: " << this
+         << ", file: " << nzbName() << " (isActive: " << isActiveJob << ")";
+
     if (_postWidget)
         _log(tr("<h3>Start Post #%1: %2</h3>").arg(_postWidget->jobNumber()).arg(_nzbName));
     else

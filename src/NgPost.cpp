@@ -808,6 +808,10 @@ void NgPost::onPackingDone()
     if (_preparePacking)
     {
         PostingJob *job = static_cast<PostingJob*>(sender());
+
+qDebug() << "[MB_TRACE][Issue#82][NgPost::onPackingDone] job: " << job
+         << ", file: " << job->nzbName();
+
         if (job == _activeJob)
         {
 #ifdef __DEBUG__
@@ -848,6 +852,10 @@ void NgPost::_prepareNextPacking()
 void NgPost::onPostingJobFinished()
 {
     PostingJob *job = static_cast<PostingJob*>(sender());
+
+qDebug() << "[MB_TRACE][Issue#82][NgPost::onPostingJobFinished] job: " << job
+         << ", file: " << job->nzbName();
+
     if (job == _activeJob)
     {
         if (_hmi && !job->widget())
@@ -942,6 +950,14 @@ void NgPost::onPostingJobFinished()
                 _error(tr(" => closing application"));
             qApp->quit();
         }
+    }
+    else if (_preparePacking && job ==_packingJob)
+    {
+        _packingJob = nullptr;
+        _pendingJobs.dequeue(); // remove the packingJob
+        job->deleteLater();
+        _error(tr("packing job finished unexpectedly..."));
+        _prepareNextPacking();
     }
     else
     {
@@ -2226,6 +2242,8 @@ QString NgPost::parseDefaultConfig()
 
 bool NgPost::startPostingJob(PostingJob *job)
 {
+qDebug() << "[MB_TRACE][Issue#82][NgPost::startPostingJob] job: " << job
+         << ", file: " << job->nzbName();
     if (_hmi)
     {
         connect(job, &PostingJob::articlesNumber, _hmi, &MainWindow::onSetProgressBarRange,  Qt::QueuedConnection);
