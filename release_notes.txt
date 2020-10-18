@@ -14,6 +14,27 @@ TODO: include ParPar instead of par2cmdline?
 
 TODO: auto RAR size and par2 parameters depending on the inputs size?
 
+
+####################################################
+###       Release: ngPost v4.13                  ###
+###       date:    2020/10/18                    ###
+####################################################
+
+- no more giving up on Articles when their connection is down
+instead we put them back on the Stack so other connections could post them
+
+- new --check option in CMD to test nzb files (using the NNTP Stat command)
+in conf, there is the new "nzbCheck" keyword for the servers,
+only those with it set up to true will be used for nzb checks (download)
+this allow to add non-blocks accounts for the checks with enabled to false
+
+- Issue #82: handle deletion of the _packingJob
+
+- Issue #81 : ngPost uses TMP_RAM even when folder is too big
+- Add log when using TMP_RAM and fix the reading of its RATIO
+
+
+
 ####################################################
 ###       Release: ngPost v4.12                  ###
 ###       date:    2020/10/12                    ###

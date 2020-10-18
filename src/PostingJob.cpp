@@ -423,7 +423,8 @@ void PostingJob::onDisconnectedConnection(NntpConnection *con)
 void PostingJob::onNntpFileStartPosting()
 {
     NntpFile *nntpFile = static_cast<NntpFile*>(sender());
-    _log(QString("[%1][%2: %3] >>>>> %4").arg(timestamp()).arg(tr("avg. speed")).arg(avgSpeed()).arg(nntpFile->name()));
+    if (!_ngPost->useHMI())
+        _log(QString("[%1][%2: %3] >>>>> %4").arg(timestamp()).arg(tr("avg. speed")).arg(avgSpeed()).arg(nntpFile->name()));
 }
 
 void PostingJob::onNntpFilePosted()
@@ -434,7 +435,7 @@ void PostingJob::onNntpFilePosted()
     if (_postWidget)
         emit filePosted(nntpFile->path(), nntpFile->nbArticles(), nntpFile->nbFailedArticles());
 
-    if (_ngPost->_dispFilesPosting)
+    if (_ngPost->_dispFilesPosting && !_ngPost->useHMI())
         _log(QString("[%1][%2: %3] <<<<< %4").arg(timestamp()).arg(tr("avg. speed")).arg(avgSpeed()).arg(nntpFile->name()));
 
     nntpFile->writeToNZB(_nzbStream, QString::fromStdString(_from));
@@ -461,7 +462,7 @@ void PostingJob::onNntpErrorReading()
     if (_postWidget)
         emit filePosted(nntpFile->path(), nntpFile->nbArticles(), nntpFile->nbArticles());
 
-    if (_ngPost->_dispFilesPosting)
+    if (_ngPost->_dispFilesPosting && !_ngPost->useHMI())
         _log(tr("[avg. speed: %1] <<<<< %2").arg(avgSpeed()).arg(nntpFile->name()));
 
     _filesInProgress.remove(nntpFile);

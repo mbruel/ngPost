@@ -2379,6 +2379,7 @@ void NgPost::saveConfig()
                << "#NZB_POST_CMD = zip \"__nzbPath__.zip\" \"__nzbPath__\"\n"
                << "#NZB_POST_CMD = ~/scripts/postNZB.sh \"__nzbPath__\" \"__groups__\" __rarName__ __rarPass__ __sizeInByte__ __nbFiles__ __nbArticles__ __nbArticlesFailed__\n"
                << "#NZB_POST_CMD = mysql -h localhost -D myDB -u myUser -pmyPass-e \"INSERT INTO POST (release, rarName, rarPass, size) VALUES('__nzbName__', '__rarName__', '__rarPass__', '__sizeInByte__')\"\n"
+               << "#NZB_POST_CMD = cmd.exe /C move \"__nzbPath__\" \"C:\\ngPost\\nzb\\__nzbName__{{__rarPass__}}.nzb\"\n"
                << "" ;
         for (const QString &nzbPostCmd : _nzbPostCmd)
             stream << "NZB_POST_CMD = " << nzbPostCmd << "\n";
@@ -2591,6 +2592,7 @@ void NgPost::saveConfig()
                << "#pass = myOtherPass\n"
                << "#connection = 15\n"
                << "#enabled = false\n"
+               << "#nzbCheck = false\n"
                << "\n";
 
 
