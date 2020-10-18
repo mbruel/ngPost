@@ -76,6 +76,8 @@ Syntax: ngPost (options)* (-i <file or folder> | --auto <folder> | --monitor <fo
 	-d or --debug      : display extra information
 	--fulldebug        : display full debug information
 	-l or --lang       : application language
+	--check            : check nzb file (if articles are available on Usenet) cf https://github.com/mbruel/nzbCheck
+	-q or --quiet      : quiet mode (no output on stdout)
 
 // automated posting (scanning and/or monitoring)
 	--auto             : parse directory and post every file/folder separately. You must use --compress, should add --gen_par2, --gen_name and --gen_pass

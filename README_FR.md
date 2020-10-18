@@ -52,6 +52,8 @@ Syntaxe: ngPost (options)* (-i <file or folder> | --auto <folder> | --monitor <f
 	-d or --debug      : display extra information
 	--fulldebug        : display full debug information
 	-l or --lang       : langue de l'application (EN, FR, ES ou DE)
+	--check            : check nzb file (if articles are available on Usenet) cf https://github.com/mbruel/nzbCheck
+	-q or --quiet      : quiet mode (no output on stdout)
 
 // post automatique (scan et/ou surveillance du dossier auto)
 	--auto             : Scan du dossier en paramètre et post de chaque fichier/dossier individuellement. L'option de compression est obligatoire
