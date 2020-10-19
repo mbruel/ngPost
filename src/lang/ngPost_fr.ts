@@ -313,7 +313,7 @@
         <source>There is nothing to post!
 Press the Scan button and remove what you don&apos;t want to post ;)
 (To remove files, select in the list and press DEL or BackSpace)</source>
-        <translation>Il n&apos;y a rien à poster!\nClickez sur le boutton Scanner et enlever les fichiers/dossiers que vous ne souhaitez pas poster ;)\n(Pour supprimer des fichiers, séléctionner les dans la liste et utilisez la touche SUPPR ou BackSpace)</translation>
+        <translation>Il n&apos;y a rien à poster!\nCliquez sur le boutton Scanner et enlever les fichiers/dossiers que vous ne souhaitez pas poster ;)\n(Pour supprimer des fichiers, séléctionner les dans la liste et utilisez la touche SUPPR ou BackSpace)</translation>
     </message>
     <message>
         <location filename="../hmi/AutoPostWidget.cpp" line="149"/>
@@ -395,7 +395,7 @@ It will be irreversible...</source>
     <message>
         <location filename="../hmi/AutoPostWidget.cpp" line="327"/>
         <source>Select one or more files</source>
-        <translation>Sélectionnez un ou plusieurs fichiers</translation>
+        <translation>Sélectionner un ou plusieurs fichiers</translation>
     </message>
 </context>
 <context>
@@ -457,7 +457,7 @@ It will be irreversible...</source>
     <message>
         <location filename="../hmi/MainWindow.ui" line="132"/>
         <source>use this poster email everytime you launch ngPost</source>
-        <translation>utiliser cet email a chaque ouverture de ngPost</translation>
+        <translation>utiliser cet email à chaque ouverture de ngPost</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="135"/>
@@ -558,7 +558,7 @@ It will be irreversible...</source>
     <message>
         <location filename="../hmi/MainWindow.ui" line="352"/>
         <source>when using compression with random name, rename also the file inside the archive</source>
-        <translation>avant la compression les fichiers sont renomés avec un nom aléatoire</translation>
+        <translation>avant la compression les fichiers sont renommés avec un nom aléatoire</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="355"/>
@@ -583,7 +583,7 @@ It will be irreversible...</source>
     <message>
         <location filename="../hmi/MainWindow.ui" line="388"/>
         <source>Auto Close Tabs</source>
-        <translation>Fermerture auto des Onglets</translation>
+        <translation>Fermeture auto des Onglets</translation>
     </message>
     <message>
         <location filename="../hmi/MainWindow.ui" line="411"/>
@@ -911,7 +911,7 @@ Are you sure you want to quit?</source>
     <message>
         <location filename="../NgPost.cpp" line="179"/>
         <source>temporary folder where the compressed files and par2 will be stored</source>
-        <translation>dossier temporaire où les archives sont crées ainsi que les par2</translation>
+        <translation>dossier temporaire où les archives sont créées ainsi que les par2</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="180"/>
@@ -1461,7 +1461,7 @@ Soit utilisez --par2_pct, soit renseignez PAR2_PCT ou PAR2_ARGS dans le fichier 
     <message>
         <location filename="../NgPost.cpp" line="2262"/>
         <source>## if you don&apos;t put anything, the nzb will be generated in the folder of ngPost on Windows and in /tmp on Linux</source>
-        <translation>## si vous n&apos;indiquez rien,le nzb sera écrit dans le dossier de ngPost sous Windows et dans /tmp pour Linux et MaxOS</translation>
+        <translation>## si vous n&apos;indiquez rien,le nzb sera écrit dans le dossier de ngPost sous Windows et dans /tmp pour Linux et MacOS</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="2263"/>
@@ -1534,12 +1534,12 @@ Soit utilisez --par2_pct, soit renseignez PAR2_PCT ou PAR2_ARGS dans le fichier 
     <message>
         <location filename="../NgPost.cpp" line="2304"/>
         <source>## for monitoring, extension file filter for new incoming files (coma separated, no dot)</source>
-        <translation>## pour la surveullance de dossier, liste des extensions à prendre en compte (séparation par des virgules, sans point)</translation>
+        <translation>## pour la surveillance de dossier, liste des extensions à prendre en compte (séparation par des virgules, sans point)</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="2308"/>
         <source>## for monitoring, ignore new incoming folders</source>
-        <translation>## pour la surveullance de dossier, ignorer les nouveaux dossiers</translation>
+        <translation>## pour la surveillance de dossier, ignorer les nouveaux dossiers</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="2311"/>
@@ -1588,7 +1588,7 @@ Soit utilisez --par2_pct, soit renseignez PAR2_PCT ou PAR2_ARGS dans le fichier 
     <message>
         <location filename="../NgPost.cpp" line="2118"/>
         <source>you can provide servers in one string using -S and/or split the parameters for ONE SINGLE server (this will overwrite the configuration file)</source>
-        <translation>il est possible de fournir plusieurs serveurs via l&apos;option -S et/ou un UNIQUE serveur avec les paramètres séparés (ils écraseront ceux présent dans le fichier de configuration)</translation>
+        <translation>il est possible de fournir plusieurs serveurs via l&apos;option -S et/ou un UNIQUE serveur avec les paramètres séparés (ils écraseront ceux présents dans le fichier de configuration)</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="2279"/>
@@ -1653,7 +1653,7 @@ Soit utilisez --par2_pct, soit renseignez PAR2_PCT ou PAR2_ARGS dans le fichier 
     <message>
         <location filename="../NgPost.cpp" line="2319"/>
         <source>## Character used to separate fields in the history posting file</source>
-        <translation>## Charactère utilisé pour la séparation des champs du fichier d&apos;historique</translation>
+        <translation>## Caractère utilisé pour la séparation des champs du fichier d&apos;historique</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="2324"/>
@@ -1728,12 +1728,12 @@ Soit utilisez --par2_pct, soit renseignez PAR2_PCT ou PAR2_ARGS dans le fichier 
     <message>
         <location filename="../NgPost.cpp" line="2375"/>
         <source>## By default, ngPost tries to resume a Post if the network is down.</source>
-        <translation>## Par défault ngPost essaye de recommencer à poster lors des pertes de réseau.</translation>
+        <translation>## Par défaut ngPost essaye de recommencer à poster lors des pertes de réseau.</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="2376"/>
         <source>## it won&apos;t stop trying until the network is back and the post is finished properly</source>
-        <translation>## il contirnuera à essayer jusqu&apos;à ce que le réseau revienne et que le post soit fini</translation>
+        <translation>## il continuera à essayer jusqu&apos;à ce que le réseau revienne et que le post soit fini</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="2377"/>
@@ -1778,7 +1778,7 @@ Soit utilisez --par2_pct, soit renseignez PAR2_PCT ou PAR2_ARGS dans le fichier 
     <message>
         <location filename="../NgPost.cpp" line="2403"/>
         <source>## /!\ The directory MUST HAVE WRITE PERMISSION /!\</source>
-        <translation>## /!\ Ce répertoire doit avoir les droits en écritures! /!\</translation>
+        <translation>## /!\ Ce répertoire doit avoir les droits en écriture ! /!\</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="2404"/>
@@ -1794,7 +1794,7 @@ Soit utilisez --par2_pct, soit renseignez PAR2_PCT ou PAR2_ARGS dans le fichier 
     <message>
         <location filename="../NgPost.cpp" line="2409"/>
         <source>## the size of a post multiply by TMP_RAM_RATIO must available on the disk</source>
-        <translation>## la taille du post multiplié par le ratio TMP_RAM_RATIO doit être disponible sur le disque</translation>
+        <translation>## la taille du post multipliée par le ratio TMP_RAM_RATIO doit être disponible sur le disque</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="2410"/>
@@ -1804,7 +1804,7 @@ Soit utilisez --par2_pct, soit renseignez PAR2_PCT ou PAR2_ARGS dans le fichier 
     <message>
         <location filename="../NgPost.cpp" line="2411"/>
         <source>## (uncomment and define TMP_RAM to activate the feature, make sure the path is writable)</source>
-        <translation>## (décommenter et définissez TMP_RAM pour activé la fonctionalité, attention le dossier doit avoir les droits en écriture)</translation>
+        <translation>## (décommentez et définissez TMP_RAM pour activer la fonctionalité, attention le dossier doit avoir les droits en écriture)</translation>
     </message>
     <message>
         <location filename="../NgPost.cpp" line="2414"/>
@@ -2648,7 +2648,7 @@ Taille du Post: %1 en %2 (%3 sec) =&gt; débit moyen: %4 (%5 connexions sur %6 t
         <location filename="../hmi/PostingWidget.cpp" line="167"/>
         <source>The nzb file &apos;%1&apos; already exists.
 Would you like to overwrite it ?</source>
-        <translation>Le fichier nzb &apos;%1&apos; existe déjà. Voulez vous l&apos;écraser?</translation>
+        <translation>Le fichier nzb &apos;%1&apos; existe déjà. Voulez-vous l&apos;écraser?</translation>
     </message>
     <message>
         <location filename="../hmi/PostingWidget.cpp" line="193"/>
