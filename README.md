@@ -4,7 +4,7 @@
 
 [Pour la version Française cliquez ici ;)](https://github.com/mbruel/ngPost/blob/master/README_FR.md)<br/>
 <br/>
-[Here is an invite for the brand new discord server](https://discord.gg/SnmmrY), feel free to join if you've questions or if interested in beta testing the new features before they're released ;)<br/>
+[Here is an invite for the brand new discord server](https://discord.gg/TwYRDy9), feel free to join if you've questions or if interested in beta testing the new features before they're released ;)<br/>
 <br/>
 
 **Command Line and sexy GUI Usenet poster** for binaries developped in **C++11/Qt5**</br>
