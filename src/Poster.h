@@ -81,7 +81,7 @@ public:
     inline QString name() const;
 
     inline void startThreads();
-    inline void stopThreads();
+    void stopThreads();
 
     bool prepareArticlesInAdvance();
 
@@ -105,14 +105,7 @@ void Poster::startThreads()
     _connectionsThread.start();
 }
 
-void Poster::stopThreads()
-{
-    _builderThread.quit();
-    _connectionsThread.quit();
 
-    _connectionsThread.wait();
-    _builderThread.wait();
-}
 
 
 #endif // POSTER_H

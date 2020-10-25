@@ -66,15 +66,22 @@ NntpConnection::~NntpConnection()
 #if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
     qDebug() << "Destruction NntpConnection " << _logPrefix;
 #endif
+    if (_ngPost->debugMode())
+        _log("Destructing connection..");
+
     // this should already have been triggered as the sockets lives in another thread
     if (_socket)
     {
         disconnect(_socket, &QAbstractSocket::disconnected, this, &NntpConnection::onDisconnected);
         disconnect(_socket, &QIODevice::readyRead,          this, &NntpConnection::onReadyRead);
+        disconnect(_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onErrors(QAbstractSocket::SocketError)));
+        if (_srvParams.useSSL)
+            disconnect(_socket, SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(onSslErrors(QList<QSslError>)));
+
         _socket->disconnectFromHost();
         if (_socket->state() != QAbstractSocket::UnconnectedState)
             _socket->waitForDisconnected();
-        _socket->deleteLater();
+        deleteSocket();
     }
 #ifdef __USE_CONNECTION_TIMEOUT__
     if (_timeout)
@@ -134,17 +141,19 @@ void NntpConnection::onKillConnection()
 
     if (_socket)
     {
-        if (_ngPost->debugFull())
+        if (_ngPost->debugMode())
             _log("Killing connection..");
 
-        disconnect(_socket, &QIODevice::readyRead, this, &NntpConnection::onReadyRead);
         disconnect(_socket, &QAbstractSocket::disconnected, this, &NntpConnection::onDisconnected);
+        disconnect(_socket, &QIODevice::readyRead, this, &NntpConnection::onReadyRead);
+        disconnect(_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onErrors(QAbstractSocket::SocketError)));
+        if (_srvParams.useSSL)
+            disconnect(_socket, SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(onSslErrors(QList<QSslError>)));
+
         _socket->disconnectFromHost();
         if (_socket->state() != QAbstractSocket::UnconnectedState)
             _socket->waitForDisconnected();
-        _isConnected = false;
-        _socket->deleteLater();
-        _socket = nullptr;
+        deleteSocket();
 
         // Coming from PostingJob::pause
         if (_currentArticle)
@@ -157,6 +166,8 @@ void NntpConnection::_closeConnection(){
 #if defined(__DEBUG__) && defined(LOG_CONNECTION_STEPS)
         _log("closeConnection");
 #endif
+        if (_ngPost->debugMode())
+            _log("Closing connection...");
 #ifdef __USE_CONNECTION_TIMEOUT__
     if (_timeout)
         _timeout->stop();
@@ -164,16 +175,17 @@ void NntpConnection::_closeConnection(){
     if (_socket && _isConnected)
     {
         disconnect(_socket, &QIODevice::readyRead, this, &NntpConnection::onReadyRead);
+        disconnect(_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onErrors(QAbstractSocket::SocketError)));
+        if (_srvParams.useSSL)
+            disconnect(_socket, SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(onSslErrors(QList<QSslError>)));
+
         _socket->disconnectFromHost(); // we will end up in NntpConnect::onDisconnected
     }
     else // wrong host info or network down
     {
         _isConnected = false;
-        if (_socket)
-        {
-            _socket->deleteLater();
-            _socket = nullptr;
-        }
+        if (_socket)        
+            deleteSocket();
 
         if (_currentArticle && !_ngPost->tryResumePostWhenConnectionLost())
         {
@@ -202,10 +214,9 @@ void NntpConnection::onDisconnected()
 #endif
         _isConnected    = false;
 
-        _socket->deleteLater();
-        _socket = nullptr;
+        deleteSocket();
     }
-    if (_poster->isPosting() && _nbDisconnected++ < NntpArticle::nbMaxTrySending())
+    if (_poster->isPosting() && _postingState != PostingState::NO_MORE_FILES && _nbDisconnected++ < NntpArticle::nbMaxTrySending())
     {
         // Let's try to reconnect
         _error(tr("Connection lost, trying to reconnect! (nb disconnected: %1)").arg(_nbDisconnected));
@@ -516,11 +527,14 @@ void NntpConnection::_sendNextArticle()
     }
     else
     {
-        _postingState = PostingState::IDLE;
+        _postingState = PostingState::NO_MORE_FILES;
 #ifdef __USE_CONNECTION_TIMEOUT__
         if (_timeout)
             _timeout->stop();
 #endif
+        if (_ngPost->debugMode())
+            _log("No more articles");
+        _closeConnection();
     }
 }
 

@@ -19,7 +19,7 @@ DEFINES += __RELEASE_ARTICLES_WHEN_CON_FAILS__
 
 
 # macro for debuging posting on multiple provides (no need anymore)
-#DEFINES -= __DISP_ARTICLE_SERVER__
+DEFINES += __DISP_ARTICLE_SERVER__
 
 
 TRANSLATIONS = lang/ngPost_en.ts lang/ngPost_fr.ts lang/ngPost_es.ts lang/ngPost_de.ts\

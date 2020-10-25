@@ -127,6 +127,9 @@ PostingJob::~PostingJob()
     qDebug() << "[PostingJob] <<<< Destruction " << this;
 #endif
 
+    if (_ngPost->debugMode())
+        _log("Deleting PostingJob");
+
     if (_compressDir)
     {
         if (hasPostFinishedSuccessfully())
@@ -688,9 +691,8 @@ qDebug() << "[MB_TRACE][PostingJob::_finishPosting]";
         _uploadedSize       = _totalSize;
     }
 
-#ifdef __DEBUG__
-    _log("Finishing posting...");
-#endif
+    if (_ngPost->debugMode())
+        _log("Finishing posting...");
 
     _ngPost->_finishPosting(); // to update progress bar
 
@@ -713,6 +715,10 @@ qDebug() << "[MB_TRACE][PostingJob::_finishPosting]";
     // 3.: close all the connections (they're living in the _threadPool)
     for (Poster *poster : _posters)
         poster->stopThreads();
+
+    if (_ngPost->debugMode())
+        _log("All posters stopped...");
+
 
 #ifdef __DEBUG__
     _log("All connections are closed...");

@@ -48,7 +48,7 @@ class NntpConnection : public QObject
 private:
     enum class PostingState {NOT_CONNECTED = 0, CONNECTED,
                              AUTH_USER, AUTH_PASS,
-                             IDLE, SENDING_ARTICLE, WAITING_ANSWER};
+                             IDLE, SENDING_ARTICLE, WAITING_ANSWER, NO_MORE_FILES};
 
     const int               _id;        //!< connection id
     const NntpServerParams &_srvParams; //!< server parameters
@@ -136,6 +136,8 @@ private:
     void _sendNextArticle();
     void _closeConnection();
 
+    inline void deleteSocket();
+
 
 };
 
@@ -172,6 +174,14 @@ void NntpConnection::_error(const QString &aMsg) const
 void NntpConnection::_error(const std::string &aMsg) const
 {
     emit error(QString("[%1] %2").arg(_logPrefix).arg(QString::fromStdString(aMsg)));
+}
+
+void NntpConnection::deleteSocket()
+{
+    _isConnected = false;
+    _socket->close();
+    _socket->deleteLater();
+    _socket = nullptr;
 }
 
 #endif // NNTPCONNECTION_H

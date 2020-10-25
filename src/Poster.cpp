@@ -166,3 +166,22 @@ bool Poster::isPosting() const
 {
     return _job->isPosting();
 }
+
+
+void Poster::stopThreads()
+{
+    _builderThread.quit();
+    _connectionsThread.quit();
+
+    if (_ngPost->debugMode())
+        _job->_log(QString("[Poster #%1] threads quit").arg(_id));
+
+    _connectionsThread.wait();
+    if (_ngPost->debugMode())
+        _job->_log(QString("[Poster #%1] connection thread done").arg(_id));
+
+    _builderThread.wait();
+
+    if (_ngPost->debugMode())
+        _job->_log(QString("[Poster #%1] threads stopped").arg(_id));
+}
