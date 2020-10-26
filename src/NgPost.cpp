@@ -1793,8 +1793,8 @@ QString NgPost::_parseConfig(const QString &configPath)
                 QStringList args = line.split('=');
                 if (args.size() >= 2)
                 {
-                    QString opt = args.at(0).trimmed().toLower(),
-                            val = args.at(1).trimmed();
+                    QString opt = args.takeFirst().trimmed().toLower(),
+                            val = args.at(0).trimmed();
                     bool ok = false;
                     if (opt == sOptionNames[Opt::THREAD])
                     {
@@ -1973,7 +1973,7 @@ QString NgPost::_parseConfig(const QString &configPath)
                         _shutdownCmd = val;
 
                     else if (opt == sOptionNames[Opt::NZB_POST_CMD])
-                        _nzbPostCmd << val;
+                        _nzbPostCmd << args.join("=").trimmed();
 
                     else if (opt == sOptionNames[Opt::INPUT_DIR])
                         _inputDir = val;
@@ -2387,6 +2387,7 @@ void NgPost::saveConfig()
                << "#NZB_POST_CMD = ~/scripts/postNZB.sh \"__nzbPath__\" \"__groups__\" __rarName__ __rarPass__ __sizeInByte__ __nbFiles__ __nbArticles__ __nbArticlesFailed__\n"
                << "#NZB_POST_CMD = mysql -h localhost -D myDB -u myUser -pmyPass-e \"INSERT INTO POST (release, rarName, rarPass, size) VALUES('__nzbName__', '__rarName__', '__rarPass__', '__sizeInByte__')\"\n"
                << "#NZB_POST_CMD = cmd.exe /C move \"__nzbPath__\" \"C:\\ngPost\\nzb\\__nzbName__{{__rarPass__}}.nzb\"\n"
+               << "#NZB_POST_CMD = curl -X POST -F 'file=@__nzbPath__' -F 'api=12345' -F 'cat=45' -F 'private=no' https://usenet.com/post-api\n"
                << "" ;
         for (const QString &nzbPostCmd : _nzbPostCmd)
             stream << "NZB_POST_CMD = " << nzbPostCmd << "\n";
