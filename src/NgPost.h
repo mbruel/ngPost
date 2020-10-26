@@ -470,7 +470,9 @@ public:
 
     inline static std::string randomStdFrom(ushort length = 13);
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
     inline static QStringList parseCombinedArgString(const QString &program);
+#endif
 
 #ifdef __COMPUTE_IMMEDIATE_SPEED__
     inline static int immediateSpeedDuration();
@@ -586,6 +588,7 @@ std::string NgPost::randomStdFrom(ushort length) {
     return randomFrom;
 }
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
 QStringList NgPost::parseCombinedArgString(const QString &program)
 {
     // from Qt old code (https://code.woboq.org/qt5/qtbase/src/corelib/io/qprocess.cpp.html#_ZL22parseCombinedArgStringRK7QString)
@@ -625,6 +628,7 @@ QStringList NgPost::parseCombinedArgString(const QString &program)
         args += tmp;
     return args;
 }
+#endif
 
 void NgPost::_enableAutoCompress()
 {

@@ -640,8 +640,11 @@ void NgPost::doNzbPostCMD(PostingJob *job)
             fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::sizeInByte],       QString::number(job->_totalSize));
             fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::nbFiles],          QString::number(job->_nbFiles));
             fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::groups],           job->groups());
-
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
             QStringList args = parseCombinedArgString(fullCmd);
+#else
+            QStringList args = QProcess::splitCommand(fullCmd);
+#endif
             QString     cmd  = args.takeFirst();
             qDebug() << "cmd: " << cmd << ", args: " << args;
             int res = QProcess::execute(cmd, args);
@@ -945,7 +948,11 @@ qDebug() << "[MB_TRACE][Issue#82][NgPost::onPostingJobFinished] job: " << job
 //            qDebug() << " cmd: " << _shutdownCmd;
 
 //            QStringList args = _shutdownCmd.split(QRegularExpression("\\s+"));
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
             QStringList args = parseCombinedArgString(_shutdownCmd);
+#else
+            QStringList args = QProcess::splitCommand(_shutdownCmd);
+#endif
             QString     cmd  = args.takeFirst();
             qDebug() << "cmd: " << cmd << ", args: " << args;
             _shutdownProc->start(cmd, args);
