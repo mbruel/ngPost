@@ -95,6 +95,8 @@ public:
 
     void setPoster(Poster *poster);
 
+    inline bool hasNoMoreFiles() const;
+
 signals:
     void startConnection();
     void killConnection();
@@ -149,6 +151,8 @@ void NntpConnection::write(const char *aBuffer){_socket->write(aBuffer);}
 
 void NntpConnection::resetErrorCount() { _nbDisconnected = 0; }
 bool NntpConnection::isConnected() const { return _isConnected; }
+
+bool NntpConnection::hasNoMoreFiles() const { return _postingState == PostingState::NO_MORE_FILES; }
 
 void NntpConnection::_log(const char *aMsg) const
 {

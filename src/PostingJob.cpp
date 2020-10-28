@@ -398,7 +398,9 @@ void PostingJob::onDisconnectedConnection(NntpConnection *con)
     if (MB_LoadAtomic(_stopPosting))
         return; // we're destructing all the connections
 
-    _error(tr("Error: disconnected connection: #%1\n").arg(con->getId()));
+    if (!con->hasNoMoreFiles())
+        _error(tr("Error: disconnected connection: #%1\n").arg(con->getId()));
+
     if (_nntpConnections.removeOne(con))
     {
         con->resetErrorCount(); // In case we will resume if we loose all
@@ -406,18 +408,26 @@ void PostingJob::onDisconnectedConnection(NntpConnection *con)
 
         if (_nntpConnections.isEmpty())
         {
-            _error(tr("we lost all the connections..."));
-            if (_ngPost->_tryResumePostWhenConnectionLost)
-            {
-                int sleepDurationInSec = _ngPost->waitDurationBeforeAutoResume();
-                _log(tr("Sleep for %1 sec before trying to reconnect").arg(sleepDurationInSec));
-                _ngPost->pause();
-                _resumeTimer.start(sleepDurationInSec*1000);
-            }
-            else
+            if (con->hasNoMoreFiles())
             {
                 _finishPosting();
                 emit noMoreConnection();
+            }
+            else
+            {
+                _error(tr("we lost all the connections..."));
+                if (_ngPost->_tryResumePostWhenConnectionLost)
+                {
+                    int sleepDurationInSec = _ngPost->waitDurationBeforeAutoResume();
+                    _log(tr("Sleep for %1 sec before trying to reconnect").arg(sleepDurationInSec));
+                    _ngPost->pause();
+                    _resumeTimer.start(sleepDurationInSec*1000);
+                }
+                else
+                {
+                    _finishPosting();
+                    emit noMoreConnection();
+                }
             }
         }
     }
