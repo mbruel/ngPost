@@ -41,6 +41,7 @@
 #include <QMessageBox>
 #include <QRegularExpression>
 #include <QDir>
+#include <QNetworkProxy>
 #ifdef __USE_TMP_RAM__
   #include <QStorageInfo>
 #endif
@@ -65,6 +66,7 @@ const QString NgPost::sSpace       = sDefaultSpace;
 
 const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
 {
+    {Opt::PROXY_SOCKS5,   "proxy_socks5"},
     {Opt::HELP,           "help"},
     {Opt::LANG,           "lang"},
     {Opt::VERSION,        "version"},
@@ -288,7 +290,8 @@ NgPost::NgPost(int &argc, char *argv[]):
     _waitDurationBeforeAutoResume(sDefaultResumeWaitInSec),
     _nzbPostCmd(), _preparePacking(false),
     _groupPolicy(GROUP_POLICY::ALL),
-    _nzbCheck(nullptr), _quiet(false)
+    _nzbCheck(nullptr), _quiet(false),
+    _proxySocks5(QNetworkProxy::NoProxy), _proxyUrl()
 {
     QThread::currentThread()->setObjectName(sMainThreadName);
 
@@ -1972,6 +1975,26 @@ QString NgPost::_parseConfig(const QString &configPath)
                     else if (opt == sOptionNames[Opt::SHUTDOWN_CMD])
                         _shutdownCmd = val;
 
+                    else if (opt == sOptionNames[Opt::PROXY_SOCKS5])
+                    {
+                        QRegularExpression regExp(sProxyStrRegExp,  QRegularExpression::CaseInsensitiveOption);
+                        QRegularExpressionMatch match = regExp.match(val);
+                        if (match.hasMatch())
+                        {
+                            _proxyUrl = val;
+                            // "^(([^:]+):([^@]+)@)?([\\w\\.\\-_]+):(\\d+)$";
+                            QString user  = match.captured(2);
+                            QString pass  = match.captured(3);
+                            QString host  = match.captured(4);
+                            ushort  port  = match.captured(5).toUShort();
+                            _proxySocks5 = QNetworkProxy(QNetworkProxy::Socks5Proxy, host, port, user, pass);
+                            QNetworkProxy::setApplicationProxy(_proxySocks5);
+                        }
+                        else
+                            err += tr("Error parsing Proxy Socks5 parameters. The syntax should be: %1").arg(sProxyStrRegExp);
+
+                    }
+
                     else if (opt == sOptionNames[Opt::NZB_POST_CMD])
                         _nzbPostCmd << args.join("=").trimmed();
 
@@ -2350,6 +2373,9 @@ void NgPost::saveConfig()
                << "\n"
                << tr("## Lang for the app. Currently supported: EN, FR, ES, DE") << "\n"
                << "lang = " << _lang.toUpper() << "\n"
+               << "\n"
+               << tr("## use Proxy (only Socks5 type!)") << "\n"
+               << (_proxyUrl.isEmpty()  ? "#PROXY_SOCKS5 = user:pass@192.168.1.1:5555" : _proxyUrl)  << "\n"
                << "\n"
                << tr("## destination folder for all your nzb") << "\n"
                << tr("## if you don't put anything, the nzb will be generated in the folder of ngPost on Windows and in /tmp on Linux") << "\n"

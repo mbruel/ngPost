@@ -36,6 +36,7 @@
 #include <QCommandLineOption>
 #include <QProcess>
 #include <QNetworkAccessManager>
+#include <QNetworkProxy>
 class QTranslator;
 class NntpConnection;
 class NntpServerParams;
@@ -80,7 +81,7 @@ class NgPost : public QObject, public CmdOrGuiApp
     friend class PostingJob;
     friend class AboutNgPost;
 
-    enum class Opt {HELP = 0, LANG, VERSION, CONF, SHUTDOWN_CMD, CHECK, QUIET,
+    enum class Opt {HELP = 0, LANG, VERSION, CONF, SHUTDOWN_CMD, CHECK, QUIET, PROXY_SOCKS5,
                     DISP_PROGRESS, DEBUG, DEBUG_FULL, POST_HISTORY, FIELD_SEPARATOR, NZB_RM_ACCENTS,
                     RESUME_WAIT, NO_RESUME_AUTO, SOCK_TIMEOUT, PREPARE_PACKING,
                     INPUT, OUTPUT, NZB_PATH, THREAD, NZB_UPLOAD_URL, NZB_POST_CMD,
@@ -231,6 +232,9 @@ private:
     bool         _quiet;
 
 
+    QNetworkProxy _proxySocks5;
+    QString       _proxyUrl;
+
 
 
 
@@ -291,6 +295,7 @@ private:
 
     static constexpr const char *sNntpServerStrRegExp = "^(([^:]+):([^@]+)@@@)?([\\w\\.\\-_]+):(\\d+):(\\d+):(no)?ssl$";
 
+    static constexpr const char *sProxyStrRegExp = "^(([^:]+):([^@]+)@)?([\\w\\.\\-_]+):(\\d+)$";
 
     static std::string sArticleIdSignature; //!< signature for Article message id (must be as a email address)
     static const std::string sRandomAlphabet;
