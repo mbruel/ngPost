@@ -798,7 +798,7 @@ void PostingJob::_printStats() const
     msgEnd += tr("Upload size: %1 in %2 (%3 sec) \
                  => average speed: %4 (%5 connections on %6 threads)\n").arg(size).arg(
             QTime::fromMSecsSinceStartOfDay(duration).toString("hh:mm:ss.zzz")).arg(sec).arg(
-                avgSpeed()).arg(_nntpConnections.size()).arg(_posters.size()*2);
+                avgSpeed()).arg(_nntpConnections.size()+_closedConnections.size()).arg(_posters.size()*2);
 
     if (_nbArticlesFailed > 0)
         msgEnd += tr("%1 / %2 articles FAILED to be uploaded (even with %3 retries)...\n").arg(
