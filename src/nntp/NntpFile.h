@@ -49,6 +49,7 @@ public:
     inline QString stats() const;
     inline QString path() const;
     inline QString name() const;
+    inline QString nameWithQuotes() const;
     inline std::string fileName() const;
     inline qint64 fileSize() const;
     inline uint nbArticles() const;
@@ -91,6 +92,8 @@ QString NntpFile::stats() const
 }
 QString NntpFile::path() const { return _file.absoluteFilePath(); }
 QString NntpFile::name() const { return QString("[%1/%2] %3").arg(_num).arg(_nbFiles).arg(_file.fileName()); }
+QString NntpFile::nameWithQuotes() const{ return QString("[%1/%2] \"%3\"").arg(_num).arg(_nbFiles).arg(_file.fileName()); }
+
 std::string NntpFile::fileName() const { return _file.fileName().toStdString(); }
 qint64 NntpFile::fileSize() const { return _file.size(); }
 uint NntpFile::nbArticles() const { return _nbAticles; }

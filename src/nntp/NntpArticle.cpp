@@ -47,7 +47,7 @@ NntpArticle::NntpArticle(NntpFile *file, uint part, qint64 pos, qint64 bytes,
     if (!obfuscation)
     {
         std::stringstream ss;
-        ss << _nntpFile->name().toStdString() << " (" << part << "/" << _nntpFile->nbArticles() << ")";
+        ss << _nntpFile->nameWithQuotes().toStdString() << " (" << part << "/" << _nntpFile->nbArticles() << ")";
 
         std::string subject = ss.str();
         _subject = new char[subject.length()+1];
