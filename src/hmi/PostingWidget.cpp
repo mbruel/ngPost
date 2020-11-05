@@ -102,6 +102,11 @@ void PostingWidget::onArticlesNumber(int nbArticles)
 
 void PostingWidget::onPostingJobDone()
 {
+    // we could arrive here twice: from PostingJob::postingFinished or PostingJob::noMoreConnection
+    // This could happen especially when we exceed the number of connections allowed by a provider
+    if (!_postingJob)
+        return;
+
     if (_postingJob->nbArticlesTotal() > 0)
     {
         if (_postingJob->nbArticlesFailed() > 0)
@@ -112,6 +117,7 @@ void PostingWidget::onPostingJobDone()
     else
         _hmi->clearJobTab(this);
 
+    disconnect(_postingJob);
     _postingJob = nullptr; //!< we don't own it, NgPost will delete it
     _postingFinished = true;
     setIDLE();

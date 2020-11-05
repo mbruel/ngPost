@@ -411,7 +411,8 @@ void PostingJob::onDisconnectedConnection(NntpConnection *con)
             if (con->hasNoMoreFiles())
             {
                 _finishPosting();
-                emit noMoreConnection();
+                if (!_postFinished)
+                    emit noMoreConnection();
             }
             else
             {
@@ -426,7 +427,8 @@ void PostingJob::onDisconnectedConnection(NntpConnection *con)
                 else
                 {
                     _finishPosting();
-                    emit noMoreConnection();
+                    if (!_postFinished)
+                        emit noMoreConnection();
                 }
             }
         }

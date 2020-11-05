@@ -53,9 +53,6 @@ class NzbCheck;
 
 #define NB_ARTICLES_TO_PREPARE_PER_CONNECTION 3
 
-
-//using QAtomicBool = QAtomicInteger<unsigned short>; // 16 bit only (faster than using 8 bit variable...)
-
 #include <QTimer>
 
 /*!

@@ -40,7 +40,7 @@ class NntpArticle;
 class PostingWidget;
 class Poster;
 
-using QAtomicBool = QAtomicInteger<unsigned short>; // 16 bit only (faster than using 8 bit variable...)
+using AtomicBool = QAtomicInteger<unsigned short>; // 16 bit only (faster than using 8 bit variable...)
 
 /*!
  * \brief PostingJob is an active object that will do a posting job
@@ -120,8 +120,8 @@ private:
     uint      _nbArticlesTotal;    //!< number of Articles of all the files to post
 
 
-    QAtomicBool _stopPosting;
-    QAtomicBool _noMoreFiles;
+    AtomicBool  _stopPosting;
+    AtomicBool  _noMoreFiles;
 
     bool _postStarted;
     bool _packed;
@@ -131,7 +131,7 @@ private:
     const bool _obfuscateFileName;
 
 
-    QAtomicBool _delFilesAfterPost;
+    AtomicBool  _delFilesAfterPost;
     const QFileInfoList _originalFiles;
 
 
