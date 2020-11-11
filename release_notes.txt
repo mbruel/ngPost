@@ -16,6 +16,26 @@ TODO: auto RAR size and par2 parameters depending on the inputs size?
 
 
 ####################################################
+###       Release: ngPost v4.14                  ###
+###       date:    2020/11/11                    ###
+####################################################
+
+- Adding PROXY_SOCKS5 support
+
+- Close the NntpConnection when nothing more to post
+
+- Issue #87: NZB_POST_CMD breaks with cURL "=" character
+- Issue #88: Error: disconnected connection at end of posts
+
+- add quotes around the name of the file in the header of the Articles
+(following discussion with nzbindex, nyuu is doing it already)
+
+- Fix the stat line with the good number of connections used for the post
+- Fix GUI crash on job completion...
+
+
+
+####################################################
 ###       Release: ngPost v4.13                  ###
 ###       date:    2020/10/18                    ###
 ####################################################
