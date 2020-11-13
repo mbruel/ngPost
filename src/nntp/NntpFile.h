@@ -91,8 +91,8 @@ QString NntpFile::stats() const
     return QString("[%1 ok / %2] %3").arg(_posted.size()).arg(_nbAticles).arg(_file.absoluteFilePath());
 }
 QString NntpFile::path() const { return _file.absoluteFilePath(); }
-QString NntpFile::name() const { return QString("[%1/%2] %3").arg(_num).arg(_nbFiles).arg(_file.fileName()); }
-QString NntpFile::nameWithQuotes() const{ return QString("[%1/%2] \"%3\"").arg(_num).arg(_nbFiles).arg(_file.fileName()); }
+QString NntpFile::name() const { return QString("[%1/%2] %3").arg(_num, std::to_string(_nbFiles).length(), 10,  QChar('0')).arg(_nbFiles).arg(_file.fileName()); }
+QString NntpFile::nameWithQuotes() const{ return QString("[%1/%2] \"%3\"").arg(_num, std::to_string(_nbFiles).length(), 10,  QChar('0')).arg(_nbFiles).arg(_file.fileName()); }
 
 std::string NntpFile::fileName() const { return _file.fileName().toStdString(); }
 qint64 NntpFile::fileSize() const { return _file.size(); }
