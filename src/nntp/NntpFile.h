@@ -39,7 +39,9 @@ class NntpFile : public QObject
     Q_OBJECT
 
 public:
-    NntpFile(PostingJob *postingJob, const QFileInfo &file, uint num, uint nbFiles, const QList<QString> &grpList);
+    NntpFile(PostingJob *postingJob, const QFileInfo &file,
+             uint num, uint nbFiles, int padding,
+             const QList<QString> &grpList);
     ~NntpFile();
 
     inline void addArticle(NntpArticle *article);
@@ -75,6 +77,7 @@ private:
     const QFileInfo         _file;      //!< original file
     const uint              _num;       //!< file number
     const uint              _nbFiles;   //!< total number of file
+    const int               _padding;
     const QList<QString>    _grpList;   //!< groups where the file is posted
     const std::string       _groups;
     const uint              _nbAticles; //!< total number of articles
@@ -91,8 +94,14 @@ QString NntpFile::stats() const
     return QString("[%1 ok / %2] %3").arg(_posted.size()).arg(_nbAticles).arg(_file.absoluteFilePath());
 }
 QString NntpFile::path() const { return _file.absoluteFilePath(); }
-QString NntpFile::name() const { return QString("[%1/%2] %3").arg(_num).arg(_nbFiles).arg(_file.fileName()); }
-QString NntpFile::nameWithQuotes() const{ return QString("[%1/%2] \"%3\"").arg(_num).arg(_nbFiles).arg(_file.fileName()); }
+QString NntpFile::name() const {
+    return QString("[%1/%2] %3").arg(_num, _padding, 10,  QChar('0')).arg(
+                _nbFiles).arg(_file.fileName());
+}
+QString NntpFile::nameWithQuotes() const {
+    return QString("[%1/%2] \"%3\"").arg(_num, _padding, 10,  QChar('0')).arg(
+                _nbFiles).arg(_file.fileName());
+}
 
 std::string NntpFile::fileName() const { return _file.fileName().toStdString(); }
 qint64 NntpFile::fileSize() const { return _file.size(); }

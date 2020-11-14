@@ -27,10 +27,13 @@
 #include <QTextStream>
 #include <QDebug>
 
-NntpFile::NntpFile(PostingJob *postingJob, const QFileInfo &file, uint num, uint nbFiles, const QList<QString> &grpList):
+NntpFile::NntpFile(PostingJob *postingJob, const QFileInfo &file,
+                   uint num, uint nbFiles, int padding,
+                   const QList<QString> &grpList):
     QObject(),
     _postingJob(postingJob),
-    _file(file), _num(num), _nbFiles(nbFiles), _grpList(grpList), _groups(grpList.join(",").toStdString()),
+    _file(file), _num(num), _nbFiles(nbFiles), _padding(padding),
+    _grpList(grpList), _groups(grpList.join(",").toStdString()),
     _nbAticles(static_cast<uint>(std::ceil(static_cast<float>(file.size())/NgPost::articleSize()))),
     _articles(),
     _posted(), _failed()
@@ -126,21 +129,13 @@ void NntpFile::writeToNZB(QTextStream &stream, const QString &from)
     if (_nbAticles)
     {
         QString tab = NgPost::space();
-        int fieldSize = 1;
-        double tmp = (double) _nbFiles / 10.;
-        while (tmp > 1.)
-        {
-            ++fieldSize;
-            tmp /= 10.;
-        }
-
         stream << tab << "<file poster=\"" << from << "\""
 #if QT_VERSION >= QT_VERSION_CHECK(5, 8, 0)
                << " date=\"" << QDateTime::currentSecsSinceEpoch() << "\""
 #else
                << " date=\"" << QDateTime::currentMSecsSinceEpoch()/1000 << "\""
 #endif
-               << QString(" subject=\"[%1/%2] - &quot;").arg(_num, fieldSize, 10,  QChar('0')).arg(_nbFiles)
+               << QString(" subject=\"[%1/%2] - &quot;").arg(_num, _padding, 10,  QChar('0')).arg(_nbFiles)
 //               << " subject=\""  << "[" << _num << "/" << _nbFiles << "] - &quot;"
                << NgPost::escapeXML(_file.fileName())
                << "&quot; yEnc (1/"<< _nbAticles << ") " << _file.size() << "\">\n";

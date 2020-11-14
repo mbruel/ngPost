@@ -68,7 +68,7 @@ PostingJob::PostingJob(NgPost *ngPost,
 
     _nzbName(QFileInfo(nzbFilePath).fileName()),
     _filesToUpload(), _filesInProgress(), _filesFailed(),
-    _nbFiles(), _nbPosted(),
+    _nbFiles(0), _nbPosted(0),
 
 
     _nzbFilePath(nzbFilePath), _nzb(nullptr), _nzbStream(),
@@ -668,6 +668,14 @@ void PostingJob::_initPosting()
     _nzb     = new QFile(_nzbFilePath);
     _nbFiles = static_cast<uint>(_files.size());
 
+    int numPadding = 1;
+    double padding = static_cast<double>(_nbFiles) / 10.;
+    while (padding > 1.)
+    {
+        ++numPadding;
+        padding /= 10.;
+    }
+
     // initialize the NntpFiles (active objects)
     _filesToUpload.reserve(static_cast<int>(_nbFiles));
     uint fileNum = 0;
@@ -678,6 +686,7 @@ void PostingJob::_initPosting()
                                           file,
                                           ++fileNum,
                                           _nbFiles,
+                                          numPadding,
                                           _ngPost->groupPolicyPerFile() && nbGroups > 1 ? QStringList(_grpList.at(std::rand() % nbGroups)): _grpList);
         connect(nntpFile, &NntpFile::allArticlesArePosted, this, &PostingJob::onNntpFilePosted, Qt::QueuedConnection);
         connect(nntpFile, &NntpFile::errorReadingFile,     this, &PostingJob::onNntpErrorReading, Qt::QueuedConnection);
