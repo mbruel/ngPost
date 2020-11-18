@@ -238,9 +238,9 @@ void NntpConnection::onDisconnected()
 #else
             emit _currentArticle->failed(_currentArticle->size());
 #endif
-            _currentArticle = nullptr;
             if (_ngPost->debugMode())
                 _error(tr("Closing connection, Failed Article: %1").arg(_currentArticle->str()));
+            _currentArticle = nullptr;
         }
         emit disconnected(this);
     }
