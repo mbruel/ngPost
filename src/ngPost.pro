@@ -1,7 +1,7 @@
-QT += network gui
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT += core network
 
 DEFINES += "APP_VERSION=\"4.14\""
+CONFIG  += use_hmi
 
 INCLUDEPATH += $$PWD
 TARGET = ngPost
@@ -9,6 +9,17 @@ TEMPLATE = app
 CONFIG += c++14
 CONFIG -= app_bundle
 
+
+use_hmi {
+    QT += gui
+    greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+
+    DEFINES += __USE_HMI__
+}
+else {
+    QT -= gui
+    CONFIG += console
+}
 
 DEFINES += __USE_CONNECTION_TIMEOUT__
 DEFINES += __COMPUTE_IMMEDIATE_SPEED__
@@ -80,18 +91,12 @@ SOURCES += \
         NzbCheck.cpp \
         Poster.cpp \
         PostingJob.cpp \
-        hmi/AboutNgPost.cpp \
-        hmi/AutoPostWidget.cpp \
-        hmi/CheckBoxCenterWidget.cpp \
-        hmi/PostingWidget.cpp \
-        hmi/SignedListWidget.cpp \
         main.cpp \
         nntp/Nntp.cpp \
         nntp/NntpArticle.cpp \
         nntp/NntpFile.cpp \
         utils/CmdOrGuiApp.cpp \
-        utils/Yenc.cpp \
-        hmi/MainWindow.cpp
+        utils/Yenc.cpp
 
 
 # Default rules for deployment.
@@ -109,11 +114,6 @@ HEADERS += \
     NzbCheck.h \
     Poster.h \
     PostingJob.h \
-    hmi/AboutNgPost.h \
-    hmi/AutoPostWidget.h \
-    hmi/CheckBoxCenterWidget.h \
-    hmi/PostingWidget.h \
-    hmi/SignedListWidget.h \
     nntp/Nntp.h \
     nntp/NntpArticle.h \
     nntp/NntpFile.h \
@@ -121,15 +121,34 @@ HEADERS += \
     utils/CmdOrGuiApp.h \
     utils/Macros.h \
     utils/PureStaticClass.h \
-    utils/Yenc.h \
-    hmi/MainWindow.h
+    utils/Yenc.h
 
+
+
+RESOURCES += \
+    resources/resources.qrc
+
+
+use_hmi {
+SOURCES += \
+    hmi/AboutNgPost.cpp \
+    hmi/AutoPostWidget.cpp \
+    hmi/CheckBoxCenterWidget.cpp \
+    hmi/PostingWidget.cpp \
+    hmi/SignedListWidget.cpp \
+    hmi/MainWindow.cpp
+
+HEADERS += \
+    hmi/AboutNgPost.h \
+    hmi/AutoPostWidget.h \
+    hmi/CheckBoxCenterWidget.h \
+    hmi/PostingWidget.h \
+    hmi/SignedListWidget.h \
+    hmi/MainWindow.h
 
 FORMS += \
     hmi/AboutNgPost.ui \
     hmi/AutoPostWidget.ui \
     hmi/MainWindow.ui \
     hmi/PostingWidget.ui
-
-RESOURCES += \
-    resources/resources.qrc
+}

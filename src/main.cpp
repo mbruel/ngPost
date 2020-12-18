@@ -4,7 +4,7 @@
 #include <QCoreApplication>
 #include <QLoggingCategory>
 
-#if defined( Q_OS_WIN )
+#if defined(__USE_HMI__) && defined( Q_OS_WIN )
 #include <windows.h>
 #endif
 
@@ -43,6 +43,7 @@ int main(int argc, char *argv[])
     app->checkForNewVersion();
 
     int exitCode = 0;
+#ifdef __USE_HMI__
     if (app->useHMI())
     {
 #if defined( Q_OS_WIN )
@@ -51,6 +52,9 @@ int main(int argc, char *argv[])
         exitCode = app->startHMI();
     }
     else if (app->parseCommandLine(argc, argv))
+#else
+    if (app->parseCommandLine(argc, argv))
+#endif
     {
         exitCode = app->startEventLoop();
 
@@ -91,6 +95,8 @@ void handleSigUsr(int signal)
     Q_UNUSED(signal)
     std::cout << "intercept SIGUSR1 :)\n";
     std::cout.flush();
+#ifdef __USE_HMI__
     app->hideOrShowGUI();
+#endif
 }
 #endif

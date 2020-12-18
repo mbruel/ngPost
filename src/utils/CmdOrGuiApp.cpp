@@ -20,27 +20,39 @@
 //========================================================================
 
 #include "CmdOrGuiApp.h"
-#include "hmi/MainWindow.h"
-#include <QApplication>
+#ifdef __USE_HMI__
+  #include "hmi/MainWindow.h"
+  #include <QApplication>
+#else
+  #include <QCoreApplication>
+#endif
 
 CmdOrGuiApp::CmdOrGuiApp(int &argc, char *argv[]):
+#ifdef __USE_HMI__
     _app(nullptr),
     _mode(argc > 1 ? AppMode::CMD : AppMode::HMI),
     _hmi(nullptr)
+#else
+    _app(new QCoreApplication(argc, argv))
+#endif
 {
+#ifdef __USE_HMI__
     if (_mode == AppMode::CMD)
-        _app =  new QCoreApplication(argc, argv);
+        _app = new QCoreApplication(argc, argv);
     else
     {
         _app = new QApplication(argc, argv);
         _hmi = new MainWindow();
     }
+#endif
 }
 
 CmdOrGuiApp::~CmdOrGuiApp()
 {
+#ifdef __USE_HMI__
     if (_hmi)
         delete  _hmi;
+#endif
     delete _app;
 }
 
@@ -51,14 +63,12 @@ void CmdOrGuiApp::checkForNewVersion()
     // https://github.com/mbruel/ngPost
 }
 
+int CmdOrGuiApp::startEventLoop() { return _app->exec(); }
+
+#ifdef __USE_HMI__
 int CmdOrGuiApp::startHMI()
 {
     _hmi->show();
-    return _app->exec();
-}
-
-int CmdOrGuiApp::startEventLoop()
-{
     return _app->exec();
 }
 
@@ -72,3 +82,4 @@ void CmdOrGuiApp::hideOrShowGUI()
             _hmi->show();
     }
 }
+#endif

@@ -24,21 +24,27 @@
 #include "FoldersMonitorForNewFiles.h"
 #include "nntp/NntpArticle.h"
 #include "nntp/NntpServerParams.h"
-#include "hmi/MainWindow.h"
-#include "hmi/PostingWidget.h"
-#include "hmi/AutoPostWidget.h"
 #include "FileUploader.h"
 #include "NzbCheck.h"
+#ifdef __USE_HMI__
+  #include "hmi/MainWindow.h"
+  #include "hmi/PostingWidget.h"
+  #include "hmi/AutoPostWidget.h"
+#endif
 
 #include <cmath>
-#include <QApplication>
+#ifdef __USE_HMI__
+  #include <QApplication>
+  #include <QMessageBox>
+#else
+  #include <QCoreApplication>
+#endif
 #include <QThread>
 #include <QTextStream>
 #include <QCommandLineParser>
 #include <QDebug>
 #include <iostream>
 #include <QNetworkReply>
-#include <QMessageBox>
 #include <QRegularExpression>
 #include <QDir>
 #include <QNetworkProxy>
@@ -295,8 +301,10 @@ NgPost::NgPost(int &argc, char *argv[]):
 {
     QThread::currentThread()->setObjectName(sMainThreadName);
 
+#ifdef __USE_HMI__
     if (_hmi)
-        _hmi->setWindowTitle(QString("%1_v%2").arg(sAppName).arg(sVersion));       
+        _hmi->setWindowTitle(QString("%1_v%2").arg(sAppName).arg(sVersion));
+#endif
 
     // in case we want to generate random uploader (_from not provided)
     std::srand(static_cast<uint>(QDateTime::currentMSecsSinceEpoch()));
@@ -410,15 +418,25 @@ int NgPost::nbMissingArticles() const
 
 void NgPost::_finishPosting()
 {
+#ifdef __USE_HMI__
     if (_hmi || _dispProgressBar)
+#else
+    if (_dispProgressBar)
+#endif
         disconnect(&_progressbarTimer, &QTimer::timeout, this, &NgPost::onRefreshprogressbarBar);
 
     if (_activeJob && _activeJob->hasUploaded())
     {
+#ifdef __USE_HMI__
         if (_hmi || _dispProgressBar)
+#else
+        if (_dispProgressBar)
+#endif
         {
             onRefreshprogressbarBar();
+#ifdef __USE_HMI__
             if (!_hmi)
+#endif
                 std::cout << std::endl;
         }
     }
@@ -433,7 +451,7 @@ void NgPost::updateGroups(const QString &groups)
 }
 
 
-
+#ifdef __USE_HMI__
 int NgPost::startHMI()
 {
     QString err = parseDefaultConfig();
@@ -451,6 +469,7 @@ int NgPost::startHMI()
 
     return _app->exec();
 }
+#endif
 
 
 void NgPost::onLog(QString msg, bool newline)
@@ -470,7 +489,7 @@ void NgPost::onErrorConnecting(QString err)
 }
 
 
-void NgPost:: onRefreshprogressbarBar()
+void NgPost::onRefreshprogressbarBar()
 {
     if (_activeJob && _activeJob->isPaused())
         return;
@@ -489,6 +508,7 @@ void NgPost:: onRefreshprogressbarBar()
         immediateSpeed     = _activeJob->immediateSpeed();
 #endif
     }
+#ifdef __USE_HMI__
     if (_hmi)
 #ifdef __COMPUTE_IMMEDIATE_SPEED__
         _hmi->updateProgressBar(nbArticlesTotal, nbArticlesUploaded, avgSpeed, immediateSpeed);
@@ -496,6 +516,7 @@ void NgPost:: onRefreshprogressbarBar()
         _hmi->updateProgressBar(nbArticlesTotal, nbArticlesUploaded, avgSpeed);
 #endif
     else
+#endif
     {
         float progressbar = static_cast<float>(nbArticlesUploaded);
         progressbar /= nbArticlesTotal;
@@ -544,6 +565,7 @@ void NgPost::onNewFileToProcess(const QFileInfo & fileInfo)
         return;
     }
 
+#ifdef __USE_HMI__
     if (_hmi)
     {
         _hmi->updateAutoPostingParams();
@@ -551,6 +573,7 @@ void NgPost::onNewFileToProcess(const QFileInfo & fileInfo)
         _delAuto = _hmi->autoWidget()->deleteFilesOncePosted();
         _hmi->autoWidget()->newFileToProcess(fileInfo);
     }
+#endif
     _log(tr("Processing new incoming file: %1").arg(fileInfo.absoluteFilePath()));
     _post(fileInfo, _monitor_nzb_folders ? QDir(fileInfo.absolutePath()).dirName() : QString());
 }
@@ -673,8 +696,10 @@ void NgPost::pause() const
     if (_activeJob && !_activeJob->isPaused())
     {
         _activeJob->pause();
+#ifdef __USE_HMI__
         if (_hmi)
             _hmi->setPauseIcon(false);
+#endif
     }
 }
 
@@ -683,9 +708,10 @@ void NgPost::resume()
     if (_activeJob && _activeJob->isPaused())
     {
         _activeJob->resume();
+#ifdef __USE_HMI__
         if (_hmi)
             _hmi->setPauseIcon(true);
-
+#endif
         _progressbarTimer.start(_refreshRate);
     }
 }
@@ -773,6 +799,7 @@ void NgPost::onCheckForNewVersion()
             if (lastMajor > currentMajor ||
                     (lastMajor == currentMajor && lastMinor > currentMinor) )
             {
+#ifdef __USE_HMI__
                 if (_hmi)
                 {
                     QString msg = tr("<center><h3>New version available on GitHUB</h3></center>");
@@ -783,6 +810,7 @@ void NgPost::onCheckForNewVersion()
                     QMessageBox::information(_hmi, tr("New version available"), msg);
                 }
                 else
+#endif
                     qCritical() << "There is a new version available on GitHUB: v" << lastRealease
                                 << " (visit https://github.com/mbruel/ngPost/ to get it)";
             }
@@ -793,6 +821,7 @@ void NgPost::onCheckForNewVersion()
     reply->deleteLater();
 }
 
+#ifdef __USE_HMI__
 #include <QDesktopServices>
 void NgPost::onDonation()
 {
@@ -805,10 +834,15 @@ void NgPost::onAboutClicked()
     AboutNgPost about(this);
     about.exec();
 }
+#endif
 
 void NgPost::onPostingJobStarted()
 {
+#ifdef __USE_HMI__
     if (_hmi || _dispProgressBar)
+#else
+    if (_dispProgressBar)
+#endif
     {
         connect(&_progressbarTimer, &QTimer::timeout, this, &NgPost::onRefreshprogressbarBar, Qt::DirectConnection);
         _progressbarTimer.start(_refreshRate);
@@ -870,11 +904,13 @@ qDebug() << "[MB_TRACE][Issue#82][NgPost::onPostingJobFinished] job: " << job
 #endif
     if (job == _activeJob)
     {
+#ifdef __USE_HMI__
         if (_hmi && !job->widget())
             _hmi->autoWidget()->updateFinishedJob(job->getFirstOriginalFile(),
                                                   job->nbArticlesTotal(),
                                                   job->nbArticlesUploaded(),
                                                   job->nbArticlesFailed());
+#endif
 
         if (_activeJob->hasPostFinished() && !_postHistoryFile.isEmpty())
         {
@@ -899,8 +935,10 @@ qDebug() << "[MB_TRACE][Issue#82][NgPost::onPostingJobFinished] job: " << job
             }
         }
 
+#ifdef __USE_HMI__
         if (_hmi && _autoCloseTabs && _activeJob->hasPostFinishedSuccessfully())
             _hmi->closeTab(_activeJob->widget());
+#endif
 
         _activeJob->deleteLater();
         _activeJob = nullptr;
@@ -909,9 +947,10 @@ qDebug() << "[MB_TRACE][Issue#82][NgPost::onPostingJobFinished] job: " << job
         {
             _activeJob = _pendingJobs.dequeue();
 
+#ifdef __USE_HMI__
             if (_hmi)
                 _hmi->setTab(_activeJob->widget());
-
+#endif
             if (_preparePacking)
             {
                 if (_packingJob == _activeJob)
@@ -960,7 +999,11 @@ qDebug() << "[MB_TRACE][Issue#82][NgPost::onPostingJobFinished] job: " << job
             qDebug() << "cmd: " << cmd << ", args: " << args;
             _shutdownProc->start(cmd, args);
         }
+#ifdef __USE_HMI__
         else if (!_folderMonitor && !_hmi)
+#else
+        else if (!_folderMonitor)
+#endif
         {
 	    if( debugFull())
                 _error(tr(" => closing application"));
@@ -1046,9 +1089,11 @@ void NgPost::onNetworkAccessibleChanged(QNetworkAccessManager::NetworkAccessibil
 
 void NgPost::_log(const QString &aMsg, bool newline) const
 {
+#ifdef __USE_HMI__
     if (_hmi)
         _hmi->log(aMsg, newline);
     else
+#endif
     {
         _cout << aMsg;
         if (newline)
@@ -1059,9 +1104,11 @@ void NgPost::_log(const QString &aMsg, bool newline) const
 
 void NgPost::_error(const QString &error) const
 {
+#ifdef __USE_HMI__
     if (_hmi)
         _hmi->logError(error);
     else
+#endif
         _cerr << error << "\n" << MB_FLUSH;
 }
 
@@ -2243,8 +2290,8 @@ void NgPost::_syntax(char *appName)
     }
 
     _cout << "\n" << tr("Examples:") << "\n"
-          << "  - " << tr("with monitoring") << ": " << app << " --monitor /Downloads/testNgPost --rm_posted --compress --gen_par2 --gen_name --gen_pass --rar_size 42 --disp_progress files\n"
-          << "  - " << tr("with auto post")  << ": " << app << " --auto /Downloads/testNgPost --compress --gen_par2 --gen_name --gen_pass --rar_size 42 --disp_progress files\n"
+          << "  - " << tr("with monitoring") << ": " << app << " --monitor /data/folder1 --monitor /data/folder2 --auto_compress --rm_posted --disp_progress files\n"
+          << "  - " << tr("with auto post")  << ": " << app << " --auto /data/folder1 --auto /data/folder2 --compress --gen_par2 --gen_name --gen_pass --rar_size 42 --disp_progress files\n"
           << "  - " << tr("with compression, filename obfuscation, random password and par2") << ": " << app << " -i /tmp/file1 -i /tmp/folder1 -o /nzb/myPost.nzb --compress --gen_name --gen_pass --gen_par2\n"
           << "  - " << tr("with config file") << ": " << app << " -c ~/.ngPost -m \"password=qwerty42\" -f ngPost@nowhere.com -i /tmp/file1 -i /tmp/file2 -i /tmp/folderToPost1 -i /tmp/folderToPost2\n"
           << "  - " << tr("with all params") << ":  " << app << " -t 1 -m \"password=qwerty42\" -m \"metaKey=someValue\" -h news.newshosting.com -P 443 -s -u user -p pass -n 30 -f ngPost@nowhere.com \
@@ -2282,12 +2329,14 @@ bool NgPost::startPostingJob(PostingJob *job)
 qDebug() << "[MB_TRACE][Issue#82][NgPost::startPostingJob] job: " << job
          << ", file: " << job->nzbName();
 #endif
+#ifdef __USE_HMI__
     if (_hmi)
     {
         connect(job, &PostingJob::articlesNumber, _hmi, &MainWindow::onSetProgressBarRange,  Qt::QueuedConnection);
         if (!job->widget())
             connect(job, &PostingJob::postingStarted,  _hmi->autoWidget(), &AutoPostWidget::onMonitorJobStart);
     }
+#endif
 
     if (_activeJob)
     {
@@ -2516,7 +2565,11 @@ void NgPost::saveConfig()
                << (_autoCompress  ? "" : "#") << "AUTO_COMPRESS = true\n"
                << "\n"
                << tr("## use the same Password for all your Posts using compression") << "\n"
+          #ifdef __USE_HMI__
                << (_hmi?(_hmi->useFixedPassword()?"":"#"):(_rarPassFixed.isEmpty()  ? "#" : ""))
+          #else
+               << (_rarPassFixed.isEmpty()  ? "#" : "")
+          #endif
                << "RAR_PASS = " << (_rarPassFixed.isEmpty()  ? "yourPassword" : _rarPassFixed) << "\n"
                << "\n"
                << tr("## temporary folder where the compressed files and par2 will be stored") << "\n"

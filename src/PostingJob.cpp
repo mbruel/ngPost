@@ -25,7 +25,9 @@
 #include "nntp/NntpServerParams.h"
 #include "nntp/NntpFile.h"
 #include "nntp/NntpArticle.h"
-#include "hmi/PostingWidget.h"
+#ifdef __USE_HMI__
+  #include "hmi/PostingWidget.h"
+#endif
 #include <cmath>
 #include <QDebug>
 #include <QProcess>
@@ -103,6 +105,7 @@ PostingJob::PostingJob(NgPost *ngPost,
 
 //    connect(this, &PostingJob::scheduleNextArticle, this, &PostingJob::onPrepareNextArticle, Qt::QueuedConnection);
 
+#ifdef __USE_HMI__
     if (_postWidget)
     {
         connect(this, &PostingJob::filePosted,       _postWidget, &PostingWidget::onFilePosted,        Qt::QueuedConnection);
@@ -111,6 +114,7 @@ PostingJob::PostingJob(NgPost *ngPost,
         connect(this, &PostingJob::postingFinished,  _postWidget, &PostingWidget::onPostingJobDone,    Qt::QueuedConnection);
         connect(this, &PostingJob::noMoreConnection, _postWidget, &PostingWidget::onPostingJobDone,    Qt::QueuedConnection);
     }
+#endif
 
     connect(&_resumeTimer, &QTimer::timeout, this, &PostingJob::onResumeTriggered);
 #ifdef __COMPUTE_IMMEDIATE_SPEED__
@@ -214,9 +218,11 @@ void PostingJob::onStartPosting(bool isActiveJob)
 qDebug() << "[MB_TRACE][Issue#82][PostingJob::onStartPosting] job: " << this
          << ", file: " << nzbName() << " (isActive: " << isActiveJob << ")";
 #endif
+#ifdef __USE_HMI__
     if (_postWidget)
         _log(tr("<h3>Start Post #%1: %2</h3>").arg(_postWidget->jobNumber()).arg(_nzbName));
     else
+#endif
         _log(QString("\n\n[%1] %2: %3").arg(timestamp()).arg(tr("Start posting")).arg(_nzbName));
 
     if (_doCompress)
@@ -265,8 +271,10 @@ void PostingJob::_postFiles()
 {    
     _postStarted = true;
 
+#ifdef __USE_HMI__
     if (_postWidget) // in case we were in Pending mode
         _postWidget->setPosting();
+#endif
 
     if (_doCompress)
     {

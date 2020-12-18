@@ -311,7 +311,9 @@ public:
     inline const char * appName() override;
 
     void checkForNewVersion() override;
+#ifdef __USE_HMI__
     int startHMI() override;
+#endif
 
     inline int errCode() const;
 
@@ -396,8 +398,10 @@ signals:
 
 public slots:
     void onCheckForNewVersion();
+#ifdef __USE_HMI__
     void onDonation();
     void onAboutClicked();
+#endif
 
 
     void onPostingJobStarted();
@@ -634,7 +638,11 @@ QStringList NgPost::parseCombinedArgString(const QString &program)
 
 void NgPost::_enableAutoCompress()
 {
+#ifdef __USE_HMI__
     if (!_hmi && !_quiet)
+#else
+    if (!_quiet)
+#endif
         _log(tr("Auto compress is ON (--compress --gen_name --gen_pass --gen_par2)"));
     _autoCompress = true;
     _doCompress   = true;

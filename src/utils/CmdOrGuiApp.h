@@ -32,9 +32,10 @@ protected:
     enum class AppMode : bool {CMD = 0, HMI = 1}; //!< supposed to be CMD but a simple HMI has been added
 
     QCoreApplication  *_app;  //!< Application instance (either a QCoreApplication or a QApplication in HMI mode)
+#ifdef __USE_HMI__
     const AppMode      _mode; //!< CMD or HMI (for Windowser...)
     MainWindow        *_hmi;  //!< potential HMI
-
+#endif
 
 public:
     explicit CmdOrGuiApp(int &argc, char *argv[]);
@@ -45,12 +46,14 @@ public:
     virtual bool parseCommandLine(int argc, char *argv[]) = 0;
     virtual void checkForNewVersion();
 
-    virtual int startHMI();
-
-    inline bool useHMI() const;
     int startEventLoop(); //!< to start in CMD
 
+#ifdef __USE_HMI__
+    virtual int startHMI();
     void hideOrShowGUI();
+#endif
+    inline bool useHMI() const;
+
 
 
     inline static QString escapeXML(const char *str);
@@ -59,8 +62,13 @@ public:
     inline static QString xml2txt(const QString &str);
 };
 
-bool CmdOrGuiApp::useHMI() const { return _mode == AppMode::HMI; }
-
+bool CmdOrGuiApp::useHMI() const {
+#ifdef __USE_HMI__
+    return _mode == AppMode::HMI;
+#else
+    return false;
+#endif
+}
 
 QString CmdOrGuiApp::escapeXML(const char *str)
 {
