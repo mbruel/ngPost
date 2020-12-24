@@ -307,7 +307,8 @@ NgPost::NgPost(int &argc, char *argv[]):
 #endif
 
     // in case we want to generate random uploader (_from not provided)
-    std::srand(static_cast<uint>(QDateTime::currentMSecsSinceEpoch()));
+//    std::srand(static_cast<uint>(QDateTime::currentMSecsSinceEpoch()));
+    std::srand(QUuid::createUuid().data1); // use more random seed
 
     // check if the embedded par2 is available (windows or appImage)
     QString par2Embedded;
