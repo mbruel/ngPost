@@ -695,7 +695,8 @@ void PostingJob::_initPosting()
                                           ++fileNum,
                                           _nbFiles,
                                           numPadding,
-                                          _ngPost->groupPolicyPerFile() && nbGroups > 1 ? QStringList(_grpList.at(std::rand() % nbGroups)): _grpList);
+                                          _obfuscateArticles && _ngPost->groupPolicyPerFile() && nbGroups > 1 ?
+                                              QStringList(_grpList.at(std::rand() % nbGroups)) : _grpList);
         connect(nntpFile, &NntpFile::allArticlesArePosted, this, &PostingJob::onNntpFilePosted, Qt::QueuedConnection);
         connect(nntpFile, &NntpFile::errorReadingFile,     this, &PostingJob::onNntpErrorReading, Qt::QueuedConnection);
         if (_ngPost->_dispFilesPosting && _ngPost->debugMode())
