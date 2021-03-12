@@ -958,16 +958,14 @@ qDebug() << "[MB_TRACE][Issue#82][NgPost::onPostingJobFinished] job: " << job
                 {
                     _packingJob = nullptr;
                     if (_activeJob->isPacked())
-                    {
-                        _activeJob->_postFiles();
-                        _prepareNextPacking();
-                    }
+                        _activeJob->_postFiles();                    
                     else if (!_activeJob->hasCompressed())
                     {
                         if (debugFull())
                             _log(tr("start non packing job..."));
                         emit _activeJob->startPosting(true);
                     }
+                    _prepareNextPacking();
                     // otherwise it will be triggered automatically when the packing is finished
                     // as it is now the active job ;)
                 }
