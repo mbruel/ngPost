@@ -1142,11 +1142,14 @@ bool PostingJob::startGenPar2(const QString &tmpFolder,
                 args << QString("/d%1:\\").arg(driveExpected);
             else
                 args << QString("-B%1:\\").arg(driveExpected);
+            QString par2File = QString("%1/%2.par2").arg(archiveTmpFolder, archiveName);
+            par2File.replace("/", "\\");
+            args << par2File;
 #else
             args << QString("-B /");
+            args << QString("%1/%2.par2").arg(archiveTmpFolder, archiveName);
 #endif
         }
-        args << QString("%1/%2.par2").arg(archiveTmpFolder, archiveName);
 
         for (const QFileInfo &fileInfo : _files)
         {
@@ -1161,8 +1164,7 @@ bool PostingJob::startGenPar2(const QString &tmpFolder,
                 _error(tr("only ParPar allows to generate par2 for files from different drive. you should consider using it ;)"));
                 return false;
             }
-            if (path.startsWith("//"))
-                path.replace(QRegExp("^//"), "\\\\");
+            path.replace("/", "\\");
 #endif
             args << path;
         }
