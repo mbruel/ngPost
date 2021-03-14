@@ -1133,9 +1133,7 @@ bool PostingJob::startGenPar2(const QString &tmpFolder,
     }
     else
     { // par2 generation only => can't use folders or files from different drive (Windows)
-#if defined( Q_OS_WIN )
         QString basePath = _files.first().absolutePath();
-#endif
         if (!useParPar) {
 #if defined( Q_OS_WIN )
             if (_ngPost->useMultiPar())
