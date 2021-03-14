@@ -272,7 +272,7 @@ void PostingWidget::onCompressCB(bool checked)
     _ui->compressNameEdit->setEnabled(checked);
     _ui->nameLengthSB->setEnabled(checked);
     _ui->genCompressName->setEnabled(checked);
-    _ui->par2CB->setEnabled(checked);
+    _ui->keepRarCB->setEnabled(checked);
 }
 
 void PostingWidget::onGenCompressName()

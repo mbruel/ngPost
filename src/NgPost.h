@@ -382,13 +382,16 @@ public:
 
 #ifdef __USE_TMP_RAM__
     inline bool useTmpRam() const;
-    inline double ramRation() const;
+    inline double ramRatio() const;
     qint64 ramAvailable() const;
     static qint64 recursiveSize(const QFileInfo &fi);
 #endif
 
     inline bool nzbCheck() const;
     int nbMissingArticles() const;
+
+    inline bool useParPar() const;
+    inline bool useMultiPar() const;
 
 signals:
     void log(QString msg, bool newline); //!< in case we signal from another thread
@@ -524,10 +527,13 @@ bool NgPost::groupPolicyPerFile() const { return _groupPolicy == GROUP_POLICY::E
 
 #ifdef __USE_TMP_RAM__
 bool   NgPost::useTmpRam() const { return _storage != nullptr; }
-double NgPost::ramRation() const { return _ramRatio; }
+double NgPost::ramRatio() const { return _ramRatio; }
 #endif
 
 bool NgPost::nzbCheck() const { return _nzbCheck != nullptr; }
+
+inline bool NgPost::useParPar() const { return _par2Path.toLower().contains("parpar"); }
+inline bool NgPost::useMultiPar() const { return _par2Path.toLower().contains("par2j"); }
 
 
 const std::string &NgPost::aticleSignature() { return sArticleIdSignature; }

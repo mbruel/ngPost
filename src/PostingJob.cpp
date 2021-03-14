@@ -232,7 +232,7 @@ qDebug() << "[MB_TRACE][Issue#82][PostingJob::onStartPosting] job: " << this
             for (const QFileInfo &fi : _files)
                 sourceSize += NgPost::recursiveSize(fi);
 
-            double sourceSizeWithRatio = _ngPost->ramRation() * sourceSize,
+            double sourceSizeWithRatio = _ngPost->ramRatio() * sourceSize,
                     availableSize = static_cast<double>(_ngPost->ramAvailable());
             if (sourceSizeWithRatio  <  availableSize)
             {
@@ -253,6 +253,33 @@ qDebug() << "[MB_TRACE][Issue#82][PostingJob::onStartPosting] job: " << this
         _log("[PostingJob::onStartPosting] Starting compression...");
 #endif
         if (!startCompressFiles(_rarPath, _tmpPath, _rarName, _rarPass, _rarSize))
+            emit postingFinished();
+    }
+    else if (_doPar2)
+    {
+#ifdef __USE_TMP_RAM__
+        if (_ngPost->useTmpRam())
+        {
+            qint64 sourceSize = 0;
+            for (const QFileInfo &fi : _files)
+                sourceSize += NgPost::recursiveSize(fi);
+
+            double par2Size = (_ngPost->ramRatio() - 1) * sourceSize,
+                    availableSize = static_cast<double>(_ngPost->ramAvailable());
+            if (par2Size  <  availableSize)
+            {
+                _tmpPath = _ngPost->_ramPath;
+                _log(tr("Using TMP_RAM path as temporary folder for par2. Post size: %1").arg(
+                         humanSize(static_cast<double>(sourceSize))));
+            }
+            else
+            {
+                _error(tr("Couldn't use TMP_RAM as there is not enough space: %1 available for a par2 volume using TMP_RAM_RATIO of %2").arg(
+                           humanSize(availableSize)).arg(humanSize(par2Size)));
+            }
+        }
+#endif
+        if (!startGenPar2(_tmpPath, _rarName, _par2Pct))
             emit postingFinished();
     }
     else
@@ -287,7 +314,21 @@ void PostingJob::_postFiles()
         }
         emit archiveFileNames(archiveNames);
     }
+    else if (_doPar2)
+    {
+        QStringList archiveNames;
+        for (const QFileInfo & file : _files)
+            archiveNames << file.absoluteFilePath();
 
+        for (const QFileInfo & file : _compressDir->entryInfoList(QDir::Files, QDir::Name))
+        {
+            _files << file;
+            archiveNames << file.absoluteFilePath();
+            if (_ngPost->debugMode())
+                _ngPost->_log(QString("  - %1").arg(file.fileName()));
+        }
+        emit archiveFileNames(archiveNames);
+    }
     _initPosting();
 
     if (_nbThreads > QThread::idealThreadCount())
@@ -929,7 +970,7 @@ bool PostingJob::startCompressFiles(const QString &cmdRar,
     if (archiveTmpFolder.startsWith("//"))
         archiveTmpFolder.replace(QRegExp("^//"), "\\\\");
 #endif
-    args << QString("%1/%2.%3").arg(archiveTmpFolder).arg(archiveName).arg(_use7z ? "7z" : "rar");
+    args << QString("%1/%2.%3").arg(archiveTmpFolder, archiveName, _use7z ? "7z" : "rar");
 
 
     if (_obfuscateFileName)
@@ -937,8 +978,7 @@ bool PostingJob::startCompressFiles(const QString &cmdRar,
         _files.clear();
         for (const QFileInfo &fileInfo : _originalFiles)
         {
-            QString obfuscatedName = QString("%1/%2").arg(fileInfo.absolutePath()).arg(
-                        _ngPost->randomPass(_ngPost->_lengthName)),
+            QString obfuscatedName = QString("%1/%2").arg(fileInfo.absolutePath(), _ngPost->randomPass(_ngPost->_lengthName)),
                     fileName = fileInfo.absoluteFilePath();
 
             if (QFile::rename(fileName, obfuscatedName))
@@ -1069,50 +1109,70 @@ bool PostingJob::startGenPar2(const QString &tmpFolder,
     else
         args << _ngPost->_par2Args.split(" ");
 
+    bool useParPar = _ngPost->useParPar();
+    if (useParPar && args.last().trimmed() != "-o")
+        args << "-o";
+    archiveTmpFolder = QString("%1/%2").arg(tmpFolder, archiveName);
+    args << QString("%1/%2.par2").arg(archiveTmpFolder, archiveName);
+
     // we've already compressed => we gen par2 for the files in the archive folder
     if (_extProc)
     {
-        archiveTmpFolder = QString("%1/%2").arg(tmpFolder).arg(archiveName);
-        if (_ngPost->_par2Path.toLower().contains("parpar"))
-        {
-            if (args.last().trimmed() != "-o")
-                args << "-o";
-            args << QString("%1/%2.par2").arg(archiveTmpFolder).arg(archiveName)
-                 << "-R" << archiveTmpFolder;
-        }
+        if (useParPar)
+              args << "-R" << archiveTmpFolder;
         else
         {
-            args << QString("%1/%2.par2").arg(archiveTmpFolder).arg(archiveName);
             if (_use7z)
-                args << QString("%1/%2.7z*").arg(archiveTmpFolder).arg(archiveName);
+                args << QString("%1/%2.7z*").arg(archiveTmpFolder, archiveName);
             else
-                args << QString("%1/%2*rar").arg(archiveTmpFolder).arg(archiveName);
+                args << QString("%1/%2*rar").arg(archiveTmpFolder, archiveName);
 
             if (_ngPost->_par2Args.isEmpty() && (_ngPost->debugMode() || !_postWidget))
                 args << "-q"; // remove the progressbar bar
-
         }
     }
     else
-    {
-        // par2 on Linux wants to have all files in the same folder and generate the par2 there
-        // otherwise we get this error: Ignoring out of basepath source file
-        // exitcode: 3
-        _error("ngPost can't generate par2 without compression cause we'd have to copy all the files in a temporary folder...");
-        return false;
+    { // par2 generation only => can't use folders or files from different drive (Windows)
+#if defined( Q_OS_WIN )
+        QChar driveExpected = _files.first().absolutePath().at(0);
+#endif
+        if (!useParPar && _files.size() > 1) {
+#if defined( Q_OS_WIN )
+            if (_ngPost->useMultiPar())
+                args << QString("/d\"%1:\"").arg(driveExpected);
+            else
+                args << QString("-B \"%1:\\\"").arg(driveExpected);
+#else
+            args << QString("-B /");
+#endif
+        }
 
-//        _extProc = new QProcess(this);
-//        connect(_extProc, &QProcess::readyReadStandardOutput, this, &NgPost::onExtProcReadyReadStandardOutput, Qt::DirectConnection);
-//        connect(_extProc, &QProcess::readyReadStandardOutput, this, &NgPost::onExtProcReadyReadStandardOutput, Qt::DirectConnection);
+        for (const QFileInfo &fileInfo : _files)
+        {
+            if (fileInfo.isDir()) {
+                _error(tr("you can't post folders without compression..."));
+                return false;
+            }
+            QString path = fileInfo.absoluteFilePath();
+#if defined( Q_OS_WIN )
+            QChar drive = path.at(0);
+            if (!useParPar && drive != driveExpected){
+                _error(tr("only ParPar allows to generate par2 for files from different drive. you should consider using it ;)"));
+                return false;
+            }
+            if (path.startsWith("//"))
+                path.replace(QRegExp("^//"), "\\\\");
+#endif
+            args << path;
+        }
 
-//        // 1.: create archive temporary folder
-//        archiveTmpFolder = _createArchiveFolder(tmpFolder, archiveName);
-//        if (archiveTmpFolder.isEmpty())
-//            return -1;
+        QString archiveTmpFolder = _createArchiveFolder(tmpFolder, archiveName);
+        if (archiveTmpFolder.isEmpty())
+            return false;
 
-//        args << QString("%1/%2.par2").arg(archiveTmpFolder).arg(archiveName);
-//        for (const QString &file : files)
-//            args << file;
+        _extProc = new QProcess(this);
+        connect(_extProc, &QProcess::readyReadStandardOutput, this, &PostingJob::onExtProcReadyReadStandardOutput, Qt::DirectConnection);
+        connect(_extProc, &QProcess::readyReadStandardError,  this, &PostingJob::onExtProcReadyReadStandardError,  Qt::DirectConnection);
     }
 
     connect(_extProc, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
@@ -1122,7 +1182,7 @@ bool PostingJob::startGenPar2(const QString &tmpFolder,
         _log(QString("[%1] %2: %3 %4").arg(timestamp()).arg(tr("Generating par2")).arg(_ngPost->_par2Path).arg(args.join(" ")));
     else
         _log(QString("%1...\n").arg(tr("Generating par2")));
-    if (!_ngPost->_par2Path.toLower().contains("parpar"))
+    if (!_ngPost->useParPar())
         _limitProcDisplay = true;
     _nbProcDisp = 0;
     _extProc->start(_ngPost->_par2Path, args);    
