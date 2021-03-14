@@ -1134,22 +1134,24 @@ bool PostingJob::startGenPar2(const QString &tmpFolder,
     else
     { // par2 generation only => can't use folders or files from different drive (Windows)
 #if defined( Q_OS_WIN )
-        QChar driveExpected = _files.first().absolutePath().at(0);
+        QString basePath = _files.first().absolutePath();
 #endif
-        if (!useParPar && _files.size() > 1) {
+        if (!useParPar) {
 #if defined( Q_OS_WIN )
             if (_ngPost->useMultiPar())
-                args << QString("/d%1:\\").arg(driveExpected);
+                args << "/d" << basePath;
             else
-                args << QString("-B%1:\\").arg(driveExpected);
+                args <<"-B" << basePath;
             QString par2File = QString("%1/%2.par2").arg(archiveTmpFolder, archiveName);
             par2File.replace("/", "\\");
             args << par2File;
 #else
-            args << QString("-B /");
+            args << "-B" << basePath;
             args << QString("%1/%2.par2").arg(archiveTmpFolder, archiveName);
 #endif
         }
+        else
+            args << QString("%1/%2.par2").arg(archiveTmpFolder, archiveName);
 
         for (const QFileInfo &fileInfo : _files)
         {
@@ -1159,9 +1161,8 @@ bool PostingJob::startGenPar2(const QString &tmpFolder,
             }
             QString path = fileInfo.absoluteFilePath();
 #if defined( Q_OS_WIN )
-            QChar drive = path.at(0);
-            if (!useParPar && drive != driveExpected){
-                _error(tr("only ParPar allows to generate par2 for files from different drive. you should consider using it ;)"));
+            if (!useParPar && basePath != fileInfo.absolutePath()){
+                _error(tr("only ParPar allows to generate par2 for files from different folders... you should consider using it ;)"));
                 return false;
             }
             path.replace("/", "\\");
