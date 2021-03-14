@@ -1113,11 +1113,11 @@ bool PostingJob::startGenPar2(const QString &tmpFolder,
     if (useParPar && args.last().trimmed() != "-o")
         args << "-o";
     archiveTmpFolder = QString("%1/%2").arg(tmpFolder, archiveName);
-    args << QString("%1/%2.par2").arg(archiveTmpFolder, archiveName);
 
     // we've already compressed => we gen par2 for the files in the archive folder
     if (_extProc)
     {
+        args << QString("%1/%2.par2").arg(archiveTmpFolder, archiveName);
         if (useParPar)
               args << "-R" << archiveTmpFolder;
         else
@@ -1139,13 +1139,14 @@ bool PostingJob::startGenPar2(const QString &tmpFolder,
         if (!useParPar && _files.size() > 1) {
 #if defined( Q_OS_WIN )
             if (_ngPost->useMultiPar())
-                args << QString("/d\"%1:\"").arg(driveExpected);
+                args << QString("/d%1:\\").arg(driveExpected);
             else
-                args << QString("-B \"%1:\\\"").arg(driveExpected);
+                args << QString("-B%1:\\").arg(driveExpected);
 #else
             args << QString("-B /");
 #endif
         }
+        args << QString("%1/%2.par2").arg(archiveTmpFolder, archiveName);
 
         for (const QFileInfo &fileInfo : _files)
         {
