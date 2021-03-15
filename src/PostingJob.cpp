@@ -1136,10 +1136,12 @@ bool PostingJob::startGenPar2(const QString &tmpFolder,
         QString basePath = _files.first().absolutePath();
         if (!useParPar) {
 #if defined( Q_OS_WIN )
+            QString basePathWin(basePath);
+            basePathWin.replace("/", "\\");
             if (_ngPost->useMultiPar())
-                args << "/d" << basePath;
+                args << QString("/d\"%1\"").arg(basePathWin);
             else
-                args <<"-B" << basePath;
+                args <<"-B" << basePathWin;
             QString par2File = QString("%1/%2.par2").arg(archiveTmpFolder, archiveName);
             par2File.replace("/", "\\");
             args << par2File;
@@ -1149,7 +1151,8 @@ bool PostingJob::startGenPar2(const QString &tmpFolder,
 #endif
         }
         else
-            args << QString("%1/%2.par2").arg(archiveTmpFolder, archiveName);
+            args << "-f" << "basename"
+                 << QString("%1/%2.par2").arg(archiveTmpFolder, archiveName);
 
         for (const QFileInfo &fileInfo : _files)
         {
@@ -1160,6 +1163,7 @@ bool PostingJob::startGenPar2(const QString &tmpFolder,
             QString path = fileInfo.absoluteFilePath();
 #if defined( Q_OS_WIN )
             if (!useParPar && basePath != fileInfo.absolutePath()){
+//                _error(tr("Due to par2 software limitation and to avoid unnecessary copies, all files must be in the same folder..."));
                 _error(tr("only ParPar allows to generate par2 for files from different folders... you should consider using it ;)"));
                 return false;
             }
