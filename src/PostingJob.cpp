@@ -1102,7 +1102,6 @@ bool PostingJob::startGenPar2(const QString &tmpFolder,
     if (!_canGenPar2())
         return false;
 
-    QString archiveTmpFolder;
     QStringList args;
     if (_ngPost->_par2Args.isEmpty())
         args << "c" << "-l" << "-m1024" << QString("-r%1").arg(redundancy);
@@ -1110,13 +1109,13 @@ bool PostingJob::startGenPar2(const QString &tmpFolder,
         args << _ngPost->_par2Args.split(" ");
 
     bool useParPar = _ngPost->useParPar();
-    if (useParPar && args.last().trimmed() != "-o")
-        args << "-o";
-    archiveTmpFolder = QString("%1/%2").arg(tmpFolder, archiveName);
+    QString archiveTmpFolder = QString("%1/%2").arg(tmpFolder, archiveName);
 
     // we've already compressed => we gen par2 for the files in the archive folder
     if (_extProc)
     {
+        if (useParPar && args.last().trimmed() != "-o")
+            args << "-o";
         args << QString("%1/%2.par2").arg(archiveTmpFolder, archiveName);
         if (useParPar)
               args << "-R" << archiveTmpFolder;
@@ -1134,12 +1133,20 @@ bool PostingJob::startGenPar2(const QString &tmpFolder,
     else
     { // par2 generation only => can't use folders or files from different drive (Windows)
         QString basePath = _files.first().absolutePath();
-        if (!useParPar) {
+        if (useParPar)
+        {
+            args << "-f" << "basename";
+            if (args.last().trimmed() != "-o")
+                args << "-o";
+            args << QString("%1/%2.par2").arg(archiveTmpFolder, archiveName);
+        }
+        else
+        {
 #if defined( Q_OS_WIN )
             QString basePathWin(basePath);
             basePathWin.replace("/", "\\");
             if (_ngPost->useMultiPar())
-                args << QString("/d\"%1\"").arg(basePathWin);
+                args << QString("/d%1").arg(basePathWin);
             else
                 args <<"-B" << basePathWin;
             QString par2File = QString("%1/%2.par2").arg(archiveTmpFolder, archiveName);
@@ -1150,9 +1157,6 @@ bool PostingJob::startGenPar2(const QString &tmpFolder,
             args << QString("%1/%2.par2").arg(archiveTmpFolder, archiveName);
 #endif
         }
-        else
-            args << "-f" << "basename"
-                 << QString("%1/%2.par2").arg(archiveTmpFolder, archiveName);
 
         for (const QFileInfo &fileInfo : _files)
         {
