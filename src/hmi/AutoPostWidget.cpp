@@ -76,9 +76,7 @@ void AutoPostWidget::init()
     connect(_ui->autoDirButton,     &QAbstractButton::clicked, this, &AutoPostWidget::onSelectAutoDirClicked);
     connect(_ui->scanAutoDirButton, &QAbstractButton::clicked, this, &AutoPostWidget::onScanAutoDirClicked);
 
-    _ui->genNameCB->setChecked(true);
-    _ui->genPassCB->setChecked(true);
-    _ui->par2CB->setChecked(true);
+    setPackingAuto(_ngPost->_packAuto, _ngPost->_packAutoKeywords);
     if (_ngPost->_keepRar)
         _ui->keepRarCB->setChecked(true);
     _ui->startJobsCB->setChecked(true);
@@ -426,11 +424,24 @@ void AutoPostWidget::retranslate()
                                    tr("Bare in mind you can select items in the list and press DEL to remove them")));
 }
 
-void AutoPostWidget::setAutoCompress(bool checked)
-{
-    _ui->genNameCB->setChecked(checked);
-    _ui->genPassCB->setChecked(checked);
-    _ui->par2CB->setChecked(checked);
+void AutoPostWidget::setPackingAuto(bool enabled, const QStringList &keys){
+    bool genName = false, genPass = false, doPar2 = false;
+    if (enabled)
+    {
+        for (auto it = keys.cbegin(), itEnd = keys.cend(); it != itEnd; ++it)
+        {
+            QString keyWord = (*it).toLower();
+            if (keyWord == NgPost::optionName(NgPost::Opt::GEN_NAME))
+                genName = true;
+            else if (keyWord == NgPost::optionName(NgPost::Opt::GEN_PASS))
+                genPass = true;
+            else if (keyWord == NgPost::optionName(NgPost::Opt::GEN_PAR2))
+                doPar2 = true;
+        }
+    }
+    _ui->genNameCB->setChecked(genName);
+    _ui->genPassCB->setChecked(genPass);
+    _ui->par2CB->setChecked(doPar2);
 }
 
 

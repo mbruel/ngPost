@@ -551,22 +551,39 @@ void PostingWidget::setNzbPassword(const QString &pass)
     _ui->nzbPassEdit->setText(pass);
 }
 
-void PostingWidget::setAutoCompress(bool checked)
+void PostingWidget::setPackingAuto(bool enabled, const QStringList &keys)
 {
-    _ui->nzbPassCB->setChecked(checked);
-    _ui->compressCB->setChecked(checked);
-    _ui->par2CB->setChecked(checked);
+    bool compress = false, genName = false, genPass = false, doPar2 = false;
+    if (enabled)
+    {
+        for (auto it = keys.cbegin(), itEnd = keys.cend(); it != itEnd; ++it)
+        {
+            QString keyWord = (*it).toLower();
+            if (keyWord == NgPost::optionName(NgPost::Opt::COMPRESS))
+                compress = true;
+            else if (keyWord == NgPost::optionName(NgPost::Opt::GEN_NAME))
+                genName = true;
+            else if (keyWord == NgPost::optionName(NgPost::Opt::GEN_PASS))
+                genPass = true;
+            else if (keyWord == NgPost::optionName(NgPost::Opt::GEN_PAR2))
+                doPar2 = true;
+        }
+    }
+    _ui->nzbPassCB->setChecked(genPass);
+    _ui->compressCB->setChecked(compress);
+    _ui->par2CB->setChecked(doPar2);
 
-    if (checked)
+
+    if (compress)
     {
         if (_ui->nzbPassEdit->text().isEmpty())
         {
             if (_hmi->useFixedPassword())
                 _ui->nzbPassEdit->setText(_ngPost->_rarPassFixed);
-            else
+            else if (genPass)
                 onGenNzbPassword();
         }
-        if (_ui->compressNameEdit->text().isEmpty())
+        if (genName && _ui->compressNameEdit->text().isEmpty())
             onGenCompressName();
     }
 }

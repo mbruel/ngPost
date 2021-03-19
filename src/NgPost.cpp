@@ -135,6 +135,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::PAR2_ARGS,    "par2_args"},
 
     {Opt::AUTO_COMPRESS,"auto_compress"},
+    {Opt::PACK,         "pack"},
     {Opt::COMPRESS,     "compress"},
     {Opt::GEN_PAR2,     "gen_par2"},
     {Opt::GEN_NAME,     "gen_name"},
@@ -196,7 +197,7 @@ const QList<QCommandLineOption> NgPost::sCmdOptions = {
     { sOptionNames[Opt::PAR2_PCT],            tr( "par2 redundancy percentage (0 by default meaning NO par2 generation)"), sOptionNames[Opt::PAR2_PCT]},
     { sOptionNames[Opt::PAR2_PATH],           tr( "par2 absolute file path (in case of self compilation of ngPost)"), sOptionNames[Opt::PAR2_PCT]},
 
-    { sOptionNames[Opt::AUTO_COMPRESS],       tr( "compress inputs with random name and password and generate par2 (equivalent of --compress --gen_name --gen_pass --gen_par2)")},
+    { sOptionNames[Opt::PACK],                tr( "Pack posts using config PACK definition with a subset of (COMPRESS, GEN_NAME, GEN_PASS, GEN_PAR2)")},
     { sOptionNames[Opt::COMPRESS],            tr( "compress inputs using RAR or 7z")},
     { sOptionNames[Opt::GEN_PAR2],            tr( "generate par2 (to be used with --compress)")},
     { sOptionNames[Opt::RAR_NAME],            tr( "provide the RAR file name (to be used with --compress)"), sOptionNames[Opt::RAR_NAME]},
@@ -276,7 +277,7 @@ NgPost::NgPost(int &argc, char *argv[]):
     _folderMonitor(nullptr), _monitorThread(nullptr),
     _delAuto(false),
     _monitor_nzb_folders(false), _monitorExtensions(), _monitorIgnoreDir(false),
-    _keepRar(false), _autoCompress(false),
+    _keepRar(false), _packAuto(false), _packAutoKeywords(),
     _lang("en"), _translators(),
     _netMgr(), _urlNzbUpload(nullptr), _urlNzbUploadStr(),
     _doShutdownWhenDone(false), _shutdownProc(nullptr),
@@ -1329,11 +1330,14 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
             _delAuto = true;
     }
 
+    if (parser.isSet(sOptionNames[Opt::PACK]))
+        enableAutoPacking();
+
     if (parser.isSet(sOptionNames[Opt::AUTO_DIR]))
     {
-        if (!_autoCompress && !parser.isSet(sOptionNames[Opt::COMPRESS]))
+        if (!_doCompress && !parser.isSet(sOptionNames[Opt::COMPRESS]))
         {
-            _error(tr("Error syntax: --auto only works with --compress or AUTO_COMPRESS in config"),
+            _error(tr("Error syntax: --auto only works with --compress or --pack with the keyword COMPRESS in config"),
                    ERROR_CODE::ERR_AUTO_NO_COMPRESS);
             return false;
         }
@@ -1522,9 +1526,6 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         _genPass = true;
     if (parser.isSet(sOptionNames[Opt::RAR_NO_ROOT_FOLDER]))
         _rarNoRootFolder = true;
-
-    if (parser.isSet(sOptionNames[Opt::AUTO_COMPRESS]))
-        _enableAutoCompress();
 
     if (_doPar2 && _par2Pct == 0 && _par2Args.isEmpty())
     {
@@ -2142,9 +2143,32 @@ QString NgPost::_parseConfig(const QString &configPath)
                     }
                     else if (opt == sOptionNames[Opt::AUTO_COMPRESS])
                     {
+                        if (useHMI())
+                            _log(tr("obsolete keyword AUTO_COMPRESS, you should use PACK instead, please click SAVE to update your conf and then go check it."));
+                        else
+                            _log(tr("obsolete keyword AUTO_COMPRESS, you should use PACK instead, please refer to the conf example: %1").arg(
+                                     "https://github.com/mbruel/ngPost/blob/master/ngPost.conf#L140"));
+                    }
+                    else if (opt == sOptionNames[Opt::PACK])
+                    {
                         val = val.toLower();
-                        if (val == "true" || val == "on" || val == "1")
-                            _enableAutoCompress();
+                        QStringList packKeywords = val.split(","), wrongKeywords,
+                                allowedKeywords = {sOptionNames[Opt::COMPRESS], sOptionNames[Opt::GEN_NAME],
+                                                    sOptionNames[Opt::GEN_PASS], sOptionNames[Opt::GEN_PAR2]};
+                        for (auto it = packKeywords.cbegin(), itEnd = packKeywords.cend(); it != itEnd; ++it)
+                        {
+                            QString keyWord = (*it).trimmed();
+                            if (allowedKeywords.contains(keyWord))
+                                _packAutoKeywords << keyWord;
+                            else
+                                wrongKeywords << keyWord.toUpper();
+                        }
+
+                        if (wrongKeywords.size())
+                            err += tr("Wrong keywords for PACK: %1. It should be a subset of (%2)").arg(
+                                        wrongKeywords.join(", "), allowedKeywords.join(", ").toUpper());
+                        else if (useHMI())
+                            enableAutoPacking();
                     }
                     else if (opt == sOptionNames[Opt::RAR_NO_ROOT_FOLDER])
                     {
@@ -2376,7 +2400,7 @@ void NgPost::_dumpParams() const
              << ", nzbPath: " << _nzbPath << ", nzbName" << _nzbName
 
              << "\ninputDir: " << _inputDir << ", autoDelete: " << _delAuto
-             << ", auto_compress:" << _autoCompress << ", autoClose: " << _autoCloseTabs
+             << ", packAutoKeywords:" << _packAutoKeywords << ", autoClose: " << _autoCloseTabs
 
              << "\n\nfrom: " << _from.c_str() << ", genFrom: " << _genFrom << ", saveFrom: " << _saveFrom
              << ", groups: " << _grpList.join(",")
@@ -2568,8 +2592,11 @@ void NgPost::saveConfig()
                << "##           Compression and par2 section                   ##\n"
                << "##############################################################\n"
                << "\n"
-               << tr("## Auto compression for all posts with random archive name, password and par2 generation") << "\n"
-               << (_autoCompress  ? "" : "#") << "AUTO_COMPRESS = true\n"
+               << tr("## Shortcut for automatic packing for both GUI and CMD using --pack") << "\n"
+               << tr("## coma separated list using the keywords COMPRESS, GEN_NAME, GEN_PASS and GEN_PAR2") << "\n"
+               << tr("#PACK = COMPRESS, GEN_NAME, GEN_PASS, GEN_PAR2") << "\n"
+               << tr("#PACK = GEN_PAR2") << "\n"
+               << (_packAuto && _packAutoKeywords.size() ? QString("PACK = %1\n").arg(_packAutoKeywords.join(", ").toUpper()) : "")
                << "\n"
                << tr("## use the same Password for all your Posts using compression") << "\n"
           #ifdef __USE_HMI__

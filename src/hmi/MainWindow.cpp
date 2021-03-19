@@ -452,7 +452,7 @@ void MainWindow::_initPostingBox()
         _ui->rarPassCB->setChecked(true);
     }
 
-    _ui->autoCompressCB->setChecked(_ngPost->_autoCompress);
+    _ui->autoCompressCB->setChecked(_ngPost->_packAuto);
     _ui->autoCloseCB->setChecked(_ngPost->_autoCloseTabs);
 
     _ui->obfuscateMsgIdCB->setChecked(_ngPost->_obfuscateArticles);
@@ -527,7 +527,7 @@ void MainWindow::updateParams()
         _ngPost->_rarPass      = _ngPost->_rarPassFixed;
     }
 
-    _ngPost->setAutoCompress(_ui->autoCompressCB->isChecked());
+    _ngPost->enableAutoPacking(_ui->autoCompressCB->isChecked());
     _ngPost->_autoCloseTabs = _ui->autoCloseCB->isChecked();
 
     _ngPost->updateGroups(_ui->groupsEdit->toPlainText());
@@ -765,13 +765,13 @@ void MainWindow::onArchivePass()
 
 void MainWindow::onAutoCompressToggled(bool checked)
 {
-    _ngPost->setAutoCompress(checked);
-    _autoPostTab->setAutoCompress(checked);
+    _ngPost->enableAutoPacking(checked);
+    _autoPostTab->setPackingAuto(checked, _ngPost->_packAutoKeywords);
     if (!_quickJobTab->isPosting())
-        _quickJobTab->setAutoCompress(checked);
+        _quickJobTab->setPackingAuto(checked, _ngPost->_packAutoKeywords);
     PostingWidget *currentQuickPost = _getPostWidget(_ui->postTabWidget->currentIndex());
     if (currentQuickPost && !currentQuickPost->isPosting())
-        currentQuickPost->setAutoCompress(checked);
+        currentQuickPost->setPackingAuto(checked, _ngPost->_packAutoKeywords);
 }
 
 void MainWindow::onDebugToggled(bool checked)

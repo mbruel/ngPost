@@ -76,6 +76,7 @@ class NgPost : public QObject, public CmdOrGuiApp
     friend class PostingJob;
     friend class AboutNgPost;
 
+public:
     enum class Opt {HELP = 0, LANG, VERSION, CONF, SHUTDOWN_CMD, CHECK, QUIET, PROXY_SOCKS5,
                     DISP_PROGRESS, DEBUG, DEBUG_FULL, POST_HISTORY, FIELD_SEPARATOR, NZB_RM_ACCENTS,
                     RESUME_WAIT, NO_RESUME_AUTO, SOCK_TIMEOUT, PREPARE_PACKING,
@@ -88,12 +89,13 @@ class NgPost : public QObject, public CmdOrGuiApp
                     TMP_RAM, TMP_RAM_RATIO,
             #endif
                     PAR2_PCT, PAR2_PATH, PAR2_ARGS,
-                    COMPRESS, GEN_PAR2, GEN_NAME, GEN_PASS, LENGTH_NAME, LENGTH_PASS,
+                    PACK, COMPRESS, GEN_PAR2, GEN_NAME, GEN_PASS, LENGTH_NAME, LENGTH_PASS,
                     RAR_NAME, RAR_PASS, RAR_NO_ROOT_FOLDER,
                     AUTO_CLOSE_TABS, AUTO_COMPRESS, GROUP_POLICY,
                     SERVER, HOST, PORT, SSL, USER, PASS, CONNECTION, ENABLED, NZBCHECK
                    };
 
+private:
     enum class GROUP_POLICY {ALL, EACH_POST, EACH_FILE};
     static const QMap<GROUP_POLICY, QString> sGroupPolicies;
 
@@ -198,7 +200,8 @@ private:
     bool          _monitorIgnoreDir;
 
     bool          _keepRar;
-    bool          _autoCompress;
+    bool          _packAuto;
+    QStringList   _packAutoKeywords;
 
     QString       _lang;
     QMap<QString, QTranslator*> _translators;
@@ -365,7 +368,6 @@ public:
 
 
     inline std::string from() const;
-    inline void setAutoCompress(bool checked);
 
     inline bool removeRarRootFolder() const;
 
@@ -392,6 +394,9 @@ public:
 
     inline bool useParPar() const;
     inline bool useMultiPar() const;
+
+    inline void enableAutoPacking(bool enable = true);
+
 
 signals:
     void log(QString msg, bool newline); //!< in case we signal from another thread
@@ -455,8 +460,6 @@ private:
 
     void _showVersionASCII() const;
 
-    inline void _enableAutoCompress();
-
 
 // Static functions
 public:
@@ -486,6 +489,7 @@ public:
     inline static int immediateSpeedDurationMs();
 #endif
 
+    inline static QString optionName(Opt key);
 };
 
 QString NgPost::quickJobName() { return tr(sQuickJobName); }
@@ -498,15 +502,6 @@ std::string NgPost::from() const
         return randomStdFrom();
     else
         return _from;
-}
-
-void NgPost::setAutoCompress(bool checked)
-{
-    _autoCompress = checked;
-    _doCompress   = checked;
-    _genName      = checked;
-    _genPass      = checked;
-    _doPar2       = checked;
 }
 
 bool NgPost::removeRarRootFolder() const { return _rarNoRootFolder; }
@@ -640,25 +635,46 @@ QStringList NgPost::parseCombinedArgString(const QString &program)
 }
 #endif
 
-void NgPost::_enableAutoCompress()
+void NgPost::enableAutoPacking(bool enable)
 {
+    _packAuto = enable;
+    if (enable)
+    {
+        for (auto it = _packAutoKeywords.cbegin(), itEnd = _packAutoKeywords.cend(); it != itEnd; ++it)
+        {
+            QString keyWord = (*it).toLower();
+            if (keyWord == sOptionNames[Opt::COMPRESS])
+                _doCompress   = true;
+            else if (keyWord == sOptionNames[Opt::GEN_NAME])
+                _genName      = true;
+            else if (keyWord == sOptionNames[Opt::GEN_PASS])
+                _genPass      = true;
+            else if (keyWord == sOptionNames[Opt::GEN_PAR2])
+                _doPar2      = true;
+        }
+
 #ifdef __USE_HMI__
-    if (!_hmi && !_quiet)
+        if (!_hmi && !_quiet)
 #else
-    if (!_quiet)
+        if (!_quiet)
 #endif
-        _log(tr("Auto compress is ON (--compress --gen_name --gen_pass --gen_par2)"));
-    _autoCompress = true;
-    _doCompress   = true;
-    _genName      = true;
-    _genPass      = true;
-    _doPar2       = true;
+            _log(tr("PACKing auto using: %1").arg(_packAutoKeywords.join(", ").toUpper()));
+    }
+    else
+    {
+        _doCompress   = true;
+        _genName      = true;
+        _genPass      = true;
+        _doPar2       = true;
+    }
 }
 
 #ifdef __COMPUTE_IMMEDIATE_SPEED__
 int NgPost::immediateSpeedDuration() { return sImmediateSpeedDurationMs / 1000; }
 int NgPost::immediateSpeedDurationMs(){ return sImmediateSpeedDurationMs; }
 #endif
+
+QString NgPost::optionName(NgPost::Opt key) {return sOptionNames.value(key, "");}
 
 QString NgPost::desc(bool useHTML)
 {

@@ -71,7 +71,7 @@ public:
     void retranslate();
 
     void setNzbPassword(const QString &pass);
-    void setAutoCompress(bool checked);
+    void setPackingAuto(bool enabled, const QStringList &keys);
 
     void postFiles(bool updateMainParams);
 

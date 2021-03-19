@@ -59,8 +59,7 @@ public:
 
     void retranslate();
 
-    void setAutoCompress(bool checked);
-
+    void setPackingAuto(bool enabled, const QStringList &keys);
 
 public slots:
     void onMonitorJobStart();
