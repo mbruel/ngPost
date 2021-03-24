@@ -74,6 +74,8 @@ private slots:
     void onMonitoringClicked();
     void onDelFilesToggled(bool checked);
     void onAddMonitoringFolder();
+    void onCompressToggled(bool checked);
+    void onGenPar2Toggled(bool checked);
 };
 
 #endif // AUTOPOSTWIDGET_H

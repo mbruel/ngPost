@@ -75,6 +75,8 @@ void AutoPostWidget::init()
     connect(_ui->rarPathButton,     &QAbstractButton::clicked, this, &AutoPostWidget::onRarPathClicked);
     connect(_ui->autoDirButton,     &QAbstractButton::clicked, this, &AutoPostWidget::onSelectAutoDirClicked);
     connect(_ui->scanAutoDirButton, &QAbstractButton::clicked, this, &AutoPostWidget::onScanAutoDirClicked);
+    connect(_ui->compressCB,        &QAbstractButton::toggled, this, &AutoPostWidget::onCompressToggled);
+    connect(_ui->par2CB,            &QAbstractButton::toggled, this, &AutoPostWidget::onGenPar2Toggled);
 
     setPackingAuto(_ngPost->_packAuto, _ngPost->_packAutoKeywords);
     if (_ngPost->_keepRar)
@@ -103,12 +105,19 @@ void AutoPostWidget::init()
 
 void AutoPostWidget::onGenQuickPosts()
 {
+    bool compress = _ui->compressCB->isChecked();
+
     QFileInfoList files;
     for (int i = 0 ; i < _ui->filesList->count() ; ++i)
     {
         QFileInfo fileInfo(_ui->filesList->item(i)->text());
         if (fileInfo.exists())
             files << fileInfo;
+        if (!compress && fileInfo.isDir())
+        {
+            _ngPost->error(tr("You can't use auto posting without compression on folders... (%1)").arg(fileInfo.fileName()));
+            return ;
+        }
     }
     if (files.isEmpty())
     {
@@ -226,6 +235,12 @@ void AutoPostWidget::onMonitoringClicked()
             QMessageBox::warning(this, tr("Error accessing Auto Dir..."), tr("The auto directory must exist and be readable..."));
             return;
         }
+        if (!_ui->compressCB->isChecked()) {
+            QMessageBox::warning(this,
+                                 tr("To be implemented..."),
+                                 tr("You can't monitor a folder without compression using the GUI...\nIt's possible in command line if MONITOR_IGNORE_DIR is enabled in your configuration file."));
+            return;
+        }
         _ui->filesList->addItem(new QListWidgetItem(QIcon(":/icons/monitor.png"), tr("Monitoring %1").arg(folderPath)));
         _ngPost->_startMonitoring(folderPath);
         _ui->monitorButton->setText(tr("Stop Monitoring"));
@@ -301,6 +316,23 @@ void AutoPostWidget::onAddMonitoringFolder()
     }
 }
 
+void AutoPostWidget::onCompressToggled(bool checked)
+{
+    _ui->genNameCB->setEnabled(checked);
+    _ui->nameLengthSB->setEnabled(checked);
+    _ui->genPassCB->setEnabled(checked);
+    _ui->passLengthSB->setEnabled(checked);
+    _ui->keepRarCB->setEnabled(checked);
+    if (!checked && !_ui->par2CB->isChecked())
+        _ui->par2CB->setChecked(true);
+}
+
+void AutoPostWidget::onGenPar2Toggled(bool checked)
+{
+    if (!checked && !_ui->compressCB->isChecked())
+        _ui->compressCB->setChecked(true);
+}
+
 #include "PostingJob.h"
 void AutoPostWidget::onMonitorJobStart()
 {
@@ -338,9 +370,9 @@ void AutoPostWidget::onSelectFilesClicked()
 void AutoPostWidget::udatePostingParams()
 {
     // fetch compression settings
-    _ngPost->_doCompress = true;
-    _ngPost->_genName    = _ui->genNameCB->isChecked();
-    _ngPost->_genPass    = _ui->genPassCB->isChecked();
+    _ngPost->_doCompress = _ui->compressCB->isChecked();
+    _ngPost->_genName    = _ngPost->_doCompress ? _ui->genNameCB->isChecked() : false;
+    _ngPost->_genPass    = _ngPost->_doCompress ? _ui->genPassCB->isChecked() : false;
     _ngPost->_doPar2     = _ui->par2CB->isChecked();
 
     _ngPost->_tmpPath    = _ui->compressPathEdit->text();
@@ -425,13 +457,15 @@ void AutoPostWidget::retranslate()
 }
 
 void AutoPostWidget::setPackingAuto(bool enabled, const QStringList &keys){
-    bool genName = false, genPass = false, doPar2 = false;
+    bool compress = false, genName = false, genPass = false, doPar2 = false;
     if (enabled)
     {
         for (auto it = keys.cbegin(), itEnd = keys.cend(); it != itEnd; ++it)
         {
             QString keyWord = (*it).toLower();
-            if (keyWord == NgPost::optionName(NgPost::Opt::GEN_NAME))
+            if (keyWord == NgPost::optionName(NgPost::Opt::COMPRESS))
+                compress = true;
+            else if (keyWord == NgPost::optionName(NgPost::Opt::GEN_NAME))
                 genName = true;
             else if (keyWord == NgPost::optionName(NgPost::Opt::GEN_PASS))
                 genPass = true;
@@ -439,9 +473,11 @@ void AutoPostWidget::setPackingAuto(bool enabled, const QStringList &keys){
                 doPar2 = true;
         }
     }
+    _ui->compressCB->setChecked(compress);
     _ui->genNameCB->setChecked(genName);
     _ui->genPassCB->setChecked(genPass);
     _ui->par2CB->setChecked(doPar2);
+    onCompressToggled(compress);
 }
 
 

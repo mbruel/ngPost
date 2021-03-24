@@ -753,16 +753,19 @@ void NgPost::_post(const QFileInfo &fileInfo, const QString &monitorFolder)
         nzbFilePath += ".nzb";
 
     _rarName = _nzbName;
-    if (_genName)
-        _rarName = randomPass(_lengthName);
-
     _rarPass = "";
-    if (_genPass) // shall we gen password?
-        _rarPass = randomPass(_lengthPass);        
-    if (!_rarPassFixed.isEmpty()) // rar pass fixed would take other
-        _rarPass = _rarPassFixed;
-    if (!_rarPass.isEmpty())
-        _meta.remove("password");
+    if (_doCompress)
+    {
+        if (_genName)
+            _rarName = randomPass(_lengthName);
+
+        if (_genPass) // shall we gen password?
+            _rarPass = randomPass(_lengthPass);
+        if (!_rarPassFixed.isEmpty()) // rar pass fixed would take other
+            _rarPass = _rarPassFixed;
+        if (!_rarPass.isEmpty())
+            _meta.remove("password");
+    }
 
     qDebug() << "Start posting job for " << _nzbName
              << " with rar_name: " << _rarName << " and pass: " << _rarPass
@@ -1333,11 +1336,22 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
     if (parser.isSet(sOptionNames[Opt::PACK]))
         enableAutoPacking();
 
+    if (parser.isSet(sOptionNames[Opt::COMPRESS]))
+        _doCompress = true;
+    if (parser.isSet(sOptionNames[Opt::GEN_PAR2]))
+        _doPar2 = true;
+    if (parser.isSet(sOptionNames[Opt::GEN_NAME]))
+        _genName = true;
+    if (parser.isSet(sOptionNames[Opt::GEN_PASS]))
+        _genPass = true;
+    if (parser.isSet(sOptionNames[Opt::RAR_NO_ROOT_FOLDER]))
+        _rarNoRootFolder = true;
+
     if (parser.isSet(sOptionNames[Opt::AUTO_DIR]))
     {
-        if (!_doCompress && !parser.isSet(sOptionNames[Opt::COMPRESS]))
+        if (!_doCompress && !_doPar2)
         {
-            _error(tr("Error syntax: --auto only works with --compress or --pack with the keyword COMPRESS in config"),
+            _error(tr("Error syntax: --auto only works with --compress or --gen_par2 or --pack with at least the keywords COMPRESS or GEN_PAR2 in PACK config"),
                    ERROR_CODE::ERR_AUTO_NO_COMPRESS);
             return false;
         }
@@ -1351,16 +1365,25 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
                 return false;
             }
             else
+            {
                 _autoDirs << QDir(fi.absoluteFilePath());
+                if (!_doCompress) {
+                    // only genPar2 => only accept files
+                    QStringList subFolders = _autoDirs.last().entryList(QDir::Dirs|QDir::NoDotAndDotDot);
+                    if (subFolders.size())
+                        _error(tr("Error: you can only --auto without compression on folders that DON'T have any subfolders.\nThat's not the case for '%1' which contains folders: %2").arg(
+                                   fi.fileName(), subFolders.join(", ")));
+                }
+            }
         }
     }        
 
     bool isMonitoring = false;
     if (parser.isSet(sOptionNames[Opt::MONITOR_DIR]))
     {
-        if (!parser.isSet(sOptionNames[Opt::COMPRESS]))
+        if (!_doCompress && (!_doPar2 || !_monitorIgnoreDir))
         {
-            _error(tr("Error syntax: --monitor only works with --compress"),
+            _error(tr("Error syntax: --monitor only works with --compress or with --gen_par2 ONLY IF MONITOR_IGNORE_DIR is enabled in config (--pack can be used)"),
                    ERROR_CODE::ERR_MONITOR_NO_COMPRESS);
             return false;
         }
@@ -1515,17 +1538,6 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
                 _par2Path = val;
         }
     }
-
-    if (parser.isSet(sOptionNames[Opt::COMPRESS]))
-        _doCompress = true;
-    if (parser.isSet(sOptionNames[Opt::GEN_PAR2]))
-        _doPar2 = true;
-    if (parser.isSet(sOptionNames[Opt::GEN_NAME]))
-        _genName = true;
-    if (parser.isSet(sOptionNames[Opt::GEN_PASS]))
-        _genPass = true;
-    if (parser.isSet(sOptionNames[Opt::RAR_NO_ROOT_FOLDER]))
-        _rarNoRootFolder = true;
 
     if (_doPar2 && _par2Pct == 0 && _par2Args.isEmpty())
     {
@@ -2594,6 +2606,7 @@ void NgPost::saveConfig()
                << "\n"
                << tr("## Shortcut for automatic packing for both GUI and CMD using --pack") << "\n"
                << tr("## coma separated list using the keywords COMPRESS, GEN_NAME, GEN_PASS and GEN_PAR2") << "\n"
+               << tr("## For Auto posting and Monitoring if you don't use COMPRESS you need GEN_PA2") << "\n"
                << tr("#PACK = COMPRESS, GEN_NAME, GEN_PASS, GEN_PAR2") << "\n"
                << tr("#PACK = GEN_PAR2") << "\n"
                << (_packAuto && _packAutoKeywords.size() ? QString("PACK = %1\n").arg(_packAutoKeywords.join(", ").toUpper()) : "")
@@ -2673,7 +2686,7 @@ void NgPost::saveConfig()
                << tr("## you could for exemple use Multipar on Windows") << "\n"
                << "#PAR2_ARGS = -s5M -r1n*0.6 -m2048M -p1l --progress stdout -q   (for parpar)\n"
                << "#PAR2_ARGS = c -l -m1024 -r8 -s768000                 (for par2cmdline)\n"
-               << "#PAR2_ARGS = create /rr8 /lc40 /lr /rd2               (for Multipar)\n"
+               << "#PAR2_ARGS = create /rr8 /lc40 /lr /rd2 /ss768000     (for Multipar)\n"
                << (_par2Args.isEmpty() ? "" : QString("PAR2_ARGS = %1\n").arg(_par2Args))
                << "\n"
                << "\n"

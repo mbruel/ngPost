@@ -473,7 +473,7 @@ void PostingWidget::init()
 
 void PostingWidget::genNameAndPassword(bool genName, bool genPass, bool doPar2, bool useRarMax)
 {
-    _ui->compressCB->setChecked(true);
+    _ui->compressCB->setChecked(_ngPost->_doCompress);
     if (genName)
         onGenCompressName();
     if (genPass && _ngPost->_rarPassFixed.isEmpty())

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1191</width>
-    <height>480</height>
+    <width>1409</width>
+    <height>507</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -335,7 +335,17 @@
    <item>
     <layout class="QHBoxLayout" name="optionsLayout">
      <item>
+      <widget class="QCheckBox" name="compressCB">
+       <property name="text">
+        <string>compress</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <layout class="QHBoxLayout" name="genNameLayout">
+       <property name="spacing">
+        <number>1</number>
+       </property>
        <item>
         <widget class="QCheckBox" name="genNameCB">
          <property name="toolTip">
@@ -356,23 +366,10 @@
       </layout>
      </item>
      <item>
-      <spacer name="horizontalSpacer_13">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Preferred</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
       <layout class="QHBoxLayout" name="compressOptionsLayout">
+       <property name="spacing">
+        <number>1</number>
+       </property>
        <item>
         <widget class="QCheckBox" name="genPassCB">
          <property name="toolTip">
@@ -391,6 +388,16 @@
         </widget>
        </item>
       </layout>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="keepRarCB">
+       <property name="toolTip">
+        <string>by default archives and par2 files are deleted uppon post success but you can choose to keep them</string>
+       </property>
+       <property name="text">
+        <string>keep archives</string>
+       </property>
+      </widget>
      </item>
      <item>
       <spacer name="horizontalSpacer_2">
@@ -415,32 +422,6 @@
        </property>
        <property name="text">
         <string>generate par2</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer_3">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Preferred</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QCheckBox" name="keepRarCB">
-       <property name="toolTip">
-        <string>by default archives and par2 files are deleted uppon post success but you can choose to keep them</string>
-       </property>
-       <property name="text">
-        <string>keep archives</string>
        </property>
       </widget>
      </item>
