@@ -278,7 +278,11 @@ private:
     static const uint sDefaultLengthName = 17;
     static const uint sDefaultLengthPass = 13;
     static const uint sDefaultRarMax     = 99;
+#if defined(__APPLE__)|| defined(__MACH__)
+    static constexpr const char *sDefaultRarExtraOptions = "-ep1 -m0 -x.DS_Store";
+#else
     static constexpr const char *sDefaultRarExtraOptions = "-ep1 -m0";
+#endif
     static constexpr const char *sDefault7zOptions = "-mx0 -mhe=on";
 
     static const char *sFolderMonitoringName;
