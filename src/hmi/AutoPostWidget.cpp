@@ -88,6 +88,7 @@ void AutoPostWidget::init()
     connect(_ui->postButton,   &QAbstractButton::clicked, this,    &AutoPostWidget::onGenQuickPosts);
     connect(_ui->aboutButton,  &QAbstractButton::clicked, _ngPost, &NgPost::onAboutClicked);
     connect(_ui->donateButton, &QAbstractButton::clicked, _ngPost, &NgPost::onDonation);
+    connect(_ui->btcDonate,    &QAbstractButton::clicked, _ngPost, &NgPost::onDonationBTC);
 
     connect(_ui->monitorButton, &QAbstractButton::clicked, this, &AutoPostWidget::onMonitoringClicked);
 
@@ -447,6 +448,7 @@ void AutoPostWidget::retranslate()
     _ui->rarMaxCB->setToolTip(tr("limit the number of archive volume to %1 (cf config RAR_MAX)").arg(_ngPost->_rarMax));
     _ui->redundancySB->setToolTip(tr("Using PAR2_ARGS from config file: %1").arg(_ngPost->_par2Args));
     _ui->donateButton->setToolTip(_ngPost->donationTooltip());
+    _ui->btcDonate->setToolTip(_ngPost->donationBtcTooltip());
     _ui->filesList->setToolTip(QString("%1<br/><br/>%2<ul><li>%3</li><li>%4</li><li>%5</li></ul>%6").arg(
                                    tr("You can use the <b>Monitor Mode</b>")).arg(
                                    tr("or <b>Generate Posts</b> by adding files:")).arg(

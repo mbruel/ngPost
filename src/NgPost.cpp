@@ -50,15 +50,17 @@
   #include <QStorageInfo>
 #endif
 
-const char *NgPost::sAppName       = "ngPost";
-const QString NgPost::sVersion     = QString::number(APP_VERSION);
-const QString NgPost::sProFileURL  = "https://raw.githubusercontent.com/mbruel/ngPost/master/src/ngPost.pro";
-const QString NgPost::sDonationURL = "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=W2C236U6JNTUA&item_name=ngPost&currency_code=EUR";
+const char *NgPost::sAppName          = "ngPost";
+const QString NgPost::sVersion        = QString::number(APP_VERSION);
+const QString NgPost::sProFileURL     = "https://raw.githubusercontent.com/mbruel/ngPost/master/src/ngPost.pro";
+const QString NgPost::sDonationURL    = "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=W2C236U6JNTUA&item_name=ngPost&currency_code=EUR";
+const QString NgPost::sDonationBtcURL = "https://github.com/mbruel/ngPost#donations";
 
 const QString NgPost::sMainThreadName     = "MainThread";
 const char *NgPost::sFolderMonitoringName = QT_TRANSLATE_NOOP("NgPost", "Auto Posting");
 const char *NgPost::sQuickJobName         = QT_TRANSLATE_NOOP("NgPost", "Quick Post");
 const char *NgPost::sDonationTooltip      = QT_TRANSLATE_NOOP("NgPost", "Donations are welcome, I spent quite some time to develop this app and make a sexy GUI although I'm not using it ;)");
+const char *NgPost::sDonationBtcTooltip   = QT_TRANSLATE_NOOP("NgPost", "Feel free to donate in BTC, click here to see my address on the GitHub section");
 
 std::string NgPost::sArticleIdSignature   = sDefaultMsgIdSignature;
 const std::string NgPost::sRandomAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -86,6 +88,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::NZB_RM_ACCENTS, "nzb_rm_accents"},
     {Opt::AUTO_CLOSE_TABS,"auto_close_tabs"},
     {Opt::RAR_NO_ROOT_FOLDER, "rar_no_root_folder"},
+    {Opt::LOG_IN_FILE,     "log_in_file"},
 
     {Opt::NO_RESUME_AUTO,  "no_resume_auto"},
     {Opt::RESUME_WAIT,     "resume_wait"},
@@ -296,7 +299,8 @@ NgPost::NgPost(int &argc, char *argv[]):
     _nzbPostCmd(), _preparePacking(false),
     _groupPolicy(GROUP_POLICY::ALL),
     _nzbCheck(nullptr), _quiet(false),
-    _proxySocks5(QNetworkProxy::NoProxy), _proxyUrl()
+    _proxySocks5(QNetworkProxy::NoProxy), _proxyUrl(),
+    _logFile(nullptr), _logStream(nullptr)
 {
     QThread::currentThread()->setObjectName(sMainThreadName);
 
@@ -384,6 +388,11 @@ NgPost::~NgPost()
 #ifdef __DEBUG__
     _log("Destuction NgPost...");
 #endif
+
+    if (_logStream){
+        delete _logStream;
+        delete _logFile;
+    }
 
     if (_nzbCheck)
         delete _nzbCheck;
@@ -830,6 +839,10 @@ void NgPost::onDonation()
 {
     QDesktopServices::openUrl(sDonationURL);
 }
+void NgPost::onDonationBTC()
+{
+    QDesktopServices::openUrl(sDonationBtcURL);
+}
 
 #include "hmi/AboutNgPost.h"
 void NgPost::onAboutClicked()
@@ -1102,7 +1115,11 @@ void NgPost::_log(const QString &aMsg, bool newline) const
 {
 #ifdef __USE_HMI__
     if (_hmi)
+    {
         _hmi->log(aMsg, newline);
+        if (_logStream && newline)
+            *_logStream << aMsg << "\n" << MB_FLUSH; // force flush in case of crash
+    }
     else
 #endif
     {
@@ -1117,7 +1134,11 @@ void NgPost::_error(const QString &error) const
 {
 #ifdef __USE_HMI__
     if (_hmi)
+    {
         _hmi->logError(error);
+        if (_logStream)
+            *_logStream << "ERR: " << error << "\n" << MB_FLUSH; // force flush in case of crash
+    }
     else
 #endif
         _cerr << error << "\n" << MB_FLUSH;
@@ -1955,6 +1976,31 @@ QString NgPost::_parseConfig(const QString &configPath)
                         if (val == "true" || val == "on" || val == "1")
                             _autoCloseTabs = true;
                     }
+                    else if (opt == sOptionNames[Opt::LOG_IN_FILE] && useHMI())
+                    {
+                        val = val.toLower();
+                        if (val == "true" || val == "on" || val == "1")
+                        {
+#if defined(WIN32) || defined(__MINGW64__)
+                            QString logFilePath = sDefaultLogFile;
+#else
+                            QString logFilePath = QString("%1/%2").arg(getenv("HOME")).arg(sDefaultLogFile);
+#endif
+
+                            _logFile = new QFile(logFilePath);
+                            if (_logFile->open(QIODevice::WriteOnly|QIODevice::Text))
+                            {
+                                _logStream = new QTextStream(_logFile);
+                                _log(tr("ngPost starts logging: %1").arg(QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss")));
+                            }
+                            else
+                            {
+                                delete _logFile;
+                                _logFile = nullptr;
+                                _error(tr("Error opening log file: '%1'").arg(logFilePath));
+                            }
+                        }
+                    }
                     else if (opt == sOptionNames[Opt::MONITOR_EXT])
                     {
                         for (const QString &extension : val.split(","))
@@ -2421,7 +2467,7 @@ void NgPost::_dumpParams() const
              << ", obfuscate articles: " << _obfuscateArticles
              << ", disp progress bar: " << _dispProgressBar
              << ", disp posting files: " << _dispFilesPosting
-
+             << ", logInFile (GUI only): " << (_logFile == nullptr ? "NO" : "YES")
              << "\n\ncompression settings: <tmp_path: " << _tmpPath << ">"
 #ifdef __USE_TMP_RAM__
              << " <ram_path: " << _ramPath << " ratio: " << _ramRatio << ">"
@@ -2463,7 +2509,7 @@ void NgPost::saveConfig()
                << "#\n"
                << "#\n"
                << "\n"
-               << tr("## Lang for the app. Currently supported: EN, FR, ES, DE") << "\n"
+               << tr("## Lang for the app. Currently supported: EN, FR, ES, DE, NL, PT, ZH") << "\n"
                << "lang = " << _lang.toUpper() << "\n"
                << "\n"
                << tr("## use Proxy (only Socks5 type!)") << "\n"
@@ -2596,6 +2642,12 @@ void NgPost::saveConfig()
                << "\n"
                << tr("## when several Posts are queued, prepare the packing of the next Post while uploading the current one") << "\n"
                << (_preparePacking ? "" : "#") << "PREPARE_PACKING = true" << "\n"
+               << "\n"
+               << tr("## For GUI ONLY, save the logs in a file (to debug potential crashes)") << "\n"
+               << tr("## ~/ngPost.log on Linux and MacOS, in the executable folder for Windows") << "\n"
+               << tr("## The log is overwritten each time ngPost is launched") << "\n"
+               << tr("## => after a crash, please SAVE the log before relaunching ngPost") << "\n"
+               << (_logStream != nullptr ? "" : "#") << "LOG_IN_FILE = true" << "\n"
                << "\n"
                << "\n"
                << "\n"

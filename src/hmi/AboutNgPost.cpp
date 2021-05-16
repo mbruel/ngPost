@@ -46,7 +46,9 @@ AboutNgPost::AboutNgPost(NgPost *ngPost, QWidget *parent) :
 
 
     ui->donateButton->setToolTip(ngPost->donationTooltip());
+    ui->btcDonate->setToolTip(ngPost->donationBtcTooltip());
     connect(ui->donateButton, &QAbstractButton::clicked, ngPost, &NgPost::onDonation);
+    connect(ui->btcDonate,    &QAbstractButton::clicked, ngPost, &NgPost::onDonationBTC);
 
     connect(ui->closeButton, &QAbstractButton::clicked, this, &QWidget::close);
 }

@@ -91,7 +91,7 @@ public:
                     PAR2_PCT, PAR2_PATH, PAR2_ARGS,
                     PACK, COMPRESS, GEN_PAR2, GEN_NAME, GEN_PASS, LENGTH_NAME, LENGTH_PASS,
                     RAR_NAME, RAR_PASS, RAR_NO_ROOT_FOLDER,
-                    AUTO_CLOSE_TABS, AUTO_COMPRESS, GROUP_POLICY,
+                    AUTO_CLOSE_TABS, AUTO_COMPRESS, GROUP_POLICY, LOG_IN_FILE,
                     SERVER, HOST, PORT, SSL, USER, PASS, CONNECTION, ENABLED, NZBCHECK
                    };
 
@@ -233,6 +233,8 @@ private:
     QNetworkProxy _proxySocks5;
     QString       _proxyUrl;
 
+    QFile        *_logFile;
+    QTextStream  *_logStream;
 
 
 
@@ -266,11 +268,14 @@ private:
     static constexpr const char *sDefaultNzbPath = "/tmp";
     static constexpr const char *sDefaultConfig = ".ngPost";
 #endif
+    static constexpr const char *sDefaultLogFile = "ngPost.log";
+
 
     static const int sprogressbarBarWidth = 50;
     static const int sDefaultRefreshRate = 500; //!< how often shall we refresh the progressbar bar?
 
     static const QString sDonationURL;
+    static const QString sDonationBtcURL;
     static const QString sNgPostASCII;
 
     static const QString sMainThreadName;
@@ -291,6 +296,7 @@ private:
     static const int sNbPreparedArticlePerConnection = NB_ARTICLES_TO_PREPARE_PER_CONNECTION;
 
     static const char *sDonationTooltip;
+    static const char *sDonationBtcTooltip;
 
     static const char sDefaultFieldSeparator = ';';
     static constexpr const char *sTranslationPath = ":/lang";
@@ -410,6 +416,7 @@ public slots:
     void onCheckForNewVersion();
 #ifdef __USE_HMI__
     void onDonation();
+    void onDonationBTC();
     void onAboutClicked();
 #endif
 
@@ -481,6 +488,7 @@ public:
     inline static QString quickJobName();
     inline static QString folderMonitoringName();
     inline static QString donationTooltip();
+    inline static QString donationBtcTooltip();
 
     inline static std::string randomStdFrom(ushort length = 13);
 
@@ -499,6 +507,8 @@ public:
 QString NgPost::quickJobName() { return tr(sQuickJobName); }
 QString NgPost::folderMonitoringName() { return tr(sFolderMonitoringName); }
 QString NgPost::donationTooltip() { return tr(sDonationTooltip); }
+QString NgPost::donationBtcTooltip() { return tr(sDonationBtcTooltip); }
+
 
 std::string NgPost::from() const
 {

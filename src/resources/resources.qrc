@@ -37,5 +37,6 @@
         <file>lang/ngPost_nl.qm</file>
         <file>icons/left.png</file>
         <file>icons/right.png</file>
+        <file>icons/btc-logo.png</file>
     </qresource>
 </RCC>
