@@ -218,7 +218,7 @@ A list of Usenet posters from Nyuu github [can be found here](https://github.com
 
 
 ### Licence
-**ngPost** is published under licence **GPL v3 **
+**ngPost** is published under licence **GPL v3**
 <pre>
 //========================================================================
 //
