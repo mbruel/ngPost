@@ -1,0 +1,56 @@
+name: AppImage CI
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+jobs:
+  build:
+    name: Build AppImage
+    #Ubuntu 16.04 use glibc 2.23
+    runs-on: ubuntu-16.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup QT environment
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo add-apt-repository ppa:beineri/opt-qt-5.12.0-xenial -y
+        sudo apt-get update -qq
+        sudo apt --assume-yes install \
+          build-essential \
+          libgl1-mesa-dev \
+          qt512base \
+          wget
+    - name: Build AppImage
+      run: |
+        mv ./ngPost.desktop ./src
+        cd src
+        /opt/qt512/bin/qmake
+        make
+        # Remove trash
+        rm -rf ./hmi
+        rm -rf ./lang
+        rm -rf ./nntp
+        rm -rf ./utils
+        find ./ \( -name "moc_*" -or -name "*.o" -or -name "*.h" -or -name "*.cpp" -or -name "qrc_*" -or -name "Makefile*" -or -name "*.a" \) -exec rm -rf {} \;
+        cd ..
+        wget -c https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage
+        chmod +x linuxdeployqt-continuous-x86_64.AppImage
+        ./linuxdeployqt-continuous-x86_64.AppImage ./src/ngPost.desktop -appimage -qmake=/opt/qt512/bin/qmake
+        mv ./ngPost-*-x86_64.AppImage ./ngPost-latest-x86_64.AppImage
+    - name: Create Release
+      id: create_release
+      uses: meeDamian/github-release@2.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag: continuous
+        name: Continuous build
+        body: |
+          Release ${{ github.sha }}
+        files: ./ngPost-latest-x86_64.AppImage
+        draft: false
+        prerelease: true
+        allow_override: true
