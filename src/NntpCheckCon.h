@@ -24,8 +24,8 @@ class NzbCheck;
 
 #include <QObject>
 #include <QTcpSocket>
+#include <QSslError>
 class QSslSocket;
-class QSslError;
 class QByteArray;
 
 class NntpCheckCon : public QObject

@@ -23,7 +23,7 @@
 #include <QMainWindow>
 #include <QFileInfoList>
 class NgPost;
-class NntpServerParams;
+struct NntpServerParams;
 class NntpFile;
 class PostingWidget;
 class AutoPostWidget;

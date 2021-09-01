@@ -37,7 +37,7 @@
 #include <QNetworkProxy>
 class QTranslator;
 class NntpConnection;
-class NntpServerParams;
+struct NntpServerParams;
 class NntpFile;
 class NntpArticle;
 class QCoreApplication;

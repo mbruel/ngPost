@@ -27,7 +27,7 @@
 #include <QTimer>
 #include <QCommandLineOption>
 #include <QElapsedTimer>
-class NntpServerParams;
+struct NntpServerParams;
 class NntpCheckCon;
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)

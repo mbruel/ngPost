@@ -240,7 +240,7 @@ const QMap<NgPost::GROUP_POLICY, QString> NgPost::sGroupPolicies = {
     {GROUP_POLICY::EACH_FILE, "each_file"}
 };
 
-#ifdef __DEBUG__
+#if __DEBUG__ && QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
 #include <QNetworkConfigurationManager>
 #endif
 NgPost::NgPost(int &argc, char *argv[]):
@@ -1818,22 +1818,22 @@ void NgPost::setNzbName(const QFileInfo &fileInfo)
     _nzbName = fileInfo.isDir() ? QDir(fileInfo.absoluteFilePath()).dirName() : fileInfo.completeBaseName();
     if (_removeAccentsOnNzbFileName)
     {
-        _nzbName.replace(QRegExp("[ÀÁÂÃÄÅ]"), "A");
-        _nzbName.replace(QRegExp("[àáâãäå]"), "a");
+        _nzbName.replace(QRegularExpression("[ÀÁÂÃÄÅ]"), "A");
+        _nzbName.replace(QRegularExpression("[àáâãäå]"), "a");
         _nzbName.replace("Ç","C");
         _nzbName.replace("ç","c");
-        _nzbName.replace(QRegExp("[ÈÉÊË]"),   "E");
-        _nzbName.replace(QRegExp("[èéêë]"),   "e");
-        _nzbName.replace(QRegExp("[ÌÍÎÏ]"),   "I");
-        _nzbName.replace(QRegExp("[ìíîï]"),   "i");
+        _nzbName.replace(QRegularExpression("[ÈÉÊË]"),   "E");
+        _nzbName.replace(QRegularExpression("[èéêë]"),   "e");
+        _nzbName.replace(QRegularExpression("[ÌÍÎÏ]"),   "I");
+        _nzbName.replace(QRegularExpression("[ìíîï]"),   "i");
         _nzbName.replace("Ñ","N");
         _nzbName.replace("ñ","n");
-        _nzbName.replace(QRegExp("[ÒÓÔÕÖØ]"), "O");
-        _nzbName.replace(QRegExp("[òóôõöø]"), "o");
-        _nzbName.replace(QRegExp("[ÙÚÛÜ]"),   "U");
-        _nzbName.replace(QRegExp("[ùúûü]"),   "u");
-        _nzbName.replace(QRegExp("[ÿý]"),     "y");
-        _nzbName.replace(QRegExp("[^A-Za-z0-9\\.,_\\-\\(\\)\\[\\]\\{\\}!#&'\\+ ]"), "");
+        _nzbName.replace(QRegularExpression("[ÒÓÔÕÖØ]"), "O");
+        _nzbName.replace(QRegularExpression("[òóôõöø]"), "o");
+        _nzbName.replace(QRegularExpression("[ÙÚÛÜ]"),   "U");
+        _nzbName.replace(QRegularExpression("[ùúûü]"),   "u");
+        _nzbName.replace(QRegularExpression("[ÿý]"),     "y");
+        _nzbName.replace(QRegularExpression("[^A-Za-z0-9\\.,_\\-\\(\\)\\[\\]\\{\\}!#&'\\+ ]"), "");
     }
 }
 

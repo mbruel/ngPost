@@ -21,14 +21,14 @@
 #define NNTPCONNECTION_H
 
 #include <QTcpSocket>
+#include <QSslError>
 
-class NntpServerParams;
+struct NntpServerParams;
 class NntpArticle;
 class NgPost;
 class Poster;
 
 class QSslSocket;
-class QSslError;
 class QByteArray;
 #ifdef __USE_CONNECTION_TIMEOUT__
 class QTimer;

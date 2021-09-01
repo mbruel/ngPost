@@ -28,7 +28,7 @@
 #include <QDebug>
 #include <QProgressBar>
 #include <QLabel>
-#include <QDesktopWidget>
+#include <QScreen>
 #include <QMessageBox>
 
 
@@ -87,7 +87,7 @@ MainWindow::MainWindow(QWidget *parent) :
     _ui->progressBar->setRange(0, 100);
     updateProgressBar(0, 0, "");
 
-    QSize screenSize = QDesktopWidget().availableGeometry(this).size();
+    QSize screenSize = qApp->screens()[0]->size();
     resize(screenSize * 0.8);
     setWindowIcon(QIcon(":/icons/ngPost.png"));
     setGeometry((screenSize.width() - width())/2,  (screenSize.height() - height())/2, width(), height());
