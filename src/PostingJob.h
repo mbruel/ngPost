@@ -82,6 +82,7 @@ private:
     const QString _rarName;
     const QString _rarPass;
     const bool    _keepRar;
+    bool          _splitArchive;
 
 
 

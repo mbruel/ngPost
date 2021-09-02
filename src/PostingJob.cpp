@@ -63,6 +63,7 @@ PostingJob::PostingJob(NgPost *ngPost,
 
     _tmpPath(tmpPath), _rarPath(rarPath), _rarArgs(rarArgs), _rarSize(rarSize), _useRarMax(useRarMax), _par2Pct(par2Pct),
     _doCompress(doCompress), _doPar2(doPar2), _rarName(rarName), _rarPass(rarPass), _keepRar(keepRar),
+    _splitArchive(false),
 
     _nntpConnections(), _closedConnections(),
 
@@ -964,6 +965,7 @@ bool PostingJob::startCompressFiles(const QString &cmdRar,
                 _log(tr("postSize: %1 MB => volSize: %2").arg(postSize).arg(volSize));
         }
         args << QString("-v%1m").arg(volSize);
+        _splitArchive = true;
     }
 
 #if defined( Q_OS_WIN )
@@ -1122,7 +1124,7 @@ bool PostingJob::startGenPar2(const QString &tmpFolder,
         else
         {
             if (_use7z)
-                args << QString("%1/%2.7z*").arg(archiveTmpFolder, archiveName);
+                args << QString("%1/%2.7z%3").arg(archiveTmpFolder, archiveName, _splitArchive ? "*": "");
             else
                 args << QString("%1/%2*rar").arg(archiveTmpFolder, archiveName);
 
