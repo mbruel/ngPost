@@ -47,12 +47,14 @@ class FoldersMonitorForNewFiles : public QObject
 {
     Q_OBJECT
 
+    friend class NgPost;
+
 private:
     QFileSystemWatcher          _monitor;        //!< monitor
     QMap<QString, FolderScan*>  _folders; //!< track files processed (their date might be > _lastCheck)
     AtomicBool                  _stopListening;
 
-    static const ulong sMSleep = 1000; //!< 1sec in case we move file from samba or unrar when the system is quite loaded
+    static ulong sMSleep;
 
 
 public:

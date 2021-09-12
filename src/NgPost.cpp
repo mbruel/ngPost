@@ -109,6 +109,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::MONITOR_FOLDERS,    "monitor_nzb_folders"},
     {Opt::MONITOR_EXT,        "monitor_extensions"},
     {Opt::MONITOR_IGNORE_DIR, "monitor_ignore_dir"},
+    {Opt::MONITOR_SEC_DELAY_SCAN, "monitor_sec_delay_scan"},
 
     {Opt::MSG_ID,       "msg_id"},
     {Opt::META,         "meta"},
@@ -279,7 +280,7 @@ NgPost::NgPost(int &argc, char *argv[]):
     _autoDirs(),
     _folderMonitor(nullptr), _monitorThread(nullptr),
     _delAuto(false),
-    _monitor_nzb_folders(false), _monitorExtensions(), _monitorIgnoreDir(false),
+    _monitor_nzb_folders(false), _monitorExtensions(), _monitorIgnoreDir(false), _monitorSecDelayScan(1),
     _keepRar(false), _packAuto(false), _packAutoKeywords(),
     _lang("en"), _translators(),
     _netMgr(), _urlNzbUpload(nullptr), _urlNzbUploadStr(),
@@ -360,7 +361,7 @@ NgPost::NgPost(int &argc, char *argv[]):
 
 void NgPost::_startMonitoring(const QString &folderPath)
 {
-    qDebug() << "Start Monitoring " << folderPath;
+    qDebug() << "Start Monitoring " << folderPath << " (delay scan: " << FoldersMonitorForNewFiles::sMSleep << "ms)";
     _monitorThread = new QThread();
     _monitorThread->setObjectName("Monitoring");
     _folderMonitor = new FoldersMonitorForNewFiles(folderPath);
@@ -1419,7 +1420,8 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
             }
             else
             {
-                _cout << "[FolderMonitor] " << tr("start monitoring: ") << fi.absoluteFilePath() << "\n" << MB_FLUSH;
+                _cout << "[FolderMonitor] " << tr("start monitoring: ") << fi.absoluteFilePath()
+                      << " (delay: " << FoldersMonitorForNewFiles::sMSleep << "ms)\n" << MB_FLUSH;
                 isMonitoring = true;
                 if (_folderMonitor)
                     _folderMonitor->addFolder(fi.absoluteFilePath());
@@ -1964,6 +1966,14 @@ QString NgPost::_parseConfig(const QString &configPath)
                         if (val == "true" || val == "on" || val == "1")
                             _monitorIgnoreDir = true;
                     }
+                    else if (opt == sOptionNames[Opt::MONITOR_SEC_DELAY_SCAN])
+                    {
+                        int nb = val.toInt(&ok);
+                        if (ok && nb > 1 && nb <= 120) {
+                            _monitorSecDelayScan = static_cast<ushort>(nb);
+                            FoldersMonitorForNewFiles::sMSleep = _monitorSecDelayScan * 1000;
+                        }
+                    }
                     else if (opt == sOptionNames[Opt::NZB_RM_ACCENTS])
                     {
                         val = val.toLower();
@@ -2459,7 +2469,8 @@ void NgPost::_dumpParams() const
 
              << "\ninputDir: " << _inputDir << ", autoDelete: " << _delAuto
              << ", packAutoKeywords:" << _packAutoKeywords << ", autoClose: " << _autoCloseTabs
-
+             << "\n, monitor delay: " << _monitorSecDelayScan << " ignore dir: " << _monitorIgnoreDir
+             << " ext: " << _monitorExtensions
              << "\n\nfrom: " << _from.c_str() << ", genFrom: " << _genFrom << ", saveFrom: " << _saveFrom
              << ", groups: " << _grpList.join(",")
              << " policy: " << sGroupPolicies[_groupPolicy].toUpper()
@@ -2566,6 +2577,9 @@ void NgPost::saveConfig()
                << "\n"
                << tr("## for monitoring, ignore new incoming folders") << "\n"
                << (_monitorIgnoreDir  ? "" : "#") << "MONITOR_IGNORE_DIR = true\n"
+               << tr("## for monitoring, delay to check the size of an incoming file/folder to make sure it is fully arrived before posting it") << "\n"
+               << tr("## must be between 1sec and 120sec (otherwise default: 1sec)") << "\n"
+               << "MONITOR_SEC_DELAY_SCAN = "  << _monitorSecDelayScan << "\n"
                << "\n\n"
                << tr("## Default folder to open to select files from the HMI") << "\n"
                << "inputDir = " << _inputDir << "\n"

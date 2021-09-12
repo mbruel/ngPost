@@ -23,6 +23,9 @@
 #include <QDir>
 #include <QDateTime>
 #include <QThread>
+
+ulong FoldersMonitorForNewFiles::sMSleep = 1000; //!< 1sec in case we move file from samba or unrar when the system is quite loaded
+
 FoldersMonitorForNewFiles::FoldersMonitorForNewFiles(const QString &folderPath, QObject *parent) :
     QObject(parent), _monitor(), _stopListening(0x0)
 {

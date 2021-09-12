@@ -81,7 +81,7 @@ public:
                     DISP_PROGRESS, DEBUG, DEBUG_FULL, POST_HISTORY, FIELD_SEPARATOR, NZB_RM_ACCENTS,
                     RESUME_WAIT, NO_RESUME_AUTO, SOCK_TIMEOUT, PREPARE_PACKING,
                     INPUT, OUTPUT, NZB_PATH, THREAD, NZB_UPLOAD_URL, NZB_POST_CMD,
-                    MONITOR_FOLDERS, MONITOR_EXT, MONITOR_IGNORE_DIR,
+                    MONITOR_FOLDERS, MONITOR_EXT, MONITOR_IGNORE_DIR, MONITOR_SEC_DELAY_SCAN,
                     MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY, GEN_FROM,
                     OBFUSCATE, INPUT_DIR, AUTO_DIR, MONITOR_DIR, DEL_AUTO,
                     TMP_DIR, RAR_PATH, RAR_EXTRA, RAR_SIZE, RAR_MAX, KEEP_RAR,
@@ -198,6 +198,7 @@ private:
     bool          _monitor_nzb_folders;
     QStringList   _monitorExtensions;
     bool          _monitorIgnoreDir;
+    ushort        _monitorSecDelayScan;
 
     bool          _keepRar;
     bool          _packAuto;
