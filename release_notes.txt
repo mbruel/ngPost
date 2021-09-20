@@ -17,18 +17,31 @@ TODO: auto RAR size and par2 parameters depending on the inputs size?
 
 ####################################################
 ###       Release: ngPost v4.15                  ###
-###       date:    2021/?/?                    ###
+###       date:    2021/09/21                    ###
 ####################################################
+
+- new MONITOR_SEC_DELAY_SCAN keyword (Issue #117)
+
+- Req #102: introduce new config PACK instead of AUTO_COMPRESS so the parameters can be chosen
+i.e: even with PACK defined in conf, it's possible to not use it in CMD if --pack is not present
+This also allow to do post with only par2 generation (no compression)
+
+- adding BTC donation button in the GUI
+
+- new LOG_IN_FILE keyword in config to save logs in GUI mode (to debug crashes)
 
 - Switch to GPL v3 licence "to avoid proprietary copies"
 without contacting me...
 Even if I suppose they won't give a fuck!...
 
-- Use more random seed for std::srand
+- Use more random seed for std::srand (potential unrealistic security hole raised...)
 
 - Add a pure CMD compilation mode (for Linux servers)
+to build it: comment line 4 in ngPost.pro (CONFIG  += use_hmi)
 
 - GROUP_POLICY::EACH_FILE only with Article's obfuscation
+
+- make it Qt6 compliant...
 
 
 
