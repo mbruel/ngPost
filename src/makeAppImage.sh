@@ -1,9 +1,10 @@
 #!/bin/bash
-make clean
 git pull
+make clean
 $MB_QMAKE -o Makefile ngPost.pro CONFIG+=release
 make -j 2
 cp ngPost ../release/ngPost/
 cd ../..
-linuxdeployqt ngPost/ngPost.desktop -appimage -qmake=$MB_QMAKE
-lt
+/home/mb/apps/bin/linuxdeployqt-6-x86_64.AppImage ngPost/ngPost.desktop -appimage -qmake=$MB_QMAKE
+ls -alrt
+
