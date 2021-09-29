@@ -1215,22 +1215,24 @@ bool NgPost::hasMonitoringPostingJobs() const
 
 bool NgPost::parseCommandLine(int argc, char *argv[])
 {
-    QString appVersion = QString("%1_v%2").arg(sAppName).arg(sVersion);
+    Q_UNUSED(argc)
+    QString appVersion = QString("%1_v%2").arg(sAppName, sVersion);
     QCommandLineParser parser;
     parser.setApplicationDescription(appVersion);
     parser.addOptions(sCmdOptions);
 
 
     // Process the actual command line arguments given by the user
-    QStringList args;
-    for (int i = 0; i < argc; ++i)
-        args << argv[i];
-
-    bool res = parser.parse(args);
+    QStringList args = QCoreApplication::arguments();
+    if (!parser.parse(args))
+    {
 #ifdef __DEBUG__
-    qDebug() << "args: " << args
-             << "=> parsing: " << res << " (error: " << parser.errorText() << ")";
+        qDebug() << "cmd args: " << args;
 #endif
+        _error(tr("Error syntax: %1\nTo list the available options use: %2 --help\n").arg(parser.errorText(), sAppName),
+                ERROR_CODE::ERR_WRONG_ARG);
+        return false;
+    }
 
     if (parser.isSet(sOptionNames[Opt::QUIET]))
         _quiet = true;
@@ -1259,13 +1261,6 @@ bool NgPost::parseCommandLine(int argc, char *argv[])
         _debug = 0;
         _dispProgressBar  = false;
         _dispFilesPosting = false;
-    }
-
-    if (!parser.parse(args))
-    {
-        _error(tr("Error syntax: %1\nTo list the available options use: %2 --help\n").arg(parser.errorText()).arg(argv[0]),
-                ERROR_CODE::ERR_WRONG_ARG);
-        return false;
     }
 
     if (parser.isSet(sOptionNames[Opt::LANG]))
