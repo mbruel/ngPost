@@ -1,6 +1,6 @@
 QT += core network
 
-DEFINES += "APP_VERSION=\"4.15\""
+DEFINES += "APP_VERSION=\"4.16\""
 CONFIG  += use_hmi
 
 INCLUDEPATH += $$PWD
