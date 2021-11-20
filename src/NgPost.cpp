@@ -52,7 +52,7 @@
 
 const char *NgPost::sAppName          = "ngPost";
 const QString NgPost::sVersion        = QString::number(APP_VERSION);
-const QString NgPost::sProFileURL     = "https://raw.githubusercontent.com/mbruel/ngPost/master/src/ngPost.pro";
+const QString NgPost::sProFileURL     = "https://raw.githubusercontent.com/mbruel/ngPost/master/src/ngPost.pri";
 const QString NgPost::sDonationURL    = "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=W2C236U6JNTUA&item_name=ngPost&currency_code=EUR";
 const QString NgPost::sDonationBtcURL = "https://github.com/mbruel/ngPost#donations";
 
