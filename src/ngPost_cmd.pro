@@ -1,7 +1,7 @@
 QT += core network
 
 DEFINES += "APP_VERSION=\"4.16\""
-CONFIG  += use_hmi
+#CONFIG  += use_hmi
 
 INCLUDEPATH += $$PWD
 TARGET = ngPost
@@ -47,7 +47,7 @@ win32: {
 macx: {
     ICON = ngPost.icns
     CONFIG += app_bundle
-    ExtraFiles.files = $$PWD/par2 $$PWD/parpar $$PWD/LICENSE
+    ExtraFiles.files = $$PWD/par2 $$PWD/parpar
     ExtraFiles.path = Contents/MacOS
     QMAKE_BUNDLE_DATA += ExtraFiles
 } 

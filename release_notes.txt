@@ -14,6 +14,18 @@ TODO: include ParPar instead of par2cmdline?
 
 TODO: auto RAR size and par2 parameters depending on the inputs size?
 
+####################################################
+###       Release: ngPost v4.16                  ###
+###       date:    2021/11/29                    ###
+####################################################
+
+- Fix nzb check
+
+- Issue #119: use QCoreApplication::arguments() instead of argv[]  to have the proper encoding
+
+- Issue #120: building cmd only Linux version
+
+
 
 ####################################################
 ###       Release: ngPost v4.15                  ###

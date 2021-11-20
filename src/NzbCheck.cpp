@@ -105,7 +105,7 @@ int NzbCheck::parseNzb()
         {
             QXmlStreamReader::TokenType type = xmlReader.readNext();
             if (type == QXmlStreamReader::TokenType::StartElement
-                    && xmlReader.name().compare(QLatin1String("file")))
+                    && xmlReader.name().compare(QLatin1String("file")) == 0)
             {
                 QString subject = xmlReader.attributes().value("subject").toString();
                 QRegularExpressionMatch match = sNntpArticleYencSubjectRegExp.match(subject);
@@ -116,7 +116,7 @@ int NzbCheck::parseNzb()
                 {
                     QXmlStreamReader::TokenType type = xmlReader.readNext();
                     if (type == QXmlStreamReader::TokenType::EndElement
-                            && xmlReader.name().compare(QLatin1String("file")))
+                            && xmlReader.name().compare(QLatin1String("file")) == 0)
                     {
                         if (debugMode())
                             _cout << tr("The file '%1' has %2 articles in the nzb (expected: %3)").arg(
@@ -133,7 +133,7 @@ int NzbCheck::parseNzb()
                         break;
                     }
                     else if (type == QXmlStreamReader::TokenType::StartElement
-                            && xmlReader.name().compare(QLatin1String("segment")))
+                            && xmlReader.name().compare(QLatin1String("segment")) == 0)
                     {
                         ++nbArticles;
                         xmlReader.readNext();
