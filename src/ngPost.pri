@@ -1,26 +1,12 @@
-<<<<<<< HEAD
 QT += core network
 
 DEFINES += "APP_VERSION=\"4.16\""
-#CONFIG  += use_hmi
 
 INCLUDEPATH += $$PWD
 TARGET = ngPost
 TEMPLATE = app
 CONFIG += c++14
 CONFIG -= app_bundle
-
-
-use_hmi {
-    QT += gui
-    greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-
-    DEFINES += __USE_HMI__
-}
-else {
-    QT -= gui
-    CONFIG += console
-}
 
 DEFINES += __USE_CONNECTION_TIMEOUT__
 DEFINES += __COMPUTE_IMMEDIATE_SPEED__
@@ -48,10 +34,10 @@ win32: {
 macx: {
     ICON = ngPost.icns
     CONFIG += app_bundle
-    ExtraFiles.files = $$PWD/par2 $$PWD/parpar
+    ExtraFiles.files = $$PWD/par2 $$PWD/parpar $$PWD/LICENSE
     ExtraFiles.path = Contents/MacOS
     QMAKE_BUNDLE_DATA += ExtraFiles
-} 
+}
 
 CONFIG(debug, debug|release) :{
     DEFINES += __DEBUG__
@@ -60,7 +46,7 @@ CONFIG(debug, debug|release) :{
     DEFINES -= LOG_CONNECTION_ERRORS_BEFORE_EMIT_SIGNALS
     DEFINES += LOG_NEWS_AUTH
     DEFINES -= LOG_NEWS_DATA
-    DEFINES += LOG_CONSTRUCTORS    
+    DEFINES += LOG_CONSTRUCTORS
 
     DEFINES -= __SAVE_ARTICLES__
 }
@@ -129,32 +115,3 @@ HEADERS += \
 RESOURCES += \
     resources/resources.qrc
 
-
-use_hmi {
-SOURCES += \
-    hmi/AboutNgPost.cpp \
-    hmi/AutoPostWidget.cpp \
-    hmi/CheckBoxCenterWidget.cpp \
-    hmi/PostingWidget.cpp \
-    hmi/SignedListWidget.cpp \
-    hmi/MainWindow.cpp
-
-HEADERS += \
-    hmi/AboutNgPost.h \
-    hmi/AutoPostWidget.h \
-    hmi/CheckBoxCenterWidget.h \
-    hmi/PostingWidget.h \
-    hmi/SignedListWidget.h \
-    hmi/MainWindow.h
-
-FORMS += \
-    hmi/AboutNgPost.ui \
-    hmi/AutoPostWidget.ui \
-    hmi/MainWindow.ui \
-    hmi/PostingWidget.ui
-}
-=======
-QT -= gui
-CONFIG += console
-include(ngPost.pri)
->>>>>>> 99a046c8c058ff05d0fb9e7ff0b8063e09b4b97e

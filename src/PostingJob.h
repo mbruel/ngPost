@@ -206,6 +206,7 @@ public:
     inline QString postSize() const;
 
     inline bool hasCompressed() const;
+    inline bool hasPacking() const;
     inline bool isPacked() const;
     inline bool hasPostStarted() const;
     inline bool hasPostFinished() const;
@@ -416,6 +417,7 @@ QString PostingJob::humanSize(double size)
 }
 
 bool PostingJob::hasCompressed() const { return _doCompress; }
+inline bool PostingJob::hasPacking() const { return _doCompress || _doPar2; }
 bool PostingJob::isPacked() const { return _packed; }
 bool PostingJob::hasPostStarted() const { return _postStarted; }
 bool PostingJob::hasPostFinished() const { return _postFinished; }

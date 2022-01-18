@@ -52,7 +52,7 @@
 
 const char *NgPost::sAppName          = "ngPost";
 const QString NgPost::sVersion        = QString::number(APP_VERSION);
-const QString NgPost::sProFileURL     = "https://raw.githubusercontent.com/mbruel/ngPost/master/src/ngPost.pro";
+const QString NgPost::sProFileURL     = "https://raw.githubusercontent.com/mbruel/ngPost/master/src/ngPost.pri";
 const QString NgPost::sDonationURL    = "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=W2C236U6JNTUA&item_name=ngPost&currency_code=EUR";
 const QString NgPost::sDonationBtcURL = "https://github.com/mbruel/ngPost#donations";
 
@@ -907,7 +907,7 @@ void NgPost::_prepareNextPacking()
     if (_pendingJobs.size())
     {
         _packingJob = _pendingJobs.first();
-        if (_packingJob->hasCompressed())
+        if (_packingJob->hasPacking())
             emit _packingJob->startPosting(false);
         else if (debugFull())
             _log(tr("no packing needed for next pending job %1").arg(_packingJob->nzbName()));
@@ -976,14 +976,17 @@ qDebug() << "[MB_TRACE][Issue#82][NgPost::onPostingJobFinished] job: " << job
                 {
                     _packingJob = nullptr;
                     if (_activeJob->isPacked())
-                        _activeJob->_postFiles();                    
-                    else if (!_activeJob->hasCompressed())
+                    {
+                        _activeJob->_postFiles();
+                        _prepareNextPacking();
+                    }
+                    else if (!_activeJob->hasPacking())
                     {
                         if (debugFull())
                             _log(tr("start non packing job..."));
                         emit _activeJob->startPosting(true);
+                        _prepareNextPacking();
                     }
-                    _prepareNextPacking();
                     // otherwise it will be triggered automatically when the packing is finished
                     // as it is now the active job ;)
                 }
