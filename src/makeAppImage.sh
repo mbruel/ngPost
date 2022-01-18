@@ -1,6 +1,7 @@
 #!/bin/bash
 git pull
 make clean
+rm Makefile
 $MB_QMAKE -o Makefile ngPost.pro CONFIG+=release
 make -j 2
 cp ngPost ../release/ngPost/
