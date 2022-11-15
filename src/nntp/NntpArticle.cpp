@@ -23,6 +23,7 @@
 #include "nntp/NntpFile.h"
 #include "nntp/Nntp.h"
 #include "utils/Yenc.h"
+#include <cstring>
 #include <sstream>
 
 ushort NntpArticle::sNbMaxTrySending = 5;
