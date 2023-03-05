@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 QT += core network
 
 DEFINES += "APP_VERSION=\"4.16\""
@@ -153,8 +152,3 @@ FORMS += \
     hmi/MainWindow.ui \
     hmi/PostingWidget.ui
 }
-=======
-QT -= gui
-CONFIG += console
-include(ngPost.pri)
->>>>>>> 99a046c8c058ff05d0fb9e7ff0b8063e09b4b97e
