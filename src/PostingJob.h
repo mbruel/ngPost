@@ -234,6 +234,8 @@ public:
     inline const QString &immediateSpeed() const;
 #endif
 
+    static QString sslSupportInfo();
+
 signals:
     void startPosting(bool isActiveJob);    //!< connected to onStartPosting (to be able to run on a different Thread)
     void stopPosting();

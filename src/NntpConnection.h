@@ -95,6 +95,8 @@ public:
 
     inline bool hasNoMoreFiles() const;
 
+    static QString sslSupportInfo();
+
 signals:
     void startConnection();
     void killConnection();

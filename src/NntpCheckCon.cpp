@@ -61,7 +61,7 @@ void NntpCheckCon::onStartConnection()
     connect(_socket, &QIODevice::readyRead,          this, &NntpCheckCon::onReadyRead,    Qt::DirectConnection);
 
     qRegisterMetaType<QAbstractSocket::SocketError>("SocketError" );
-    connect(_socket, SIGNAL(error(QAbstractSocket::SocketError)),
+    connect(_socket, SIGNAL(errorOccurred(QAbstractSocket::SocketError)),
             this, SLOT(onErrors(QAbstractSocket::SocketError)), Qt::DirectConnection);
 
     _socket->connectToHost(_srvParams.host, _srvParams.port);

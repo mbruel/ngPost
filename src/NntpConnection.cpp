@@ -72,7 +72,8 @@ NntpConnection::~NntpConnection()
     {
         disconnect(_socket, &QAbstractSocket::disconnected, this, &NntpConnection::onDisconnected);
         disconnect(_socket, &QIODevice::readyRead,          this, &NntpConnection::onReadyRead);
-        disconnect(_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onErrors(QAbstractSocket::SocketError)));
+        disconnect(_socket, SIGNAL(errorOccurred(QAbstractSocket::SocketError)),
+                   this, SLOT(onErrors(QAbstractSocket::SocketError)));
         if (_srvParams.useSSL)
             disconnect(_socket, SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(onSslErrors(QList<QSslError>)));
 
@@ -107,7 +108,7 @@ void NntpConnection::onStartConnection()
     connect(_socket, &QIODevice::readyRead,          this, &NntpConnection::onReadyRead,    Qt::DirectConnection);
 
     qRegisterMetaType<QAbstractSocket::SocketError>("SocketError" );
-    connect(_socket, SIGNAL(error(QAbstractSocket::SocketError)),
+    connect(_socket, SIGNAL(errorOccurred(QAbstractSocket::SocketError)),
             this, SLOT(onErrors(QAbstractSocket::SocketError)), Qt::DirectConnection);
 
     _socket->connectToHost(_srvParams.host, _srvParams.port);
@@ -120,11 +121,6 @@ void NntpConnection::onStartConnection()
     }
     _timeout->start(_ngPost->getSocketTimeout());
 #endif
-
-    if (_ngPost->debugFull())
-        _log(QString("SSL support: %1, build version: %2, system version: %3").arg(QSslSocket::supportsSsl() ? "yes" : "no").arg(
-                 QSslSocket::sslLibraryBuildVersionString()).arg(QSslSocket::sslLibraryVersionString()));
-
 }
 
 void NntpConnection::onKillConnection()
@@ -144,9 +140,11 @@ void NntpConnection::onKillConnection()
 
         disconnect(_socket, &QAbstractSocket::disconnected, this, &NntpConnection::onDisconnected);
         disconnect(_socket, &QIODevice::readyRead, this, &NntpConnection::onReadyRead);
-        disconnect(_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onErrors(QAbstractSocket::SocketError)));
+        disconnect(_socket, SIGNAL(errorOccurred(QAbstractSocket::SocketError)),
+                   this, SLOT(onErrors(QAbstractSocket::SocketError)));
         if (_srvParams.useSSL)
-            disconnect(_socket, SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(onSslErrors(QList<QSslError>)));
+            disconnect(_socket, SIGNAL(sslErrors(QList<QSslError>)),
+                       this, SLOT(onSslErrors(QList<QSslError>)));
 
         _socket->disconnectFromHost();
         if (_socket->state() != QAbstractSocket::UnconnectedState)
@@ -173,9 +171,11 @@ void NntpConnection::_closeConnection(){
     if (_socket && _isConnected)
     {
         disconnect(_socket, &QIODevice::readyRead, this, &NntpConnection::onReadyRead);
-        disconnect(_socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onErrors(QAbstractSocket::SocketError)));
+        disconnect(_socket, SIGNAL(errorOccurred(QAbstractSocket::SocketError)),
+                   this, SLOT(onErrors(QAbstractSocket::SocketError)));
         if (_srvParams.useSSL)
-            disconnect(_socket, SIGNAL(sslErrors(QList<QSslError>)), this, SLOT(onSslErrors(QList<QSslError>)));
+            disconnect(_socket, SIGNAL(sslErrors(QList<QSslError>)),
+                       this, SLOT(onSslErrors(QList<QSslError>)));
 
         _socket->disconnectFromHost(); // we will end up in NntpConnect::onDisconnected
     }
@@ -541,5 +541,13 @@ void NntpConnection::_sendNextArticle()
 void NntpConnection::setPoster(Poster *poster)
 {
     _poster = poster;
-    _logPrefix = QString("%1 {%2}").arg(poster->name()).arg(_logPrefix);
+    _logPrefix = QString("%1 {%2}").arg(poster->name(), _logPrefix);
+}
+
+QString NntpConnection::sslSupportInfo()
+{
+    return QString("SSL support: %1, build version: %2, system version: %3").arg(
+                QSslSocket::supportsSsl() ? "yes" : "no",
+                QSslSocket::sslLibraryBuildVersionString(),
+                QSslSocket::sslLibraryVersionString());
 }

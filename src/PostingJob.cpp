@@ -120,6 +120,9 @@ PostingJob::PostingJob(NgPost *ngPost,
     if (_useHMI)
         connect(&_immediateSpeedTimer, &QTimer::timeout, this, &PostingJob::onImmediateSpeedComputation, Qt::QueuedConnection);
 #endif
+
+    if (ngPost->debugMode())
+        _log(NntpConnection::sslSupportInfo());
 }
 
 PostingJob::~PostingJob()
@@ -175,6 +178,11 @@ void PostingJob::resume()
 
     _isPaused = false;
     _pauseDuration += _pauseTimer.elapsed();
+}
+
+QString PostingJob::sslSupportInfo()
+{
+    return NntpConnection::sslSupportInfo();
 }
 
 void PostingJob::onResumeTriggered()

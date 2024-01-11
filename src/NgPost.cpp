@@ -2499,7 +2499,9 @@ void NgPost::_dumpParams() const
 void NgPost::_showVersionASCII() const
 {
     _cout << sNgPostASCII
-          << "                          v" << sVersion << "\n\n" << MB_FLUSH;
+          << "                          v" << sVersion << "\n\n"
+          << PostingJob::sslSupportInfo()  << "\n"
+          << MB_FLUSH;
 }
 
 void NgPost::saveConfig()
