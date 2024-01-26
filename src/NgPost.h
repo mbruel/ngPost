@@ -323,6 +323,7 @@ public:
     inline const char * appName() override;
 
     void checkForNewVersion() override;
+    bool checkSupportSSL();
 #ifdef __USE_HMI__
     int startHMI() override;
 #endif

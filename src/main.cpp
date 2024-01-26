@@ -68,6 +68,7 @@ int main(int argc, char *argv[])
 #if defined( Q_OS_WIN )
         ::ShowWindow( ::GetConsoleWindow(), SW_HIDE ); //hide console window
 #endif
+        app->checkSupportSSL();
         exitCode = app->startHMI();
     }
     else if (app->parseCommandLine(argc, argv))
@@ -75,11 +76,13 @@ int main(int argc, char *argv[])
     if (app->parseCommandLine(argc, argv))
 #endif
     {
-        exitCode = app->startEventLoop();
+        if (app->checkSupportSSL())
+        {
+            exitCode = app->startEventLoop();
 
-        if (app->nzbCheck())
-            exitCode = app->nbMissingArticles();
-
+            if (app->nzbCheck())
+                exitCode = app->nbMissingArticles();
+        }
 #ifdef __DEBUG__
         std::cout << app->appName() << " closed properly!\n";
         std::cout.flush();

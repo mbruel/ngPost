@@ -185,6 +185,11 @@ QString PostingJob::sslSupportInfo()
     return NntpConnection::sslSupportInfo();
 }
 
+bool PostingJob::supportsSsl()
+{
+    return NntpConnection::supportsSsl();
+}
+
 void PostingJob::onResumeTriggered()
 {
     if (_isPaused)

@@ -235,6 +235,7 @@ public:
 #endif
 
     static QString sslSupportInfo();
+    static bool supportsSsl();
 
 signals:
     void startPosting(bool isActiveJob);    //!< connected to onStartPosting (to be able to run on a different Thread)

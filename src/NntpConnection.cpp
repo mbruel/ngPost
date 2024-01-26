@@ -551,3 +551,8 @@ QString NntpConnection::sslSupportInfo()
                 QSslSocket::sslLibraryBuildVersionString(),
                 QSslSocket::sslLibraryVersionString());
 }
+
+bool NntpConnection::supportsSsl()
+{
+    return QSslSocket::supportsSsl();
+}

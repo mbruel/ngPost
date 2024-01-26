@@ -642,6 +642,17 @@ void NgPost::checkForNewVersion()
     QObject::connect(reply, &QNetworkReply::finished, this, &NgPost::onCheckForNewVersion);
 }
 
+bool NgPost::checkSupportSSL()
+{
+    if (!PostingJob::supportsSsl())
+    {
+        _log(tr("SSL issue on your system..."));
+        _log(PostingJob::sslSupportInfo());
+        return false;
+    }
+    return true;
+}
+
 void NgPost::doNzbPostCMD(PostingJob *job)
 {
     // first NZB_UPLOAD_URL
