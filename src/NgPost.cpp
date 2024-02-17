@@ -949,17 +949,17 @@ qDebug() << "[MB_TRACE][Issue#82][NgPost::onPostingJobFinished] job: " << job
             {
                 QTextStream stream(&hist);
                 stream << QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss")
-                       << _historyFieldSeparator << _activeJob->nzbName()
+                       << _historyFieldSeparator << "\"" << _activeJob->nzbName() << "\""
                        << _historyFieldSeparator << _activeJob->postSize()
                        << _historyFieldSeparator << _activeJob->avgSpeed();
                 if (_activeJob->hasCompressed())
-                    stream << _historyFieldSeparator << _activeJob->rarName()
-                           << _historyFieldSeparator << _activeJob->rarPass();
+                    stream << _historyFieldSeparator << "\"" << _activeJob->rarName() << "\""
+                           << _historyFieldSeparator << "\"" << _activeJob->rarPass() << "\"";
                 else
                     stream << _historyFieldSeparator << _historyFieldSeparator;
 
                 stream << _historyFieldSeparator << _activeJob->groups()
-                       << _historyFieldSeparator << _activeJob->from()
+                       << _historyFieldSeparator << "\"" << _activeJob->from() << "\""
                        << "\n" << MB_FLUSH;
                 hist.close();
             }
