@@ -53,6 +53,7 @@ private:
 
     const qint64 _filePos;   //!< position in the File (for yEnc header)
     const qint64 _fileBytes; //!< bytes of the original file that are encoded
+    const bool _obfuscateArticles;
 
     ushort _nbTrySending;
 
