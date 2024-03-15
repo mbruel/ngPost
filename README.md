@@ -149,11 +149,11 @@ Most configuration keywords can be used in command line but few of them, are onl
 - **AUTO_CLOSE_TABS**: close Quick Post Tabs when posted successfully (for the GUI)
 - **RESUME_WAIT**: Time to wait (seconds) before trying to resume a Post automatically in case of loss of Network (min: 30)
 - **NO_RESUME_AUTO**: stop a post when you loose the network
-- ** PREPARE_PACKING**: when several posts are queued, prepare the packing of the next post while uploading the current one
+- **PREPARE_PACKING**: when several posts are queued, prepare the packing of the next post while uploading the current one
 
 The following ones are for experimented posters:
 - **RAR_EXTRA** : to customize the rar command (no need to put the 'a', '-idp' or '-r'). No need to use it for 7-zip except if you wish to change the compession level.
-- **PAR2_CMD**  : to change the par2 generator and be able to use [Parpar](https://github.com/animetosho/ParPar) or [Multipar](http://hp.vector.co.jp/authors/VA021385/) if you wish. (par2cmdline is the default embedded generator)
+- **PAR2_PATH**  : to change the par2 generator and be able to use [Parpar](https://github.com/animetosho/ParPar) or [Multipar](http://hp.vector.co.jp/authors/VA021385/) if you wish. (par2cmdline is the default embedded generator)
 - **PAR2_ARGS** : to customize the par2 command, especially if you choose to use another one than the default par2cmdline
 - **TMP_RAM**: use a temporary folder with size constraint, typically a tmpfs partition, for posting files that would fit (otherwise TMP_DIR is used)
 - **TMP_RAM_RATIO**: Ratio used on the source files size to compensate the par2 generation
