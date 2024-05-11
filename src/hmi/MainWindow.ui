@@ -720,6 +720,19 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="CircularImageButton" name="nightModeButton">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>24</width>
+           <height>24</height>
+          </size>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </item>
@@ -731,11 +744,18 @@
      <x>0</x>
      <y>0</y>
      <width>1119</width>
-     <height>24</height>
+     <height>19</height>
     </rect>
    </property>
   </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>CircularImageButton</class>
+   <extends>QPushButton</extends>
+   <header>hmi/CircularImageButton.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="../resources/resources.qrc"/>
  </resources>

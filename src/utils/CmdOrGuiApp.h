@@ -26,6 +26,24 @@ class QCoreApplication;
 
 class CmdOrGuiApp
 {
+    static const QString sAmpXml;
+    static const QString sLtXml;
+    static const QString sGtXml;
+    static const QString sQuoteXml;
+    static const QString sAPosXml;
+
+    static const QString sAmpStr;
+    static const QString sLtStr;
+    static const QString sGtStr;
+    static const QString sQuoteStr;
+    static const QString sAPosStr;
+
+    static const QChar sAmpChar;
+    static const QChar sLtChar;
+    static const QChar sGtChar;
+    static const QChar sQuoteChar;
+    static const QChar sAPosChar;
+
 protected:
     enum class AppMode : bool {CMD = 0, HMI = 1}; //!< supposed to be CMD but a simple HMI has been added
 
@@ -71,44 +89,46 @@ bool CmdOrGuiApp::useHMI() const {
 QString CmdOrGuiApp::escapeXML(const char *str)
 {
     QString escaped(str);
-    escaped.replace('&',  "&amp;");
-    escaped.replace('<',  "&lt;");
-    escaped.replace('>',  "&gt;");
-    escaped.replace('"',  "&quot;");
-    escaped.replace('\'', "&apos;");
+    escaped.replace(sAmpChar,   sAmpXml);
+    escaped.replace(sLtChar,    sLtXml);
+    escaped.replace(sGtChar,    sGtXml);
+    escaped.replace(sQuoteChar, sQuoteXml);
+    escaped.replace(sAPosChar,  sAPosXml);
     return escaped;
 }
 
 QString CmdOrGuiApp::escapeXML(const QString &str)
 {
     QString escaped(str);
-    escaped.replace('&',  "&amp;");
-    escaped.replace('<',  "&lt;");
-    escaped.replace('>',  "&gt;");
-    escaped.replace('"',  "&quot;");
-    escaped.replace('\'', "&apos;");
+    escaped.replace(sAmpChar,   sAmpXml);
+    escaped.replace(sLtChar,    sLtXml);
+    escaped.replace(sGtChar,    sGtXml);
+    escaped.replace(sQuoteChar, sQuoteXml);
+    escaped.replace(sAPosChar,  sAPosXml);
     return escaped;
 }
 
 QString CmdOrGuiApp::xml2txt(const char *str)
 {
+
+
     QString escaped(str);
-    escaped.replace("&amp;",  "&");
-    escaped.replace("&lt;",   "<");
-    escaped.replace("&gt;",   ">");
-    escaped.replace("&quot;", "\"");
-    escaped.replace("&apos;", "'");
+    escaped.replace(sAmpXml,   sAmpStr);
+    escaped.replace(sLtXml,    sLtStr);
+    escaped.replace(sGtXml,    sGtStr);
+    escaped.replace(sQuoteXml, sQuoteStr);
+    escaped.replace(sAPosXml,  sAPosStr);
     return escaped;
 }
 
 QString CmdOrGuiApp::xml2txt(const QString &str)
 {
     QString escaped(str);
-    escaped.replace("&amp;",  "&");
-    escaped.replace("&lt;",   "<");
-    escaped.replace("&gt;",   ">");
-    escaped.replace("&quot;", "\"");
-    escaped.replace("&apos;", "'");
+    escaped.replace(sAmpXml,   sAmpStr);
+    escaped.replace(sLtXml,    sLtStr);
+    escaped.replace(sGtXml,    sGtStr);
+    escaped.replace(sQuoteXml, sQuoteStr);
+    escaped.replace(sAPosXml,  sAPosStr);
     return escaped;
 }
 

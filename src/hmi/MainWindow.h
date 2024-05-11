@@ -105,6 +105,8 @@ public:
     static const QString sDoneKOIcon;
     static const QColor  sArticlesFailedColor;
 
+    void setNightMode(bool goNight = false);
+
 protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
     void dragEnterEvent(QDragEnterEvent *e) override;

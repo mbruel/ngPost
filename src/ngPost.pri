@@ -1,11 +1,11 @@
-QT += core network
+QT += core network sql
 
-DEFINES += "APP_VERSION=\"4.16\""
+DEFINES += "APP_VERSION=\"4.17\""
 
 INCLUDEPATH += $$PWD
 TARGET = ngPost
 TEMPLATE = app
-CONFIG += c++14
+CONFIG += c++17
 CONFIG -= app_bundle
 
 DEFINES += __USE_CONNECTION_TIMEOUT__
@@ -69,6 +69,9 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+        $$PWD/Migration.cpp \
+        $$PWD/ResumeJobQueue.cpp \
+        $$PWD/utils/Database.cpp \
         ArticleBuilder.cpp \
         FileUploader.cpp \
         FoldersMonitorForNewFiles.cpp \
@@ -92,6 +95,9 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
+    $$PWD/Migration.h \
+    $$PWD/ResumeJobQueue.h \
+    $$PWD/utils/Database.h \
     ArticleBuilder.h \
     FileUploader.h \
     FoldersMonitorForNewFiles.h \

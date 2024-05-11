@@ -48,6 +48,7 @@ class FoldersMonitorForNewFiles;
 class QStorageInfo;
 #endif
 class NzbCheck;
+class Database;
 
 #define NB_ARTICLES_TO_PREPARE_PER_CONNECTION 3
 
@@ -77,7 +78,7 @@ class NgPost : public QObject, public CmdOrGuiApp
     friend class AboutNgPost;
 
 public:
-    enum class Opt {HELP = 0, LANG, VERSION, CONF, SHUTDOWN_CMD, CHECK, QUIET, PROXY_SOCKS5,
+    enum class Opt {HELP = 0, LANG, VERSION, CONF, CONF_VERSION, SHUTDOWN_CMD, CHECK, QUIET, PROXY_SOCKS5,
                     DISP_PROGRESS, DEBUG, DEBUG_FULL, POST_HISTORY, FIELD_SEPARATOR, NZB_RM_ACCENTS,
                     RESUME_WAIT, NO_RESUME_AUTO, SOCK_TIMEOUT, PREPARE_PACKING,
                     INPUT, OUTPUT, NZB_PATH, THREAD, NZB_UPLOAD_URL, NZB_POST_CMD,
@@ -187,8 +188,9 @@ private:
     QQueue<PostingJob*> _pendingJobs;
     PostingJob         *_packingJob;
 
-    QString     _historyFieldSeparator;
-    QString     _postHistoryFile;
+    QString     _historyFieldSeparator; //!< deprecated (before 4.17)
+    QString     _postHistoryFile; //!< deprecated (before 4.17)
+    QString     _dbHistoryFile;
     QList<QDir> _autoDirs;
 
     FoldersMonitorForNewFiles *_folderMonitor;
@@ -237,7 +239,12 @@ private:
     QFile        *_logFile;
     QTextStream  *_logStream;
 
+    Database     *_dbHistory;
 
+
+#ifdef __USE_HMI__
+    bool _isNightMode = false;
+#endif
 
     static constexpr const char *sDefaultShutdownCmdLinux   = "sudo -n /sbin/poweroff";
     static constexpr const char *sDefaultShutdownCmdWindows = "shutdown /s /f /t 0";
@@ -250,6 +257,8 @@ private:
 
     static const char *sAppName;
     static const QString sVersion;
+    static QRegularExpression sAppVersionRegExp;
+    static QString sConfVersion;
     static const QString sProFileURL;
 
     static const QList<QCommandLineOption> sCmdOptions;
@@ -270,6 +279,7 @@ private:
     static constexpr const char *sDefaultConfig = ".ngPost";
 #endif
     static constexpr const char *sDefaultLogFile = "ngPost.log";
+    static constexpr const char *sDbHistoryFile  = "ngPost.sqlite";
 
 
     static const int sprogressbarBarWidth = 50;
@@ -367,7 +377,7 @@ public:
 
     inline bool dispPostingFile() const;
 
-    void saveConfig();
+    void saveConfig() const;
 
     void setDelFilesAfterPosted(bool delFiles);
     void addMonitoringFolder(const QString &dirPath);
@@ -409,9 +419,13 @@ public:
 
     inline void enableAutoPacking(bool enable = true);
 
+    inline QString const &postHistoryFile() const;
+    inline QString const &historyFieldSeparator() const;
+    bool initHistoryDatabase() const;
+    inline Database *historyDatabase() const;
 
 signals:
-    void log(QString msg, bool newline); //!< in case we signal from another thread
+    void log(QString msg, bool newline) const; //!< in case we signal from another thread
     void error(QString msg); //!< in case we signal from another thread
 
 public slots:
@@ -437,15 +451,18 @@ public slots:
 #if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
     void onNetworkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility accessible);
 #endif
+    void onLog(QString msg, bool newline) const;
+    void onError(QString msg);
 
 private slots:
-    void onLog(QString msg, bool newline);
-    void onError(QString msg);
     void onErrorConnecting(QString err);
     void onRefreshprogressbarBar();
 
     void onNewFileToProcess(const QFileInfo &fileInfo);
 
+#ifdef __USE_HMI__
+    void onSwitchNightMode();
+#endif
 
 private:
     void _loadTanslators();
@@ -504,6 +521,9 @@ public:
 #endif
 
     inline static QString optionName(Opt key);
+
+    inline static const QString version();
+    inline static QString confVersion();
 };
 
 QString NgPost::quickJobName() { return tr(sQuickJobName); }
@@ -685,12 +705,20 @@ void NgPost::enableAutoPacking(bool enable)
     }
 }
 
+inline const QString &NgPost::postHistoryFile() const { return _postHistoryFile; }
+inline const QString &NgPost::historyFieldSeparator() const { return _historyFieldSeparator; }
+
+inline Database *NgPost::historyDatabase() const { return _dbHistory;}
+
 #ifdef __COMPUTE_IMMEDIATE_SPEED__
 int NgPost::immediateSpeedDuration() { return sImmediateSpeedDurationMs / 1000; }
 int NgPost::immediateSpeedDurationMs(){ return sImmediateSpeedDurationMs; }
 #endif
 
 QString NgPost::optionName(NgPost::Opt key) {return sOptionNames.value(key, "");}
+
+inline QString const NgPost::version() { return sVersion; }
+inline QString NgPost::confVersion(){ return sConfVersion; }
 
 QString NgPost::desc(bool useHTML)
 {

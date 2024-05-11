@@ -24,6 +24,8 @@
 #include "nntp/NntpServerParams.h"
 #include "FileUploader.h"
 #include "NzbCheck.h"
+#include "Migration.h"
+#include "utils/Database.h"
 #ifdef __USE_HMI__
   #include "hmi/MainWindow.h"
   #include "hmi/PostingWidget.h"
@@ -52,6 +54,8 @@
 
 const char *NgPost::sAppName          = "ngPost";
 const QString NgPost::sVersion        = QString::number(APP_VERSION);
+QString NgPost::sConfVersion          = QString();
+QRegularExpression NgPost::sAppVersionRegExp  = QRegularExpression("^DEFINES \\+= \"APP_VERSION=\\\\\"((\\d+)\\.(\\d+))\\\\\"\"$");
 const QString NgPost::sProFileURL     = "https://raw.githubusercontent.com/mbruel/ngPost/master/src/ngPost.pri";
 const QString NgPost::sDonationURL    = "https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=W2C236U6JNTUA&item_name=ngPost&currency_code=EUR";
 const QString NgPost::sDonationBtcURL = "https://github.com/mbruel/ngPost#donations";
@@ -77,6 +81,7 @@ const QMap<NgPost::Opt, QString> NgPost::sOptionNames =
     {Opt::LANG,           "lang"},
     {Opt::VERSION,        "version"},
     {Opt::CONF,           "conf"},
+    {Opt::CONF_VERSION,   "conf_version"},
     {Opt::SHUTDOWN_CMD,   "shutdown_cmd"},
     {Opt::DISP_PROGRESS,  "disp_progress"},
     {Opt::DEBUG,          "debug"},
@@ -277,6 +282,11 @@ NgPost::NgPost(int &argc, char *argv[]):
     _activeJob(nullptr), _pendingJobs(), _packingJob(nullptr),
     _historyFieldSeparator(sDefaultFieldSeparator),
     _postHistoryFile(),
+#if defined(WIN32) || defined(__MINGW64__)
+    _dbHistoryFile(sDbHistoryFile),
+#else
+    _dbHistoryFile(QString("%1/%2").arg(getenv("HOME"), sDbHistoryFile)),
+#endif
     _autoDirs(),
     _folderMonitor(nullptr), _monitorThread(nullptr),
     _delAuto(false),
@@ -301,7 +311,8 @@ NgPost::NgPost(int &argc, char *argv[]):
     _groupPolicy(GROUP_POLICY::ALL),
     _nzbCheck(nullptr), _quiet(false),
     _proxySocks5(QNetworkProxy::NoProxy), _proxyUrl(),
-    _logFile(nullptr), _logStream(nullptr)
+    _logFile(nullptr), _logStream(nullptr),
+    _dbHistory(new Database)
 {
     QThread::currentThread()->setObjectName(sMainThreadName);
 
@@ -426,6 +437,11 @@ int NgPost::nbMissingArticles() const
     return _nzbCheck->nbMissingArticles();
 }
 
+bool NgPost::initHistoryDatabase() const
+{
+    return _dbHistory->initSQLite(_dbHistoryFile);
+}
+
 void NgPost::_finishPosting()
 {
 #ifdef __USE_HMI__
@@ -465,24 +481,55 @@ void NgPost::updateGroups(const QString &groups)
 int NgPost::startHMI()
 {
     QString err = parseDefaultConfig();
+    {
+        Migration m(*this);
+//        _createDbIfNotExist();
+        m.migrate();
+    }
     if (!err.isEmpty())
         _error(err);
 
     if (_from.empty())
-            _from = randomStdFrom();
+        _from = randomStdFrom();
 #ifdef __DEBUG__
     _dumpParams();
 #endif
     _hmi->init(this);
     _hmi->show();
     changeLanguage(_lang); // reforce lang set up...
-
+    _hmi->setNightMode(false);
     return _app->exec();
+}
+
+void NgPost::onSwitchNightMode()
+{
+    _isNightMode = !_isNightMode;
+    if (_isNightMode)
+    {
+        //    QFile f( ":/style/DarkStyle.qss" );
+        QFile f( ":/style/QTDark.qss" );
+        if ( !f.exists() )
+            qWarning() << "Unable to set dark stylesheet, file not found";
+        else
+        {
+            f.open( QFile::ReadOnly | QFile::Text );
+            QTextStream ts( &f );
+            qApp->setStyleSheet( ts.readAll() );
+        }
+    }
+    else
+    {
+        //    https://successfulsoftware.net/2021/03/31/how-to-add-a-dark-theme-to-your-qt-application/
+        //    To unset the stylesheet and return to a light theme just call:
+
+        qApp->setStyleSheet( "" );
+    }
+    _hmi->setNightMode(_isNightMode);
 }
 #endif
 
 
-void NgPost::onLog(QString msg, bool newline)
+void NgPost::onLog(QString msg, bool newline) const
 {
     _log(msg, newline);
 }
@@ -805,14 +852,13 @@ void NgPost::_post(const QFileInfo &fileInfo, const QString &monitorFolder)
 
 void NgPost::onCheckForNewVersion()
 {
-    QNetworkReply      *reply = static_cast<QNetworkReply*>(sender());
-    QRegularExpression appVersionRegExp("^DEFINES \\+= \"APP_VERSION=\\\\\"((\\d+)\\.(\\d+))\\\\\"\"$");
+    QNetworkReply *reply = static_cast<QNetworkReply*>(sender());
     QStringList v = sVersion.split(".");
     int currentMajor = v.at(0).toInt(), currentMinor = v.at(1).toInt();
     while (!reply->atEnd())
     {
         QString line = reply->readLine().trimmed();
-        QRegularExpressionMatch match = appVersionRegExp.match(line);
+        QRegularExpressionMatch match = sAppVersionRegExp.match(line);
         if (match.hasMatch())
         {
             QString lastRealease = match.captured(1);
@@ -1909,6 +1955,18 @@ QString NgPost::_parseConfig(const QString &configPath)
                                 _nbThreads = nb;
                         }
                     }
+                    else if (opt == sOptionNames[Opt::CONF_VERSION])
+                    {
+                        QRegularExpression versionReg("\\d+\\.\\d+");
+                        if (versionReg.match(val).hasMatch())
+                        {
+                            sConfVersion = val;
+                            qDebug() << "config version : " << val;
+                        }
+                        else
+                            err += tr("%1 '%2' is invalid\n").arg(
+                                        sOptionNames[Opt::CONF_VERSION].toUpper()).arg(val);
+                    }
                     else if (opt == sOptionNames[Opt::NZB_PATH])
                     {
                         QFileInfo nzbFI(val);
@@ -2109,7 +2167,8 @@ QString NgPost::_parseConfig(const QString &configPath)
 
                     else if (opt == sOptionNames[Opt::PROXY_SOCKS5])
                     {
-                        QRegularExpression regExp(sProxyStrRegExp,  QRegularExpression::CaseInsensitiveOption);
+                        QRegularExpression regExp(sProxyStrRegExp,
+                                                  QRegularExpression::CaseInsensitiveOption);
                         QRegularExpressionMatch match = regExp.match(val);
                         if (match.hasMatch())
                         {
@@ -2162,9 +2221,13 @@ QString NgPost::_parseConfig(const QString &configPath)
                         _ramPath = val;
                         QFileInfo fi(_ramPath);
                         if (!fi.isDir())
-                            err += QString("%1 %2\n").arg(sOptionNames[Opt::TMP_RAM].toUpper()).arg(tr("should be a directory!..."));
+                            err += QString("%1 %2\n").arg(
+                                        sOptionNames[Opt::TMP_RAM].toUpper()).arg(
+                                        tr("should be a directory!..."));
                         else if (!fi.isWritable())
-                            err += QString("%1 %2\n").arg(sOptionNames[Opt::TMP_RAM].toUpper()).arg(tr("should be writable!..."));
+                            err += QString("%1 %2\n").arg(
+                                        sOptionNames[Opt::TMP_RAM].toUpper()).arg(
+                                        tr("should be writable!..."));
                         else
                         {
                             _storage = new QStorageInfo(_ramPath);
@@ -2183,7 +2246,8 @@ QString NgPost::_parseConfig(const QString &configPath)
                         if (!ok || ratio < sRamRatioMin || ratio > sRamRatioMax)
                             err += QString("%1 %2\n").arg(
                                         sOptionNames[Opt::TMP_RAM_RATIO].toUpper()).arg(
-                                        tr("should be a ratio between %1 and %2").arg(sRamRatioMin).arg(sRamRatioMax));
+                                        tr("should be a ratio between %1 and %2").arg(
+                                            sRamRatioMin).arg(sRamRatioMax));
                         else
                             _ramRatio = ratio;
                     }
@@ -2426,7 +2490,7 @@ QString NgPost::parseDefaultConfig()
         err = _parseConfig(conf);
     }
     else
-        qCritical() << "The default config file doesn't exist: " << conf;
+        err = tr("The default config file is missing: %1").arg(conf);
 
     return err;
 }
@@ -2515,7 +2579,7 @@ void NgPost::_showVersionASCII() const
           << MB_FLUSH;
 }
 
-void NgPost::saveConfig()
+void NgPost::saveConfig() const
 {
 #if defined(WIN32) || defined(__MINGW64__)
     QString conf = sDefaultConfig;
@@ -2530,6 +2594,8 @@ void NgPost::saveConfig()
         stream << tr("# ngPost configuration file") << "\n"
                << "#\n"
                << "#\n"
+               << "\n"
+               << "CONF_VERSION = " << sVersion << "\n"
                << "\n"
                << tr("## Lang for the app. Currently supported: EN, FR, ES, DE, NL, PT, ZH") << "\n"
                << "lang = " << _lang.toUpper() << "\n"

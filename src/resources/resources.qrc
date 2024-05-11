@@ -38,5 +38,10 @@
         <file>icons/left.png</file>
         <file>icons/right.png</file>
         <file>icons/btc-logo.png</file>
+        <file>db/tables.sql</file>
+        <file>style/DarkStyle.qss</file>
+        <file>style/QTDark.qss</file>
+        <file>icons/DayMode.png</file>
+        <file>icons/NightMode.png</file>
     </qresource>
 </RCC>

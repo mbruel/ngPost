@@ -22,6 +22,7 @@
 #include "PostingWidget.h"
 #include "AutoPostWidget.h"
 #include "NgPost.h"
+#include "CircularImageButton.h"
 #include "nntp/NntpServerParams.h"
 #include "nntp/NntpArticle.h"
 
@@ -156,6 +157,8 @@ void MainWindow::init(NgPost *ngPost)
 
     _ui->goCmdButton->hide();
 //    connect(_ui->goCmdButton, &QAbstractButton::clicked, _ngPost, &NgPost::onGoCMD, Qt::QueuedConnection);
+
+    connect(_ui->nightModeButton, &QAbstractButton::clicked, _ngPost, &NgPost::onSwitchNightMode);
 
     updateProgressBar(0, 0);
 }
@@ -911,6 +914,13 @@ void MainWindow::setPauseIcon(bool pause)
         _ui->pauseButton->setIcon(QIcon(":/icons/pause.png"));
     else
         _ui->pauseButton->setIcon(QIcon(":/icons/play.png"));
+}
+
+void MainWindow::setNightMode(bool goNight)
+{
+    static const QString kGoDay = ":/icons/DayMode.png";
+    static const QString kGoNight = ":/icons/NightMode.png";
+    _ui->nightModeButton->setImage(goNight ? kGoDay : kGoNight);
 }
 
 void MainWindow::onPauseClicked()
