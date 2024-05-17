@@ -227,7 +227,8 @@ void NntpConnection::onDisconnected()
     if (_socket)
     {
 #if defined(__DEBUG__) && defined(LOG_CONNECTION_STEPS)
-        _error("> disconnected");
+        if (!hasNoMoreFiles())
+            _error("> disconnected");
 #endif
         _isConnected = false;
 

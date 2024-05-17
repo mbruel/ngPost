@@ -46,6 +46,7 @@ PostingJob::PostingJob(NgPost                 *ngPost,
     , _params(params)
     , _postWidget(postWidget)
     , _tmpPath(params->tmpPath())
+    , _files(_params->files())
     , _delFilesAfterPost(_params->delFilesAfterPost() ? 0x1 : 0x0)
 
     , _extProc(nullptr)
@@ -56,7 +57,6 @@ PostingJob::PostingJob(NgPost                 *ngPost,
     , _nntpConnections()
     , _closedConnections()
 
-    //    , nzbName()(QFileInfo(nzbFilePath).fileName())
     , _filesToUpload()
     , _filesInProgress()
     , _filesFailed()
@@ -74,7 +74,6 @@ PostingJob::PostingJob(NgPost                 *ngPost,
     , _pauseDuration(0)
 
     , _nbConnections(0)
-    //    , _nbThreads(_ngPost->_nbThreads) // MB_TODO do we need it?
     , _nbArticlesUploaded(0)
     , _nbArticlesFailed(0)
     , _uploadedSize(0)
@@ -99,22 +98,23 @@ PostingJob::PostingJob(NgPost                 *ngPost,
     _init();
 }
 
-PostingJob::PostingJob(NgPost              *ngPost,
-                       QString const       &rarName,
-                       QString const       &rarPass,
-                       QString const       &nzbFilePath,
-                       QFileInfoList const &files,
-                       //                       PostingWidget        *postWidget,
-                       QList<QString> const &grpList,
-                       std::string const    &from,
-                       SharedParams const   &sharedParams,
-                       QObject              *parent)
+PostingJob::PostingJob(NgPost                       *ngPost,
+                       QString const                &rarName,
+                       QString const                &rarPass,
+                       QString const                &nzbFilePath,
+                       QFileInfoList const          &files,
+                       QList<QString> const         &grpList,
+                       std::string const            &from,
+                       SharedParams const           &sharedParams,
+                       QMap<QString, QString> const &meta,
+                       QObject                      *parent)
     : QObject(parent)
     , _ngPost(ngPost)
     , _params(new PostingParams(
-              ngPost, rarName, rarPass, nzbFilePath, files, nullptr, grpList, from, sharedParams))
+              ngPost, rarName, rarPass, nzbFilePath, files, nullptr, grpList, from, sharedParams, meta))
     , _postWidget(nullptr)
     , _tmpPath(sharedParams->tmpPath())
+    , _files(files)
     , _delFilesAfterPost(_params->delFilesAfterPost() ? 0x1 : 0x0)
 
     , _extProc(nullptr)
@@ -125,7 +125,6 @@ PostingJob::PostingJob(NgPost              *ngPost,
     , _nntpConnections()
     , _closedConnections()
 
-    //    , nzbName()(QFileInfo(nzbFilePath).fileName())
     , _filesToUpload()
     , _filesInProgress()
     , _filesFailed()
@@ -143,7 +142,6 @@ PostingJob::PostingJob(NgPost              *ngPost,
     , _pauseDuration(0)
 
     , _nbConnections(0)
-    //    , _nbThreads(_ngPost->_nbThreads) // MB_TODO do we need it?
     , _nbArticlesUploaded(0)
     , _nbArticlesFailed(0)
     , _uploadedSize(0)
@@ -166,6 +164,41 @@ PostingJob::PostingJob(NgPost              *ngPost,
 #endif
 {
     _init();
+}
+
+PostingJob::~PostingJob()
+{
+
+#ifdef __DEBUG__
+    _log("Destructing PostingJob");
+    qDebug() << "[PostingJob] <<<< Destruction " << this;
+#endif
+
+    if (_ngPost->debugMode())
+        _log("Deleting PostingJob");
+
+    if (_compressDir)
+    {
+        if (hasPostFinishedSuccessfully())
+            _cleanCompressDir();
+        delete _compressDir;
+        _compressDir = nullptr;
+    }
+
+    if (_extProc)
+        _cleanExtProc();
+
+    qDeleteAll(_filesFailed);
+    qDeleteAll(_filesInProgress);
+    qDeleteAll(_filesToUpload);
+    qDeleteAll(_nntpConnections);
+    qDeleteAll(_closedConnections);
+    qDeleteAll(_posters);
+
+    if (_nzb)
+        delete _nzb;
+    if (_file)
+        delete _file;
 }
 
 void PostingJob::_init()
@@ -224,126 +257,6 @@ void PostingJob::_init()
         _log(NntpConnection::sslSupportInfo());
 }
 
-PostingJob::~PostingJob()
-{
-
-#ifdef __DEBUG__
-    _log("Destructing PostingJob");
-    qDebug() << "[PostingJob] <<<< Destruction " << this;
-#endif
-
-    if (_ngPost->debugMode())
-        _log("Deleting PostingJob");
-
-    if (_compressDir)
-    {
-        if (hasPostFinishedSuccessfully())
-            _cleanCompressDir();
-        delete _compressDir;
-        _compressDir = nullptr;
-    }
-
-    if (_extProc)
-        _cleanExtProc();
-
-    qDeleteAll(_filesFailed);
-    qDeleteAll(_filesInProgress);
-    qDeleteAll(_filesToUpload);
-    qDeleteAll(_nntpConnections);
-    qDeleteAll(_closedConnections);
-    qDeleteAll(_posters);
-
-    if (_nzb)
-        delete _nzb;
-    if (_file)
-        delete _file;
-}
-
-void PostingJob::pause()
-{
-    _log("Pause posting...");
-    for (NntpConnection *con : _nntpConnections)
-        emit con->killConnection();
-
-    _isPaused = true;
-    _pauseTimer.start();
-}
-
-void PostingJob::resume()
-{
-    _log("Resume posting...");
-    for (NntpConnection *con : _nntpConnections)
-        emit con->startConnection();
-
-    _isPaused = false;
-    _pauseDuration += _pauseTimer.elapsed();
-}
-
-QString PostingJob::sslSupportInfo() { return NntpConnection::sslSupportInfo(); }
-
-bool PostingJob::supportsSsl() { return NntpConnection::supportsSsl(); }
-
-void PostingJob::onResumeTriggered()
-{
-    if (_isPaused)
-    {
-        _log(tr("Try to resume posting"));
-        _nntpConnections.swap(_closedConnections);
-        _ngPost->resume();
-    }
-}
-
-#ifdef __COMPUTE_IMMEDIATE_SPEED__
-void PostingJob::onImmediateSpeedComputation()
-{
-    QString power                    = " ";
-    int     immediateSpeedDurationMs = NgPost::immediateSpeedDurationMs();
-    double  bandwidth                = 1000. * _immediateSize / immediateSpeedDurationMs;
-    if (bandwidth > 1024)
-    {
-        bandwidth /= 1024;
-        power = "k";
-    }
-    if (bandwidth > 1024)
-    {
-        bandwidth /= 1024;
-        power = "M";
-    }
-
-    _immediateSpeed = QString("%1 %2B/s").arg(bandwidth, 6, 'f', 2).arg(power);
-    _immediateSize  = 0;
-    _immediateSpeedTimer.start(immediateSpeedDurationMs);
-}
-#endif
-
-#ifdef __USE_TMP_RAM__
-void PostingJob::shallWeUseTmpRam()
-{
-    if (_params->useTmpRam())
-    {
-        qint64 sourceSize = 0;
-        for (QFileInfo const &fi : _params->files())
-            sourceSize += NgTools::recursivePathSize(fi);
-
-        double sourceSizeWithRatio = _params->ramRatio() * sourceSize,
-               availableSize       = static_cast<double>(_params->ramAvailable());
-        if (sourceSizeWithRatio < availableSize)
-        {
-            _tmpPath = _params->ramPath();
-            _log(tr("Using TMP_RAM path as temporary folder. Post size: %1")
-                         .arg(NgTools::humanSize(static_cast<double>(sourceSize))));
-        }
-        else
-        {
-            _error(tr("Couldn't use TMP_RAM as there is not enough space: %1 available for a Post with "
-                      "ratio of %2")
-                           .arg(NgTools::humanSize(availableSize))
-                           .arg(NgTools::humanSize(sourceSizeWithRatio)));
-        }
-    }
-}
-#endif
-
 void PostingJob::onStartPosting(bool isActiveJob)
 {
     _isActiveJob = isActiveJob; // MB_TODO what is actually _isActiveJob for? not primary Job? no posting
@@ -356,7 +269,7 @@ void PostingJob::onStartPosting(bool isActiveJob)
         _log(tr("<h3>Start Post #%1: %2</h3>").arg(_postWidget->jobNumber()).arg(nzbName()));
     else
 #endif
-        _log(QString("\n\n[%1] %2: %3").arg(timestamp()).arg(tr("Start posting")).arg(nzbName()));
+        _log(QString("[%1] %2: %3").arg(timestamp()).arg(tr("Start posting")).arg(nzbName()));
 
     // 1.: If we need compression we jump in startCompressFiles
     // and when the _extProcess is done we should arrive in onCompressionFinished
@@ -387,8 +300,340 @@ void PostingJob::onStartPosting(bool isActiveJob)
 
     // Otherwise no packing at all, we will post the original files
     _packed = true;
-    _files  = _params->files();
     _postFiles();
+}
+
+bool PostingJob::startCompressFiles()
+{
+    if (!_params->canCompress())
+        return false;
+
+    // 1.: create archive temporary folder
+    QString archiveTmpFolder = _createArchiveFolder(_tmpPath, _params->rarName());
+    if (archiveTmpFolder.isEmpty())
+        return false;
+
+    _extProc = new QProcess(this);
+    connect(_extProc,
+            &QProcess::readyReadStandardOutput,
+            this,
+            &PostingJob::onExtProcReadyReadStandardOutput,
+            Qt::DirectConnection);
+    connect(_extProc,
+            &QProcess::readyReadStandardError,
+            this,
+            &PostingJob::onExtProcReadyReadStandardError,
+            Qt::DirectConnection);
+    connect(_extProc,
+            static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+            this,
+            &PostingJob::onCompressionFinished,
+            Qt::QueuedConnection);
+
+    QStringList args = _params->buildCompressionCommandArgumentsList();
+
+#if defined(Q_OS_WIN)
+    if (archiveTmpFolder.startsWith("//"))
+        archiveTmpFolder.replace(QRegExp("^//"), "\\\\");
+#endif
+    args << QString("%1/%2.%3").arg(archiveTmpFolder, _params->rarName(), _params->use7z() ? "7z" : "rar");
+
+    // With the option obfuscateFileName users want to rename the files
+    // before puting them in the archive
+    // so we keep the map _obfuscatedFileNames to reverse the renaming later
+    // and populate _files with the new random names...
+    if (_params->obfuscateFileName())
+    {
+        _files.clear();
+        for (QFileInfo const &fileInfo : _params->files())
+        {
+            QString obfuscatedName = QString("%1/%2").arg(fileInfo.absolutePath(),
+                                                          NgTools::randomFileName(_params->lengthName())),
+                    fileName       = fileInfo.absoluteFilePath();
+
+            if (QFile::rename(fileName, obfuscatedName))
+            {
+                _obfuscatedFileNames.insert(obfuscatedName, fileName);
+                _files << QFileInfo(obfuscatedName);
+            }
+            else
+            {
+                _files << fileInfo;
+                _error(tr("Couldn't rename file %1").arg(fileName));
+            }
+        }
+    }
+
+    // Trick with RAR_NO_ROOT_FOLDER if only one dir file to not double it when extracting...
+    // + Windows shitty path replacement.. should switch to C++17 std::filesystem... one day?!?
+    bool hasDir = false;
+    if (_params->files().size() == 1)
+    { // Only remove rar root folder if there is only ONE folder AND RAR_NO_ROOT_FOLDER is set
+        QFileInfo const &fileInfo = _files.first();
+        QString          path     = fileInfo.absoluteFilePath();
+#if defined(Q_OS_WIN)
+        if (path.startsWith("//"))
+            path.replace(QRegExp("^//"), "\\\\");
+#endif
+        if (fileInfo.isDir())
+        {
+            hasDir = true;
+            if (_params->removeRarRootFolder())
+                path += "/";
+        }
+        args << path;
+    }
+    else
+    {
+        for (QFileInfo const &fileInfo : _files)
+        {
+            QString path = fileInfo.absoluteFilePath();
+#if defined(Q_OS_WIN)
+            if (path.startsWith("//"))
+                path.replace(QRegExp("^//"), "\\\\");
+#endif
+            if (fileInfo.isDir())
+                hasDir = true;
+            args << path;
+        }
+    }
+
+    // if we've a folder, add the recursive option!
+    if (hasDir && !args.contains("-r"))
+        args << "-r";
+
+    // launch the compression! and ends up just under in onCompressionFinished if all ok...
+    if (_ngPost->debugMode() || !_postWidget)
+        _log(QString("[%1] %2: %3 %4\n")
+                     .arg(timestamp())
+                     .arg(tr("Compressing files"))
+                     .arg(_params->rarPath())
+                     .arg(args.join(" ")));
+    else
+        _log(QString("%1...\n").arg(tr("Compressing files")));
+    _limitProcDisplay = false;
+    _extProc->start(_params->rarPath(), args);
+
+#ifdef __DEBUG__
+    _log("[PostingJob::_compressFiles] compression started...");
+#endif
+
+    return true;
+}
+
+void PostingJob::onCompressionFinished(int exitCode)
+{
+    if (_ngPost->debugMode())
+        _log(tr("=> rar exit code: %1\n").arg(exitCode));
+    else
+        _log("\n");
+
+#ifdef __DEBUG__
+    _log("[PostingJob::_compressFiles] compression finished...");
+#endif
+
+    // if we've done the obfuscateFileName, we can revert the renaming
+    // except if we will delete the files when the posting is done ;
+    if (_params->obfuscateFileName() && !MB_LoadAtomic(_delFilesAfterPost))
+    {
+        for (auto it = _obfuscatedFileNames.cbegin(), itEnd = _obfuscatedFileNames.cend(); it != itEnd; ++it)
+            QFile::rename(it.key(), it.value());
+    }
+
+    // if the compression process failed we stop here...
+    if (exitCode != 0)
+    {
+        _error(tr("Error during compression: %1").arg(exitCode));
+        _cleanCompressDir();
+        emit postingFinished();
+        return;
+    }
+
+    // we need to update _files with the generated archives
+    _updateFilesListFromCompressDir();
+
+    // Shall we continue with par2? quite straight forward...
+    // we jump under in startGenPar2 then in onGenPar2Finished
+    if (_params->doPar2())
+    {
+        disconnect(_extProc,
+                   static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+                   this,
+                   &PostingJob::onCompressionFinished);
+        if (!startGenPar2())
+        {
+            _cleanCompressDir();
+            // MB_TODO 2024.05 shall we _cleanExtProc() ?
+            emit postingFinished();
+        }
+        return;
+    }
+
+    // No par2 to be done so yeah we clean the extProc
+    // and only start posting if we're the active job
+    // as we may have starting packing as soon as the previous one started posting
+    // we wait it finishes to not handling sharing NntpConnection
+    // that would not benefit in any way...
+    // Rq 2024.05: seems the _isActiveJob is useless no?
+    _packed = true;
+    _cleanExtProc();
+    if (this == _ngPost->_activeJob)
+        _postFiles();
+
+    emit packingDone(); //!< no par2 generation so next job can start packing ;)
+}
+
+bool PostingJob::startGenPar2()
+{
+    if (!_params->canGenPar2())
+        return false;
+
+    QStringList args;
+    if (_params->par2Args().isEmpty())
+        args << "c"
+             << "-l"
+             << "-m1024" << QString("-r%1").arg(_params->par2Pct());
+    else
+        args << _params->par2Args().split(kCmdArgsSeparator);
+
+    bool    useParPar        = _params->useParPar();
+    QString archiveTmpFolder = QString("%1/%2").arg(_tmpPath, _params->rarName());
+
+    // we've already compressed => we gen par2 for the files in the archive folder
+    if (_extProc)
+    {
+        if (useParPar && args.last().trimmed() != "-o")
+            args << "-o";
+        args << QString("%1/%2.par2").arg(archiveTmpFolder, _params->rarName());
+        if (useParPar)
+            args << "-R" << archiveTmpFolder;
+        else
+        {
+            if (_params->use7z())
+                args << QString("%1/%2.7z%3")
+                                .arg(archiveTmpFolder, _params->rarName(), _params->splitArchive() ? "*" : "");
+            else
+                args << QString("%1/%2*rar").arg(archiveTmpFolder, _params->rarName());
+
+            if (_params->par2Args().isEmpty() && (_ngPost->debugMode() || !_postWidget))
+                args << "-q"; // remove the progressbar bar
+        }
+    }
+    else
+    { // par2 generation only => can't use folders or files from different drive (Windows)
+        QString basePath = _files.first().absolutePath();
+        if (useParPar)
+        {
+            args << "-f"
+                 << "basename";
+            if (args.last().trimmed() != "-o")
+                args << "-o";
+            args << QString("%1/%2.par2").arg(archiveTmpFolder, _params->rarName());
+        }
+        else
+        {
+#if defined(Q_OS_WIN)
+            QString basePathWin(basePath);
+            basePathWin.replace("/", "\\");
+            if (_ngPost->useMultiPar())
+                args << QString("/d%1").arg(basePathWin);
+            else
+                args << "-B" << basePathWin;
+            QString par2File = QString("%1/%2.par2").arg(archiveTmpFolder, _params->rarName());
+            par2File.replace("/", "\\");
+            args << par2File;
+#else
+            args << "-B" << basePath;
+            args << QString("%1/%2.par2").arg(archiveTmpFolder, _params->rarName());
+#endif
+        }
+
+        for (QFileInfo const &fileInfo : _files)
+        {
+            if (fileInfo.isDir())
+            {
+                _error(tr("you can't post folders without compression..."));
+                return false;
+            }
+            QString path = fileInfo.absoluteFilePath();
+#if defined(Q_OS_WIN)
+            if (!useParPar && basePath != fileInfo.absolutePath())
+            {
+                //                _error(tr("Due to par2 software limitation and to avoid unnecessary copies, all
+                //                files must be in the same folder..."));
+                _error(tr("only ParPar allows to generate par2 for files from different folders... you should "
+                          "consider using it ;)"));
+                return false;
+            }
+            path.replace("/", "\\");
+#endif
+            args << path;
+        }
+
+        QString archiveTmpFolder = _createArchiveFolder(_tmpPath, _params->rarName());
+        if (archiveTmpFolder.isEmpty())
+            return false;
+
+        _extProc = new QProcess(this);
+        connect(_extProc,
+                &QProcess::readyReadStandardOutput,
+                this,
+                &PostingJob::onExtProcReadyReadStandardOutput,
+                Qt::DirectConnection);
+        connect(_extProc,
+                &QProcess::readyReadStandardError,
+                this,
+                &PostingJob::onExtProcReadyReadStandardError,
+                Qt::DirectConnection);
+    }
+
+    connect(_extProc,
+            static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+            this,
+            &PostingJob::onGenPar2Finished,
+            Qt::QueuedConnection);
+
+    if (_ngPost->debugMode() || !_postWidget)
+        _log(QString("[%1] %2: %3 %4")
+                     .arg(timestamp())
+                     .arg(tr("Generating par2"))
+                     .arg(_params->par2Path())
+                     .arg(args.join(" ")));
+    else
+        _log(QString("%1...\n").arg(tr("Generating par2")));
+    if (!_params->useParPar())
+        _limitProcDisplay = true;
+    _nbProcDisp = 0;
+    _extProc->start(_params->par2Path(), args);
+
+    return true;
+}
+
+void PostingJob::onGenPar2Finished(int exitCode)
+{
+    if (_ngPost->debugMode())
+        _log(tr("=> par2 exit code: %1\n").arg(exitCode));
+    else
+        _log("\n");
+
+    _cleanExtProc();
+
+    if (exitCode != 0)
+    {
+        _error(tr("Error during par2 generation: %1").arg(exitCode));
+        _cleanCompressDir();
+        emit postingFinished();
+        return;
+    }
+
+    // we need to update _files with the generated par2 files
+    _updateFilesListFromCompressDir();
+
+    _packed = true;
+    if (this == _ngPost->_activeJob)
+        _postFiles();
+
+    emit packingDone(); //!< no par2 generation so next job can start packing ;)
 }
 
 void PostingJob::_postFiles()
@@ -428,24 +673,31 @@ void PostingJob::_postFiles()
     }
     else
     {
-        QString tab = NgConf::kSpace;
         _nzbStream.setDevice(_nzb);
         _nzbStream << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                    << "<!DOCTYPE nzb PUBLIC \"-//newzBin//DTD NZB 1.1//EN\" "
                       "\"http://www.newzbin.com/DTD/nzb/nzb-1.1.dtd\">\n"
-                   << "<nzb xmlns=\"http://www.newzbin.com/DTD/2003/nzb\">\n";
+                   << "<nzb xmlns=\"http://www.newzbin.com/DTD/2003/nzb\">\n"
+                   << kSpace << "<head>\n";
+        // add the title in the header (first file name)
+        _nzbStream << kSpace << kSpace << "<meta type=\"title\">" << _params->files().front().fileName()
+                   << "</meta>\n";
+        if (!_params->rarPass().isEmpty()) // lets add the password
+            _nzbStream << kSpace << kSpace << "<meta type=\"password\">" << _params->rarPass() << "</meta>\n";
 
-        if (!_params->rarPass().isEmpty() || _ngPost->_meta.size())
+        // add the other meta like the category or whatever...
+        if (!_params->meta().isEmpty())
         {
-            _nzbStream << tab << "<head>\n";
-            for (auto itMeta = _ngPost->_meta.cbegin(); itMeta != _ngPost->_meta.cend(); ++itMeta)
-                _nzbStream << tab << tab << "<meta type=\"" << itMeta.key() << "\">" << itMeta.value()
+#if QT_VERSION < QT_VERSION_CHECK(6, 4, 0)
+            for (auto itMeta = _params->meta().cbegin(); itMeta != _params->meta().cend(); ++itMeta)
+                _nzbStream << kSpace << kSpace << "<meta type=\"" << itMeta.key() << "\">" << itMeta.value()
                            << "</meta>\n";
-            if (!_params->rarPass().isEmpty())
-                _nzbStream << tab << tab << "<meta type=\"password\">" << _params->rarPass() << "</meta>\n";
-            _nzbStream << tab << "</head>\n\n";
+#else
+            for (auto const &[key, val] : _params->meta().asKeyValueRange())
+                _nzbStream << kSpace << kSpace << "<meta type=\"" << key << "\">" << val << "</meta>\n";
+#endif
         }
-        _nzbStream << MB_FLUSH;
+        _nzbStream << kSpace << "</head>\n\n" << MB_FLUSH;
     }
 
     _timeStart.start();
@@ -778,6 +1030,37 @@ NntpArticle *PostingJob::_readNextArticleIntoBufferPtr(QString const &threadName
 
 void PostingJob::_initPosting()
 {
+    qDebug() << "[MB_TRACE][PostingJob::_initPosting] nzbFilePath: " << _params->nzbFilePath()
+             << ", overwriteNzb: " << _params->overwriteNzb();
+    //    emit postingFinished(); // MB_TODO MB_TODEL!!!! No posting!
+    // // MB_TODO MB_TODEL: Shall we investigate we would have a crash...
+    /* MB_TODO MB_TODEL
+    unexpected job finished packing...
+    [PostingJob] <<<< Destruction  PostingJob(0x564511556de0)
+    Destruction nntpFile:  "/tmp/newshosting_installer.nzb/newshosting_installer.nzb.part1.rar"
+    Destruction nntpFile:  "/tmp/newshosting_installer.nzb/newshosting_installer.nzb.par2"
+    Destruction nntpFile:  "/tmp/newshosting_installer.nzb/newshosting_installer.nzb.part2.rar"
+    Destruction nntpFile:  "/tmp/newshosting_installer.nzb/newshosting_installer.nzb.part3.rar"
+    Destruction nntpFile:  "/tmp/newshosting_installer.nzb/newshosting_installer.nzb.vol00+01.par2"
+    Destruction nntpFile:  "/tmp/newshosting_installer.nzb/newshosting_installer.nzb.vol01+02.par2"
+    Destruction NntpConnection  "Poster #0 {NntpCon #1}"
+    QObject: Cannot create children for a parent that is in a different thread.
+    (Parent is QTcpSocket(0x7fd454005a30), parent's thread is QThread(0x5645114a3eb8), current thread is
+    QThread(0x564511495980) QObject: Cannot create children for a parent that is in a different thread. (Parent
+    is QTcpSocket(0x7fd454005a30), parent's thread is QThread(0x5645114a3eb8), current thread is
+    QThread(0x564511495980) QObject::killTimer: Timers cannot be stopped from another thread QObject::~QObject:
+    Timers cannot be stopped from another thread Destruction NntpConnection  "Poster #1 {NntpCon #2}"
+    QSocketNotifier: Socket notifiers cannot be enabled or disabled from another thread
+    QSocketNotifier: Socket notifiers cannot be enabled or disabled from another thread
+    QSocketNotifier: Socket notifiers cannot be enabled or disabled from another thread
+    QObject::killTimer: Timers cannot be stopped from another thread
+    QObject::~QObject: Timers cannot be stopped from another thread
+    Destruction NntpConnection  "Poster #2 {NntpCon #3}"
+    QSocketNotifier: Socket notifiers cannot be enabled or disabled from another thread
+    QObject::killTimer: Timers cannot be stopped from another thread
+    QObject::~QObject: Timers cannot be stopped from another thread
+    Destruction Poster # 0
+    */
     // initialize buffer and nzb file
     if (!_params->overwriteNzb()) // MB_TODO: for now never overwrite!
     {
@@ -787,7 +1070,10 @@ void PostingJob::_initPosting()
         {
             QString baseName = fi.completeBaseName();
             if (nbDuplicates != 0)
-                baseName.chop(2);
+            {
+                static QChar kUnderscore('_');
+                baseName.chop(baseName.length() - baseName.lastIndexOf(kUnderscore));
+            }
             _params->setNzbFilePath(
                     QFileInfo(fi.absoluteDir(), QString("%1_%2.nzb").arg(baseName).arg(++nbDuplicates))
                             .absoluteFilePath());
@@ -860,15 +1146,15 @@ void PostingJob::_finishPosting()
     for (NntpConnection *con : _nntpConnections)
         emit con->killConnection();
 
+    // 3.: close all the connections (they're living in the _threadPool)
+    for (Poster *poster : _posters)
+        poster->stopThreads();
+
     qApp->processEvents();
 
     // 4.: stop and wait for all threads
     // 2.: close nzb file
     _closeNzb();
-
-    // 3.: close all the connections (they're living in the _threadPool)
-    for (Poster *poster : _posters)
-        poster->stopThreads();
 
     if (_ngPost->debugMode())
         _log("All posters stopped...");
@@ -972,339 +1258,6 @@ void PostingJob::_printStats() const
     _log(msgEnd);
 }
 
-bool PostingJob::startCompressFiles()
-{
-    if (!_params->canCompress())
-        return false;
-
-    // 1.: create archive temporary folder
-    QString archiveTmpFolder = _createArchiveFolder(_tmpPath, _params->rarName());
-    if (archiveTmpFolder.isEmpty())
-        return false;
-
-    _extProc = new QProcess(this);
-    connect(_extProc,
-            &QProcess::readyReadStandardOutput,
-            this,
-            &PostingJob::onExtProcReadyReadStandardOutput,
-            Qt::DirectConnection);
-    connect(_extProc,
-            &QProcess::readyReadStandardError,
-            this,
-            &PostingJob::onExtProcReadyReadStandardError,
-            Qt::DirectConnection);
-    connect(_extProc,
-            static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
-            this,
-            &PostingJob::onCompressionFinished,
-            Qt::QueuedConnection);
-
-    QStringList args = _params->buildCompressionCommandArgumentsList();
-
-#if defined(Q_OS_WIN)
-    if (archiveTmpFolder.startsWith("//"))
-        archiveTmpFolder.replace(QRegExp("^//"), "\\\\");
-#endif
-    args << QString("%1/%2.%3").arg(archiveTmpFolder, _params->rarName(), _params->use7z() ? "7z" : "rar");
-
-    // With the option obfuscateFileName users want to rename the files
-    // before puting them in the archive
-    // so we keep the map _obfuscatedFileNames to reverse the renaming later
-    // and populate _files with the new random names...
-    if (_params->obfuscateFileName())
-    {
-        _files.clear();
-        for (QFileInfo const &fileInfo : _params->files())
-        {
-            QString obfuscatedName = QString("%1/%2").arg(fileInfo.absolutePath(),
-                                                          NgTools::randomFileName(_params->lengthName())),
-                    fileName       = fileInfo.absoluteFilePath();
-
-            if (QFile::rename(fileName, obfuscatedName))
-            {
-                _obfuscatedFileNames.insert(obfuscatedName, fileName);
-                _files << QFileInfo(obfuscatedName);
-            }
-            else
-            {
-                _files << fileInfo;
-                _error(tr("Couldn't rename file %1").arg(fileName));
-            }
-        }
-    }
-
-    // Trick with RAR_NO_ROOT_FOLDER if only one dir file to not double it when extracting...
-    // + Windows shitty path replacement.. should switch to C++17 std::filesystem... one day?!?
-    bool hasDir = false;
-    if (_files.size() == 1)
-    { // Only remove rar root folder if there is only ONE folder AND RAR_NO_ROOT_FOLDER is set
-        QFileInfo const &fileInfo = _files.first();
-        QString          path     = fileInfo.absoluteFilePath();
-#if defined(Q_OS_WIN)
-        if (path.startsWith("//"))
-            path.replace(QRegExp("^//"), "\\\\");
-#endif
-        if (fileInfo.isDir())
-        {
-            hasDir = true;
-            if (_params->removeRarRootFolder())
-                path += "/";
-        }
-        args << path;
-    }
-    else
-    {
-        for (QFileInfo const &fileInfo : _files)
-        {
-            QString path = fileInfo.absoluteFilePath();
-#if defined(Q_OS_WIN)
-            if (path.startsWith("//"))
-                path.replace(QRegExp("^//"), "\\\\");
-#endif
-            if (fileInfo.isDir())
-                hasDir = true;
-            args << path;
-        }
-    }
-
-    // if we've a folder, add the recursive option!
-    if (hasDir && !args.contains("-r"))
-        args << "-r";
-
-    // launch the compression! and ends up just under in onCompressionFinished if all ok...
-    if (_ngPost->debugMode() || !_postWidget)
-        _log(QString("[%1] %2: %3 %4\n")
-                     .arg(timestamp())
-                     .arg(tr("Compressing files"))
-                     .arg(_params->rarPath())
-                     .arg(args.join(" ")));
-    else
-        _log(QString("%1...\n").arg(tr("Compressing files")));
-    _limitProcDisplay = false;
-    _extProc->start(_params->rarPath(), args);
-
-#ifdef __DEBUG__
-    _log("[PostingJob::_compressFiles] compression started...");
-#endif
-
-    return true;
-}
-
-void PostingJob::onCompressionFinished(int exitCode)
-{
-    if (_ngPost->debugMode())
-        _log(tr("=> rar exit code: %1\n").arg(exitCode));
-    else
-        _log("\n");
-
-#ifdef __DEBUG__
-    _log("[PostingJob::_compressFiles] compression finished...");
-#endif
-
-    // if we've done the obfuscateFileName, we can revert the renaming
-    // except if we will delete the files when the posting is done ;
-    if (_params->obfuscateFileName() && !MB_LoadAtomic(_delFilesAfterPost))
-    {
-        for (auto it = _obfuscatedFileNames.cbegin(), itEnd = _obfuscatedFileNames.cend(); it != itEnd; ++it)
-            QFile::rename(it.key(), it.value());
-    }
-
-    // if the compression process failed we stop here...
-    if (exitCode != 0)
-    {
-        _error(tr("Error during compression: %1").arg(exitCode));
-        _cleanCompressDir();
-        emit postingFinished();
-        return;
-    }
-
-    // we need to update _files with the generated archives
-    _updateFilesListFromCompressDir();
-
-    // Shall we continue with par2? quite straight forward...
-    // we jump under in startGenPar2 then in onGenPar2Finished
-    if (_params->doPar2())
-    {
-        disconnect(_extProc,
-                   static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
-                   this,
-                   &PostingJob::onCompressionFinished);
-        if (!startGenPar2())
-        {
-            _cleanCompressDir();
-            // MB_TODO 2024.05 shall we _cleanExtProc() ?
-            emit postingFinished();
-        }
-        return;
-    }
-
-    // No par2 to be done so yeah we clean the extProc
-    // and only start posting if we're the active job
-    // as we may have starting packing as soon as the previous one started posting
-    // we wait it finishes to not handling sharing NntpConnection
-    // that would not benefit in any way...
-    // Rq 2024.05: seems the _isActiveJob is useless no?
-    _packed = true;
-    _cleanExtProc();
-    if (this == _ngPost->_activeJob)
-        _postFiles();
-
-    emit packingDone(); //!< no par2 generation so next job can start packing ;)
-}
-
-bool PostingJob::startGenPar2()
-{
-    if (!_params->canGenPar2())
-        return false;
-
-    QStringList args;
-    if (_params->par2Args().isEmpty())
-        args << "c"
-             << "-l"
-             << "-m1024" << QString("-r%1").arg(_params->par2Pct());
-    else
-        args << _params->par2Args().split(kCmdArgsSeparator);
-
-    bool    useParPar        = _params->useParPar();
-    QString archiveTmpFolder = QString("%1/%2").arg(_tmpPath, _params->rarName());
-
-    // we've already compressed => we gen par2 for the files in the archive folder
-    if (_extProc)
-    {
-        if (useParPar && args.last().trimmed() != "-o")
-            args << "-o";
-        args << QString("%1/%2.par2").arg(archiveTmpFolder, _params->rarName());
-        if (useParPar)
-            args << "-R" << archiveTmpFolder;
-        else
-        {
-            if (_params->use7z())
-                args << QString("%1/%2.7z%3")
-                                .arg(archiveTmpFolder, _params->rarName(), _params->splitArchive() ? "*" : "");
-            else
-                args << QString("%1/%2*rar").arg(archiveTmpFolder, _params->rarName());
-
-            if (_params->par2Args().isEmpty() && (_ngPost->debugMode() || !_postWidget))
-                args << "-q"; // remove the progressbar bar
-        }
-    }
-    else
-    { // par2 generation only => can't use folders or files from different drive (Windows)
-        QString basePath = _files.first().absolutePath();
-        if (useParPar)
-        {
-            args << "-f"
-                 << "basename";
-            if (args.last().trimmed() != "-o")
-                args << "-o";
-            args << QString("%1/%2.par2").arg(archiveTmpFolder, _params->rarName());
-        }
-        else
-        {
-#if defined(Q_OS_WIN)
-            QString basePathWin(basePath);
-            basePathWin.replace("/", "\\");
-            if (_ngPost->useMultiPar())
-                args << QString("/d%1").arg(basePathWin);
-            else
-                args << "-B" << basePathWin;
-            QString par2File = QString("%1/%2.par2").arg(archiveTmpFolder, _params->rarName());
-            par2File.replace("/", "\\");
-            args << par2File;
-#else
-            args << "-B" << basePath;
-            args << QString("%1/%2.par2").arg(archiveTmpFolder, _params->rarName());
-#endif
-        }
-
-        for (QFileInfo const &fileInfo : _files)
-        {
-            if (fileInfo.isDir())
-            {
-                _error(tr("you can't post folders without compression..."));
-                return false;
-            }
-            QString path = fileInfo.absoluteFilePath();
-#if defined(Q_OS_WIN)
-            if (!useParPar && basePath != fileInfo.absolutePath())
-            {
-                //                _error(tr("Due to par2 software limitation and to avoid unnecessary copies, all
-                //                files must be in the same folder..."));
-                _error(tr("only ParPar allows to generate par2 for files from different folders... you should "
-                          "consider using it ;)"));
-                return false;
-            }
-            path.replace("/", "\\");
-#endif
-            args << path;
-        }
-
-        QString archiveTmpFolder = _createArchiveFolder(_tmpPath, _params->rarName());
-        if (archiveTmpFolder.isEmpty())
-            return false;
-
-        _extProc = new QProcess(this);
-        connect(_extProc,
-                &QProcess::readyReadStandardOutput,
-                this,
-                &PostingJob::onExtProcReadyReadStandardOutput,
-                Qt::DirectConnection);
-        connect(_extProc,
-                &QProcess::readyReadStandardError,
-                this,
-                &PostingJob::onExtProcReadyReadStandardError,
-                Qt::DirectConnection);
-    }
-
-    connect(_extProc,
-            static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
-            this,
-            &PostingJob::onGenPar2Finished,
-            Qt::QueuedConnection);
-
-    if (_ngPost->debugMode() || !_postWidget)
-        _log(QString("[%1] %2: %3 %4")
-                     .arg(timestamp())
-                     .arg(tr("Generating par2"))
-                     .arg(_params->par2Path())
-                     .arg(args.join(" ")));
-    else
-        _log(QString("%1...\n").arg(tr("Generating par2")));
-    if (!_params->useParPar())
-        _limitProcDisplay = true;
-    _nbProcDisp = 0;
-    _extProc->start(_params->par2Path(), args);
-
-    return true;
-}
-
-void PostingJob::onGenPar2Finished(int exitCode)
-{
-    if (_ngPost->debugMode())
-        _log(tr("=> par2 exit code: %1\n").arg(exitCode));
-    else
-        _log("\n");
-
-    _cleanExtProc();
-
-    if (exitCode != 0)
-    {
-        _error(tr("Error during par2 generation: %1").arg(exitCode));
-        _cleanCompressDir();
-        emit postingFinished();
-        return;
-    }
-
-    // we need to update _files with the generated par2 files
-    _updateFilesListFromCompressDir();
-
-    _packed = true;
-    if (this == _ngPost->_activeJob)
-        _postFiles();
-
-    emit packingDone(); //!< no par2 generation so next job can start packing ;)
-}
-
 void PostingJob::_cleanExtProc()
 {
     delete _extProc;
@@ -1323,6 +1276,7 @@ void PostingJob::_cleanCompressDir()
 
 QStringList PostingJob::_updateFilesListFromCompressDir()
 {
+    _files.clear();
     QStringList archiveNames;
     for (QFileInfo const &file : _compressDir->entryInfoList(QDir::Files, QDir::Name))
     {
@@ -1376,3 +1330,88 @@ void PostingJob::onExtProcReadyReadStandardError() { _error(_extProc->readAllSta
 QString PostingJob::nzbName() const { return _ngPost->getNzbName(QFileInfo(_params->nzbFilePath())); }
 
 QString PostingJob::postSize() const { return NgTools::humanSize(static_cast<double>(_totalSize)); }
+
+void PostingJob::pause()
+{
+    _log("Pause posting...");
+    for (NntpConnection *con : _nntpConnections)
+        emit con->killConnection();
+
+    _isPaused = true;
+    _pauseTimer.start();
+}
+
+void PostingJob::resume()
+{
+    _log("Resume posting...");
+    for (NntpConnection *con : _nntpConnections)
+        emit con->startConnection();
+
+    _isPaused = false;
+    _pauseDuration += _pauseTimer.elapsed();
+}
+
+QString PostingJob::sslSupportInfo() { return NntpConnection::sslSupportInfo(); }
+
+bool PostingJob::supportsSsl() { return NntpConnection::supportsSsl(); }
+
+void PostingJob::onResumeTriggered()
+{
+    if (_isPaused)
+    {
+        _log(tr("Try to resume posting"));
+        _nntpConnections.swap(_closedConnections);
+        _ngPost->resume();
+    }
+}
+
+#ifdef __COMPUTE_IMMEDIATE_SPEED__
+void PostingJob::onImmediateSpeedComputation()
+{
+    QString power                    = " ";
+    int     immediateSpeedDurationMs = NgPost::immediateSpeedDurationMs();
+    double  bandwidth                = 1000. * _immediateSize / immediateSpeedDurationMs;
+    if (bandwidth > 1024)
+    {
+        bandwidth /= 1024;
+        power = "k";
+    }
+    if (bandwidth > 1024)
+    {
+        bandwidth /= 1024;
+        power = "M";
+    }
+
+    _immediateSpeed = QString("%1 %2B/s").arg(bandwidth, 6, 'f', 2).arg(power);
+    _immediateSize  = 0;
+    _immediateSpeedTimer.start(immediateSpeedDurationMs);
+}
+#endif
+
+#ifdef __USE_TMP_RAM__
+void PostingJob::shallWeUseTmpRam()
+{
+    if (_params->useTmpRam())
+    {
+        qint64 sourceSize = 0;
+        for (QFileInfo const &fi : _params->files())
+            sourceSize += NgTools::recursivePathSize(fi);
+
+        double sourceSizeWithRatio = _params->ramRatio() * sourceSize,
+               availableSize       = static_cast<double>(_params->ramAvailable());
+        if (sourceSizeWithRatio < availableSize)
+        {
+            _tmpPath = _params->ramPath();
+            _log(tr("Using TMP_RAM path as temporary folder. Post size: %1")
+                         .arg(NgTools::humanSize(static_cast<double>(sourceSize))));
+        }
+        else
+        {
+            _error(tr("Couldn't use TMP_RAM as there is not enough space: %1 available for a Post with "
+                      "ratio of %2")
+                           .arg(NgTools::humanSize(availableSize))
+                           .arg(NgTools::humanSize(sourceSizeWithRatio)));
+        }
+    }
+}
+#endif

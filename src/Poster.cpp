@@ -150,7 +150,7 @@ bool Poster::prepareArticlesInAdvance()
         }
     }
 #ifdef __DEBUG__
-    _job->_log(QString("[%1] prepareArticlesInAdvance: Article queue size:  %1")
+    _job->_log(QString("[%1] prepareArticlesInAdvance: Article queue size:  %2")
                        .arg(_builderThread.objectName())
                        .arg(_articles.size()));
 #endif

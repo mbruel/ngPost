@@ -120,9 +120,8 @@ private:
     bool        _saveFrom;
     std::string _from; //!< email of poster (if empty, random one will be used for each file)
 
-    QMap<QString, QString> _meta;    //!< list of meta to add in the nzb header (typically a password)
-    QList<QString>         _grpList; //!< Newsgroup where we're posting in a list format to write in the nzb file
-    int                    _nbGroups;
+    QList<QString> _grpList; //!< Newsgroup where we're posting in a list format to write in the nzb file
+    int            _nbGroups;
 
     QString _inputDir; //!< Default folder to open to select files from the HMI
 
@@ -271,18 +270,22 @@ private:
     // The one _params->from() should be enough!
     const std::string _from; //!< email of poster (if empty, random one will be used for each file)
 
+    //! list of meta to add in the nzb header (typically a category, password...)
+    QMap<QString, QString> _meta;
+
     mutable bool _splitArchive; //!< might be set by buildCompressionCommandArgumentsList
 
 public:
-    PostingParams(NgPost *const         ngPost,
-                  QString const        &rarName,
-                  QString const        &rarPass,
-                  QString const        &nzbFilePath,
-                  QFileInfoList const  &files,
-                  PostingWidget        *postWidget,
-                  QList<QString> const &grpList,
-                  std::string const    &from,
-                  SharedParams const   &mainParams)
+    PostingParams(NgPost *const                 ngPost,
+                  QString const                &rarName,
+                  QString const                &rarPass,
+                  QString const                &nzbFilePath,
+                  QFileInfoList const          &files,
+                  PostingWidget                *postWidget,
+                  QList<QString> const         &grpList,
+                  std::string const            &from,
+                  SharedParams const           &mainParams,
+                  QMap<QString, QString> const &meta = QMap<QString, QString>())
         : _ngPost(ngPost)
         , _params(mainParams)
         , _rarName(rarName)
@@ -292,12 +295,22 @@ public:
         , _postWidget(postWidget)
         , _grpList(grpList)
         , _from(from)
+        , _meta(meta)
         , _splitArchive(false)
     {
     }
     Q_DISABLE_COPY_MOVE(PostingParams);
 
     QList<NntpServerParams *> const &nntpServers() const { return _params->nntpServers(); }
+
+    QMap<QString, QString> const &meta() { return _meta; }
+
+    void setMeta(QMap<QString, QString> const &meta)
+    {
+        _meta = meta;
+        ;
+    }
+    void removeMeta(QString const &metaKey) { _meta.remove(metaKey); }
 
     int nbNntpConnections() const;
 

@@ -172,16 +172,16 @@ public:
      * \param params
      * \param parent
      */
-    PostingJob(NgPost              *ngPost,
-               QString const       &rarName,
-               QString const       &rarPass,
-               QString const       &nzbFilePath,
-               QFileInfoList const &files,
-               //               PostingWidget        *postWidget,
-               QList<QString> const &grpList,
-               std::string const    &from,
-               SharedParams const   &sharedParams,
-               QObject              *parent = nullptr);
+    PostingJob(NgPost                       *ngPost,
+               QString const                &rarName,
+               QString const                &rarPass,
+               QString const                &nzbFilePath,
+               QFileInfoList const          &files,
+               QList<QString> const         &grpList,
+               std::string const            &from,
+               SharedParams const           &sharedParams,
+               QMap<QString, QString> const &meta   = QMap<QString, QString>(),
+               QObject                      *parent = nullptr);
     ~PostingJob();
 
     void pause();

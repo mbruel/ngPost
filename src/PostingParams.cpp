@@ -15,7 +15,9 @@ using namespace NgConf;
 
 MainParams::~MainParams()
 {
+#ifdef __DEBUG__
     qDebug() << "[MB_TRACE][MainParams] destroyed... is it on purpose?";
+#endif
 #ifdef __USE_TMP_RAM__
     if (_storage)
         delete _storage;
@@ -79,7 +81,6 @@ MainParams::MainParams()
     , _genFrom(false)
     , _saveFrom(false)
     , _from()
-    , _meta()
     , _grpList(kDefaultGroups)
     , _nbGroups(kDefaultGroups.size())
     , _inputDir()

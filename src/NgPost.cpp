@@ -388,9 +388,17 @@ void NgPost::onSwitchNightMode()
 
 void NgPost::onLog(QString msg, bool newline) const { _log(msg, newline); }
 
-void NgPost::onError(QString msg) { criticalError(msg, ERR_CODE::COMPLETED_WITH_ERRORS); }
+void NgPost::onError(QString msg)
+{
+    ;
+    criticalError(msg, ERR_CODE::COMPLETED_WITH_ERRORS);
+}
 
-void NgPost::onErrorConnecting(QString err) { criticalError(err, ERR_CODE::COMPLETED_WITH_ERRORS); }
+void NgPost::onErrorConnecting(QString err)
+{
+    ;
+    criticalError(err, ERR_CODE::COMPLETED_WITH_ERRORS);
+}
 
 void NgPost::onRefreshprogressbarBar()
 {
@@ -644,9 +652,8 @@ void NgPost::resume()
 void NgPost::post(QFileInfo const &fileInfo, QString const &monitorFolder)
 {
     QString nzbName     = getNzbName(fileInfo);
-    QString nzbFilePath = getNzbPath(monitorFolder);
-    if (!nzbFilePath.endsWith(".nzb"))
-        nzbFilePath += ".nzb";
+    QString nzbPath     = getNzbPath(monitorFolder);
+    QString nzbFilePath = QFileInfo(QDir(nzbPath), nzbName).absoluteFilePath();
 
     QString rarName = nzbName;
     QString rarPass = "";
@@ -659,9 +666,6 @@ void NgPost::post(QFileInfo const &fileInfo, QString const &monitorFolder)
             rarPass = _postingParams->rarPassFixed();
         else if (_postingParams->genPass()) // shall we gen password?
             rarPass = NgTools::randomPass(_postingParams->lengthPass());
-
-        if (rarPass.isEmpty())
-            _meta.remove("password");
     }
 
     qDebug() << "Start posting job for " << nzbName << " with rar_name: " << rarName << " and pass: " << rarPass;
@@ -1116,6 +1120,9 @@ QString NgPost::getNzbName(QFileInfo const &fileInfo) const
             fileInfo.isDir() ? QDir(fileInfo.absoluteFilePath()).dirName() : fileInfo.completeBaseName();
     if (_postingParams->removeAccentsOnNzbFileName())
         NgTools::removeAccentsFromString(nzbName);
+
+    if (!nzbName.endsWith(".nzb"))
+        nzbName += ".nzb";
     return nzbName;
 }
 
@@ -1136,7 +1143,6 @@ QString NgPost::getNzbPath(QString const &monitorFolder)
             QDir().mkdir(path);
 
         return path;
-        //        return QString("%1/%2").arg(path).arg(_nzbName);
     }
 }
 
@@ -1153,11 +1159,12 @@ QStringList NgPost::parseDefaultConfig()
     return NgConfigLoader::loadConfig(this, conf, _postingParams);
 }
 
-bool NgPost::startPostingJob(QString const       &rarName,
-                             QString const       &rarPass,
-                             QString const       &nzbFilePath,
-                             QFileInfoList const &files,
-                             std::string const   &from)
+bool NgPost::startPostingJob(QString const                &rarName,
+                             QString const                &rarPass,
+                             QString const                &nzbFilePath,
+                             QFileInfoList const          &files,
+                             std::string const            &from,
+                             QMap<QString, QString> const &meta)
 {
     return startPostingJob(new PostingJob(this,
                                           rarName,
@@ -1166,7 +1173,8 @@ bool NgPost::startPostingJob(QString const       &rarName,
                                           files,
                                           _postingParams->getPostingGroups(),
                                           from,
-                                          _postingParams));
+                                          _postingParams,
+                                          meta));
 }
 
 bool NgPost::startPostingJob(PostingJob *job)

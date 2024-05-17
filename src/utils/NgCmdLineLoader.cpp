@@ -239,7 +239,7 @@ void NgCmdLineLoader::prepareAndStartPostingSingleFiles(QString                 
     QString nzbName = ngPost->getNzbName(filesToUpload.front());
 
     // 16.: is the nzb output path clearly given?
-    QString nzbPath = postingParams->_nzbPath;
+    QString nzbPath = postingParams->nzbPath();
     if (parser.isSet("o"))
     {
         QFileInfo nzb(parser.value(kOptionNames[Opt::OUTPUT]));
@@ -249,20 +249,39 @@ void NgCmdLineLoader::prepareAndStartPostingSingleFiles(QString                 
     if (rarName.isEmpty())
         rarName = nzbName;
 
-    if (postingParams->_doCompress)
+    if (postingParams->doCompress())
     {
-        if (postingParams->_genName)
-            rarName = NgTools::randomPass(postingParams->_lengthName);
-
-        if (postingParams->_genPass)
-        {
-            rarPass = NgTools::randomPass(postingParams->_lengthPass);
-            postingParams->_meta.remove("password");
-        }
+        if (postingParams->genName())
+            rarName = NgTools::randomFileName(postingParams->lengthName());
+        if (postingParams->genPass())
+            rarPass = NgTools::randomPass(postingParams->lengthPass());
     }
 
-    ngPost->startPostingJob(
-            rarName, rarPass, QFileInfo(QDir(nzbPath), nzbName).absoluteFilePath(), filesToUpload, from);
+    // generic meta (keyword, value) data for the nzb headers
+    // (ideally different than password or file name as ngPost will set them automatically)
+    // can be for example: category=cppCourse
+    QMap<QString, QString> metaHeadNzb;
+    if (parser.isSet(kOptionNames[Opt::META]))
+    {
+        for (QString const &meta : parser.values(kOptionNames[Opt::META]))
+        {
+            QStringList mList = meta.split("=");
+            if (mList.size() == 2)
+                metaHeadNzb.insert(NgTools::escapeXML(mList[0]), NgTools::escapeXML(mList[1]));
+        }
+        if (metaHeadNzb.contains("password") && rarPass.isEmpty())
+        {
+            rarPass = metaHeadNzb["password"]; // we will use the password for compression
+            metaHeadNzb.remove("password");    // but won't put it twice in the header of the nzb ;)
+        }
+    }
+    qDebug() << "Start posting job for " << nzbName << " with rarName: " << rarName << " and pass: " << rarPass;
+    ngPost->startPostingJob(rarName,
+                            rarPass,
+                            QFileInfo(QDir(nzbPath), nzbName).absoluteFilePath(),
+                            filesToUpload,
+                            from,
+                            metaHeadNzb);
 }
 
 bool NgCmdLineLoader::getInputFilesToGroupPost(QList<QFileInfo>         &filesToUpload,
@@ -483,19 +502,6 @@ bool NgCmdLineLoader::loadPostingParameters(QCommandLineParser const &parser,
         postingParams->_obfuscateArticles = true;
         if (!postingParams->quietMode())
             ngPost->onLog(tr("Do article obfuscation (the subject of each Article will be a UUID)\n"), true);
-    }
-
-    // generic meta (keyword, value) data for the nzb headers
-    // (ideally different than password or file name as ngPost will set them automatically)
-    // can be for example: category=cppCourse
-    if (parser.isSet(kOptionNames[Opt::META]))
-    {
-        for (QString const &meta : parser.values(kOptionNames[Opt::META]))
-        {
-            QStringList mList = meta.split("=");
-            if (mList.size() == 2)
-                postingParams->_meta.insert(NgTools::escapeXML(mList[0]), NgTools::escapeXML(mList[1]));
-        }
     }
     return true; // continue the game ;)
 }

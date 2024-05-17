@@ -103,8 +103,6 @@ private:
      */
     NzbCheck *_nzbCheck;
 
-    QMap<QString, QString> _meta; //!< list of meta to add in the nzb header (typically a password)
-
     mutable QTextStream _cout; //!< stream for stdout
     mutable QTextStream _cerr; //!< stream for stderr
 
@@ -189,12 +187,12 @@ public:
     QStringList parseDefaultConfig();
 
     bool startPostingJob(PostingJob *job);
-    bool startPostingJob(QString const       &rarName,
-                         QString const       &rarPass,
-                         QString const       &nzbFilePath,
-                         QFileInfoList const &files,
-                         //                         PostingWidget        *postWidget,
-                         std::string const &from);
+    bool startPostingJob(QString const                &rarName,
+                         QString const                &rarPass,
+                         QString const                &nzbFilePath,
+                         QFileInfoList const          &files,
+                         std::string const            &from,
+                         QMap<QString, QString> const &meta);
 
     QString const &proxyUrl() const { return _proxyUrl; }
     QString const &lang() const { return _lang; }
