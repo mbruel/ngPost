@@ -32,19 +32,18 @@ class QStorageInfo;
 class NgPost;
 class NntpServerParams;
 class PostingParams;
-class PostingParamsShared;
+class MainParams;
 class PostingWidget;
-using SharedParams     = QSharedDataPointer<PostingParamsShared>; // shared by all PostingJobs::PostingParamsPtr
-using PostingParamsPtr = QSharedPointer<PostingParams>;           // shared by PostingJobs and PostingWidget
+using SharedParams     = QSharedDataPointer<MainParams>; // shared by all PostingJobs::PostingParamsPtr
+using PostingParamsPtr = QSharedPointer<PostingParams>;  // shared by PostingJobs and PostingWidget
 
-class PostingParamsShared : public QSharedData
+class MainParams : public QSharedData
 {
-    Q_DECLARE_TR_FUNCTIONS(PostingParamsShared); // tr() without QObject using QCoreApplication::translate
+    Q_DECLARE_TR_FUNCTIONS(MainParams); // tr() without QObject using QCoreApplication::translate
 
-    friend class PostingParams;   // Big brother (wrapper for PostingJobs)
     friend class NgConfigLoader;  // direct access to set the attributes
     friend class NgCmdLineLoader; // direct access to set the attributes
-    friend class NgPost;          // _postingParams->setPar2Path(par2Embedded);
+    //    friend class NgPost;          // _postingParams->setPar2Path(par2Embedded);
 
 private:
     bool _quiet;
@@ -125,26 +124,30 @@ private:
     bool _delAuto; //!< shall we delete file/folder once posted (only for --auto and --monitor)
 
 public:
-    // ALL PUBLIC METHODS ARE CONST TO NOT DETACH !
+    // ALL PUBLIC METHODS ARE CONST AND NEED TO RETURN A CONST TO NOT DETACH !...
 
-    PostingParamsShared();
-    ~PostingParamsShared();
+    MainParams();
+    ~MainParams();
 
-    //    PostingParamsShared(PostingParamsShared const &o) = default;
-    //    PostingParamsShared(PostingParamsShared &&o)      = default;
+    //    MainParams(MainParams const &o) = default;
+    //    MainParams(MainParams &&o)      = default;
 
-    PostingParamsShared(PostingParamsShared const &o) : QSharedData(o)
+    MainParams(MainParams const &o) : QSharedData(o)
     {
         // TODO: temporary before using = default!!!
-        qDebug() << "[MB_TRACE][PostingParamsShared(const &)] oups... copy on write? is it on purpose?";
+        qDebug() << "[MB_SharedParams_Debug][MainParams(const &)] oups... copy on write?  on purpose?"
+                 << " src addr: "
+                 << QString("0x%1").arg(reinterpret_cast<quintptr>(&o), QT_POINTER_SIZE * 2, 16, QChar('0'))
+                 << " detached new addr: "
+                 << QString("0x%1").arg(reinterpret_cast<quintptr>(this), QT_POINTER_SIZE * 2, 16, QChar('0'));
     }
-    PostingParamsShared(PostingParamsShared &&o) : QSharedData(o)
+    MainParams(MainParams &&o) : QSharedData(o)
     {
         // TODO: temporary before using = default!!!
-        qDebug() << "[MB_TRACE][PostingParamsShared(&&)] oups... copy on write? is it on purpose?";
+        qDebug() << "[MB_TRACE][MainParams(&&)] oups... copy on write? is it on purpose?";
     }
-    PostingParamsShared &operator=(PostingParamsShared const &) = delete;
-    PostingParamsShared &operator=(PostingParamsShared &&)      = delete;
+    MainParams &operator=(MainParams const &) = delete;
+    MainParams &operator=(MainParams &&)      = delete;
 
     bool quietMode() const { return _quiet; }
 
@@ -170,7 +173,14 @@ public:
     ushort             rarMax() const { return _rarMax; }
     ushort             par2Pct() const { return _par2Pct; }
 
-    ushort         lengthName() const { return _lengthName; }
+    ushort lengthName() const
+    {
+        qDebug() << "[MB_SharedParams_Debug] [MainParams::lengthName] 'this' (directly the data...) "
+                    "type: "
+                 << typeid(this).name() << ", addr: "
+                 << QString("0x%1").arg(reinterpret_cast<quintptr>(this), QT_POINTER_SIZE * 2, 16, QChar('0'));
+        return _lengthName;
+    }
     ushort         lengthPass() const { return _lengthPass; }
     QString const &rarPassFixed() const { return _rarPassFixed; }
 
@@ -182,7 +192,7 @@ public:
     QString const     &nzbPath() const { return _nzbPath; }
     QStringList const &nzbPostCmd() const { return _nzbPostCmd; }
 
-    QUrl *urlNzbUpload() const { return _urlNzbUpload; }
+    QUrl const *urlNzbUpload() const { return _urlNzbUpload; }
 
     bool               monitorNzbFolders() const { return _monitorNzbFolders; }
     QStringList const &monitorExtensions() const { return _monitorExtensions; }
@@ -221,6 +231,15 @@ public:
     bool preparePacking() const { return _preparePacking; }
 
     std::string getFrom() const;
+
+    bool hasGroupPolicyEachFile() const { return _groupPolicy == NgConf::GROUP_POLICY::EACH_FILE; }
+    bool use7z() const { return _use7z; }
+
+    bool               genFrom() const { return _genFrom; }
+    bool               saveFrom() const { return _saveFrom; }
+    std::string const &from() const { return _from; }
+
+    bool removeAccentsOnNzbFileName() const { return _removeAccentsOnNzbFileName; }
 
 #ifdef __DEBUG__
     void dumpParams() const;
@@ -262,8 +281,11 @@ private:
     const QFileInfoList _files;
 
     PostingWidget *const _postWidget;
-    QStringList const    _grpList; //!< Newsgroup where we're posting in a list format to write in the nzb file
-    const std::string    _from;    //!< email of poster (if empty, random one will be used for each file)
+    QStringList const    _grpList; //!< Newsgroup where we're posting in a list format to write in the nzb
+
+    // MB_TODO: we probably don't need this PostingParams::_from
+    // The one _params->from() should be enough!
+    const std::string _from; //!< email of poster (if empty, random one will be used for each file)
 
     mutable bool _splitArchive; //!< might be set by buildCompressionCommandArgumentsList
 
@@ -291,6 +313,8 @@ public:
     }
     Q_DISABLE_COPY_MOVE(PostingParams);
 
+    SharedParams const *mainParamsAddr() const { return &_params; } // MB_SharedParams_Debug
+
     QList<NntpServerParams *> const &nntpServers() const { return _params->nntpServers(); }
 
     int nbNntpConnections() const;
@@ -308,8 +332,7 @@ public:
     QStringList groupsAccordingToPolicy() const
     {
         static int nbGroups = _grpList.size();
-        if (_params->obfuscateArticles() && _params->_groupPolicy == NgConf::GROUP_POLICY::EACH_FILE
-            && nbGroups > 1)
+        if (_params->obfuscateArticles() && _params->hasGroupPolicyEachFile() && nbGroups > 1)
             return QStringList(_grpList.at(std::rand() % nbGroups));
         return _grpList;
     }
@@ -326,7 +349,19 @@ public:
     ushort             rarMax() const { return _params->rarMax(); }
     ushort             par2Pct() const { return _params->par2Pct(); }
 
-    ushort         lengthName() const { return _params->lengthName(); }
+    ushort lengthName() const
+    {
+
+        qDebug() << "[MB_SharedParams_Debug] [PostingParams::lengthName] _params type: "
+                 << typeid(_params).name() << ", addr: "
+                 << QString("0x%1").arg(
+                            reinterpret_cast<quintptr>(&_params), QT_POINTER_SIZE * 2, 16, QChar('0'))
+                 << ", addr data(): "
+                 << QString("0x%1").arg(
+                            reinterpret_cast<quintptr>(_params.data()), QT_POINTER_SIZE * 2, 16, QChar('0'));
+
+        return _params->lengthName();
+    }
     ushort         lengthPass() const { return _params->lengthPass(); }
     QString const &rarPassFixed() const { return _params->rarPassFixed(); }
 
@@ -343,15 +378,15 @@ public:
 
     QStringList const &packAutoKeywords() const { return _params->packAutoKeywords(); }
 
-    QUrl *urlNzbUpload() const { return _params->urlNzbUpload(); }
+    QUrl const *urlNzbUpload() const { return _params->urlNzbUpload(); }
 
-    bool use7z() const { return _params->_use7z; }
+    bool use7z() const { return _params->use7z(); }
     bool hasCompressed() const { return _params->doCompress(); }
     bool hasPacking() const { return _params->doCompress() || _params->doPar2(); }
 
     bool saveOriginalFiles() const
     {
-        return !_postWidget || _params->_delFilesAfterPost || _params->_obfuscateFileName;
+        return !_postWidget || _params->delFilesAfterPost() || _params->obfuscateFileName();
     }
 
     bool obfuscateArticles() const { return _params->obfuscateArticles(); }

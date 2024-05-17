@@ -141,7 +141,7 @@ bool Poster::prepareArticlesInAdvance()
         if (!_prepareNextArticle(_builderThread.objectName()))
         {
 #ifdef __DEBUG__
-            _job->_log(QString("[%1] prepareArticlesInAdvance : no more Articles to produce after i = %1")
+            _job->_log(QString("[%1] prepareArticlesInAdvance : no more Articles to produce after i = %2")
                                .arg(_builderThread.objectName())
                                .arg(i));
 #endif

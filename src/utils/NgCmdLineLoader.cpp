@@ -144,6 +144,9 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost *const ngPost, SharedPar
             postingParams->_delAuto = true;
     }
 
+    if (!loadPostingParameters(parser, ngPost, postingParams))
+        return false; // end of game :( (error has been sent)
+
     // 11.: packing compression obfuscation settings
     if (!loadPackingParameters(parser, ngPost, postingParams))
         return false; // end of game :( (error has been sent)

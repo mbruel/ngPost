@@ -66,6 +66,7 @@ using namespace NgError;
 NgPost::NgPost(int &argc, char *argv[])
     : QObject()
     , CmdOrGuiApp(argc, argv)
+    , _postingParams(new MainParams)
     , _nzbCheck(nullptr)
 
     , _cout(stdout)
@@ -555,6 +556,16 @@ bool NgPost::checkSupportSSL()
 
 void NgPost::doNzbPostCMD(PostingJob *job)
 {
+    qDebug() << "[MB_SharedParams_Debug] [NgPost::doNzbPostCMD] NgPost::_postingParams type: "
+             << typeid(_postingParams).name() << ", addr: "
+             << QString("0x%1").arg(
+                        reinterpret_cast<quintptr>(&_postingParams), QT_POINTER_SIZE * 2, 16, QChar('0'))
+             << ", addr data(): "
+             << QString("0x%1").arg(
+                        reinterpret_cast<quintptr>(_postingParams.data()), QT_POINTER_SIZE * 2, 16, QChar('0'));
+
+    ushort lengthName = _postingParams->lengthName();
+
     // first NZB_UPLOAD_URL
     if (_postingParams->urlNzbUpload())
     {
@@ -1113,7 +1124,7 @@ QString NgPost::getNzbName(QFileInfo const &fileInfo) const
 {
     QString nzbName =
             fileInfo.isDir() ? QDir(fileInfo.absoluteFilePath()).dirName() : fileInfo.completeBaseName();
-    if (_postingParams->_removeAccentsOnNzbFileName)
+    if (_postingParams->removeAccentsOnNzbFileName())
         NgTools::removeAccentsFromString(nzbName);
     return nzbName;
 }
@@ -1161,6 +1172,16 @@ bool NgPost::startPostingJob(QString const       &rarName,
                              std::string const    &from,
                              SharedParams const   &mainParams)
 {
+    qDebug() << "[MB_SharedParams_Debug] [NgPost::startPostingJob] NgPost::_postingParams type: "
+             << typeid(_postingParams).name() << ", addr: "
+             << QString("0x%1").arg(
+                        reinterpret_cast<quintptr>(&_postingParams), QT_POINTER_SIZE * 2, 16, QChar('0'))
+             << ", addr data(): "
+             << QString("0x%1").arg(
+                        reinterpret_cast<quintptr>(_postingParams.data()), QT_POINTER_SIZE * 2, 16, QChar('0'));
+
+    ushort lengthName = _postingParams->lengthName();
+
     return startPostingJob(
             new PostingJob(this, rarName, rarPass, nzbFilePath, files, grpList, from, mainParams));
 }

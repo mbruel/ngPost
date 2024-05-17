@@ -165,6 +165,20 @@ PostingJob::PostingJob(NgPost              *ngPost,
     , _useHMI(_ngPost->useHMI())
 #endif
 {
+    qDebug() << "[MB_SharedParams_Debug] [PostingJob::PostingJob] PostingJob::_params type: "
+             << typeid(_params).name() << ", addr: "
+             << QString("0x%1").arg(reinterpret_cast<quintptr>(&_params), QT_POINTER_SIZE * 2, 16, QChar('0'))
+             << ", addr data(): "
+             << QString("0x%1").arg(
+                        reinterpret_cast<quintptr>(_params.data()), QT_POINTER_SIZE * 2, 16, QChar('0'))
+             << ", mainParamsAddr: "
+             << QString("0x%1").arg(reinterpret_cast<quintptr>(_params->mainParamsAddr()),
+                                    QT_POINTER_SIZE * 2,
+                                    16,
+                                    QChar('0'));
+
+    ushort lengthName = _params->lengthName();
+
     _init();
 }
 
@@ -346,6 +360,20 @@ void PostingJob::shallWeUseTmpRam()
 
 void PostingJob::onStartPosting(bool isActiveJob)
 {
+    qDebug() << "[MB_SharedParams_Debug] [PostingJob::onStartPosting] PostingJob::_params type: "
+             << typeid(_params).name() << ", addr: "
+             << QString("0x%1").arg(reinterpret_cast<quintptr>(&_params), QT_POINTER_SIZE * 2, 16, QChar('0'))
+             << ", addr data(): "
+             << QString("0x%1").arg(
+                        reinterpret_cast<quintptr>(_params.data()), QT_POINTER_SIZE * 2, 16, QChar('0'))
+             << ", mainParamsAddr: "
+             << QString("0x%1").arg(reinterpret_cast<quintptr>(_params->mainParamsAddr()),
+                                    QT_POINTER_SIZE * 2,
+                                    16,
+                                    QChar('0'));
+
+    ushort lengthName = _params->lengthName();
+
     _isActiveJob = isActiveJob; // MB_TODO what is actually _isActiveJob for? not primary Job? no posting
 #ifdef __DEBUG__
     qDebug() << "[MB_TRACE][Issue#82][PostingJob::onStartPosting] job: " << this << ", file: " << nzbName()
@@ -877,6 +905,21 @@ void PostingJob::_finishPosting()
     _log("All connections are closed...");
 #endif
 
+    qDebug() << "[MB_SharedParams_Debug] [PostingJob::_finishPosting] PostingJob::_params type: "
+             << typeid(_params).name() << ", addr: "
+             << QString("0x%1").arg(reinterpret_cast<quintptr>(&_params), QT_POINTER_SIZE * 2, 16, QChar('0'))
+             << ", addr data(): "
+             << QString("0x%1").arg(
+                        reinterpret_cast<quintptr>(_params.data()), QT_POINTER_SIZE * 2, 16, QChar('0'))
+             << ", mainParamsAddr: "
+             << QString("0x%1").arg(reinterpret_cast<quintptr>(_params->mainParamsAddr()),
+                                    QT_POINTER_SIZE * 2,
+                                    16,
+                                    QChar('0'));
+    ushort lengthName = _params->lengthName();
+
+    _ngPost->doNzbPostCMD(this);
+
     // 5.: print out the list of files that havn't been posted
     // (in case of disconnection)
     int nbPendingFiles = _filesToUpload.size() + _filesInProgress.size() + _filesFailed.size();
@@ -919,7 +962,6 @@ void PostingJob::_closeNzb()
         {
             _nzbStream << "</nzb>\n";
             _nzb->close();
-            _ngPost->doNzbPostCMD(this);
         }
         delete _nzb;
         _nzb = nullptr;

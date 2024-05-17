@@ -13,9 +13,9 @@
 
 using namespace NgConf;
 
-PostingParamsShared::~PostingParamsShared()
+MainParams::~MainParams()
 {
-    qDebug() << "[MB_TRACE][PostingParamsShared] destroyed... is it on purpose?";
+    qDebug() << "[MB_TRACE][MainParams] destroyed... is it on purpose?";
 #ifdef __USE_TMP_RAM__
     if (_storage)
         delete _storage;
@@ -26,7 +26,7 @@ PostingParamsShared::~PostingParamsShared()
     qDeleteAll(_nntpServers);
 }
 
-PostingParamsShared::PostingParamsShared()
+MainParams::MainParams()
     : QSharedData()
     , _quiet(false)
 #ifdef __USE_TMP_RAM__
@@ -86,20 +86,22 @@ PostingParamsShared::PostingParamsShared()
     , _delAuto(false)
 
 {
-    qDebug() << "[MB_TRACE][PostingParamsShared()] oups... copy on write? is it on purpose?";
+    qDebug() << "[MB_SharedParams_Debug][MainParams()] First creation ?"
+             << " src addr: "
+             << QString("0x%1").arg(reinterpret_cast<quintptr>(this), QT_POINTER_SIZE * 2, 16, QChar('0'));
 }
 
 #ifdef __USE_TMP_RAM__
-qint64 PostingParamsShared::ramAvailable() const { return _storage->bytesAvailable(); }
+qint64 MainParams::ramAvailable() const { return _storage->bytesAvailable(); }
 
-std::string PostingParamsShared::getFrom() const
+std::string MainParams::getFrom() const
 {
     if (_genFrom || _obfuscateArticles || _from.empty())
         return NgTools::randomStdFrom(_lengthName);
     return _from;
 }
 
-QString PostingParamsShared::setRamPathAndTestStorage(NgPost *const ngPost, QString const &ramPath)
+QString MainParams::setRamPathAndTestStorage(NgPost *const ngPost, QString const &ramPath)
 {
     QFileInfo fi(ramPath);
     if (!fi.isDir())
@@ -122,7 +124,7 @@ QString PostingParamsShared::setRamPathAndTestStorage(NgPost *const ngPost, QStr
 
 #endif
 
-void PostingParamsShared::updateGroups(QString const &groups)
+void MainParams::updateGroups(QString const &groups)
 {
     _grpList.clear();
     for (QString const &grp : groups.split(","))
@@ -143,7 +145,7 @@ int PostingParams::nbNntpConnections() const
 
 QString PostingParams::from(bool emptyIfObfuscateArticle) const
 {
-    if (emptyIfObfuscateArticle && _params->_obfuscateArticles)
+    if (emptyIfObfuscateArticle && _params->obfuscateArticles())
         return QString();
 
     return QString::fromStdString(_from);
@@ -154,7 +156,7 @@ QStringList PostingParams::buildCompressionCommandArgumentsList() const
     // create rar args (rar a -v50m -ed -ep1 -m0 -hp"$PASS" "$TMP_FOLDER/$RAR_NAME.rar" "${FILES[@]}")
     // QStringList args = {"a", "-idp", "-ep1", compressLevel,
     // QString("%1/%2.rar").arg(archiveTmpFolder).arg(archiveName)};
-    QStringList args = _params->_rarArgs;
+    QStringList args = _params->rarArgs();
 
     // make sure 'a' is present: Add files to archive.
     if (!args.contains("a"))
@@ -178,10 +180,10 @@ QStringList PostingParams::buildCompressionCommandArgumentsList() const
             args << QString("-hp%1").arg(_rarPass);
     }
 
-    if (_params->_rarSize > 0 || _params->_useRarMax)
+    if (_params->rarSize() > 0 || _params->useRarMax())
     {
-        uint volSize = _params->_rarSize;
-        if (_params->_useRarMax)
+        uint volSize = _params->rarSize();
+        if (_params->useRarMax())
         {
             qint64 postSize = 0;
             for (QFileInfo const &fileInfo : _files)
@@ -190,11 +192,11 @@ QStringList PostingParams::buildCompressionCommandArgumentsList() const
             postSize /= 1024 * 1024; // to get it in MB
             if (volSize > 0)
             {
-                if (postSize / volSize > _params->_rarMax)
-                    volSize = static_cast<uint>(postSize / _params->_rarMax) + 1;
+                if (postSize / volSize > _params->rarMax())
+                    volSize = static_cast<uint>(postSize / _params->rarMax()) + 1;
             }
             else
-                volSize = static_cast<uint>(postSize / _params->_rarMax) + 1;
+                volSize = static_cast<uint>(postSize / _params->rarMax()) + 1;
 
             if (_ngPost->debugMode())
                 emit _ngPost->log(
@@ -211,14 +213,14 @@ QStringList PostingParams::buildCompressionCommandArgumentsList() const
 
 bool PostingParams::_checkTmpFolder() const
 {
-    if (_params->_tmpPath.isEmpty())
+    if (_params->tmpPath().isEmpty())
     {
         emit _ngPost->error(QCoreApplication::translate(
                 "PostingParams", "NO_POSSIBLE_COMPRESSION: You must define the temporary directory..."));
         return false;
     }
 
-    QFileInfo fi(_params->_tmpPath);
+    QFileInfo fi(_params->tmpPath());
     if (!fi.exists() || !fi.isDir() || !fi.isWritable())
     {
         emit _ngPost->error(QCoreApplication::translate(
@@ -236,7 +238,7 @@ bool PostingParams::canCompress() const
         return false;
 
     // 2.: check _rarPath is executable
-    QFileInfo fi(_params->_rarPath);
+    QFileInfo fi(_params->rarPath());
     if (!fi.exists() || !fi.isFile() || !fi.isExecutable())
     {
         emit _ngPost->error(
@@ -254,7 +256,7 @@ bool PostingParams::canGenPar2() const
         return false;
 
     // 2.: check _ is executable
-    QFileInfo fi(_params->_par2Path);
+    QFileInfo fi(_params->par2Path());
     if (!fi.exists() || !fi.isFile() || !fi.isExecutable())
     {
         emit _ngPost->error(QCoreApplication::translate("PostingParams", "ERROR: par2 is not available..."));
@@ -266,13 +268,13 @@ bool PostingParams::canGenPar2() const
 
 std::string PostingParams::fromStd() const
 {
-    if (_params->_genFrom || _from.empty())
+    if (_params->genFrom() || _params->from().empty())
         return NgTools::randomStdFrom();
     else
-        return _from;
+        return _params->from();
 }
 
-void PostingParamsShared::enableAutoPacking(bool enable)
+void MainParams::enableAutoPacking(bool enable)
 {
     _doCompress = false;
     _genName    = false;
@@ -303,7 +305,7 @@ void PostingParamsShared::enableAutoPacking(bool enable)
     }
 }
 
-void PostingParamsShared::setEmptyCompressionArguments()
+void MainParams::setEmptyCompressionArguments()
 {
     _use7z = _rarPath.contains(k7zip);
     if (_rarArgs.isEmpty())
@@ -315,7 +317,7 @@ void PostingParamsShared::setEmptyCompressionArguments()
     }
 }
 
-bool PostingParamsShared::saveConfig(QString const &configFilePath, NgPost const &ngPost) const
+bool MainParams::saveConfig(QString const &configFilePath, NgPost const &ngPost) const
 {
     QFile file(configFilePath);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
@@ -675,45 +677,37 @@ bool PostingParamsShared::saveConfig(QString const &configFilePath, NgPost const
 }
 
 #ifdef __DEBUG__
-void PostingParamsShared::dumpParams() const
+void MainParams::dumpParams() const
 {
     QString servers;
     for (NntpServerParams *srv : _nntpServers)
         servers += srv->str() + " ";
-    qDebug()
-            << "[NgPost::_dumpParams]>>>>>>>>>>>>>>>>>>\n"
-            << "nb Servers: " << _nntpServers.size() << ": " << servers
+    qDebug() << "[MainParams::_dumpParams]>>>>>>>>>>>>>>>>>>\n"
+             << "nb Servers: " << _nntpServers.size() << ": " << servers << "\n\nnbThreads: " << _nbThreads
+             << "\ninputDir: " << _inputDir << ", autoDelete: " << _delAuto << "\npackAuto: " << _packAuto
+             << ", packAutoKeywords:" << _packAutoKeywords << ", autoClose: " << _autoCloseTabs
+             << "\n, monitor delay: " << _monitorSecDelayScan << " ignore dir: " << _monitorIgnoreDir
+             << " ext: " << _monitorExtensions << "\nfrom: " << _from.c_str() << ", genFrom: " << _genFrom
+             << ", saveFrom: " << _saveFrom << ", groups: " << _grpList.join(",")
+             << " policy: " << kGroupPolicies[_groupPolicy].toUpper() << "\narticleSize: " << kArticleSize
+             << ", obfuscate articles: " << _obfuscateArticles
+             << ", obfuscate file names: " << _obfuscateFileName
+             << ", _delFilesAfterPost: " << _delFilesAfterPost << ", _overwriteNzb: " << _overwriteNzb
 
-            << "\n\nnbThreads: "
-            << _nbThreads
-            //             << " nb Inputs: " << _nbFiles << ", nzbPath: " << _nzbPath
-            //             << ", nzbName" << _nzbName
-
-            //            << "\ninputDir: " << _inputDir << ", autoDelete: " << _delAuto
-            << ", packAutoKeywords:" << _packAutoKeywords << ", autoClose: " << _autoCloseTabs
-            << "\n, monitor delay: " << _monitorSecDelayScan << " ignore dir: " << _monitorIgnoreDir
-            << " ext: " << _monitorExtensions << "\n\nfrom: " << _from.c_str() << ", genFrom: " << _genFrom
-            << ", saveFrom: " << _saveFrom << ", groups: " << _grpList.join(",")
-            << " policy: " << kGroupPolicies[_groupPolicy].toUpper() << "\narticleSize: "
-            << kArticleSize
-            //             << ", obfuscate articles: " << _obfuscateArticles << ", disp progress bar: " <<
-            //             _dispProgressBar
-            //             << ", disp posting files: " << _dispFilesPosting
-            //             << ", logInFile (GUI only): " << (_logFile == nullptr ? "NO" : "YES")
-            << "\n\ncompression settings: <tmp_path: " << _tmpPath << ">"
+             << "\n\ncompression settings: <tmp_path: " << _tmpPath << ">"
 #  ifdef __USE_TMP_RAM__
-            << " <ram_path: " << _ramPath << " ratio: " << _ramRatio << ">"
+             << " <ram_path: " << _ramPath << " ratio: " << _ramRatio << ">"
 #  endif
-            << ", <rar_path: " << _rarPath << ">"
-            << ", <rar_size: " << _rarSize << ">"
-            << "\n<par2_pct: " << _par2Pct << ">"
-            << ", <par2_path: " << _par2Path << ">"
-            << ", <par2_pathCfg: " << _par2PathConfig << ">"
-            << ", <par2_args: " << _par2Args << ">"
-            << "\n\ncompress: " << _doCompress << ", doPar2: " << _doPar2 << ", gen_name: "
-            << _genName
-            //             << ", genPass: " << _genPass << "\nrarName: " << _rarName << ", rarPass: " << _rarPass
-            << ", lengthName: " << _lengthName << ", lengthPass: " << _lengthPass
-            << "\n[NgPost::_dumpParams]<<<<<<<<<<<<<<<<<<\n";
+             << ", <rar_path: " << _rarPath << ">"
+             << ", <rar_size: " << _rarSize << ">"
+             << "\n<par2_pct: " << _par2Pct << ">"
+             << ", <par2_path: " << _par2Path << ">"
+             << ", <par2_pathCfg: " << _par2PathConfig << ">"
+             << ", <par2_args: " << _par2Args << ">"
+             << " _use7z: " << _use7z << "\n\ncompress: " << _doCompress << ", doPar2: " << _doPar2
+             << ", gen_name: " << _genName << ", genPass: " << _genPass << ", lengthName: " << _lengthName
+             << ", lengthPass: " << _lengthPass << "\n _urlNzbUploadStr:" << _urlNzbUploadStr
+             << " _urlNzbUpload :" << (_urlNzbUpload ? "yes" : "no") << ", _nzbPostCmd: " << _nzbPostCmd
+             << "\n_preparePacking: " << _preparePacking << "\n[MainParams::_dumpParams]<<<<<<<<<<<<<<<<<<\n";
 }
 #endif
