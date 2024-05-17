@@ -19,10 +19,10 @@
 
 #ifndef NntpFile_H
 #define NntpFile_H
-#include <QObject>
-#include <QVector>
-#include <QSet>
 #include <QFileInfo>
+#include <QObject>
+#include <QSet>
+#include <QVector>
 class NntpArticle;
 class QTextStream;
 class PostingJob;
@@ -35,54 +35,55 @@ class PostingJob;
 class NntpFile : public QObject
 {
     Q_OBJECT
-
-public:
-    NntpFile(PostingJob *postingJob, const QFileInfo &file,
-             uint num, uint nbFiles, int padding,
-             const QList<QString> &grpList);
-    ~NntpFile();
-
-    inline void addArticle(NntpArticle *article);
-
-    void writeToNZB(QTextStream &stream, const QString &from);
-
-    inline QString stats() const;
-    inline QString path() const;
-    inline QString name() const;
-    inline QString nameWithQuotes() const;
-    inline std::string fileName() const;
-    inline qint64 fileSize() const;
-    inline uint nbArticles() const;
-    inline uint nbFailedArticles() const;
-    inline bool hasFailedArticles() const;
-    inline const std::string &groups() const;
-
-    QString missingArticles() const;
-
 signals:
     void allArticlesArePosted();
     void startPosting();
     void scheduleDeletion();
     void errorReadingFile();
 
-public slots:
-    void onArticlePosted(quint64 size);
-    void onArticleFailed(quint64 size);
-
-
 private:
-    PostingJob       *const _postingJob;
-    const QFileInfo         _file;      //!< original file
-    const uint              _num;       //!< file number
-    const uint              _nbFiles;   //!< total number of file
-    const int               _padding;
-    const QList<QString>    _grpList;   //!< groups where the file is posted
-    const std::string       _groups;
-    const uint              _nbAticles; //!< total number of articles
-    QVector<NntpArticle*>   _articles;  //!< all articles (that are yEnc encoded)
+    PostingJob *const      _postingJob;
+    const QFileInfo        _file;    //!< original file
+    const uint             _num;     //!< file number
+    const uint             _nbFiles; //!< total number of file
+    int const              _padding;
+    QList<QString> const   _grpList; //!< groups where the file is posted
+    const std::string      _groups;
+    const uint             _nbAticles; //!< total number of articles
+    QVector<NntpArticle *> _articles;  //!< all articles (that are yEnc encoded)
 
     QSet<uint> _posted; //!< part number of the Articles that have been posted (uploaded on the socket)
     QSet<uint> _failed; //!< part number of the Articles that FAILED to be posted (uploaded on the socket)
+
+public:
+    NntpFile(PostingJob           *postingJob,
+             QFileInfo const      &file,
+             uint                  num,
+             uint                  nbFiles,
+             int                   padding,
+             QList<QString> const &grpList);
+    ~NntpFile();
+
+    inline void addArticle(NntpArticle *article);
+
+    void writeToNZB(QTextStream &stream, QString const &from);
+
+    inline QString            stats() const;
+    inline QString            path() const;
+    inline QString            name() const;
+    inline QString            nameWithQuotes() const;
+    inline std::string        fileName() const;
+    inline qint64             fileSize() const;
+    inline uint               nbArticles() const;
+    inline uint               nbFailedArticles() const;
+    inline bool               hasFailedArticles() const;
+    inline std::string const &groups() const;
+
+    QString missingArticles() const;
+
+public slots:
+    void onArticlePosted(quint64 size);
+    void onArticleFailed(quint64 size);
 };
 
 void NntpFile::addArticle(NntpArticle *article) { _articles.push_back(article); }
@@ -92,20 +93,20 @@ QString NntpFile::stats() const
     return QString("[%1 ok / %2] %3").arg(_posted.size()).arg(_nbAticles).arg(_file.absoluteFilePath());
 }
 QString NntpFile::path() const { return _file.absoluteFilePath(); }
-QString NntpFile::name() const {
-    return QString("[%1/%2] %3").arg(_num, _padding, 10,  QChar('0')).arg(
-                _nbFiles).arg(_file.fileName());
+QString NntpFile::name() const
+{
+    return QString("[%1/%2] %3").arg(_num, _padding, 10, QChar('0')).arg(_nbFiles).arg(_file.fileName());
 }
-QString NntpFile::nameWithQuotes() const {
-    return QString("[%1/%2] \"%3\"").arg(_num, _padding, 10,  QChar('0')).arg(
-                _nbFiles).arg(_file.fileName());
+QString NntpFile::nameWithQuotes() const
+{
+    return QString("[%1/%2] \"%3\"").arg(_num, _padding, 10, QChar('0')).arg(_nbFiles).arg(_file.fileName());
 }
 
-std::string NntpFile::fileName() const { return _file.fileName().toStdString(); }
-qint64 NntpFile::fileSize() const { return _file.size(); }
-uint NntpFile::nbArticles() const { return _nbAticles; }
-uint NntpFile::nbFailedArticles() const { return static_cast<uint>(_failed.size()); }
-bool NntpFile::hasFailedArticles() const { return _failed.size() != 0; }
-const std::string &NntpFile::groups() const { return _groups; }
+std::string        NntpFile::fileName() const { return _file.fileName().toStdString(); }
+qint64             NntpFile::fileSize() const { return _file.size(); }
+uint               NntpFile::nbArticles() const { return _nbAticles; }
+uint               NntpFile::nbFailedArticles() const { return static_cast<uint>(_failed.size()); }
+bool               NntpFile::hasFailedArticles() const { return _failed.size() != 0; }
+std::string const &NntpFile::groups() const { return _groups; }
 
 #endif // NntpFile_H

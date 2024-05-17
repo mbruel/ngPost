@@ -16,14 +16,13 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>
 //
 //========================================================================
-
 #ifndef POSTER_H
 #define POSTER_H
 
+#include <QMutex>
+#include <QQueue>
 #include <QThread>
 #include <QVector>
-#include <QQueue>
-#include <QMutex>
 class NgPost;
 class ArticleBuilder;
 class NntpConnection;
@@ -47,17 +46,17 @@ class Poster
 
 private:
     const ushort      _id;
-    NgPost     *const _ngPost;
+    NgPost *const     _ngPost;
     PostingJob *const _job;
 
     QThread _builderThread;
     QThread _connectionsThread;
 
-    ArticleBuilder          *_articleBuilder;
-    QVector<NntpConnection*> _nntpConnections; //!< we don't own them, we just move them to _connectionsThread
+    ArticleBuilder           *_articleBuilder;
+    QVector<NntpConnection *> _nntpConnections; //!< we don't own them, we just move them to _connectionsThread
 
-    QQueue<NntpArticle*> _articles;
-    QMutex               _secureArticles;
+    QQueue<NntpArticle *> _articles;
+    QMutex                _secureArticles;
 
 public:
     Poster(PostingJob *job, ushort id);
@@ -68,10 +67,12 @@ public:
     uint nbActiveConnections() const;
 #endif
 
-    NntpArticle *getNextArticle(const QString &conPrefix);
+    NntpArticle *getNextArticle(QString const &conPrefix);
 #ifdef __RELEASE_ARTICLES_WHEN_CON_FAILS__
-    void releaseArticle(const QString &conPrefix, NntpArticle *article);
+    void releaseArticle(QString const &conPrefix, NntpArticle *article);
 #endif
+
+    bool tryResumePostWhenConnectionLost() const;
 
     inline void lockQueue();
     inline void unlockQueue();
@@ -79,17 +80,14 @@ public:
     inline QString name() const;
 
     inline void startThreads();
-    void stopThreads();
+    void        stopThreads();
 
     bool prepareArticlesInAdvance();
 
     bool isPosting() const;
 
-
 private:
-    NntpArticle *_prepareNextArticle(const QString &threadName, bool fillQueue = true);
-
-
+    NntpArticle *_prepareNextArticle(QString const &threadName, bool fillQueue = true);
 };
 
 void Poster::lockQueue() { _secureArticles.lock(); }
@@ -102,8 +100,5 @@ void Poster::startThreads()
     _builderThread.start();
     _connectionsThread.start();
 }
-
-
-
 
 #endif // POSTER_H

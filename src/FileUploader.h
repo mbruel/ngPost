@@ -16,9 +16,9 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>
 //
 //========================================================================
-
 #ifndef FILEUPLOADER_H
 #define FILEUPLOADER_H
+
 #include <QFile>
 #include <QFileInfo>
 #include <QUrl>
@@ -28,6 +28,10 @@ class QNetworkReply;
 class FileUploader : public QObject
 {
     Q_OBJECT
+signals:
+    void readyToDie();
+    void error(QString const &msg);
+    void log(QString const &msg, bool newline = true);
 
 private:
     QNetworkAccessManager &_netMgr;
@@ -37,22 +41,16 @@ private:
     QUrl                   _nzbUrl;
 
 public:
-    FileUploader(QNetworkAccessManager &netMgr, const QString &nzbFilePath);
+    FileUploader(QNetworkAccessManager &netMgr, QString const &nzbFilePath);
     ~FileUploader();
 
-    void startUpload(const QUrl &serverUrl);
-
-signals:
-    void readyToDie();
-    void error(const QString &msg);
-    void log(const QString &msg, bool newline = true);
+    void startUpload(QUrl const &serverUrl);
 
 private slots:
     void onUploadFinished();
 
 private:
     inline QString url() const;
-
 };
 
 QString FileUploader::url() const
@@ -60,7 +58,7 @@ QString FileUploader::url() const
     if (_nzbUrl.isEmpty())
         return QString();
     else
-        return _nzbUrl.toString(QUrl::RemovePassword|QUrl::RemovePath);
+        return _nzbUrl.toString(QUrl::RemovePassword | QUrl::RemovePath);
 }
 
 #endif // FILEUPLOADER_H

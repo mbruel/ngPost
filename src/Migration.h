@@ -16,7 +16,6 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>
 //
 //========================================================================
-
 #ifndef MIGRATION_H
 #define MIGRATION_H
 
@@ -24,10 +23,10 @@ class NgPost;
 
 class Migration
 {
-    const NgPost &_ngPost;
+    NgPost const &_ngPost;
 
 public:
-    Migration(const NgPost &ngPost);
+    Migration(NgPost const &ngPost);
     ~Migration() = default;
 
     bool migrate();
@@ -36,7 +35,6 @@ private:
     void _doMigration(short confBuild = 1);
 
     void _migrateTo417();
-
 };
 
 #endif // MIGRATION_H

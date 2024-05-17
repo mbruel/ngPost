@@ -461,7 +461,7 @@ void MainWindow::_initPostingBox()
     _ui->obfuscateMsgIdCB->setChecked(_ngPost->_obfuscateArticles);
     _ui->obfuscateFileNameCB->setChecked(_ngPost->_obfuscateFileName);
 
-    _ui->articleSizeEdit->setText(QString::number(_ngPost->articleSize()));
+    _ui->articleSizeEdit->setText(QString::number(NgConf::kArticleSize));
     _ui->articleSizeEdit->setValidator(new QIntValidator(100000, 10000000, _ui->articleSizeEdit));
 
     _ui->nbRetrySB->setRange(0, 15);
@@ -518,7 +518,7 @@ void MainWindow::updateParams()
     {
         QRegularExpression email("\\w+@\\w+\\.\\w+");
         if (!email.match(from).hasMatch())
-            from += QString("@%1.com").arg(_ngPost->aticleSignature().c_str());
+            from += QString("@%1.com").arg(NgConf::kArticleIdSignature.c_str());
         _ngPost->_from   = _ngPost->escapeXML(from).toStdString();
     }
     _ngPost->_genFrom  = _ui->uniqueFromCB->isChecked();

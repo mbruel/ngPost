@@ -18,47 +18,53 @@
 //========================================================================
 
 #include "ResumeJobQueue.h"
-#include <QFile>
-#include <QXmlStreamReader>
 #include <QCoreApplication>
+#include <QFile>
 #include <QRegularExpression>
-#include "NgPost.h"
+#include <QXmlStreamReader>
 
-QStringList ResumeJobQueue::postedFilesFromNzb(const NgPost &ngPost, const QString &nzbPath)
+#include "NgPost.h"
+#include "utils/NgTools.h"
+
+QStringList ResumeJobQueue::postedFilesFromNzb(NgPost const &ngPost, QString const &nzbPath)
 {
     QFile xmlFile(nzbPath);
-    if (!xmlFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    if (!xmlFile.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
         ngPost.onLog(QString("Can't open nzb file: %1").arg(nzbPath), true);
         return QStringList();
     }
     QXmlStreamReader xmlReader(&xmlFile);
 
     static const QRegularExpression sSubjectRegExp(".*\"(.*)\".*");
-    QStringList postedFileNames;
-    while(!xmlReader.atEnd() && !xmlReader.hasError()) {
+    QStringList                     postedFileNames;
+    while (!xmlReader.atEnd() && !xmlReader.hasError())
+    {
         // Read next element
         QXmlStreamReader::TokenType token = xmlReader.readNext();
 
-        //If token is StartElement - read it
-        if(token == QXmlStreamReader::StartElement) {
-            if(xmlReader.name() == QStringLiteral("file")) {
+        // If token is StartElement - read it
+        if (token == QXmlStreamReader::StartElement)
+        {
+            if (xmlReader.name() == QStringLiteral("file"))
+            {
                 QStringView subject = xmlReader.attributes().value(QStringLiteral("subject"));
-//                qDebug() << "[ResumeJobQueue::postedFilesFromNzb] has file with subject: " << subject;
-                QRegularExpressionMatch match = sSubjectRegExp.match(NgPost::xml2txt(subject.toString()));
+                //                qDebug() << "[ResumeJobQueue::postedFilesFromNzb] has file with subject: " <<
+                //                subject;
+                QRegularExpressionMatch match = sSubjectRegExp.match(NgTools::xml2txt(subject.toString()));
                 if (match.hasMatch())
-                    postedFileNames << NgPost::xml2txt(match.captured(1));
+                    postedFileNames << NgTools::xml2txt(match.captured(1));
             }
         }
     }
 
-    if(xmlReader.hasError()) {
-        qDebug() <<  "[postedFilesFromNzb] Error parsing nzb "
-                  << nzbPath << " : " << xmlReader.errorString();
+    if (xmlReader.hasError())
+    {
+        qDebug() << "[postedFilesFromNzb] Error parsing nzb " << nzbPath << " : " << xmlReader.errorString();
         return postedFileNames;
     }
 
-    qDebug() <<  "[postedFilesFromNzb] postedFileNames: " << postedFileNames;
-
+    qDebug() << "[postedFilesFromNzb] postedFileNames: " << postedFileNames;
 
     // close reader and flush file
     xmlReader.clear();

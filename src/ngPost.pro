@@ -1,4 +1,4 @@
-CONFIG  += use_hmi
+#CONFIG  += use_hmi
 
 use_hmi {
     QT += gui

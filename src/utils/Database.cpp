@@ -34,13 +34,13 @@ Database::Database():
 Database::~Database()
 {
     _db.close();
-    QSqlDatabase::removeDatabase(sDriverSqlite);
+    QSqlDatabase::removeDatabase(kDriverSqlite);
 }
 
 bool Database::initSQLite(const QString &dbPath)
 {
     // 1.: SQLite driver not available
-    _db = QSqlDatabase::addDatabase(sDriverSqlite);
+    _db = QSqlDatabase::addDatabase(kDriverSqlite);
     if (!_db.isValid()){
         qCritical() << "Error loading Sqlite driver... " << _db.lastError().text();
         return false;
@@ -83,7 +83,7 @@ int Database::insertPost(const QString &date, const QString &nzbName,
                          int done)
 {
     QSqlQuery query;
-    query.prepare(sInsertStatement);
+    query.prepare(kInsertStatement);
     query.bindValue(":date", date);
 //    query.bindValue(":date", date.toString("yyyy-MM-dd"));
     query.bindValue(":nzbName", nzbName);
@@ -112,23 +112,23 @@ int Database::insertPost(const QString &date, const QString &nzbName,
 qint64 Database::postedSizeInMB(DATE_CONDITION since) const
 {
     qint64 megas = 0;
-    QString req(sSizeSelect);
+    QString req(kSizeSelect);
     if (since != DATE_CONDITION::ALL)
     {
         req.append(" WHERE ");
         switch (since)
         {
         case DATE_CONDITION::YEAR:
-            req.append(sYearCondition);
+            req.append(kYearCondition);
             break;
         case DATE_CONDITION::MONTH:
-            req.append(sMonthCondition);
+            req.append(kMonthCondition);
             break;
         case DATE_CONDITION::WEEK:
-            req.append(sWeekCondition);
+            req.append(kWeekCondition);
             break;
         case DATE_CONDITION::DAY:
-            req.append(sDayCondition);
+            req.append(kDayCondition);
             break;
         default:
             break;
@@ -201,11 +201,11 @@ int Database::_execSqlFile(const QString &fileName, const QString &separator)
     return nbFailed;
 }
 
-const QRegularExpression Database::sByteSizeRegExp = QRegularExpression("(\\d+\\.\\d{2}) ([kMG]?B)");
+const QRegularExpression Database::kByteSizeRegExp = QRegularExpression("(\\d+\\.\\d{2}) ([kMG]?B)");
 qint64 Database::byteSize(const QString &humanSize)
 {
     qint64 bytes = 0;
-    QRegularExpressionMatch match = sByteSizeRegExp.match(humanSize);
+    QRegularExpressionMatch match = kByteSizeRegExp.match(humanSize);
     if (match.hasMatch())
     {
         double size = match.captured(1).toDouble();
@@ -224,7 +224,7 @@ qint64 Database::byteSize(const QString &humanSize)
 qint64 Database::megaSize(const QString &humanSize)
 {
     qint64 megas = 0;
-    QRegularExpressionMatch match = sByteSizeRegExp.match(humanSize);
+    QRegularExpressionMatch match = kByteSizeRegExp.match(humanSize);
     if (match.hasMatch())
     {
         double size = match.captured(1).toDouble();
@@ -238,18 +238,18 @@ qint64 Database::megaSize(const QString &humanSize)
     return megas;
 }
 
-const QString Database::sSizeSelect = "SELECT size FROM tHistory";
+const QString Database::kSizeSelect = "SELECT size FROM tHistory";
 
-const QString Database::sYearCondition = "strftime('%Y',date) = strftime('%Y',date('now'))";
-const QString Database::sMonthCondition = "strftime('%Y',date) = strftime('%Y',date('now')) \
+const QString Database::kYearCondition = "strftime('%Y',date) = strftime('%Y',date('now'))";
+const QString Database::kMonthCondition = "strftime('%Y',date) = strftime('%Y',date('now')) \
 AND strftime('%m',date) = strftime('%m',date('now'))";
-const QString Database::sWeekCondition = "strftime('%Y',date) = strftime('%Y',date('now')) \
+const QString Database::kWeekCondition = "strftime('%Y',date) = strftime('%Y',date('now')) \
 AND strftime('%W',date) = strftime('%W',date('now'))";
-const QString Database::sDayCondition = "strftime('%Y',date) = strftime('%Y',date('now')) \
+const QString Database::kDayCondition = "strftime('%Y',date) = strftime('%Y',date('now')) \
 AND strftime('%m',date) = strftime('%m',date('now'))\
 AND strftime('%d',date) = strftime('%d',date('now'))";
 
-const QString Database::sInsertStatement = QString("\
+const QString Database::kInsertStatement = QString("\
 insert into tHistory\
     (date, nzbName, size, avgSpeed, archiveName, archivePass, groups, poster, tmpPath, nzbFilePath, done)\
 values\

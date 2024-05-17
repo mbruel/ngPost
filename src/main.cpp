@@ -17,15 +17,17 @@
 //
 //========================================================================
 
-#include "NgPost.h"
 #include <csignal>
 #include <iostream>
 #include <QCoreApplication>
 #include <QLoggingCategory>
 
-#if defined(__USE_HMI__) && defined( Q_OS_WIN )
-#include <windows.h>
+#if defined(__USE_HMI__) && defined(Q_OS_WIN)
+#  include <windows.h>
 #endif
+
+#include "NgPost.h"
+#include "utils/NgTools.h"
 
 #ifdef __linux__
 void handleSigUsr(int signal);
@@ -34,15 +36,12 @@ void handleShutdown(int signal);
 
 static NgPost *app = nullptr;
 
-
 #if defined(__USE_TMP_RAM__) && defined(__DEBUG__)
-#include "PostingJob.h"
-void dispFolderSize(const QFileInfo &folderPath)
+void dispFolderSize(QFileInfo const &folderPath)
 {
-    qint64 size = NgPost::recursiveSize(folderPath);
-    qDebug() << "size " << folderPath.absoluteFilePath()
-             << " : " << PostingJob::humanSize(static_cast<double>(size))
-             << " (" << size << ")";
+    qint64 size = NgTools::recursivePathSize(folderPath);
+    qDebug() << "size " << folderPath.absoluteFilePath() << " : "
+             << NgTools::humanSize(static_cast<double>(size)) << " (" << size << ")";
 }
 #endif
 
@@ -51,8 +50,8 @@ int main(int argc, char *argv[])
     // disable SSL warnings
     QLoggingCategory::setFilterRules("qt.network.ssl.warning=false");
 
-    signal(SIGINT,  &handleShutdown);// shut down on ctrl-c
-    signal(SIGTERM, &handleShutdown);// shut down on killall
+    signal(SIGINT, &handleShutdown);  // shut down on ctrl-c
+    signal(SIGTERM, &handleShutdown); // shut down on killall
 #ifdef __linux__
     signal(SIGUSR1, &handleSigUsr); // kill -s SIGUSR1 $(pidof ngPost) to hide/show the GUI
 #endif
@@ -65,9 +64,9 @@ int main(int argc, char *argv[])
 #ifdef __USE_HMI__
     if (app->useHMI())
     {
-#if defined( Q_OS_WIN )
-        ::ShowWindow( ::GetConsoleWindow(), SW_HIDE ); //hide console window
-#endif
+#  if defined(Q_OS_WIN)
+        ::ShowWindow(::GetConsoleWindow(), SW_HIDE); // hide console window
+#  endif
         app->checkSupportSSL();
         exitCode = app->startHMI();
     }
@@ -117,8 +116,8 @@ void handleSigUsr(int signal)
     Q_UNUSED(signal)
     std::cout << "intercept SIGUSR1 :)\n";
     std::cout.flush();
-#ifdef __USE_HMI__
+#  ifdef __USE_HMI__
     app->hideOrShowGUI();
-#endif
+#  endif
 }
 #endif

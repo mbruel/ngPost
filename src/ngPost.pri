@@ -70,8 +70,12 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         $$PWD/Migration.cpp \
+        $$PWD/PostingParams.cpp \
         $$PWD/ResumeJobQueue.cpp \
         $$PWD/utils/Database.cpp \
+        $$PWD/utils/NgCmdLineLoader.cpp \
+        $$PWD/utils/NgConfigLoader.cpp \
+        $$PWD/utils/NgTools.cpp \
         ArticleBuilder.cpp \
         FileUploader.cpp \
         FoldersMonitorForNewFiles.cpp \
@@ -96,8 +100,14 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     $$PWD/Migration.h \
+    $$PWD/NgConf.h \
+    $$PWD/NgError.h \
+    $$PWD/PostingParams.h \
     $$PWD/ResumeJobQueue.h \
     $$PWD/utils/Database.h \
+    $$PWD/utils/NgCmdLineLoader.h \
+    $$PWD/utils/NgConfigLoader.h \
+    $$PWD/utils/NgTools.h \
     ArticleBuilder.h \
     FileUploader.h \
     FoldersMonitorForNewFiles.h \

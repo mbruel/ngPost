@@ -16,20 +16,19 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>
 //
 //========================================================================
-
 #ifndef YENC_H
 #define YENC_H
-#include <QtGlobal>
-#include "PureStaticClass.h"
 
-#include <string>
+#include "PureStaticClass.h"
+#include <QtGlobal>
+
 class Yenc : public PureStaticClass
 {
 public:
-    static qint64 encode(const char data[], qint64 dataSize, uchar encbuffer[], quint32 &crc32);
+    static qint64 encode(char const data[], qint64 dataSize, uchar encbuffer[], quint32 &crc32);
 
 private:
-    static quint32 crc32_tab[];
+    static const quint32 crc32_tab[];
 };
 
 #endif // YENC_H

@@ -16,18 +16,18 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>
 //
 //========================================================================
-
 #ifndef PURESTATICCLASS_H
 #define PURESTATICCLASS_H
 
 class PureStaticClass
 {
     PureStaticClass() = delete;
-    PureStaticClass(const PureStaticClass &other) = delete;
-    PureStaticClass(const PureStaticClass &&other) = delete;
 
-    PureStaticClass & operator=(const PureStaticClass &other) = delete;
-    PureStaticClass & operator=(const PureStaticClass &&other) = delete;
+    PureStaticClass(PureStaticClass const &)  = delete;
+    PureStaticClass(PureStaticClass const &&) = delete;
+
+    PureStaticClass &operator=(PureStaticClass const &)  = delete;
+    PureStaticClass &operator=(PureStaticClass const &&) = delete;
 };
 
 #endif // PURESTATICCLASS_H

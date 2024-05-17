@@ -16,21 +16,21 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>
 //
 //========================================================================
-
 #ifndef MACROS_H
 #define MACROS_H
+
 #include <QtGlobal>
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-    #define MB_FLUSH flush
+#  define MB_FLUSH flush
 #else
-    #define MB_FLUSH Qt::flush
+#  define MB_FLUSH Qt::flush
 #endif
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-    #define MB_LoadAtomic(atom) atom.load()
+#  define MB_LoadAtomic(atom) atom.load()
 #else
-    #define MB_LoadAtomic(atom) atom.loadRelaxed()
+#  define MB_LoadAtomic(atom) atom.loadRelaxed()
 #endif
 
 #endif // MACROS_H

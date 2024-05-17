@@ -16,20 +16,20 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>
 //
 //========================================================================
-
 #ifndef RESUMEJOBQUEUE_H
 #define RESUMEJOBQUEUE_H
-#include <QtGlobal>
+
 #include "NgPost.h"
 #include "utils/PureStaticClass.h"
 #include <QStringList>
+#include <QtGlobal>
 
 class NgPost;
 
 class ResumeJobQueue : public PureStaticClass
 {
 public:
-    static QStringList postedFilesFromNzb(const NgPost &ngPost, const QString &nzbPath);
+    static QStringList postedFilesFromNzb(NgPost const &ngPost, QString const &nzbPath);
 };
 
 #endif // RESUMEJOBQUEUE_H

@@ -16,18 +16,16 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>
 //
 //========================================================================
-
 #ifndef FOLDERSMONITORFORNEWFILES_H
 #define FOLDERSMONITORFORNEWFILES_H
 
-
-#include <QFileSystemWatcher>
 #include <QDateTime>
 #include <QFileInfoList>
+#include <QFileSystemWatcher>
 #include <QMap>
 #include <QSet>
 using AtomicBool = QAtomicInteger<unsigned short>; // 16 bit only (faster than using 8 bit variable...)
-using PathSet = QSet<QString>;
+using PathSet    = QSet<QString>;
 
 class FolderScan
 {
@@ -36,9 +34,9 @@ public:
     QDateTime     lastUpdate;
     PathSet       previousScan;
 
-    FolderScan(const QString &folderPath);
-    FolderScan(const FolderScan &other) = delete;
-    FolderScan &operator=(const FolderScan &) = delete;
+    FolderScan(QString const &folderPath);
+    FolderScan(FolderScan const &other)       = delete;
+    FolderScan &operator=(FolderScan const &) = delete;
 
     ~FolderScan() = default;
 };
@@ -47,34 +45,32 @@ class FoldersMonitorForNewFiles : public QObject
 {
     Q_OBJECT
 
-    friend class NgPost;
+    friend class NgPost;         // MB_TODO: is it still necessary?
+    friend class NgConfigLoader; // to update sMSleep
+
+signals:
+    void newFileToProcess(QFileInfo const &fileInfo);
 
 private:
-    QFileSystemWatcher          _monitor;        //!< monitor
-    QMap<QString, FolderScan*>  _folders; //!< track files processed (their date might be > _lastCheck)
+    QFileSystemWatcher          _monitor; //!< monitor
+    QMap<QString, FolderScan *> _folders; //!< track files processed (their date might be > _lastCheck)
     AtomicBool                  _stopListening;
 
     static ulong sMSleep;
 
-
 public:
-    FoldersMonitorForNewFiles(const QString &folderPath, QObject *parent = nullptr);
+    FoldersMonitorForNewFiles(QString const &folderPath, QObject *parent = nullptr);
     ~FoldersMonitorForNewFiles();
 
-    bool addFolder(const QString &folderPath);
+    bool addFolder(QString const &folderPath);
     void stopListening();
 
-signals:
-    void newFileToProcess(const QFileInfo &fileInfo);
-
-
 public slots:
-    void onDirectoryChanged(const QString &folderPath);
-
+    void onDirectoryChanged(QString const &folderPath);
 
 private:
     qint64 _pathSize(QFileInfo &fileInfo) const;
-    qint64 _dirSize(const QString &path) const;
+    qint64 _dirSize(QString const &path) const;
 };
 
 #endif // FOLDERSMONITORFORNEWFILES_H

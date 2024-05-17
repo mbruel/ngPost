@@ -18,34 +18,31 @@
 //========================================================================
 
 #include "AutoPostWidget.h"
-#include "ui_AutoPostWidget.h"
-#include "PostingWidget.h"
+#include "FoldersMonitorForNewFiles.h"
 #include "MainWindow.h"
 #include "NgPost.h"
-#include "FoldersMonitorForNewFiles.h"
-#include <QFileDialog>
+#include "PostingWidget.h"
+#include "ui_AutoPostWidget.h"
 #include <QDebug>
-#include <QMessageBox>
+#include <QFileDialog>
 #include <QKeyEvent>
+#include <QMessageBox>
 #include <QMimeData>
 
-AutoPostWidget::AutoPostWidget(NgPost *ngPost, MainWindow *hmi) :
-    QWidget(hmi),
-    _ui(new Ui::AutoPostWidget),
-    _hmi(hmi),
-    _ngPost(ngPost),
-    _isMonitoring(false),
-    _currentPostIdx(1)
+AutoPostWidget::AutoPostWidget(NgPost *ngPost, MainWindow *hmi)
+    : QWidget(hmi)
+    , _ui(new Ui::AutoPostWidget)
+    , _hmi(hmi)
+    , _ngPost(ngPost)
+    , _isMonitoring(false)
+    , _currentPostIdx(1)
 {
     _ui->setupUi(this);
     _ui->filesList->setSignature(QString("<pre>%1</pre>").arg(_ngPost->escapeXML(_ngPost->asciiArt())));
     connect(_ui->filesList, &SignedListWidget::rightClick, this, &AutoPostWidget::onSelectFilesClicked);
 }
 
-AutoPostWidget::~AutoPostWidget()
-{
-    delete _ui;
-}
+AutoPostWidget::~AutoPostWidget() { delete _ui; }
 
 void AutoPostWidget::init()
 {
@@ -71,12 +68,12 @@ void AutoPostWidget::init()
 
     _ui->filesList->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
-    connect(_ui->compressPathButton,&QAbstractButton::clicked, this, &AutoPostWidget::onCompressPathClicked);
-    connect(_ui->rarPathButton,     &QAbstractButton::clicked, this, &AutoPostWidget::onRarPathClicked);
-    connect(_ui->autoDirButton,     &QAbstractButton::clicked, this, &AutoPostWidget::onSelectAutoDirClicked);
+    connect(_ui->compressPathButton, &QAbstractButton::clicked, this, &AutoPostWidget::onCompressPathClicked);
+    connect(_ui->rarPathButton, &QAbstractButton::clicked, this, &AutoPostWidget::onRarPathClicked);
+    connect(_ui->autoDirButton, &QAbstractButton::clicked, this, &AutoPostWidget::onSelectAutoDirClicked);
     connect(_ui->scanAutoDirButton, &QAbstractButton::clicked, this, &AutoPostWidget::onScanAutoDirClicked);
-    connect(_ui->compressCB,        &QAbstractButton::toggled, this, &AutoPostWidget::onCompressToggled);
-    connect(_ui->par2CB,            &QAbstractButton::toggled, this, &AutoPostWidget::onGenPar2Toggled);
+    connect(_ui->compressCB, &QAbstractButton::toggled, this, &AutoPostWidget::onCompressToggled);
+    connect(_ui->par2CB, &QAbstractButton::toggled, this, &AutoPostWidget::onGenPar2Toggled);
 
     setPackingAuto(_ngPost->_packAuto, _ngPost->_packAutoKeywords);
     if (_ngPost->_keepRar)
@@ -85,46 +82,46 @@ void AutoPostWidget::init()
 
     _ui->latestFilesFirstCB->setChecked(true);
 
-    connect(_ui->postButton,   &QAbstractButton::clicked, this,    &AutoPostWidget::onGenQuickPosts);
-    connect(_ui->aboutButton,  &QAbstractButton::clicked, _ngPost, &NgPost::onAboutClicked);
+    connect(_ui->postButton, &QAbstractButton::clicked, this, &AutoPostWidget::onGenQuickPosts);
+    connect(_ui->aboutButton, &QAbstractButton::clicked, _ngPost, &NgPost::onAboutClicked);
     connect(_ui->donateButton, &QAbstractButton::clicked, _ngPost, &NgPost::onDonation);
-    connect(_ui->btcDonate,    &QAbstractButton::clicked, _ngPost, &NgPost::onDonationBTC);
+    connect(_ui->btcDonate, &QAbstractButton::clicked, _ngPost, &NgPost::onDonationBTC);
 
     connect(_ui->monitorButton, &QAbstractButton::clicked, this, &AutoPostWidget::onMonitoringClicked);
 
     connect(_ui->delFilesCB, &QAbstractButton::toggled, this, &AutoPostWidget::onDelFilesToggled);
 
-
     _ui->addMonitoringFolderButton->setEnabled(false);
-    connect(_ui->addMonitoringFolderButton, &QAbstractButton::clicked, this, &AutoPostWidget::onAddMonitoringFolder);
+    connect(_ui->addMonitoringFolderButton,
+            &QAbstractButton::clicked,
+            this,
+            &AutoPostWidget::onAddMonitoringFolder);
 
-
-    _ui->extensionFilterEdit->setText(_ngPost->_monitorExtensions.isEmpty()? "" : _ngPost->_monitorExtensions.join(","));
+    _ui->extensionFilterEdit->setText(
+            _ngPost->_monitorExtensions.isEmpty() ? "" : _ngPost->_monitorExtensions.join(","));
     _ui->dirAllowedCB->setChecked(!_ngPost->_monitorIgnoreDir);
 }
-
 
 void AutoPostWidget::onGenQuickPosts()
 {
     bool compress = _ui->compressCB->isChecked();
 
     QFileInfoList files;
-    for (int i = 0 ; i < _ui->filesList->count() ; ++i)
+    for (int i = 0; i < _ui->filesList->count(); ++i)
     {
         QFileInfo fileInfo(_ui->filesList->item(i)->text());
         if (fileInfo.exists())
             files << fileInfo;
         if (!compress && fileInfo.isDir())
         {
-            _ngPost->error(tr("You can't use auto posting without compression on folders... (%1)").arg(fileInfo.fileName()));
-            return ;
+            _ngPost->error(tr("You can't use auto posting without compression on folders... (%1)")
+                                   .arg(fileInfo.fileName()));
+            return;
         }
     }
     if (files.isEmpty())
     {
-        QMessageBox::warning(nullptr,
-                             tr("Nothing to post..."),
-                             tr("There is nothing to post!\n\
+        QMessageBox::warning(nullptr, tr("Nothing to post..."), tr("There is nothing to post!\n\
 Press the Scan button and remove what you don't want to post ;)\n\
 (To remove files, select in the list and press DEL or BackSpace)"));
         return;
@@ -134,11 +131,10 @@ Press the Scan button and remove what you don't want to post ;)\n\
     _hmi->updateParams();
     udatePostingParams();
 
-    bool startPost = _ui->startJobsCB->isChecked(),
-         useRarMax = _ui->rarMaxCB->isChecked();
-    for (const QFileInfo &file : files)
+    bool startPost = _ui->startJobsCB->isChecked(), useRarMax = _ui->rarMaxCB->isChecked();
+    for (QFileInfo const &file : files)
     {
-        PostingWidget *quickPostWidget = _hmi->addNewQuickTab(0, {file});
+        PostingWidget *quickPostWidget = _hmi->addNewQuickTab(0, { file });
         quickPostWidget->init();
         quickPostWidget->genNameAndPassword(_ngPost->_genName, _ngPost->_genPass, _ngPost->_doPar2, useRarMax);
 
@@ -147,14 +143,10 @@ Press the Scan button and remove what you don't want to post ;)\n\
     }
 }
 
-
 void AutoPostWidget::onCompressPathClicked()
 {
     QString path = QFileDialog::getExistingDirectory(
-                this,
-                tr("Select a Folder"),
-                _ui->compressPathEdit->text(),
-                QFileDialog::ShowDirsOnly);
+            this, tr("Select a Folder"), _ui->compressPathEdit->text(), QFileDialog::ShowDirsOnly);
 
     if (!path.isEmpty())
         _ui->compressPathEdit->setText(path);
@@ -163,10 +155,7 @@ void AutoPostWidget::onCompressPathClicked()
 void AutoPostWidget::onRarPathClicked()
 {
     QString path = QFileDialog::getOpenFileName(
-                this,
-                tr("Select rar executable"),
-                QFileInfo(_ngPost->_rarPath).absolutePath()
-                );
+            this, tr("Select rar executable"), QFileInfo(_ngPost->_rarPath).absolutePath());
 
     if (!path.isEmpty())
     {
@@ -181,10 +170,7 @@ void AutoPostWidget::onRarPathClicked()
 void AutoPostWidget::onSelectAutoDirClicked()
 {
     QString path = QFileDialog::getExistingDirectory(
-                this,
-                tr("Select a Folder"),
-                _ui->autoDirEdit->text(),
-                QFileDialog::ShowDirsOnly);
+            this, tr("Select a Folder"), _ui->autoDirEdit->text(), QFileDialog::ShowDirsOnly);
 
     if (!path.isEmpty())
         _ui->autoDirEdit->setText(path);
@@ -197,7 +183,8 @@ void AutoPostWidget::onScanAutoDirClicked()
     {
         _ui->filesList->clear2();
         QDir::SortFlags sort = _ui->latestFilesFirstCB->isChecked() ? QDir::Time : QDir::Name;
-        for (const QFileInfo &file : autoDir.entryInfoList(QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot, sort))
+        for (QFileInfo const &file :
+             autoDir.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot, sort))
             _ui->filesList->addPathIfNotInList(file.absoluteFilePath(), 0, file.isDir());
     }
     else
@@ -213,9 +200,9 @@ void AutoPostWidget::onMonitoringClicked()
         if (_ngPost->hasMonitoringPostingJobs())
         {
             int res = QMessageBox::question(this,
-                                  tr("Ongoing Monitoring post"),
-                                  tr("There are still ongoing or pending Monitoring Posts.\n We're going to stop all of them.\nAre you sure you want to proceed?")
-                                  );
+                                            tr("Ongoing Monitoring post"),
+                                            tr("There are still ongoing or pending Monitoring Posts.\n We're "
+                                               "going to stop all of them.\nAre you sure you want to proceed?"));
             if (res == QMessageBox::No)
                 return;
             else
@@ -229,21 +216,27 @@ void AutoPostWidget::onMonitoringClicked()
     {
         _currentPostIdx = 1;
         _ui->filesList->clear2();
-        QString folderPath = _ui->autoDirEdit->text();
+        QString   folderPath = _ui->autoDirEdit->text();
         QFileInfo fi(folderPath);
         if (!fi.exists() || !fi.isDir() || !fi.isReadable())
         {
-            QMessageBox::warning(this, tr("Error accessing Auto Dir..."), tr("The auto directory must exist and be readable..."));
-            return;
-        }
-        if (!_ui->compressCB->isChecked()) {
             QMessageBox::warning(this,
-                                 tr("To be implemented..."),
-                                 tr("You can't monitor a folder without compression using the GUI...\nIt's possible in command line if MONITOR_IGNORE_DIR is enabled in your configuration file."));
+                                 tr("Error accessing Auto Dir..."),
+                                 tr("The auto directory must exist and be readable..."));
             return;
         }
-        _ui->filesList->addItem(new QListWidgetItem(QIcon(":/icons/monitor.png"), tr("Monitoring %1").arg(folderPath)));
-        _ngPost->_startMonitoring(folderPath);
+        if (!_ui->compressCB->isChecked())
+        {
+            QMessageBox::warning(
+                    this,
+                    tr("To be implemented..."),
+                    tr("You can't monitor a folder without compression using the GUI...\nIt's possible in "
+                       "command line if MONITOR_IGNORE_DIR is enabled in your configuration file."));
+            return;
+        }
+        _ui->filesList->addItem(
+                new QListWidgetItem(QIcon(":/icons/monitor.png"), tr("Monitoring %1").arg(folderPath)));
+        _ngPost->startFolderMonitoring(folderPath);
         _ui->monitorButton->setText(tr("Stop Monitoring"));
     }
 
@@ -266,7 +259,7 @@ void AutoPostWidget::onMonitoringClicked()
     _ui->passLengthSB->setEnabled(_isMonitoring);
 
     _ui->par2CB->setEnabled(_isMonitoring);
-//    _ui->delFilesCB->setEnabled(_isMonitoring);
+    //    _ui->delFilesCB->setEnabled(_isMonitoring);
 
     _ui->startJobsCB->setEnabled(_isMonitoring);
     _ui->postButton->setEnabled(_isMonitoring);
@@ -280,11 +273,11 @@ void AutoPostWidget::onMonitoringClicked()
         _ui->filesList->setSelectionMode(QAbstractItemView::ExtendedSelection);
 }
 
-void AutoPostWidget::newFileToProcess(const QFileInfo &fileInfo)
+void AutoPostWidget::newFileToProcess(QFileInfo const &fileInfo)
 {
-    QListWidgetItem *newItem = new QListWidgetItem(
-                QIcon(fileInfo.isDir()?":/icons/folder.png":":/icons/file.png"),
-                QString("- %1").arg(fileInfo.absoluteFilePath()));
+    QListWidgetItem *newItem =
+            new QListWidgetItem(QIcon(fileInfo.isDir() ? ":/icons/folder.png" : ":/icons/file.png"),
+                                QString("- %1").arg(fileInfo.absoluteFilePath()));
     newItem->setForeground(_hmi->sPendingColor);
     _ui->filesList->addItem(newItem);
 }
@@ -293,25 +286,24 @@ void AutoPostWidget::onDelFilesToggled(bool checked)
 {
     if (checked)
         QMessageBox::warning(this,
-                         tr("Deleting files/folders once posted"),
-                         tr("You're about to delete files from your computer once they've been posted!\nUse it at your own risk!\nIt will be irreversible..."));
+                             tr("Deleting files/folders once posted"),
+                             tr("You're about to delete files from your computer once they've been posted!\nUse "
+                                "it at your own risk!\nIt will be irreversible..."));
     _ngPost->setDelFilesAfterPosted(checked);
 }
 
 void AutoPostWidget::onAddMonitoringFolder()
 {
     QString path = QFileDialog::getExistingDirectory(
-                this,
-                tr("Select a Monitoring Folder to add"),
-                _ui->autoDirEdit->text(),
-                QFileDialog::ShowDirsOnly);
+            this, tr("Select a Monitoring Folder to add"), _ui->autoDirEdit->text(), QFileDialog::ShowDirsOnly);
 
     if (!path.isEmpty())
     {
         QFileInfo newDir(path);
         if (newDir.exists() && newDir.isDir() && newDir.isReadable())
         {
-            _ui->filesList->addItem(new QListWidgetItem(QIcon(":/icons/monitor.png"), tr("Monitoring %1").arg(newDir.absoluteFilePath())));
+            _ui->filesList->addItem(new QListWidgetItem(QIcon(":/icons/monitor.png"),
+                                                        tr("Monitoring %1").arg(newDir.absoluteFilePath())));
             _ngPost->addMonitoringFolder(newDir.absoluteFilePath());
         }
     }
@@ -337,10 +329,10 @@ void AutoPostWidget::onGenPar2Toggled(bool checked)
 #include "PostingJob.h"
 void AutoPostWidget::onMonitorJobStart()
 {
-    PostingJob *job = static_cast<PostingJob*>(sender());
+    PostingJob *job = static_cast<PostingJob *>(sender());
 
     QString srcPath = QString("- %1").arg(job->getFirstOriginalFile());
-    int nbFiles = _ui->filesList->count();
+    int     nbFiles = _ui->filesList->count();
     for (int i = _currentPostIdx; i < nbFiles; ++i)
     {
         QListWidgetItem *item = _ui->filesList->item(i);
@@ -357,13 +349,11 @@ void AutoPostWidget::onSelectFilesClicked()
 {
     if (!_isMonitoring)
     {
-        QStringList files = QFileDialog::getOpenFileNames(
-                    this,
-                    tr("Select one or more files"),
-                    _ngPost->_inputDir);
+        QStringList files =
+                QFileDialog::getOpenFileNames(this, tr("Select one or more files"), _ngPost->_inputDir);
 
         int currentNbFiles = _ui->filesList->count();
-        for (const QString &file : files)
+        for (QString const &file : files)
             _ui->filesList->addPathIfNotInList(file, currentNbFiles);
     }
 }
@@ -380,9 +370,9 @@ void AutoPostWidget::udatePostingParams()
     _ngPost->_rarPath    = _ui->rarEdit->text();
     _ngPost->_lengthName = static_cast<uint>(_ui->nameLengthSB->value());
     _ngPost->_lengthPass = static_cast<uint>(_ui->passLengthSB->value());
-    uint val = 0;
-    bool ok  = true;
-    _ngPost->_rarSize = 0;
+    uint val             = 0;
+    bool ok              = true;
+    _ngPost->_rarSize    = 0;
     if (!_ui->rarSizeEdit->text().isEmpty())
     {
         val = _ui->rarSizeEdit->text().toUInt(&ok);
@@ -397,7 +387,6 @@ void AutoPostWidget::udatePostingParams()
     QFileInfo inputDir(_ui->autoDirEdit->text());
     if (inputDir.exists() && inputDir.isDir() && inputDir.isWritable())
         _ngPost->_inputDir = inputDir.absoluteFilePath();
-
 
     _ngPost->_monitorExtensions.clear();
     if (!_ui->extensionFilterEdit->text().isEmpty())
@@ -414,10 +403,10 @@ void AutoPostWidget::udatePostingParams()
     _ngPost->_keepRar = _ui->keepRarCB->isChecked();
 }
 
-void AutoPostWidget::updateFinishedJob(const QString &path, uint nbArticles, uint nbUploaded, uint nbFailed)
+void AutoPostWidget::updateFinishedJob(QString const &path, uint nbArticles, uint nbUploaded, uint nbFailed)
 {
     QString srcPath = QString("- %1").arg(path);
-    int nbFiles = _ui->filesList->count();
+    int     nbFiles = _ui->filesList->count();
     for (int i = 1; i < nbFiles; ++i)
     {
         QListWidgetItem *item = _ui->filesList->item(i);
@@ -445,20 +434,23 @@ bool AutoPostWidget::deleteFilesOncePosted() const { return _ui->delFilesCB->isC
 void AutoPostWidget::retranslate()
 {
     _ui->retranslateUi(this);
-    _ui->rarMaxCB->setToolTip(tr("limit the number of archive volume to %1 (cf config RAR_MAX)").arg(_ngPost->_rarMax));
+    _ui->rarMaxCB->setToolTip(
+            tr("limit the number of archive volume to %1 (cf config RAR_MAX)").arg(_ngPost->_rarMax));
     _ui->redundancySB->setToolTip(tr("Using PAR2_ARGS from config file: %1").arg(_ngPost->_par2Args));
     _ui->donateButton->setToolTip(_ngPost->donationTooltip());
     _ui->btcDonate->setToolTip(_ngPost->donationBtcTooltip());
-    _ui->filesList->setToolTip(QString("%1<br/><br/>%2<ul><li>%3</li><li>%4</li><li>%5</li></ul>%6").arg(
-                                   tr("You can use the <b>Monitor Mode</b>")).arg(
-                                   tr("or <b>Generate Posts</b> by adding files:")).arg(
-                                   tr("Drag & Drop files/folders")).arg(
-                                   tr("Right Click to add Files")).arg(
-                                   tr("Click on the Scan Button")).arg(
-                                   tr("Bare in mind you can select items in the list and press DEL to remove them")));
+    _ui->filesList->setToolTip(
+            QString("%1<br/><br/>%2<ul><li>%3</li><li>%4</li><li>%5</li></ul>%6")
+                    .arg(tr("You can use the <b>Monitor Mode</b>"))
+                    .arg(tr("or <b>Generate Posts</b> by adding files:"))
+                    .arg(tr("Drag & Drop files/folders"))
+                    .arg(tr("Right Click to add Files"))
+                    .arg(tr("Click on the Scan Button"))
+                    .arg(tr("Bare in mind you can select items in the list and press DEL to remove them")));
 }
 
-void AutoPostWidget::setPackingAuto(bool enabled, const QStringList &keys){
+void AutoPostWidget::setPackingAuto(bool enabled, QStringList const &keys)
+{
     bool compress = false, genName = false, genPass = false, doPar2 = false;
     if (enabled)
     {
@@ -482,14 +474,12 @@ void AutoPostWidget::setPackingAuto(bool enabled, const QStringList &keys){
     onCompressToggled(compress);
 }
 
-
-
 void AutoPostWidget::handleKeyEvent(QKeyEvent *keyEvent)
 {
     if (!_isMonitoring)
     {
         qDebug() << "[AutoPostWidget::handleKeyEvent] key event: " << keyEvent->key();
-        if(keyEvent->key() == Qt::Key_Delete || keyEvent->key() == Qt::Key_Backspace)
+        if (keyEvent->key() == Qt::Key_Delete || keyEvent->key() == Qt::Key_Backspace)
         {
             for (QListWidgetItem *item : _ui->filesList->selectedItems())
             {
@@ -501,13 +491,12 @@ void AutoPostWidget::handleKeyEvent(QKeyEvent *keyEvent)
     }
 }
 
-
 void AutoPostWidget::handleDropEvent(QDropEvent *e)
 {
     if (!_isMonitoring)
     {
         int currentNbFiles = _ui->filesList->count();
-        for (const QUrl &url : e->mimeData()->urls())
+        for (QUrl const &url : e->mimeData()->urls())
         {
             QString fileName = url.toLocalFile();
             _ui->filesList->addPathIfNotInList(fileName, currentNbFiles, QFileInfo(fileName).isDir());

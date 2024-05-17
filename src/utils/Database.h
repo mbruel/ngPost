@@ -16,62 +16,69 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>
 //
 //========================================================================
-
 #ifndef DATABASE_H
 #define DATABASE_H
+
 #include <QSqlDatabase>
 
 class Database
 {
 public:
-    enum class TYPE : char {SQLITE};
-    enum class DATE_CONDITION : char {ALL, YEAR, MONTH, WEEK, DAY};
+    enum class TYPE : char
+    {
+        SQLITE
+    };
+    enum class DATE_CONDITION : char
+    {
+        ALL,
+        YEAR,
+        MONTH,
+        WEEK,
+        DAY
+    };
+
 private:
     TYPE         _type;
     QSqlDatabase _db;
 
-    static constexpr const char *sDriverSqlite = "QSQLITE";
+    static constexpr char const *kDriverSqlite = "QSQLITE";
 
-    static const QString sInsertStatement;
+    static const QString kInsertStatement;
 
-    static const QString sSizeSelect;
+    static const QString kSizeSelect;
 
-    static const QString sYearCondition;
-    static const QString sMonthCondition;
-    static const QString sWeekCondition;
-    static const QString sDayCondition;
+    static const QString kYearCondition;
+    static const QString kMonthCondition;
+    static const QString kWeekCondition;
+    static const QString kDayCondition;
 
-    static const QRegularExpression sByteSizeRegExp;
+    static const QRegularExpression kByteSizeRegExp;
 
 public:
     Database(); //!< for SQLITE
     ~Database();
 
-    bool initSQLite(const QString &dbPath);
-    int insertPost(QString const& date,
-                   QString const& nzbName,
-                   QString const& size,
-                   QString const& avgSpeed,
-                   QString const& archiveName,
-                   QString const& archivePass,
-                   QString const& groups,
-                   QString const& from,
-                   QString const& tmpPath,
-                   QString const& nzbFilePath,
-                   int done);
+    bool initSQLite(QString const &dbPath);
+    int  insertPost(QString const &date,
+                    QString const &nzbName,
+                    QString const &size,
+                    QString const &avgSpeed,
+                    QString const &archiveName,
+                    QString const &archivePass,
+                    QString const &groups,
+                    QString const &from,
+                    QString const &tmpPath,
+                    QString const &nzbFilePath,
+                    int            done);
 
-    qint64 postedSizeInMB(DATE_CONDITION since) const;
+    qint64  postedSizeInMB(DATE_CONDITION since) const;
     QString postedSize(DATE_CONDITION since) const;
 
-    static qint64 byteSize(const QString &humanSize);
-    static qint64 megaSize(const QString &humanSize);
-
+    static qint64 byteSize(QString const &humanSize);
+    static qint64 megaSize(QString const &humanSize);
 
 private:
-    int _execSqlFile(const QString &fileName, const QString &separator = ";");
-
-
-
+    int _execSqlFile(QString const &fileName, QString const &separator = ";");
 };
 
 #endif // DATABASE_H

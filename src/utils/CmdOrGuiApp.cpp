@@ -19,35 +19,18 @@
 
 #include "CmdOrGuiApp.h"
 #ifdef __USE_HMI__
-  #include "hmi/MainWindow.h"
-  #include <QApplication>
+#  include "hmi/MainWindow.h"
+#  include <QApplication>
 #else
-  #include <QCoreApplication>
+#  include <QCoreApplication>
 #endif
 
-const QString CmdOrGuiApp::sAmpXml   = QStringLiteral("&amp;");
-const QString CmdOrGuiApp::sLtXml    = QStringLiteral("&lt;");
-const QString CmdOrGuiApp::sGtXml    = QStringLiteral("&gt;");
-const QString CmdOrGuiApp::sQuoteXml = QStringLiteral("&quot;");
-const QString CmdOrGuiApp::sAPosXml  = QStringLiteral("&apos;");
-
-const QString CmdOrGuiApp::sAmpStr   = QStringLiteral("&");
-const QString CmdOrGuiApp::sLtStr    = QStringLiteral("<");
-const QString CmdOrGuiApp::sGtStr    = QStringLiteral(">");
-const QString CmdOrGuiApp::sQuoteStr = QStringLiteral("\"");
-const QString CmdOrGuiApp::sAPosStr  = QStringLiteral("'");
-
-const QChar CmdOrGuiApp::sAmpChar   = '&';
-const QChar CmdOrGuiApp::sLtChar    = '<';
-const QChar CmdOrGuiApp::sGtChar    = '>';
-const QChar CmdOrGuiApp::sQuoteChar = '"';
-const QChar CmdOrGuiApp::sAPosChar  = '\'';
-
-CmdOrGuiApp::CmdOrGuiApp(int &argc, char *argv[]):
+CmdOrGuiApp::CmdOrGuiApp(int &argc, char *argv[])
+    :
 #ifdef __USE_HMI__
-    _app(nullptr),
-    _mode(argc > 1 ? AppMode::CMD : AppMode::HMI),
-    _hmi(nullptr)
+    _app(nullptr)
+    , _mode(argc > 1 ? AppMode::CMD : AppMode::HMI)
+    , _hmi(nullptr)
 #else
     _app(new QCoreApplication(argc, argv))
 #endif
@@ -67,7 +50,7 @@ CmdOrGuiApp::~CmdOrGuiApp()
 {
 #ifdef __USE_HMI__
     if (_hmi)
-        delete  _hmi;
+        delete _hmi;
 #endif
     delete _app;
 }

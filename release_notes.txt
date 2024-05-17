@@ -15,6 +15,41 @@ TODO: include ParPar instead of par2cmdline?
 TODO: auto RAR size and par2 parameters depending on the inputs size?
 
 ####################################################
+###       Release: ngPost v5.0                   ###
+###       date:    2024/05/??                    ###
+####################################################
+- for gimly26: TODO for Linux and Mac, 
+check if the default config file (~/.ngPost) exists
+if it is not the case, create it with all default values
+especially set TMP_DIR = /tmp so the user can post 
+instead of having a write permission issue
+
+- major refactoring / tidying / comment of the code 
+use of clang-format (home made :))
+to approach a real production standard
+
+- migration to Qt6. Release of 2 versions with SSL 3 and SSL 1.1
+ngPost_v5.0_libssl1.1-x86_64.AppImage & ngPost_v5.0_libssl3-x86_64.AppImage
+Windows and Mac versions upgrade to SSL 3 only
+
+- migration to an SQLite database for the history
+=> users can get stats (upload per day, week, month, year)
++ possibility to restart posts that were stopped for whatever reason \o/
+
+- basic night mode for the GUI (css found on the web)
+
+- switch to cmake instead of pro/pri files
+use of cpack to generate a .deb? This would deploy the config file :)
+
+- integrate Tr4il Pull request: Obfuscation fixes from xompage/ngpost
+breaking yEnc header format.
+Or maybe bit more clever and simulate a fake ones so providers don't catch it straight away
+
+- try to set up weblate for translations
+https://hosted.weblate.org/projects/ngpost/
+
+
+####################################################
 ###       Release: ngPost v4.16                  ###
 ###       date:    2021/11/29                    ###
 ####################################################

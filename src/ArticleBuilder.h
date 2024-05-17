@@ -16,12 +16,10 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>
 //
 //========================================================================
-
 #ifndef ARTICLEBUILDER_H
 #define ARTICLEBUILDER_H
 
 #include <QObject>
-class NgPost;
 class Poster;
 class PostingJob;
 class NntpArticle;
@@ -38,28 +36,23 @@ class NntpArticle;
 class ArticleBuilder : public QObject
 {
     Q_OBJECT
-
-private:
-    NgPost     *const _ngPost;
-    Poster     *const _poster;
-    PostingJob *const _job;
-
-    char *_buffer;   //!< buffer to read the current file to build an Article
-
 signals:
     void scheduleNextArticle();
 
+private:
+    Poster *const     _poster;
+    PostingJob *const _job;
+
+    char *_buffer; //!< buffer to read the current file to build an Article
 
 private slots:
     void onPrepareNextArticle();
-
 
 public:
     ArticleBuilder(Poster *poster, QObject *parent = nullptr);
     ~ArticleBuilder();
 
-    NntpArticle *getNextArticle(const QString &threadName);
-
+    NntpArticle *getNextArticle(QString const &threadName);
 };
 
 #endif // ARTICLEBUILDER_H

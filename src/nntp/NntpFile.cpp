@@ -18,29 +18,39 @@
 //========================================================================
 
 #include "NntpFile.h"
-#include "PostingJob.h"
-#include "NgPost.h"
-#include "NntpArticle.h"
-#include <cmath>
-#include <QTextStream>
-#include <QDebug>
 
-NntpFile::NntpFile(PostingJob *postingJob, const QFileInfo &file,
-                   uint num, uint nbFiles, int padding,
-                   const QList<QString> &grpList):
-    QObject(),
-    _postingJob(postingJob),
-    _file(file), _num(num), _nbFiles(nbFiles), _padding(padding),
-    _grpList(grpList), _groups(grpList.join(",").toStdString()),
-    _nbAticles(static_cast<uint>(std::ceil(static_cast<float>(file.size())/NgPost::articleSize()))),
-    _articles(),
-    _posted(), _failed()
+#include <cmath>
+#include <QDebug>
+#include <QTextStream>
+
+#include "NgConf.h"
+#include "NntpArticle.h"
+#include "PostingJob.h"
+#include "utils/Macros.h" // MB_FLUSH
+#include "utils/NgTools.h"
+
+NntpFile::NntpFile(PostingJob           *postingJob,
+                   QFileInfo const      &file,
+                   uint                  num,
+                   uint                  nbFiles,
+                   int                   padding,
+                   QList<QString> const &grpList)
+    : QObject()
+    , _postingJob(postingJob)
+    , _file(file)
+    , _num(num)
+    , _nbFiles(nbFiles)
+    , _padding(padding)
+    , _grpList(grpList)
+    , _groups(grpList.join(",").toStdString())
+    , _nbAticles(static_cast<uint>(std::ceil(static_cast<float>(file.size()) / NgConf::kArticleSize)))
+    , _articles()
+    , _posted()
+    , _failed()
 {
 #if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
-    qDebug() << "Creation NntpFile: " << file.absoluteFilePath()
-             << " size: " << file.size()
-             << " article size: " << NgPost::articleSize()
-             << " => nbArticles: " << _nbAticles;
+    qDebug() << "Creation NntpFile: " << file.absoluteFilePath() << " size: " << file.size()
+             << " article size: " << NgConf::kArticleSize << " => nbArticles: " << _nbAticles;
 #endif
     _articles.reserve(static_cast<int>(_nbAticles));
     connect(this, &NntpFile::scheduleDeletion, this, &QObject::deleteLater, Qt::QueuedConnection);
@@ -57,18 +67,15 @@ NntpFile::~NntpFile()
 void NntpFile::onArticlePosted(quint64 size)
 {
     _postingJob->articlePosted(size);
-    NntpArticle *article = static_cast<NntpArticle*>(sender());
-    uint part = article->_part;
+    NntpArticle *article = static_cast<NntpArticle *>(sender());
+    uint         part    = article->_part;
 #ifdef __DEBUG__
     if (_posted.contains(part) || _failed.contains(part))
-        qCritical() << "[NntpFile::onArticlePosted] DUPLICATE article #" << part
-                    << " for file: " << name();
+        qCritical() << "[NntpFile::onArticlePosted] DUPLICATE article #" << part << " for file: " << name();
 
-    qDebug() << "[NntpFile::onArticlePosted] " << name()
-             << ": posted: " << _posted.size() << " / " << _nbAticles
+    qDebug() << "[NntpFile::onArticlePosted] " << name() << ": posted: " << _posted.size() << " / " << _nbAticles
              << " (nb FAILED: " << _failed.size() << ")"
-             << " article part " << part
-             << ", id: " << article->id();
+             << " article part " << part << ", id: " << article->id();
 #endif
     _posted.insert(part);
     article->freeMemory(); // free resources
@@ -80,18 +87,15 @@ void NntpFile::onArticlePosted(quint64 size)
 void NntpFile::onArticleFailed(quint64 size)
 {
     _postingJob->articleFailed(size);
-    NntpArticle *article = static_cast<NntpArticle*>(sender());
-    uint part = article->_part;
+    NntpArticle *article = static_cast<NntpArticle *>(sender());
+    uint         part    = article->_part;
 #ifdef __DEBUG__
     if (_posted.contains(part) || _failed.contains(part))
-        qCritical() << "[NntpFile::onArticleFailed] DUPLICATE article #" << part
-                    << " for file: " << name();
+        qCritical() << "[NntpFile::onArticleFailed] DUPLICATE article #" << part << " for file: " << name();
 
-    qDebug() << "[NntpFile::onArticleFailed] " << name()
-             << ": posted: " << _posted.size() << " / " << _nbAticles
+    qDebug() << "[NntpFile::onArticleFailed] " << name() << ": posted: " << _posted.size() << " / " << _nbAticles
              << " (nb FAILED: " << _failed.size() << ")"
-             << " article part " << part
-             << ", id: " << article->id();
+             << " article part " << part << ", id: " << article->id();
 #endif
     _failed.insert(part);
     article->freeMemory(); // free resources
@@ -100,11 +104,12 @@ void NntpFile::onArticleFailed(quint64 size)
         emit allArticlesArePosted();
 }
 
-#include <string>
 #include <QDateTime>
-void NntpFile::writeToNZB(QTextStream &stream, const QString &from)
+#include <string>
+void NntpFile::writeToNZB(QTextStream &stream, QString const &from)
 {
-    //    <file poster="NewsUP &lt;NewsUP@somewhere.cbr&gt;" date="1565026184" subject="[1/846] - &quot;1w7NbOvYC2E8D5oYeXROyp4FZAaxEOmK&quot; ">
+    //    <file poster="NewsUP &lt;NewsUP@somewhere.cbr&gt;" date="1565026184" subject="[1/846] -
+    //    &quot;1w7NbOvYC2E8D5oYeXROyp4FZAaxEOmK&quot; ">
     //        <groups>
     //          <group>alt.binaries.superman</group>
     //          <group>alt.binaries.paxer</group>
@@ -112,34 +117,35 @@ void NntpFile::writeToNZB(QTextStream &stream, const QString &from)
     //          <group>alt.binaries.kleverig</group>
     //        </groups>
     //        <segments>
-    //          <segment bytes="716800" number="1">part52of36.5M2EYjx9pGk-gkmn6rAa_tc@powerpost2000AA.local</segment>
+    //          <segment bytes="716800"
+    //          number="1">part52of36.5M2EYjx9pGk-gkmn6rAa_tc@powerpost2000AA.local</segment>
 
-
-
-//    file poster="ngPost@somewhere.com" date="1565794820357" subject="Odin_3.09.3.zip">
-//      <groups>    </groups>    <segments>      <segment bytes="716800" number="1">{83f5c794-1b1a-4bc3-88cb-87dff4060f2e}</segment>
-//        <segment bytes="287882" number="2">{6f2e54e9-6a84-4eed-a811-5d9ebd0069e4}</segment>
-//      <segments>  </file>
-//    file poster="ngPost@somewhere.com" date="1565794820357" subject="nginx-1.15.1.tar.gz">
-//      <groups>    </groups>    <segments>      <segment bytes="716800" number="1">{1c502e51-ab9c-4ec6-bd0a-17377ed8a0a7}</segment>
-//        <segment bytes="307286" number="2">{ebae6f34-37e7-4df2-91b8-850f82f3cc47}</segment>
-//      <segments>  </file>
+    //    file poster="ngPost@somewhere.com" date="1565794820357" subject="Odin_3.09.3.zip">
+    //      <groups>    </groups>    <segments>      <segment bytes="716800"
+    //      number="1">{83f5c794-1b1a-4bc3-88cb-87dff4060f2e}</segment>
+    //        <segment bytes="287882" number="2">{6f2e54e9-6a84-4eed-a811-5d9ebd0069e4}</segment>
+    //      <segments>  </file>
+    //    file poster="ngPost@somewhere.com" date="1565794820357" subject="nginx-1.15.1.tar.gz">
+    //      <groups>    </groups>    <segments>      <segment bytes="716800"
+    //      number="1">{1c502e51-ab9c-4ec6-bd0a-17377ed8a0a7}</segment>
+    //        <segment bytes="307286" number="2">{ebae6f34-37e7-4df2-91b8-850f82f3cc47}</segment>
+    //      <segments>  </file>
     if (_nbAticles)
     {
-        QString tab = NgPost::space();
+        QString tab = NgConf::kSpace;
         stream << tab << "<file poster=\"" << from << "\""
 #if QT_VERSION >= QT_VERSION_CHECK(5, 8, 0)
                << " date=\"" << QDateTime::currentSecsSinceEpoch() << "\""
 #else
-               << " date=\"" << QDateTime::currentMSecsSinceEpoch()/1000 << "\""
+               << " date=\"" << QDateTime::currentMSecsSinceEpoch() / 1000 << "\""
 #endif
-               << QString(" subject=\"[%1/%2] - &quot;").arg(_num, _padding, 10,  QChar('0')).arg(_nbFiles)
-//               << " subject=\""  << "[" << _num << "/" << _nbFiles << "] - &quot;"
-               << NgPost::escapeXML(_file.fileName())
-               << "&quot; yEnc (1/"<< _nbAticles << ") " << _file.size() << "\">\n";
+               << QString(" subject=\"[%1/%2] - &quot;").arg(_num, _padding, 10, QChar('0')).arg(_nbFiles)
+               //               << " subject=\""  << "[" << _num << "/" << _nbFiles << "] - &quot;"
+               << NgTools::escapeXML(_file.fileName()) << "&quot; yEnc (1/" << _nbAticles << ") " << _file.size()
+               << "\">\n";
 
         stream << tab << tab << "<groups>\n";
-        for (const QString &grp : _grpList)
+        for (QString const &grp : _grpList)
             stream << tab << tab << tab << "<group>" << grp << "</group>\n";
         stream << tab << tab << "</groups>\n";
 
@@ -147,13 +153,10 @@ void NntpFile::writeToNZB(QTextStream &stream, const QString &from)
         for (NntpArticle *article : _articles)
         {
             stream << tab << tab << tab << "<segment"
-                   << " bytes=\""  << article->_fileBytes << "\""
-                   << " number=\"" << article->_part << "\">"
-                   << article->_msgId
-                   << "</segment>\n";
+                   << " bytes=\"" << article->_fileBytes << "\""
+                   << " number=\"" << article->_part << "\">" << article->_msgId << "</segment>\n";
         }
         stream << tab << tab << "</segments>\n";
-
 
         stream << tab << "</file>\n" << MB_FLUSH;
     }
@@ -163,7 +166,7 @@ QString NntpFile::missingArticles() const
 {
     QSet<uint> allArticles;
     allArticles.reserve(static_cast<int>(_nbAticles));
-    for (uint i = 1; i <= _nbAticles ; ++i)
+    for (uint i = 1; i <= _nbAticles; ++i)
         allArticles << i;
 
     allArticles.subtract(_posted);

@@ -18,27 +18,27 @@
 //========================================================================
 
 #include "ArticleBuilder.h"
-#include "Poster.h"
-#include "NgPost.h"
-#include "PostingJob.h"
+#include "NgConf.h"
 #include "nntp/NntpArticle.h"
+#include "Poster.h"
+#include "PostingJob.h"
 
-ArticleBuilder::ArticleBuilder(Poster *poster, QObject *parent):
-    QObject (parent),
-    _ngPost(poster->_ngPost),
-    _poster(poster),
-    _job(poster->_job),
-    _buffer(new char[static_cast<quint64>(_ngPost->articleSize())+1])
+ArticleBuilder::ArticleBuilder(Poster *poster, QObject *parent)
+    : QObject(parent)
+    , _poster(poster)
+    , _job(poster->_job)
+    , _buffer(new char[static_cast<quint64>(NgConf::kArticleSize) + 1])
 {
-    connect(this, &ArticleBuilder::scheduleNextArticle, this, &ArticleBuilder::onPrepareNextArticle, Qt::QueuedConnection);
+    connect(this,
+            &ArticleBuilder::scheduleNextArticle,
+            this,
+            &ArticleBuilder::onPrepareNextArticle,
+            Qt::QueuedConnection);
 }
 
-ArticleBuilder::~ArticleBuilder()
-{
-    delete[] _buffer;
-}
+ArticleBuilder::~ArticleBuilder() { delete[] _buffer; }
 
-NntpArticle *ArticleBuilder::getNextArticle(const QString &threadName)
+NntpArticle *ArticleBuilder::getNextArticle(QString const &threadName)
 {
     _job->_secureDiskAccess.lock();
     NntpArticle *article = _job->_readNextArticleIntoBufferPtr(threadName, &_buffer);
@@ -47,12 +47,11 @@ NntpArticle *ArticleBuilder::getNextArticle(const QString &threadName)
     {
         article->yEncBody(_buffer);
 #ifdef __SAVE_ARTICLES__
-        article->dumpToFile("/tmp", _ngPost->aticleSignature());
+        article->dumpToFile("/tmp", NgConf::kArticleIdSignature);
 #endif
     }
     return article;
 }
-
 
 void ArticleBuilder::onPrepareNextArticle()
 {

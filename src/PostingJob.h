@@ -16,20 +16,20 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>
 //
 //========================================================================
-
 #ifndef POSTINGJOB_H
 #define POSTINGJOB_H
+
 #include "utils/Macros.h"
 
+#include <QElapsedTimer>
 #include <QFileInfoList>
-#include <QVector>
-#include <QSet>
-#include <QQueue>
-#include <QTextStream>
 #include <QMutex>
+#include <QQueue>
+#include <QSet>
+#include <QTextStream>
 #include <QTime>
 #include <QTimer>
-#include <QElapsedTimer>
+#include <QVector>
 class QProcess;
 class NgPost;
 class NntpConnection;
@@ -39,6 +39,8 @@ class PostingWidget;
 class Poster;
 
 using AtomicBool = QAtomicInteger<unsigned short>; // 16 bit only (faster than using 8 bit variable...)
+
+#include "PostingParams.h"
 
 /*!
  * \brief PostingJob is an active object that will do a posting job
@@ -55,97 +57,87 @@ class PostingJob : public QObject
     friend class ArticleBuilder;
     friend class NgPost;
 
+signals:
+    //! connected to onStartPosting (to be able to run on a different Thread)
+    void startPosting(bool isActiveJob);
+    void stopPosting(); //!< stop posting (pause by user (from GUI))
+
+    void postingStarted(); //!< emitted at the end of onStartPosting
+    void noMoreConnection();
+    void postingFinished(); //!< posting is finished
+
+    //! to update the PostingWidget with the names of the archives that will be posted
+    //! const ref even if it goes to main thread cause it won't be destroyed anytime soon
+    void archiveFileNames(QStringList const &paths);
+    void articlesNumber(uint nbArticles); //!< total number of articles for the progress bar
+
+    //! to warn that a file is fully posted
+    void filePosted(QString filePath, uint nbArticles, uint nbFailed);
+
+    void packingDone(); //!< end of packing (compression and or par2)
+
 private:
-    NgPost *const _ngPost; //!< handle on the application to access global configs
-    QFileInfoList _files; //!< populated on constuction using a QStringList of paths
+    NgPost *_ngPost; //!< handle on the application to access global configs
 
-    PostingWidget *const _postWidget;
+    PostingParamsPtr     _params;     //!< all posting parameters including the list of files
+    PostingWidget *const _postWidget; //!< attached Windows
 
-    QProcess   *_extProc;
-    QDir       *_compressDir;
-    bool        _limitProcDisplay;
-    ushort      _nbProcDisp;
+    QString _tmpPath; //!< can be _params->tmpPath() or _params->ramPath()
 
-#ifdef __USE_TMP_RAM__
-    QString        _tmpPath; //!< can be overwritten by _ngPost->_ramPath
-#else
-    const QString  _tmpPath;
-#endif
-    const QString  _rarPath;
-    QString        _rarArgs;
-    const uint     _rarSize;
-    const bool     _useRarMax;
-    const uint     _par2Pct;
+    /*!
+     * \brief _files that will be posted by _postFiles()
+     * they can be directly _params->files() if no packing (compression and/or par2)
+     * most likely they will be replaced by the created archives located in _compressDir
+     */
+    QFileInfoList _files;
+    AtomicBool    _delFilesAfterPost; //!< we're talking about the original files _params->files()
 
-    const bool    _doCompress;
-    const bool    _doPar2;
-    const QString _rarName;
-    const QString _rarPass;
-    const bool    _keepRar;
-    bool          _splitArchive;
+    QProcess *_extProc;          //!< process to launch compression and/or par2 asynchronously
+    QDir     *_compressDir;      //!< directory containing the archives
+    bool      _limitProcDisplay; //!< limit external process output
+    ushort    _nbProcDisp;       //!< hacky way to limit external process output
 
+    QVector<NntpConnection *> _nntpConnections;   //!< the NNTP connections (owning the TCP sockets)
+    QVector<NntpConnection *> _closedConnections; //!< the NNTP connections (owning the TCP sockets)
 
+    //    QString            _nzbName;         //!< name of nzb that we'll write (without the extension)
+    QQueue<NntpFile *> _filesToUpload;   //!< list of files to upload (that we didn't start)
+    QSet<NntpFile *>   _filesInProgress; //!< files in queue to be uploaded (Articles have been produced)
+    QSet<NntpFile *>   _filesFailed;     //!< files that couldn't be read
+    uint               _nbFiles;         //!< number of files to post in this iteration
+    uint               _nbPosted;        //!< number of files posted
 
-    QVector<NntpConnection*> _nntpConnections; //!< the NNTP connections (owning the TCP sockets)
-    QVector<NntpConnection*> _closedConnections; //!< the NNTP connections (owning the TCP sockets)
+    QFile      *_nzb;       //!< nzb file that will be filled on the fly when a file is fully posted
+    QTextStream _nzbStream; //!< txt stream for the nzb file
 
-    QString               _nzbName; //!< name of nzb that we'll write (without the extension)
-    QQueue<NntpFile*>     _filesToUpload;  //!< list of files to upload (that we didn't start)
-    QSet<NntpFile*>       _filesInProgress;//!< files in queue to be uploaded (Articles have been produced)
-    QSet<NntpFile*>       _filesFailed;//!< files that couldn't be read
-    uint                  _nbFiles;  //!< number of files to post in this iteration
-    uint                  _nbPosted; //!< number of files posted
+    NntpFile *_nntpFile; //!< current file that is getting processed
+    QFile    *_file;     //!< file handler on the file getting processed
+    uint      _part;     //!< part number (Article) on the current file
 
-
-    QString      _nzbFilePath;
-    QFile       *_nzb;       //!< nzb file that will be filled on the fly when a file is fully posted
-    QTextStream  _nzbStream; //!< txt stream for the nzb file
-
-    NntpFile    *_nntpFile; //!< current file that is getting processed
-    QFile       *_file;     //!< file handler on the file getting processed
-    uint         _part;     //!< part number (Article) on the current file
-
-    QElapsedTimer _timeStart; //!< to get some stats (upload time and avg speed)
-    quint64       _totalSize; //!< total size (in Bytes) to be uploaded
-    QElapsedTimer _pauseTimer;   //!< to record the time when ngPost is in pause
+    QElapsedTimer _timeStart;     //!< to get some stats (upload time and avg speed)
+    quint64       _totalSize;     //!< total size (in Bytes) to be uploaded
+    QElapsedTimer _pauseTimer;    //!< to record the time when ngPost is in pause
     qint64        _pauseDuration; //!< total duration of all pauses
 
-    int     _nbConnections; //!< available number of NntpConnection (we may loose some)
-    int     _nbThreads;     //!< size of the ThreadPool
+    int _nbConnections; //!< available number of NntpConnection (we may loose some)
 
-    uint      _nbArticlesUploaded; //!< number of Articles that have been uploaded (+ failed ones)
-    uint      _nbArticlesFailed;   //!< number of Articles that failed to be uploaded
-    quint64   _uploadedSize;       //!< bytes posted (to compute the avg speed)
-    uint      _nbArticlesTotal;    //!< number of Articles of all the files to post
+    uint    _nbArticlesUploaded; //!< number of Articles that have been uploaded (+ failed ones)
+    uint    _nbArticlesFailed;   //!< number of Articles that failed to be uploaded
+    quint64 _uploadedSize;       //!< bytes posted (to compute the avg speed)
+    uint    _nbArticlesTotal;    //!< number of Articles of all the files to post
 
-
-    AtomicBool  _stopPosting;
-    AtomicBool  _noMoreFiles;
+    AtomicBool _stopPosting;
+    AtomicBool _noMoreFiles;
 
     bool _postStarted;
     bool _packed;
     bool _postFinished;
 
-    const bool _obfuscateArticles;
-    const bool _obfuscateFileName;
-
-
-    AtomicBool  _delFilesAfterPost;
-    const QFileInfoList _originalFiles;
-
-
     QMutex _secureDiskAccess;
 
-    QVector<Poster*> _posters;
-
-    const bool  _overwriteNzb;
+    QVector<Poster *> _posters;
 
     QMap<QString, QString> _obfuscatedFileNames;
-
-    const QList<QString> _grpList; //!< Newsgroup where we're posting in a list format to write in the nzb file
-    const std::string    _from;               //!< email of poster (if empty, random one will be used for each file)
-
-    bool _use7z;
 
     bool _isPaused;
 
@@ -153,111 +145,120 @@ private:
 
     bool _isActiveJob;
 
-
 #ifdef __COMPUTE_IMMEDIATE_SPEED__
-    quint64    _immediateSize;       //!< bytes posted (to compute the avg speed)
+    quint64    _immediateSize; //!< bytes posted (to compute the avg speed)
     QTimer     _immediateSpeedTimer;
     QString    _immediateSpeed;
-    const bool _useHMI;
+    bool const _useHMI;
 #endif
 
 public:
-    PostingJob(NgPost *ngPost,
-               const QString &nzbFilePath,
-               const QFileInfoList &files,
-               PostingWidget *postWidget,
-               const QList<QString> &grpList,
-               const std::string    &from,
-               bool obfuscateArticles,
-               bool obfuscateFileName,
-               const QString &tmpPath,
-               const QString &rarPath,
-               const QString &rarArgs,
-               uint rarSize,
-               bool useRarMax,
-               uint par2Pct,
-               bool doCompress,
-               bool doPar2,
-               const QString &rarName,
-               const QString &rarPass,
-               bool keepRar = false,
-               bool delFilesAfterPost = false,
-               bool overwriteNzb = true,
-               QObject *parent = nullptr);
-    ~PostingJob();
+    /*!
+     * \brief constructor from the GUI (postWidget)
+     * \param ngPost
+     * \param postWidget
+     * \param params
+     * \param parent
+     */
+    PostingJob(NgPost                 *ngPost,
+               PostingWidget          *postWidget,
+               PostingParamsPtr const &params,
+               QObject                *parent = nullptr);
 
+    /*!
+     * \brief constructor from the CMD (no postWidget)
+     * \param ngPost
+     * \param postWidget
+     * \param params
+     * \param parent
+     */
+    PostingJob(NgPost              *ngPost,
+               QString const       &rarName,
+               QString const       &rarPass,
+               QString const       &nzbFilePath,
+               QFileInfoList const &files,
+               //               PostingWidget        *postWidget,
+               QList<QString> const &grpList,
+               std::string const    &from,
+               SharedParams const   &sharedParams,
+               QObject              *parent = nullptr);
+    ~PostingJob();
 
     void pause();
     void resume();
+
+    bool tryResumePostWhenConnectionLost() const { return _params->tryResumePostWhenConnectionLost(); }
 
     inline QString avgSpeed() const;
 
     inline void articlePosted(quint64 size);
     inline void articleFailed(quint64 size);
 
-    inline uint nbArticlesTotal() const;
-    inline uint nbArticlesUploaded() const;
-    inline uint nbArticlesFailed() const;
-    inline bool hasUploaded() const;
+    inline uint nbArticlesTotal() const { return _nbArticlesTotal; }
+    inline uint nbArticlesUploaded() const { return _nbArticlesUploaded; }
+    inline uint nbArticlesFailed() const { return _nbArticlesFailed; }
+    inline bool hasUploaded() const { return _nbArticlesTotal > 0; }
 
-    inline const QString &nzbName() const;
-    inline const QString &rarName() const;
-    inline const QString &rarPass() const;
-    inline QString postSize() const;
+    QString               nzbName() const;
+    inline QString const &nzbFilePath() const { return _params->nzbFilePath(); }
+    inline QString const &rarName() const { return _params->rarName(); }
+    inline QString const &rarPass() const { return _params->rarPass(); }
+    QString               postSize() const;
 
-    inline bool hasCompressed() const;
-    inline bool hasPacking() const;
-    inline bool isPacked() const;
-    inline bool hasPostStarted() const;
-    inline bool hasPostFinished() const;
-    inline bool hasPostFinishedSuccessfully() const;
+    inline bool hasCompressed() const { return _params->hasCompressed(); }
+    inline bool hasPacking() const { return _params->hasPacking(); }
+    inline bool isPacked() const { return _packed; }
+    inline bool hasPostStarted() const { return _postStarted; }
+    inline bool hasPostFinished() const { return _postFinished; }
+    inline bool hasPostFinishedSuccessfully() const { return _postFinished && !_nbArticlesFailed; }
 
-    inline PostingWidget *widget() const;
+    inline PostingWidget *widget() const { return _postWidget; }
 
     inline QString getFirstOriginalFile() const;
 
-    inline void setDelFilesAfterPosted(bool delFiles);
+    inline void setDelFilesAfterPosted(bool delFiles) { _delFilesAfterPost = delFiles ? 0x1 : 0x0; }
 
-    inline QString groups() const;
-    inline QString from() const;
+    inline QString groups() const { return _params->groups(); }
+    inline QString from(bool emptyIfObfuscateArticle) const { return _params->from(emptyIfObfuscateArticle); }
 
-    inline bool isPosting() const;
+    inline bool isPosting() const { return MB_LoadAtomic(_stopPosting) == 0x0; }
 
-    inline bool isPaused() const;
-
-    inline const QString &nzbFilePath() const;
-
-    inline static QString humanSize(double size);
-
+    inline bool isPaused() const { return _isPaused; }
 
 #ifdef __COMPUTE_IMMEDIATE_SPEED__
-    inline const QString &immediateSpeed() const;
+    QString const &immediateSpeed() const { return _immediateSpeed; }
+#endif
+
+#ifdef __USE_TMP_RAM__
+    void shallWeUseTmpRam(); //!< if so update _tmpPath
 #endif
 
     static QString sslSupportInfo();
-    static bool supportsSsl();
-
-signals:
-    void startPosting(bool isActiveJob);    //!< connected to onStartPosting (to be able to run on a different Thread)
-    void stopPosting();
-
-    void postingStarted();  //!< emitted at the end of onStartPosting
-    void noMoreConnection();
-    void postingFinished();
-
-    void archiveFileNames(QStringList paths);
-    void articlesNumber(uint nbArticles);
-
-    void filePosted(QString filePath, uint nbArticles, uint nbFailed);
-
-    void packingDone();
-
+    static bool    supportsSsl();
 
 public slots:
     void onStopPosting(); //!< for HMI
 
 private slots:
+    /*!
+     * \brief stating point of the Job. it might:
+     *    - launch a compression process using _extProc with files stored in _compressDir
+     *    - launch a par2 process using _extProc with files stored in _compressDir
+     *    - post directly the files using _postFiles()
+     *  Bare in mind that's asynchronous: the end of _extProc will trigger the next step
+     *  cf startCompressFiles and startGenPar2 to know the receiving slots ;)
+     * \param isActiveJob
+     */
     void onStartPosting(bool isActiveJob);
+
+    /*!
+     * \brief end of compression process _extProc
+     * \param exitCode
+     */
+    void onCompressionFinished(int exitCode);
+
+    void onGenPar2Finished(int exitCode);
+
     void onDisconnectedConnection(NntpConnection *con);
 
     void onNntpFileStartPosting();
@@ -267,73 +268,67 @@ private slots:
     void onExtProcReadyReadStandardOutput();
     void onExtProcReadyReadStandardError();
 
-    void onCompressionFinished(int exitCode);
-    void onGenPar2Finished(int exitCode);
-
     void onResumeTriggered();
 
 #ifdef __COMPUTE_IMMEDIATE_SPEED__
     void onImmediateSpeedComputation();
 #endif
 
-
 private:
-    void _log(const QString &aMsg, bool newline = true) const; //!< log function for QString
-    void _error(const QString &error) const;
+    void _init(); //!< mainly do the connection with itself, NgPost and PostingWidget
+
+    void _initPosting();
+
+    /*!
+     * \brief actual method that will post the files on Usenet
+     * the files are the one contained in _files
+     */
+    void _postFiles();
+    void _finishPosting();
+
+    void _log(QString const &aMsg, bool newline = true) const; //!< log function for QString
+    void _error(QString const &error) const;
 
     int  _createNntpConnections();
     void _preparePostersArticles();
 
-    NntpArticle *_readNextArticleIntoBufferPtr(const QString &threadName, char **bufferPtr);
-
+    NntpArticle *_readNextArticleIntoBufferPtr(QString const &threadName, char **bufferPtr);
 
     void _delOriginalFiles();
 
     inline NntpFile *_getNextFile();
 
-    void _initPosting();
-    void _postFiles();
-    void _finishPosting();
-
     void _closeNzb();
-    void _printStats() const;    
+    void _printStats() const;
 
-
-    bool startCompressFiles(const QString &cmdRar,
-                            const QString &tmpFolder,
-                            const QString &archiveName,
-                            const QString &pass,
-                            uint volSize = 0);
-    bool startGenPar2(const QString &tmpFolder,
-                      const QString &archiveName,
-                      uint redundancy = 0);
-
-    bool _canCompress() const;
-    bool _canGenPar2() const;
+    bool startCompressFiles();
+    bool startGenPar2();
 
     void _cleanExtProc();
     void _cleanCompressDir();
 
-    QString _createArchiveFolder(const QString &tmpFolder, const QString &archiveName);
+    /*!
+     * \brief if we do some packing, the _files to be posted needs to be update
+     * by thoses created in _compressDir
+     * return the list of the archiveNames
+     * can be used twice if we both compress and generate the par2
+     */
+    QStringList _updateFilesListFromCompressDir();
 
-    bool _checkTmpFolder() const;
+    QString _createArchiveFolder(QString const &tmpFolder, QString const &archiveName);
 
-
-    qint64 _dirSize(const QString &path);
-
-    inline QString timestamp() const;
+    inline QString timestamp() const { return QTime::currentTime().toString("hh:mm:ss.zzz"); }
 };
-
 
 QString PostingJob::avgSpeed() const
 {
-    QString power = " ";
-    double bandwidth = 0.;
+    QString power     = " ";
+    double  bandwidth = 0.;
 
     if (_timeStart.isValid())
     {
-        double sec = (_timeStart.elapsed()-_pauseDuration)/1000.;
-        bandwidth = _uploadedSize / sec;
+        double sec = (_timeStart.elapsed() - _pauseDuration) / 1000.;
+        bandwidth  = _uploadedSize / sec;
 
         if (bandwidth > 1024)
         {
@@ -362,11 +357,6 @@ NntpFile *PostingJob::_getNextFile()
         return nullptr;
 }
 
-QString PostingJob::timestamp() const
-{
-    return QTime::currentTime().toString("hh:mm:ss.zzz");
-}
-
 void PostingJob::articlePosted(quint64 size)
 {
     _uploadedSize += size;
@@ -388,72 +378,12 @@ void PostingJob::articleFailed(quint64 size)
 #endif
 }
 
-uint PostingJob::nbArticlesTotal() const { return _nbArticlesTotal; }
-uint PostingJob::nbArticlesUploaded() const { return _nbArticlesUploaded; }
-uint PostingJob::nbArticlesFailed() const{ return _nbArticlesFailed; }
-bool PostingJob::hasUploaded() const{ return _nbArticlesTotal > 0; }
-
-const QString &PostingJob::nzbName() const { return _nzbName; }
-const QString &PostingJob::rarName() const { return _rarName; }
-const QString &PostingJob::rarPass() const { return _rarPass; }
-QString PostingJob::postSize() const { return humanSize(static_cast<double>(_totalSize)); }
-
-QString PostingJob::humanSize(double size)
-{
-    QString unit = "B";
-    if (size > 1024)
-    {
-        size /= 1024;
-        unit = "kB";
-    }
-    if (size > 1024)
-    {
-        size /= 1024;
-        unit = "MB";
-    }
-    if (size > 1024)
-    {
-        size /= 1024;
-        unit = "GB";
-    }
-    return QString("%1 %2").arg(size, 0, 'f', 2).arg(unit);
-}
-
-bool PostingJob::hasCompressed() const { return _doCompress; }
-inline bool PostingJob::hasPacking() const { return _doCompress || _doPar2; }
-bool PostingJob::isPacked() const { return _packed; }
-bool PostingJob::hasPostStarted() const { return _postStarted; }
-bool PostingJob::hasPostFinished() const { return _postFinished; }
-bool PostingJob::hasPostFinishedSuccessfully() const { return _postFinished && !_nbArticlesFailed; }
-
-PostingWidget *PostingJob::widget() const { return _postWidget; }
-
 QString PostingJob::getFirstOriginalFile() const
 {
-    if (_originalFiles.isEmpty())
+    if (_params->files().isEmpty())
         return QString();
     else
-        return _originalFiles.first().absoluteFilePath();
+        return _params->files().first().absoluteFilePath();
 }
-
-void PostingJob::setDelFilesAfterPosted(bool delFiles)
-{
-    _delFilesAfterPost = delFiles ? 0x1 : 0x0;
-}
-
-QString PostingJob::groups() const { return _grpList.join(","); }
-QString PostingJob::from() const { return _obfuscateArticles ? QString() : QString::fromStdString(_from); }
-
-bool PostingJob::isPosting() const
-{
-    return MB_LoadAtomic(_stopPosting) == 0x0;
-}
-bool PostingJob::isPaused() const { return _isPaused; }
-
-const QString &PostingJob::nzbFilePath() const { return _nzbFilePath; }
-
-#ifdef __COMPUTE_IMMEDIATE_SPEED__
-const QString &PostingJob::immediateSpeed() const { return _immediateSpeed; }
-#endif
 
 #endif // POSTINGJOB_H
