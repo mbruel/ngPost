@@ -260,13 +260,9 @@ void NgCmdLineLoader::prepareAndStartPostingSingleFiles(QString                 
             postingParams->_meta.remove("password");
         }
     }
-    ngPost->startPostingJob(rarName,
-                            rarPass,
-                            QFileInfo(QDir(nzbPath), nzbName).absoluteFilePath(),
-                            filesToUpload,
-                            postingParams->getPostingGroups(),
-                            from,
-                            postingParams);
+
+    ngPost->startPostingJob(
+            rarName, rarPass, QFileInfo(QDir(nzbPath), nzbName).absoluteFilePath(), filesToUpload, from);
 }
 
 bool NgCmdLineLoader::getInputFilesToGroupPost(QList<QFileInfo>         &filesToUpload,

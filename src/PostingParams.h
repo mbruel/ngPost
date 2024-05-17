@@ -30,12 +30,17 @@
 class QStorageInfo;
 #endif
 class NgPost;
-class NntpServerParams;
+struct NntpServerParams;
 class PostingParams;
 class MainParams;
 class PostingWidget;
-using SharedParams     = QSharedDataPointer<MainParams>; // shared by all PostingJobs::PostingParamsPtr
-using PostingParamsPtr = QSharedPointer<PostingParams>;  // shared by PostingJobs and PostingWidget
+
+// SharedParams is shared by all PostingJobs::PostingParamsPtr
+// if a PostingJobs wants a variant of the MainParams it will have to explicitely call detach()
+using SharedParams = QExplicitlySharedDataPointer<MainParams>;
+
+// shared between a PostingJobs and its PostingWidget
+using PostingParamsPtr = QSharedPointer<PostingParams>;
 
 class MainParams : public QSharedData
 {
@@ -43,7 +48,7 @@ class MainParams : public QSharedData
 
     friend class NgConfigLoader;  // direct access to set the attributes
     friend class NgCmdLineLoader; // direct access to set the attributes
-    //    friend class NgPost;          // _postingParams->setPar2Path(par2Embedded);
+    friend class NgPost;          // _postingParams->setPar2Path(par2Embedded);
 
 private:
     bool _quiet;
@@ -129,23 +134,9 @@ public:
     MainParams();
     ~MainParams();
 
-    //    MainParams(MainParams const &o) = default;
-    //    MainParams(MainParams &&o)      = default;
+    MainParams(MainParams const &) = default;
+    MainParams(MainParams &&)      = default;
 
-    MainParams(MainParams const &o) : QSharedData(o)
-    {
-        // TODO: temporary before using = default!!!
-        qDebug() << "[MB_SharedParams_Debug][MainParams(const &)] oups... copy on write?  on purpose?"
-                 << " src addr: "
-                 << QString("0x%1").arg(reinterpret_cast<quintptr>(&o), QT_POINTER_SIZE * 2, 16, QChar('0'))
-                 << " detached new addr: "
-                 << QString("0x%1").arg(reinterpret_cast<quintptr>(this), QT_POINTER_SIZE * 2, 16, QChar('0'));
-    }
-    MainParams(MainParams &&o) : QSharedData(o)
-    {
-        // TODO: temporary before using = default!!!
-        qDebug() << "[MB_TRACE][MainParams(&&)] oups... copy on write? is it on purpose?";
-    }
     MainParams &operator=(MainParams const &) = delete;
     MainParams &operator=(MainParams &&)      = delete;
 
@@ -173,14 +164,7 @@ public:
     ushort             rarMax() const { return _rarMax; }
     ushort             par2Pct() const { return _par2Pct; }
 
-    ushort lengthName() const
-    {
-        qDebug() << "[MB_SharedParams_Debug] [MainParams::lengthName] 'this' (directly the data...) "
-                    "type: "
-                 << typeid(this).name() << ", addr: "
-                 << QString("0x%1").arg(reinterpret_cast<quintptr>(this), QT_POINTER_SIZE * 2, 16, QChar('0'));
-        return _lengthName;
-    }
+    ushort         lengthName() const { return _lengthName; }
     ushort         lengthPass() const { return _lengthPass; }
     QString const &rarPassFixed() const { return _rarPassFixed; }
 
@@ -313,8 +297,6 @@ public:
     }
     Q_DISABLE_COPY_MOVE(PostingParams);
 
-    SharedParams const *mainParamsAddr() const { return &_params; } // MB_SharedParams_Debug
-
     QList<NntpServerParams *> const &nntpServers() const { return _params->nntpServers(); }
 
     int nbNntpConnections() const;
@@ -349,19 +331,7 @@ public:
     ushort             rarMax() const { return _params->rarMax(); }
     ushort             par2Pct() const { return _params->par2Pct(); }
 
-    ushort lengthName() const
-    {
-
-        qDebug() << "[MB_SharedParams_Debug] [PostingParams::lengthName] _params type: "
-                 << typeid(_params).name() << ", addr: "
-                 << QString("0x%1").arg(
-                            reinterpret_cast<quintptr>(&_params), QT_POINTER_SIZE * 2, 16, QChar('0'))
-                 << ", addr data(): "
-                 << QString("0x%1").arg(
-                            reinterpret_cast<quintptr>(_params.data()), QT_POINTER_SIZE * 2, 16, QChar('0'));
-
-        return _params->lengthName();
-    }
+    ushort         lengthName() const { return _params->lengthName(); }
     ushort         lengthPass() const { return _params->lengthPass(); }
     QString const &rarPassFixed() const { return _params->rarPassFixed(); }
 

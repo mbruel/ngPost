@@ -556,16 +556,6 @@ bool NgPost::checkSupportSSL()
 
 void NgPost::doNzbPostCMD(PostingJob *job)
 {
-    qDebug() << "[MB_SharedParams_Debug] [NgPost::doNzbPostCMD] NgPost::_postingParams type: "
-             << typeid(_postingParams).name() << ", addr: "
-             << QString("0x%1").arg(
-                        reinterpret_cast<quintptr>(&_postingParams), QT_POINTER_SIZE * 2, 16, QChar('0'))
-             << ", addr data(): "
-             << QString("0x%1").arg(
-                        reinterpret_cast<quintptr>(_postingParams.data()), QT_POINTER_SIZE * 2, 16, QChar('0'));
-
-    ushort lengthName = _postingParams->lengthName();
-
     // first NZB_UPLOAD_URL
     if (_postingParams->urlNzbUpload())
     {
@@ -1167,23 +1157,16 @@ bool NgPost::startPostingJob(QString const       &rarName,
                              QString const       &rarPass,
                              QString const       &nzbFilePath,
                              QFileInfoList const &files,
-                             //                             PostingWidget        *postWidget,
-                             QList<QString> const &grpList,
-                             std::string const    &from,
-                             SharedParams const   &mainParams)
+                             std::string const   &from)
 {
-    qDebug() << "[MB_SharedParams_Debug] [NgPost::startPostingJob] NgPost::_postingParams type: "
-             << typeid(_postingParams).name() << ", addr: "
-             << QString("0x%1").arg(
-                        reinterpret_cast<quintptr>(&_postingParams), QT_POINTER_SIZE * 2, 16, QChar('0'))
-             << ", addr data(): "
-             << QString("0x%1").arg(
-                        reinterpret_cast<quintptr>(_postingParams.data()), QT_POINTER_SIZE * 2, 16, QChar('0'));
-
-    ushort lengthName = _postingParams->lengthName();
-
-    return startPostingJob(
-            new PostingJob(this, rarName, rarPass, nzbFilePath, files, grpList, from, mainParams));
+    return startPostingJob(new PostingJob(this,
+                                          rarName,
+                                          rarPass,
+                                          nzbFilePath,
+                                          files,
+                                          _postingParams->getPostingGroups(),
+                                          from,
+                                          _postingParams));
 }
 
 bool NgPost::startPostingJob(PostingJob *job)

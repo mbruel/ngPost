@@ -86,9 +86,6 @@ MainParams::MainParams()
     , _delAuto(false)
 
 {
-    qDebug() << "[MB_SharedParams_Debug][MainParams()] First creation ?"
-             << " src addr: "
-             << QString("0x%1").arg(reinterpret_cast<quintptr>(this), QT_POINTER_SIZE * 2, 16, QChar('0'));
 }
 
 #ifdef __USE_TMP_RAM__

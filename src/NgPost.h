@@ -194,9 +194,7 @@ public:
                          QString const       &nzbFilePath,
                          QFileInfoList const &files,
                          //                         PostingWidget        *postWidget,
-                         QList<QString> const &grpList,
-                         std::string const    &from,
-                         SharedParams const   &mainParams);
+                         std::string const &from);
 
     QString const &proxyUrl() const { return _proxyUrl; }
     QString const &lang() const { return _lang; }
