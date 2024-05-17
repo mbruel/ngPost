@@ -265,7 +265,7 @@ public:
     void showVersionASCII() const;
     void setDebugLevel(ushort lvl) { _debug = lvl; }
 
-    void doNzbCheck(QString const &nzbPath);
+    bool doNzbCheck(QString const &nzbPath);
 
     //! available for NgCmdLineLoader
     void criticalError(QString const &error, NgError::ERR_CODE code);

@@ -51,6 +51,9 @@ constexpr char const *kDonationTooltip =
 constexpr char const *kDonationBtcTooltip = QT_TRANSLATE_NOOP(
         "NgPost", "Feel free to donate in BTC, click here to see my address on the GitHub section");
 
+inline const QString kDefaultTxtEditorLinux = "gedit";
+inline const QString kDefaultTxtEditorMacOS = "open";
+
 constexpr char const *kDefaultShutdownCmdLinux   = "sudo -n /sbin/poweroff";
 constexpr char const *kDefaultShutdownCmdWindows = "shutdown /s /f /t 0";
 constexpr char const *kDefaultShutdownCmdMacOS   = "sudo -n shutdown -h now";

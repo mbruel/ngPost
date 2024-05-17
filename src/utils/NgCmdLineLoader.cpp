@@ -114,10 +114,7 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost *const ngPost, SharedPar
 
     // 8.: is it an nzbCheck demand ? (no posting)
     if (parser.isSet(kOptionNames[Opt::CHECK]))
-    {
-        ngPost->doNzbCheck(parser.value(kOptionNames[Opt::CHECK]).trimmed());
-        return false; // end of game :(
-    }
+        return ngPost->doNzbCheck(parser.value(kOptionNames[Opt::CHECK]).trimmed());
 
     // 9.: check if we've inputs (either files, auto directory or monitoring one
     if (!parser.isSet(kOptionNames[Opt::INPUT]) && !parser.isSet(kOptionNames[Opt::AUTO_DIR])

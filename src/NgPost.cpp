@@ -1152,6 +1152,35 @@ QStringList NgPost::parseDefaultConfig()
     QString conf = kDefaultConfig;
 #else
     QString conf = QString("%1/%2").arg(getenv("HOME")).arg(kDefaultConfig);
+    if (!QFileInfo(conf).exists())
+    {
+        if (!_postingParams->saveConfig(conf, *this))
+            return { tr("Couldn't create the default configuration file '%1'...").arg(conf) };
+
+        _log(tr("Default configuration file created: %1").arg(conf));
+        if (!useHMI())
+        {
+            _log(tr("Please fill at least a provider, your tmp, rar and par2 path and set the features you like "
+                    ";)"));
+#  if defined(__linux__) || defined(__APPLE__)
+            QThread::sleep(3);
+            // Open Editor
+            QProcess *process = new QProcess(this);
+#    ifdef __linux__
+            process->setProgram(kDefaultTxtEditorLinux);
+#    elif __APPLE__
+            process->setProgram(kDefaultTxtEditorLinux);
+#    endif
+            process->setArguments({ conf });
+            connect(process, &QProcess::finished, process, &QObject::deleteLater);
+            process->start();
+            if (process->waitForStarted())
+                _log(tr("Please save and close the editor to continue..."));
+            process->waitForFinished();
+#  endif
+            return { tr("Once done, rerun the app ;)") };
+        }
+    }
 #endif
     if (!_postingParams->quietMode())
         _cout << tr("Using default config file: %1").arg(conf) << "\n" << MB_FLUSH;
@@ -1244,28 +1273,29 @@ void NgPost::addMonitoringFolder(QString const &dirPath)
         _folderMonitor->addFolder(dirPath);
 }
 
-void NgPost::doNzbCheck(QString const &nzbPath)
+bool NgPost::doNzbCheck(QString const &nzbPath)
 {
     _nzbCheck = new NzbCheck(); // it's a one shot, no leak ;)
     _nzbCheck->setDebug(_debug);
     _nzbCheck->setDispProgressBar(_dispProgressBar || _dispFilesPosting);
     _nzbCheck->setQuiet(_postingParams->quietMode());
     int nbArticles = _nzbCheck->parseNzb(nzbPath);
-    if (nbArticles > 0)
-    {
-        auto const &nntpServers = _postingParams->nntpServers();
-        if (nntpServers.isEmpty())
-        {
-            criticalError(tr("No server found to launch nzbCheck on %1...\nCheck config or add some in command "
-                             "line. cf --help")
-                                  .arg(nzbPath),
-                          ERR_CODE::ERR_NO_SERVER);
-            return;
-        }
+    if (nbArticles == 0)
+        return false;
 
-        // _nzbCheck is a big boy, we just let him the hand ;)
-        _nzbCheck->checkPost(nntpServers);
+    auto const &nntpServers = _postingParams->nntpServers();
+    if (nntpServers.isEmpty())
+    {
+        criticalError(tr("No server found to launch nzbCheck on %1...\nCheck config or add some in command "
+                         "line. cf --help")
+                              .arg(nzbPath),
+                      ERR_CODE::ERR_NO_SERVER);
+        return false;
     }
+
+    // _nzbCheck is a big boy, we just let him the hand ;)
+    _nzbCheck->checkPost(nntpServers);
+    return true;
 }
 
 bool NgPost::removeNntpServer(NntpServerParams *server) { return _postingParams->removeNntpServer(server); }
