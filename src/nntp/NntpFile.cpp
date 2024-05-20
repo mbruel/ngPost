@@ -59,7 +59,8 @@ NntpFile::NntpFile(PostingJob           *postingJob,
 NntpFile::~NntpFile()
 {
 #if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
-    qDebug() << "Destruction nntpFile: " << _file.absoluteFilePath();
+    qDebug() << "Destruction NntpFile #" << _num << " : " << _file.fileName() << " (" << _nbAticles
+             << " articles)";
 #endif
     qDeleteAll(_articles);
 }

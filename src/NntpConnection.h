@@ -77,8 +77,8 @@ private:
     NntpArticle *_currentArticle;
     ushort       _nbDisconnected;
 
-    NgPost *_ngPost;
-    Poster *_poster;
+    NgPost const &_ngPost; //!< MB_TODO try to avoid it and just use NgLogger directly
+    Poster       *_poster; //!< as to pointer cause created with nullptr
 #ifdef __USE_CONNECTION_TIMEOUT__
     QTimer *_timeout;
 #endif
@@ -89,7 +89,7 @@ public:
      * \param id          : connection id
      * \param ssl         : should the connection be encrypted?
      */
-    explicit NntpConnection(NgPost *ngPost, int id, NntpServerParams const &srvParams);
+    explicit NntpConnection(NgPost const &ngPost, int id, NntpServerParams const &srvParams);
 
     NntpConnection(NntpConnection const &)             = delete;
     NntpConnection(NntpConnection const &&)            = delete;

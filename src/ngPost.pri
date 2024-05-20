@@ -1,12 +1,14 @@
 QT += core network sql
 
-DEFINES += "APP_VERSION=\"4.17\""
+DEFINES += "APP_VERSION=\"5.0\""
 
 INCLUDEPATH += $$PWD
 TARGET = ngPost
 TEMPLATE = app
 CONFIG += c++17
 CONFIG -= app_bundle
+
+DEFINES += __MOVETOTHREAD_TRACKING__
 
 DEFINES += __USE_CONNECTION_TIMEOUT__
 DEFINES += __COMPUTE_IMMEDIATE_SPEED__
@@ -75,6 +77,7 @@ SOURCES += \
         $$PWD/utils/Database.cpp \
         $$PWD/utils/NgCmdLineLoader.cpp \
         $$PWD/utils/NgConfigLoader.cpp \
+        $$PWD/utils/NgLogger.cpp \
         $$PWD/utils/NgTools.cpp \
         ArticleBuilder.cpp \
         FileUploader.cpp \
@@ -107,7 +110,9 @@ HEADERS += \
     $$PWD/utils/Database.h \
     $$PWD/utils/NgCmdLineLoader.h \
     $$PWD/utils/NgConfigLoader.h \
+    $$PWD/utils/NgLogger.h \
     $$PWD/utils/NgTools.h \
+    $$PWD/utils/Singleton.h \
     ArticleBuilder.h \
     FileUploader.h \
     FoldersMonitorForNewFiles.h \

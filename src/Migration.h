@@ -23,18 +23,18 @@ class NgPost;
 
 class Migration
 {
-    NgPost const &_ngPost;
+    NgPost &_ngPost;
 
 public:
-    Migration(NgPost const &ngPost);
+    Migration(NgPost &ngPost);
     ~Migration() = default;
 
     bool migrate();
 
 private:
-    void _doMigration(short confBuild = 1);
+    void _doMigration(unsigned short const confBuild = 1);
 
-    void _migrateTo417();
+    void _migrateTo500();
 };
 
 #endif // MIGRATION_H

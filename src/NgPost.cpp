@@ -61,22 +61,12 @@
 #endif
 
 using namespace NgConf;
-using namespace NgError;
 
 NgPost::NgPost(int &argc, char *argv[])
     : QObject()
     , CmdOrGuiApp(argc, argv)
     , _postingParams(new MainParams)
     , _nzbCheck(nullptr)
-
-    , _cout(stdout)
-    , _cerr(stderr)
-    , _err(ERR_CODE::NONE)
-#ifdef __DEBUG__
-    , _debug(2)
-#else
-    , _debug(0)
-#endif
     , _dispProgressBar(false)
     , _dispFilesPosting(false)
     , _progressbarTimer()
@@ -113,11 +103,9 @@ NgPost::NgPost(int &argc, char *argv[])
 
     , _proxySocks5(QNetworkProxy::NoProxy)
     , _proxyUrl()
-    , _logFile(nullptr)
-    , _logStream(nullptr)
     , _dbHistory(new Database)
 {
-    QThread::currentThread()->setObjectName(kMainThreadName);
+    QThread::currentThread()->setObjectName(kThreadNameMain);
 
 #ifdef __USE_HMI__
     if (_hmi)
@@ -139,9 +127,6 @@ NgPost::NgPost(int &argc, char *argv[])
     QFileInfo fi(par2Embedded);
     if (fi.exists() && fi.isFile() && fi.isExecutable())
         _postingParams->setPar2Path(par2Embedded);
-
-    connect(this, &NgPost::log, this, &NgPost::onLog, Qt::QueuedConnection);
-    connect(this, &NgPost::error, this, &NgPost::onError, Qt::QueuedConnection);
 
     _loadTanslators();
 
@@ -175,17 +160,17 @@ NgPost::NgPost(int &argc, char *argv[])
 void NgPost::startFolderMonitoring(QString const &folderPath)
 {
     if (!_postingParams->quietMode())
-        _log(tr("Start monitoring folder: %1 (delay: %2ms)")
-                     .arg(folderPath)
-                     .arg(FoldersMonitorForNewFiles::sMSleep),
-             true);
+        NgLogger::log(tr("Start monitoring folder: %1 (delay: %2ms)")
+                              .arg(folderPath)
+                              .arg(FoldersMonitorForNewFiles::sMSleep),
+                      true);
 
     if (_folderMonitor) // already monitoring folders!
         _folderMonitor->addFolder(folderPath);
     else
     {
         _monitorThread = new QThread();
-        _monitorThread->setObjectName("Monitoring");
+        _monitorThread->setObjectName(kThreadNameMonitor);
         _folderMonitor = new FoldersMonitorForNewFiles(folderPath);
         _folderMonitor->moveToThread(_monitorThread);
         connect(_folderMonitor,
@@ -214,14 +199,8 @@ void NgPost::_stopMonitoring()
 NgPost::~NgPost()
 {
 #ifdef __DEBUG__
-    _log("Destuction NgPost...");
+    NgLogger::log("Destuction NgPost...", true);
 #endif
-
-    if (_logStream)
-    {
-        delete _logStream;
-        delete _logFile;
-    }
 
     if (_nzbCheck)
         delete _nzbCheck;
@@ -241,27 +220,16 @@ NgPost::~NgPost()
 
 int NgPost::nbMissingArticles() const { return _nzbCheck->nbMissingArticles(); }
 
-bool NgPost::initHistoryDatabase() const { return _dbHistory->initSQLite(_dbHistoryFile); }
+bool NgPost::initHistoryDatabase() { return _dbHistory->initSQLite(_dbHistoryFile); }
 
-void NgPost::startLogInFile()
+void NgPost::startLogInFile() const
 {
 #if defined(WIN32) || defined(__MINGW64__)
     QString logFilePath = kDefaultLogFile;
 #else
     QString logFilePath = QString("%1/%2").arg(getenv("HOME")).arg(kDefaultLogFile);
 #endif
-    _logFile = new QFile(logFilePath);
-    if (_logFile->open(QIODevice::WriteOnly | QIODevice::Text))
-    {
-        _logStream = new QTextStream(_logFile);
-        _log(tr("ngPost starts logging: %1").arg(QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss")));
-    }
-    else
-    {
-        delete _logFile;
-        _logFile = nullptr;
-        _error(tr("Error opening log file: '%1'").arg(logFilePath));
-    }
+    NgLogger::startLogInFile(logFilePath);
 }
 
 void NgPost::setDisplayProgress(QString const &txtValue)
@@ -285,7 +253,7 @@ void NgPost::setDisplayProgress(QString const &txtValue)
         _dispFilesPosting = false;
     }
     else
-        _error(tr("Wrong display keyword: %1").arg(val.toUpper()));
+        NgLogger::error(tr("Wrong display keyword: %1").arg(val.toUpper()));
 }
 
 void NgPost::setProxy(QString const &url)
@@ -302,10 +270,11 @@ void NgPost::setProxy(QString const &url)
         ushort  port = match.captured(5).toUShort();
         _proxySocks5 = QNetworkProxy(QNetworkProxy::Socks5Proxy, host, port, user, pass);
         QNetworkProxy::setApplicationProxy(_proxySocks5);
-        _log(tr("Proxy used: %1:xxx@%2:%3").arg(user).arg(host).arg(port));
+        NgLogger::log(tr("Proxy used: %1:xxx@%2:%3").arg(user).arg(host).arg(port), true);
     }
     else
-        _error(tr("Error parsing Proxy Socks5 parameters. The syntax should be: %1").arg(kProxyStrRegExp));
+        NgLogger::error(
+                tr("Error parsing Proxy Socks5 parameters. The syntax should be: %1").arg(kProxyStrRegExp));
 }
 
 #ifdef __USE_HMI__
@@ -342,13 +311,13 @@ void NgPost::_finishPosting()
 int NgPost::startHMI()
 {
     QStringList errors = parseDefaultConfig();
-    { // MB_TODO: check this migration!!!
+    { // MB_TODO: check this migration!!! make it even for CMD ;)
         Migration m(*this);
         //        _createDbIfNotExist();
         m.migrate();
     }
     if (!errors.isEmpty())
-        _error(errors);
+        NgLogger::error(errors);
 #  ifdef __DEBUG__
     _postingParams->dumpParams();
 #  endif
@@ -386,19 +355,11 @@ void NgPost::onSwitchNightMode()
 }
 #endif
 
-void NgPost::onLog(QString msg, bool newline) const { _log(msg, newline); }
+// void NgPost::onLog(QString msg, bool newline) const { NgLogger::log(msg, newline); }
 
-void NgPost::onError(QString msg)
-{
-    ;
-    criticalError(msg, ERR_CODE::COMPLETED_WITH_ERRORS);
-}
+// void NgPost::onError(QString msg) { criticalError(msg, ERR_CODE::COMPLETED_WITH_ERRORS); }
 
-void NgPost::onErrorConnecting(QString err)
-{
-    ;
-    criticalError(err, ERR_CODE::COMPLETED_WITH_ERRORS);
-}
+// void NgPost::onErrorConnecting(QString err) { criticalError(err, ERR_CODE::COMPLETED_WITH_ERRORS); }
 
 void NgPost::onRefreshprogressbarBar()
 {
@@ -462,9 +423,10 @@ void NgPost::onNewFileToProcess(QFileInfo const &fileInfo)
     {
         if (_postingParams->monitorIgnoreDir())
         {
-            if (_debug)
-                _log(tr("MONITOR_IGNORE_DIR ON => Ignoring new incoming folder %1")
-                             .arg(fileInfo.absoluteFilePath()));
+            NgLogger::log(tr("MONITOR_IGNORE_DIR ON => Ignoring new incoming folder %1")
+                                  .arg(fileInfo.absoluteFilePath()),
+                          true,
+                          NgLogger::DebugLevel::Debug);
             return;
         }
     }
@@ -477,8 +439,10 @@ void NgPost::onNewFileToProcess(QFileInfo const &fileInfo)
                  << ", size: " << _postingParams->monitorExtensions().size()
                  << ", suffix: " << fileInfo.suffix();
 #endif
-        if (_debug)
-            _log(tr("MONITOR_EXTENSIONS ON => Ignoring new incoming file %1").arg(fileInfo.absoluteFilePath()));
+        NgLogger::log(
+                tr("MONITOR_EXTENSIONS ON => Ignoring new incoming file %1").arg(fileInfo.absoluteFilePath()),
+                true,
+                NgLogger::DebugLevel::Debug);
         return;
     }
 
@@ -492,7 +456,7 @@ void NgPost::onNewFileToProcess(QFileInfo const &fileInfo)
         _hmi->autoWidget()->newFileToProcess(fileInfo);
     }
 #endif
-    _log(tr("Processing new incoming file: %1").arg(fileInfo.absoluteFilePath()));
+    NgLogger::log(tr("Processing new incoming file: %1").arg(fileInfo.absoluteFilePath()), true);
     post(fileInfo, _postingParams->monitorNzbFolders() ? QDir(fileInfo.absolutePath()).dirName() : QString());
 }
 
@@ -513,7 +477,7 @@ void NgPost::_loadTanslators()
             if (lang == "en")
                 _translators.insert(lang, nullptr);
             else
-                _cerr << tr("error loading translator %1").arg(qmFile.absoluteFilePath()) << "\n" << MB_FLUSH;
+                NgLogger::error(tr("error loading translator %1").arg(qmFile.absoluteFilePath()));
             delete translator;
         }
     }
@@ -526,7 +490,7 @@ void NgPost::_loadTanslators()
             _app->installTranslator(_translators[_lang]);
         else
         {
-            _cerr << tr("ERROR: couldn't find translator for lang %1").arg(_lang) << "\n" << MB_FLUSH;
+            NgLogger::error(tr("ERROR: couldn't find translator for lang %1").arg(_lang));
             _lang = "en";
         }
     }
@@ -555,8 +519,7 @@ bool NgPost::checkSupportSSL()
 {
     if (!PostingJob::supportsSsl())
     {
-        _log(tr("SSL issue on your system..."));
-        _log(PostingJob::sslSupportInfo());
+        NgLogger::log(tr("SSL issue on your system: %1").arg(PostingJob::sslSupportInfo()), true);
         return false;
     }
     return true;
@@ -568,8 +531,10 @@ void NgPost::doNzbPostCMD(PostingJob *job)
     if (_postingParams->urlNzbUpload())
     {
         FileUploader *testUpload = new FileUploader(_netMgr, job->nzbFilePath());
-        connect(testUpload, &FileUploader::error, this, &NgPost::onError, Qt::DirectConnection);
-        connect(testUpload, &FileUploader::log, this, &NgPost::onLog, Qt::DirectConnection);
+        connect(testUpload, &FileUploader::error, qOverload<QString>(&NgLogger::error));
+        connect(testUpload,
+                &FileUploader::log,
+                [](QString msg, bool newline = true) { NgLogger::log(msg, newline); });
         connect(testUpload, &FileUploader::readyToDie, testUpload, &QObject::deleteLater, Qt::QueuedConnection);
         testUpload->startUpload(*_postingParams->urlNzbUpload());
     }
@@ -608,10 +573,10 @@ void NgPost::doNzbPostCMD(PostingJob *job)
             QString cmd = args.takeFirst();
             qDebug() << "cmd: " << cmd << ", args: " << args;
             int res = QProcess::execute(cmd, args);
-            if (debugMode())
-                _log(tr("NZB Post cmd: %1 exitcode: %2").arg(fullCmd).arg(res));
+            if (NgLogger::isDebugMode())
+                NgLogger::log(tr("NZB Post cmd: %1 exitcode: %2").arg(fullCmd).arg(res), true);
             else
-                _log(fullCmd);
+                NgLogger::log(fullCmd, true);
         }
     }
 }
@@ -669,7 +634,7 @@ void NgPost::post(QFileInfo const &fileInfo, QString const &monitorFolder)
     }
 
     qDebug() << "Start posting job for " << nzbName << " with rar_name: " << rarName << " and pass: " << rarPass;
-    startPostingJob(new PostingJob(this,
+    startPostingJob(new PostingJob(*this,
                                    rarName,
                                    rarPass,
                                    nzbFilePath,
@@ -683,7 +648,10 @@ void NgPost::onCheckForNewVersion()
 {
     QNetworkReply *reply        = static_cast<QNetworkReply *>(sender());
     QStringList    v            = kVersion.split(".");
-    int            currentMajor = v.at(0).toInt(), currentMinor = v.at(1).toInt();
+    int            currentMajor = v.at(0).toInt(), currentMinor = 0;
+    if (v.size() == 2) // 5.0 will get kVersion = "5"
+        currentMinor = v.at(1).toInt();
+
     while (!reply->atEnd())
     {
         QString                 line  = reply->readLine().trimmed();
@@ -765,7 +733,7 @@ void NgPost::onPackingDone()
         if (job == _activeJob)
         {
 #ifdef __DEBUG__
-            _log("[NgPost::onPackingDone] Active Job packed :)");
+            NgLogger::log("[NgPost::onPackingDone] Active Job packed :)", true);
 #endif
             // The previous active Job finished posting before the packing of the next one
             if (_packingJob == nullptr)
@@ -773,7 +741,7 @@ void NgPost::onPackingDone()
                 if (!job->hasPostStarted())
                 {
 #ifdef __DEBUG__
-                    _log("[NgPost::onPackingDone] Active Job didn't start posting...");
+                    NgLogger::log("[NgPost::onPackingDone] Active Job didn't start posting...", true);
 #endif
                     job->_postFiles();
                 }
@@ -781,10 +749,10 @@ void NgPost::onPackingDone()
             }
         }
         else if (job != _packingJob)
-            _error("unexpected job finished packing..."); // should never happen...
+            NgLogger::error("unexpected job finished packing..."); // should never happen...
 #ifdef __DEBUG__
         else
-            _log("[NgPost::onPackingDone] Packing Job done :)");
+            NgLogger::log("[NgPost::onPackingDone] Packing Job done :)", true);
 #endif
     }
 }
@@ -796,8 +764,9 @@ void NgPost::_prepareNextPacking()
         _packingJob = _pendingJobs.first();
         if (_packingJob->hasPacking())
             emit _packingJob->startPosting(false);
-        else if (debugFull())
-            _log(tr("no packing needed for next pending job %1").arg(_packingJob->nzbName()));
+        NgLogger::log(tr("no packing needed for next pending job %1").arg(_packingJob->nzbName()),
+                      true,
+                      NgLogger::DebugLevel::FullDebug);
     }
 }
 
@@ -817,6 +786,17 @@ void NgPost::onPostingJobFinished()
                                                   job->nbArticlesUploaded(),
                                                   job->nbArticlesFailed());
 #endif
+        _dbHistory->insertPost(NgTools::currentDateTime(),
+                               _activeJob->nzbName(),
+                               _activeJob->postSize(),
+                               _activeJob->avgSpeed(),
+                               _activeJob->hasCompressed() ? _activeJob->rarName() : QString(),
+                               _activeJob->hasCompressed() ? _activeJob->rarPass() : QString(),
+                               _activeJob->groups(),
+                               _activeJob->from(false),
+                               _activeJob->tmpPath(),
+                               _activeJob->nzbFilePath(),
+                               _activeJob->hasPostFinished());
 
         if (_activeJob->hasPostFinished() && !_postHistoryFile.isEmpty())
         {
@@ -824,9 +804,9 @@ void NgPost::onPostingJobFinished()
             if (hist.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text))
             {
                 QTextStream stream(&hist);
-                stream << QDateTime::currentDateTime().toString("yyyy/MM/dd hh:mm:ss") << _historyFieldSeparator
-                       << _activeJob->nzbName() << _historyFieldSeparator << _activeJob->postSize()
-                       << _historyFieldSeparator << _activeJob->avgSpeed();
+                stream << NgTools::currentDateTime() << _historyFieldSeparator << _activeJob->nzbName()
+                       << _historyFieldSeparator << _activeJob->postSize() << _historyFieldSeparator
+                       << _activeJob->avgSpeed();
                 if (_activeJob->hasCompressed())
                     stream << _historyFieldSeparator << _activeJob->rarName() << _historyFieldSeparator
                            << _activeJob->rarPass();
@@ -868,8 +848,7 @@ void NgPost::onPostingJobFinished()
                     }
                     else if (!_activeJob->hasPacking())
                     {
-                        if (debugFull())
-                            _log(tr("start non packing job..."));
+                        NgLogger::log(tr("start non packing job..."), true, NgLogger::DebugLevel::FullDebug);
                         emit _activeJob->startPosting(true);
                         _prepareNextPacking();
                     }
@@ -877,7 +856,7 @@ void NgPost::onPostingJobFinished()
                     // as it is now the active job ;)
                 }
                 else
-                    _error("next active job different to the packing one..."); // should never happen...
+                    NgLogger::error("next active job different to the packing one..."); // should never happen...
             }
             else
                 emit _activeJob->startPosting(true);
@@ -935,8 +914,7 @@ void NgPost::onPostingJobFinished()
         else if (!_folderMonitor)
 #endif
         {
-            if (debugFull())
-                _error(tr(" => closing application"));
+            NgLogger::error(tr(" => closing application"));
             qApp->quit();
         }
     }
@@ -945,14 +923,15 @@ void NgPost::onPostingJobFinished()
         _packingJob = nullptr;
         _pendingJobs.dequeue(); // remove the packingJob
         job->deleteLater();
-        _error(tr("packing job finished unexpectedly..."));
+        NgLogger::error(tr("packing job finished unexpectedly..."));
         _prepareNextPacking();
     }
     else
     {
         // it was a Pending job that has been cancelled
-        if (debugFull())
-            _log(tr("Cancelled pending job?"));
+        NgLogger::log(tr("Cancelled pending job %1?").arg(NgTools::ptrAddrInHex(job)),
+                      true,
+                      NgLogger::DebugLevel::Debug);
         _pendingJobs.removeOne(job);
         job->deleteLater();
     }
@@ -962,20 +941,17 @@ void NgPost::onShutdownProcReadyReadStandardOutput()
 {
     QString line(_shutdownProc->readAllStandardOutput());
     //    _cout << "Shutdown out: " << line << "\n" << MB_FLUSH;
-    _log(QString("Shutdown out: %1").arg(QString(line)));
+    NgLogger::log(QString("Shutdown out: %1").arg(QString(line)), true);
 }
 
 void NgPost::onShutdownProcReadyReadStandardError()
 {
-    QString line(_shutdownProc->readAllStandardError());
-    //    _cout << "Shutdown ERROR: " << line << "\n" << MB_FLUSH;
-    _error(QString("Shutdown ERROR: %1").arg(line));
+    NgLogger::error(QString("Shutdown ERROR: %1").arg(_shutdownProc->readAllStandardError()));
 }
 
 void NgPost::onShutdownProcFinished(int exitCode)
 {
-    if (_debug)
-        _log(QString("Shutdown proc exitCode: ").arg(exitCode));
+    NgLogger::log(QString("Shutdown proc exitCode: ").arg(exitCode), true, NgLogger::DebugLevel::Debug);
     _shutdownProc->deleteLater();
     _shutdownProc = nullptr;
 }
@@ -992,7 +968,7 @@ void NgPost::onShutdownProcFinished(int exitCode)
 
 void NgPost::onShutdownProcError(QProcess::ProcessError error)
 {
-    _error(QString("Shutdown process Error: %1").arg(error));
+    NgLogger::error(QString("Shutdown process Error: %1").arg(error));
 }
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
@@ -1002,7 +978,7 @@ void NgPost::onNetworkAccessibleChanged(QNetworkAccessManager::NetworkAccessibil
     QString msg(tr("Network access changed: %1"));
     if (accessible == QNetworkAccessManager::NetworkAccessibility::Accessible)
     {
-        _log(msg.arg("ON"));
+        NgLogger::log(msg.arg("ON"));
 #  ifndef __USE_CONNECTION_TIMEOUT__
         if (_activeJob && _activeJob->isPaused())
             _activeJob->resume();
@@ -1010,7 +986,7 @@ void NgPost::onNetworkAccessibleChanged(QNetworkAccessManager::NetworkAccessibil
     }
     else
     {
-        _error(msg.arg("OFF"));
+        NgLogger::error(msg.arg("OFF"));
 #  ifndef __USE_CONNECTION_TIMEOUT__
         if (_activeJob)
             _activeJob->pause();
@@ -1018,46 +994,6 @@ void NgPost::onNetworkAccessibleChanged(QNetworkAccessManager::NetworkAccessibil
     }
 }
 #endif
-
-void NgPost::_log(QString const &aMsg, bool newline) const
-{
-#ifdef __USE_HMI__
-    if (_hmi)
-    {
-        _hmi->log(aMsg, newline);
-        if (_logStream && newline)
-            *_logStream << aMsg << "\n" << MB_FLUSH; // force flush in case of crash
-    }
-    else
-#endif
-    {
-        _cout << aMsg;
-        if (newline)
-            _cout << "\n";
-        _cout << MB_FLUSH;
-    }
-}
-
-void NgPost::_error(QString const &error) const
-{
-#ifdef __USE_HMI__
-    if (_hmi)
-    {
-        _hmi->logError(error);
-        if (_logStream)
-            *_logStream << "ERR: " << error << "\n" << MB_FLUSH; // force flush in case of crash
-    }
-    else
-#endif
-        _cerr << error << "\n" << MB_FLUSH;
-}
-
-void NgPost::criticalError(QString const &error, NgError::ERR_CODE code)
-{
-    // MB_TODO: shall we do more?
-    _err = code;
-    _error(QString("[%1] %2").arg(NgError::kErrorNames[code], error));
-}
 
 void NgPost::closeAllPostingJobs()
 {
@@ -1067,7 +1003,8 @@ void NgPost::closeAllPostingJobs()
 }
 
 void NgPost::closeAllMonitoringJobs()
-{
+{ // MB_TODO: it doesn'#t look related to Monitoring, is it? otherwise change the name...
+    // used only by HMI ? => #ifdef __USE_HMI__
     auto it = _pendingJobs.begin();
     while (it != _pendingJobs.end())
     {
@@ -1075,8 +1012,8 @@ void NgPost::closeAllMonitoringJobs()
         if (!job->widget())
         {
             it = _pendingJobs.erase(it);
-            if (_debug)
-                _error(tr("Cancelling monitoring job: %1").arg(job->getFirstOriginalFile()));
+            if (NgLogger::isDebugMode())
+                NgLogger::error(tr("Cancelling monitoring job: %1").arg(job->getFirstOriginalFile()));
             delete job;
         }
         else
@@ -1085,8 +1022,8 @@ void NgPost::closeAllMonitoringJobs()
     if (_activeJob && !_activeJob->widget())
     {
         emit _activeJob->stopPosting();
-        if (_debug)
-            _error(tr("Stopping monitoring job: %1").arg(_activeJob->getFirstOriginalFile()));
+        if (NgLogger::isDebugMode())
+            NgLogger::error(tr("Stopping monitoring job: %1").arg(_activeJob->getFirstOriginalFile()));
     }
 }
 
@@ -1111,7 +1048,7 @@ bool NgPost::hasMonitoringPostingJobs() const
 bool NgPost::parseCommandLine(int argc, char *argv[])
 {
     Q_UNUSED(argc);
-    return NgCmdLineLoader::loadCmdLine(argv[0], this, _postingParams);
+    return NgCmdLineLoader::loadCmdLine(argv[0], *this, _postingParams);
 }
 
 QString NgPost::getNzbName(QFileInfo const &fileInfo) const
@@ -1157,11 +1094,13 @@ QStringList NgPost::parseDefaultConfig()
         if (!_postingParams->saveConfig(conf, *this))
             return { tr("Couldn't create the default configuration file '%1'...").arg(conf) };
 
-        _log(tr("Default configuration file created: %1").arg(conf));
+        NgLogger::log(tr("Default configuration file created: %1").arg(conf), true);
         if (!useHMI())
         {
-            _log(tr("Please fill at least a provider, your tmp, rar and par2 path and set the features you like "
-                    ";)"));
+            NgLogger::log(tr("Please fill at least a provider, your tmp, rar and par2 path and set the features "
+                             "you like "
+                             ";)"),
+                          true);
 #  if defined(__linux__) || defined(__APPLE__)
             QThread::sleep(3);
             // Open Editor
@@ -1175,7 +1114,7 @@ QStringList NgPost::parseDefaultConfig()
             connect(process, &QProcess::finished, process, &QObject::deleteLater);
             process->start();
             if (process->waitForStarted())
-                _log(tr("Please save and close the editor to continue..."));
+                NgLogger::log(tr("Please save and close the editor to continue..."), true);
             process->waitForFinished();
 #  endif
             return { tr("Once done, rerun the app ;)") };
@@ -1183,9 +1122,8 @@ QStringList NgPost::parseDefaultConfig()
     }
 #endif
     if (!_postingParams->quietMode())
-        _cout << tr("Using default config file: %1").arg(conf) << "\n" << MB_FLUSH;
-
-    return NgConfigLoader::loadConfig(this, conf, _postingParams);
+        NgLogger::log(tr("Using default config file: %1").arg(conf), true);
+    return NgConfigLoader::loadConfig(*this, conf, _postingParams);
 }
 
 bool NgPost::startPostingJob(QString const                &rarName,
@@ -1195,7 +1133,7 @@ bool NgPost::startPostingJob(QString const                &rarName,
                              std::string const            &from,
                              QMap<QString, QString> const &meta)
 {
-    return startPostingJob(new PostingJob(this,
+    return startPostingJob(new PostingJob(*this,
                                           rarName,
                                           rarPass,
                                           nzbFilePath,
@@ -1244,18 +1182,20 @@ bool NgPost::startPostingJob(PostingJob *job)
 
 void NgPost::showVersionASCII() const
 {
-    _cout << kNgPostASCII << "                          v" << kVersion << "\n\n"
-          << PostingJob::sslSupportInfo() << "\n"
-          << MB_FLUSH;
+    NgLogger::log(QString("%1                          v%2\n\n%3\n")
+                          .arg(kNgPostASCII)
+                          .arg(kVersion)
+                          .arg(PostingJob::sslSupportInfo()),
+                  true);
 }
 
 void NgPost::saveConfig() const
 {
     QString configPath = NgTools::getConfigurationFilePath();
     if (_postingParams->saveConfig(configPath, *this))
-        _log(tr("The config file '%1' has been updated").arg(configPath), true);
+        NgLogger::log(tr("The config file '%1' has been updated").arg(configPath), true);
     else
-        _error(tr("Error: couldn't write the config file %1").arg(configPath));
+        NgLogger::error(tr("Error: couldn't write the config file %1").arg(configPath));
 }
 
 void NgPost::setDelFilesAfterPosted(bool delFiles)
@@ -1275,8 +1215,8 @@ void NgPost::addMonitoringFolder(QString const &dirPath)
 
 bool NgPost::doNzbCheck(QString const &nzbPath)
 {
-    _nzbCheck = new NzbCheck(); // it's a one shot, no leak ;)
-    _nzbCheck->setDebug(_debug);
+    _nzbCheck = new NzbCheck();                           // it's a one shot, no leak ;)
+    _nzbCheck->setDebug(NgLogger::isDebugMode() ? 0 : 1); // MB_TODO : make NzbCheck use NgLogger...
     _nzbCheck->setDispProgressBar(_dispProgressBar || _dispFilesPosting);
     _nzbCheck->setQuiet(_postingParams->quietMode());
     int nbArticles = _nzbCheck->parseNzb(nzbPath);
@@ -1286,10 +1226,11 @@ bool NgPost::doNzbCheck(QString const &nzbPath)
     auto const &nntpServers = _postingParams->nntpServers();
     if (nntpServers.isEmpty())
     {
-        criticalError(tr("No server found to launch nzbCheck on %1...\nCheck config or add some in command "
-                         "line. cf --help")
-                              .arg(nzbPath),
-                      ERR_CODE::ERR_NO_SERVER);
+        NgLogger::criticalError(
+                tr("No server found to launch nzbCheck on %1...\nCheck config or add some in command "
+                   "line. cf --help")
+                        .arg(nzbPath),
+                NgError::ERR_CODE::ERR_NO_SERVER);
         return false;
     }
 

@@ -6,9 +6,8 @@
 #include "NgConf.h"
 #include "NgError.h"
 using namespace NgConf;
-using namespace NgError;
 
-#include "FoldersMonitorForNewFiles.h"
+// #include "FoldersMonitorForNewFiles.h"
 #include "NgPost.h"
 #include "nntp/NntpArticle.h"
 #include "nntp/NntpServerParams.h"
@@ -17,7 +16,122 @@ using namespace NgError;
 #include "utils/NgConfigLoader.h"
 #include "utils/NgTools.h"
 
-bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost *const ngPost, SharedParams &postingParams)
+QList<QCommandLineOption> const NgCmdLineLoader::kCmdOptions = {
+    { kOptionNames[Opt::HELP], tr("Help: display syntax") },
+    { { "v", kOptionNames[Opt::VERSION] }, tr("app version") },
+    { { "c", kOptionNames[Opt::CONF] },
+     tr("use configuration file (if not provided, we try to load $HOME/.ngPost)"),
+     kOptionNames[Opt::CONF] },
+    { kOptionNames[Opt::DISP_PROGRESS],
+     tr("display cmd progressbar: NONE (default), BAR or FILES"),
+     kOptionNames[Opt::DISP_PROGRESS] },
+    { { "d", kOptionNames[Opt::DEBUG] }, tr("display extra information") },
+    { kOptionNames[Opt::DEBUG_FULL], tr("display full debug information") },
+    { { "l", kOptionNames[Opt::LANG] }, tr("application language"), kOptionNames[Opt::LANG] },
+
+    { kOptionNames[Opt::CHECK],
+     tr("check nzb file (if articles are available on Usenet) cf https://github.com/mbruel/nzbCheck"),
+     kOptionNames[Opt::CHECK] },
+    { { "q", kOptionNames[Opt::QUIET] }, tr("quiet mode (no output on stdout)") },
+
+ // automated posting (scanning and/or monitoring)
+    { kOptionNames[Opt::AUTO_DIR],
+     tr("parse directory and post every file/folder separately. You must use --compress, "
+         "should add --gen_par2, --gen_name and --gen_pass"),
+     kOptionNames[Opt::AUTO_DIR] },
+    { kOptionNames[Opt::MONITOR_DIR],
+     tr("monitor directory and post every new file/folder. You must use --compress, should "
+         "add --gen_par2, --gen_name and --gen_pass"),
+     kOptionNames[Opt::MONITOR_DIR] },
+    { kOptionNames[Opt::DEL_AUTO],
+     tr("delete file/folder once posted. You must use --auto or --monitor with this option.") },
+
+ // quick posting (several files/folders)
+    { { "i", kOptionNames[Opt::INPUT] },
+     tr("input file to upload (single file or directory), you can use it multiple times"),
+     kOptionNames[Opt::INPUT] },
+    { { "o", kOptionNames[Opt::OUTPUT] }, tr("output file path (nzb)"), kOptionNames[Opt::OUTPUT] },
+
+ // general options
+    { { "x", kOptionNames[Opt::OBFUSCATE] },
+     tr("obfuscate the subjects of the articles (CAREFUL you won't find your post "
+         "if you lose the nzb file)") },
+    { { "g", kOptionNames[Opt::GROUPS] },
+     tr("newsgroups where to post the files (coma separated without space)"),
+     kOptionNames[Opt::GROUPS] },
+    { { "m", kOptionNames[Opt::META] },
+     tr("extra meta data in header (typically \"password=qwerty42\")"),
+     kOptionNames[Opt::META] },
+    { { "f", kOptionNames[Opt::FROM] },
+     tr("poster email (random one if not provided)"),
+     kOptionNames[Opt::FROM] },
+    { { "a", kOptionNames[Opt::ARTICLE_SIZE] },
+     tr("article size (default one: %1)").arg(kDefaultArticleSize),
+     kOptionNames[Opt::ARTICLE_SIZE] },
+    { { "z", kOptionNames[Opt::MSG_ID] },
+     tr("msg id signature, after the @ (default one: ngPost)"),
+     kOptionNames[Opt::MSG_ID] },
+    { { "r", kOptionNames[Opt::NB_RETRY] },
+     tr("number of time we retry to an Article that failed (default: 5)"),
+     kOptionNames[Opt::NB_RETRY] },
+    { { "t", kOptionNames[Opt::THREAD] },
+     tr("number of Threads (the connections will be distributed amongs them)"),
+     kOptionNames[Opt::THREAD] },
+    { kOptionNames[Opt::GEN_FROM], tr("generate a new random email for each Post (--auto or --monitor)") },
+
+ // for compression and par2 support
+    { kOptionNames[Opt::TMP_DIR],
+     tr("temporary folder where the compressed files and par2 will be stored"),
+     kOptionNames[Opt::TMP_DIR] },
+    { kOptionNames[Opt::RAR_PATH],
+     tr("RAR absolute file path (external application)"),
+     kOptionNames[Opt::RAR_PATH] },
+    { kOptionNames[Opt::RAR_SIZE],
+     tr("size in MB of the RAR volumes (0 by default meaning NO split)"),
+     kOptionNames[Opt::RAR_SIZE] },
+    { kOptionNames[Opt::RAR_MAX], tr("maximum number of archive volumes"), kOptionNames[Opt::RAR_MAX] },
+    { kOptionNames[Opt::PAR2_PCT],
+     tr("par2 redundancy percentage (0 by default meaning NO par2 generation)"),
+     kOptionNames[Opt::PAR2_PCT] },
+    { kOptionNames[Opt::PAR2_PATH],
+     tr("par2 absolute file path (in case of self compilation of ngPost)"),
+     kOptionNames[Opt::PAR2_PCT] },
+
+    { kOptionNames[Opt::PACK],
+     tr("Pack posts using config PACK definition with a subset of (COMPRESS, "
+         "GEN_NAME, GEN_PASS, GEN_PAR2)") },
+    { kOptionNames[Opt::COMPRESS], tr("compress inputs using RAR or 7z") },
+    { kOptionNames[Opt::GEN_PAR2], tr("generate par2 (to be used with --compress)") },
+    { kOptionNames[Opt::RAR_NAME],
+     tr("provide the RAR file name (to be used with --compress)"),
+     kOptionNames[Opt::RAR_NAME] },
+    { kOptionNames[Opt::RAR_PASS],
+     tr("provide the RAR password (to be used with --compress)"),
+     kOptionNames[Opt::RAR_PASS] },
+    { kOptionNames[Opt::GEN_NAME], tr("generate random RAR name (to be used with --compress)") },
+    { kOptionNames[Opt::GEN_PASS], tr("generate random RAR password (to be used with --compress)") },
+    { kOptionNames[Opt::LENGTH_NAME],
+     tr("length of the random RAR name (to be used with --gen_name), default: 17"),
+     kOptionNames[Opt::LENGTH_NAME] },
+    { kOptionNames[Opt::LENGTH_PASS],
+     tr("length of the random RAR password (to be used with --gen_pass), default: 13"),
+     kOptionNames[Opt::LENGTH_PASS] },
+    { kOptionNames[Opt::RAR_NO_ROOT_FOLDER],
+     tr("Remove root (parent) folder when compressing Folders using RAR") },
+
+    { { "S", kOptionNames[Opt::SERVER] },
+     tr("NNTP server following the format (<user>:<pass>@@@)?<host>:<port>:<nbCons>:(no)?ssl"),
+     kOptionNames[Opt::SERVER] },
+ // without config file, you can provide all the parameters to connect to ONE SINGLE server
+    { { "h", kOptionNames[Opt::HOST] }, tr("NNTP server hostname (or IP)"), kOptionNames[Opt::HOST] },
+    { { "P", kOptionNames[Opt::PORT] }, tr("NNTP server port"), kOptionNames[Opt::PORT] },
+    { { "s", kOptionNames[Opt::SSL] }, tr("use SSL") },
+    { { "u", kOptionNames[Opt::USER] }, tr("NNTP server username"), kOptionNames[Opt::USER] },
+    { { "p", kOptionNames[Opt::PASS] }, tr("NNTP server password"), kOptionNames[Opt::PASS] },
+    { { "n", kOptionNames[Opt::CONNECTION] }, tr("number of NNTP connections"), kOptionNames[Opt::CONNECTION] },
+};
+
+bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost &ngPost, SharedParams &postingParams)
 {
     QString            appVersion = QString("%1_v%2").arg(kAppName, kVersion);
     QCommandLineParser parser;
@@ -25,16 +139,16 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost *const ngPost, SharedPar
     parser.addOptions(kCmdOptions);
 
     // Process the actual command line arguments given by the user
-    // return ERR_CODE::ERR_WRONG_ARG if QCommandLineParser fails.
+    // return NgError::ERR_CODE::ERR_WRONG_ARG if QCommandLineParser fails.
     QStringList args = QCoreApplication::arguments();
     if (!parser.parse(args))
     {
 #ifdef __DEBUG__
         qDebug() << "cmd args: " << args;
 #endif
-        ngPost->criticalError(tr("Error syntax: %1\nTo list the available options use: %2 --help\n")
-                                      .arg(parser.errorText(), appName),
-                              ERR_CODE::ERR_WRONG_ARG);
+        NgLogger::criticalError(tr("Error syntax: %1\nTo list the available options use: %2 --help\n")
+                                        .arg(parser.errorText(), appName),
+                                NgError::ERR_CODE::ERR_WRONG_ARG);
         return false; // end of game
     }
 
@@ -42,28 +156,14 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost *const ngPost, SharedPar
     if (parser.isSet(kOptionNames[Opt::QUIET]))
     {
         postingParams->_quiet = true;
-        ngPost->beQuiet();
+        ngPost.beQuiet();
     }
 
-    // 1.: Either load the config given in parameter or the default one
-    if (parser.isSet(kOptionNames[Opt::CONF]))
+    // 1.: show version ?
+    if (parser.isSet(kOptionNames[Opt::VERSION]))
     {
-        QStringList errors =
-                NgConfigLoader::loadConfig(ngPost, parser.value(kOptionNames[Opt::CONF]), postingParams);
-        if (!errors.isEmpty())
-        {
-            ngPost->criticalError(errors.join("\n"), ERR_CODE::ERR_CONF_FILE);
-            return false; // end of game :(
-        }
-    }
-    else
-    {
-        QStringList errors = ngPost->parseDefaultConfig();
-        if (!errors.isEmpty())
-        {
-            ngPost->criticalError(errors.join("\n"), ERR_CODE::ERR_CONF_FILE);
-            return false; // end of game :(
-        }
+        ngPost.showVersionASCII();
+        return false; // end of game :)
     }
 
     // 2.: Change lang (for the help => we don't return!)
@@ -71,33 +171,50 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost *const ngPost, SharedPar
     {
         QString lang = parser.value(kOptionNames[Opt::LANG]).toLower();
         qDebug() << "Lang: " << lang << "\n";
-        ngPost->changeLanguage(lang);
+        ngPost.changeLanguage(lang);
     }
 
     // 3.: show help ?
     if (parser.isSet(kOptionNames[Opt::HELP]))
     {
-        ngPost->showVersionASCII();
+        ngPost.showVersionASCII();
+        // we need to process the events to print the version before the syntax
+        // cause the syntax is using directly stdout without NgLogger
+        qApp->processEvents();
         syntax(ngPost, appName);
         return false; // end of game :)
     }
 
-    // 4.: show version ?
-    if (parser.isSet(kOptionNames[Opt::VERSION]))
+    // 4.: Either load the config given in parameter or the default one
+    if (parser.isSet(kOptionNames[Opt::CONF]))
     {
-        ngPost->showVersionASCII();
-        return false; // end of game :)
+        QStringList errors =
+                NgConfigLoader::loadConfig(ngPost, parser.value(kOptionNames[Opt::CONF]), postingParams);
+        if (!errors.isEmpty())
+        {
+            NgLogger::criticalError(errors.join("\n"), NgError::ERR_CODE::ERR_CONF_FILE);
+            return false; // end of game :(
+        }
+    }
+    else
+    {
+        QStringList errors = ngPost.parseDefaultConfig();
+        if (!errors.isEmpty())
+        {
+            NgLogger::criticalError(errors.join("\n"), NgError::ERR_CODE::ERR_CONF_FILE);
+            return false; // end of game :(
+        }
     }
 
     // 5.: debug level
     if (parser.isSet(kOptionNames[Opt::DEBUG]))
     {
-        ngPost->setDebugLevel(1);
+        NgLogger::setDebug(NgLogger::DebugLevel::Debug);
         qDebug() << tr("Extra logs are ON\n");
     }
     if (parser.isSet(kOptionNames[Opt::DEBUG_FULL]))
     {
-        ngPost->setDebugLevel(2);
+        NgLogger::setDebug(NgLogger::DebugLevel::FullDebug);
         qDebug() << tr("Full debug logs are ON\n");
     }
 
@@ -105,25 +222,25 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost *const ngPost, SharedPar
     if (parser.isSet(kOptionNames[Opt::DISP_PROGRESS]))
     {
         QString val = parser.value(kOptionNames[Opt::DISP_PROGRESS]);
-        ngPost->setDisplayProgress(val.trimmed());
+        ngPost.setDisplayProgress(val.trimmed());
     }
 
     // 7.: Load server(s) if given (so we can do a nzbCheck if required)
-    if (!loadServersParameters(parser, ngPost, postingParams))
+    if (!loadServersParameters(parser, postingParams))
         return false; // end of game :( (error has been sent)
 
     // 8.: is it an nzbCheck demand ? (no posting)
     if (parser.isSet(kOptionNames[Opt::CHECK]))
-        return ngPost->doNzbCheck(parser.value(kOptionNames[Opt::CHECK]).trimmed());
+        return ngPost.doNzbCheck(parser.value(kOptionNames[Opt::CHECK]).trimmed());
 
     // 9.: check if we've inputs (either files, auto directory or monitoring one
     if (!parser.isSet(kOptionNames[Opt::INPUT]) && !parser.isSet(kOptionNames[Opt::AUTO_DIR])
         && !parser.isSet(kOptionNames[Opt::MONITOR_DIR]))
     {
-        ngPost->criticalError(
+        NgLogger::criticalError(
                 tr("Error syntax: you should provide at least one input file or directory using the option -i, "
                    "--auto or --monitor"),
-                ERR_CODE::ERR_NO_INPUT);
+                NgError::ERR_CODE::ERR_NO_INPUT);
         return false; // end of game :(
     }
 
@@ -133,19 +250,19 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost *const ngPost, SharedPar
     {
         if (!parser.isSet(kOptionNames[Opt::AUTO_DIR]) && !parser.isSet(kOptionNames[Opt::MONITOR_DIR]))
         {
-            ngPost->criticalError(tr("Error syntax: --del option is only available with --auto or --monitor"),
-                                  ERR_CODE::ERR_DEL_AUTO);
+            NgLogger::criticalError(tr("Error syntax: --del option is only available with --auto or --monitor"),
+                                    NgError::ERR_CODE::ERR_DEL_AUTO);
             return false; // end of game :(
         }
         else
             postingParams->_delAuto = true;
     }
 
-    if (!loadPostingParameters(parser, ngPost, postingParams))
+    if (!loadPostingParameters(parser, postingParams))
         return false; // end of game :( (error has been sent)
 
     // 11.: packing compression obfuscation settings
-    if (!loadPackingParameters(parser, ngPost, postingParams))
+    if (!loadPackingParameters(parser, postingParams))
         return false; // end of game :( (error has been sent)
 
     // 12.1: single post using -i can provide the rar name
@@ -174,7 +291,7 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost *const ngPost, SharedPar
     {
         postingParams->_genFrom = true;
         if (!postingParams->quietMode())
-            ngPost->onLog(tr("Generate new random poster for each post"), true);
+            NgLogger::log(tr("Generate new random poster for each post"), true);
         from = NgTools::randomStdFrom();
     }
     else if (from.empty())
@@ -182,7 +299,7 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost *const ngPost, SharedPar
 
     // 13.: do we have some auto directory to process? fill the list!
     QList<QDir> autoDirs;
-    if (!getAutoDirectories(autoDirs, parser, ngPost, postingParams))
+    if (!getAutoDirectories(autoDirs, parser, postingParams))
         return false; // end of game :( (error has been sent)
 
     // 14.: do we have folders to monitor?
@@ -192,7 +309,7 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost *const ngPost, SharedPar
 
     // 15.: get single files to post (-i option), the nzbName and nzbPath
     QList<QFileInfo> filesToUpload;
-    if (!getInputFilesToGroupPost(filesToUpload, parser, ngPost, postingParams))
+    if (!getInputFilesToGroupPost(filesToUpload, parser, postingParams))
         return false; // end of game :( (error has been sent)
 
 #ifdef __DEBUG__
@@ -207,17 +324,16 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost *const ngPost, SharedPar
     for (QDir const &dir : autoDirs)
     {
         if (!postingParams->quietMode())
-            ngPost->onLog(QString("===> Auto dir: %1").arg(dir.absolutePath()), true);
+            NgLogger::log(QString("===> Auto dir: %1").arg(dir.absolutePath()), true);
         for (QFileInfo const &fileInfo :
              dir.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name))
-            ngPost->post(fileInfo,
-                         postingParams->_monitorNzbFolders ? QDir(fileInfo.absolutePath()).dirName()
-                                                           : QString());
+            ngPost.post(fileInfo,
+                        postingParams->_monitorNzbFolders ? QDir(fileInfo.absolutePath()).dirName() : QString());
     }
 
     if (filesToUpload.isEmpty() && autoDirs.isEmpty() && !isMonitoring)
     {
-        ngPost->criticalError(tr("Nothing to do..."), ERR_CODE::ERR_NO_INPUT);
+        NgLogger::criticalError(tr("Nothing to do..."), NgError::ERR_CODE::ERR_NO_INPUT);
         return false; // end of game :( (error has been sent)
     }
 
@@ -229,18 +345,18 @@ void NgCmdLineLoader::prepareAndStartPostingSingleFiles(QString                 
                                                         std::string const        &from,
                                                         QList<QFileInfo>         &filesToUpload,
                                                         QCommandLineParser const &parser,
-                                                        NgPost *const             ngPost,
+                                                        NgPost                   &ngPost,
                                                         SharedParams             &postingParams)
 {
     // The nzbName will be the one of the first input file
-    QString nzbName = ngPost->getNzbName(filesToUpload.front());
+    QString nzbName = ngPost.getNzbName(filesToUpload.front());
 
     // 16.: is the nzb output path clearly given?
     QString nzbPath = postingParams->nzbPath();
     if (parser.isSet("o"))
     {
         QFileInfo nzb(parser.value(kOptionNames[Opt::OUTPUT]));
-        nzbName = ngPost->getNzbName(nzb);
+        nzbName = ngPost.getNzbName(nzb);
         nzbPath = nzb.absolutePath();
     }
     if (rarName.isEmpty())
@@ -273,17 +389,16 @@ void NgCmdLineLoader::prepareAndStartPostingSingleFiles(QString                 
         }
     }
     qDebug() << "Start posting job for " << nzbName << " with rarName: " << rarName << " and pass: " << rarPass;
-    ngPost->startPostingJob(rarName,
-                            rarPass,
-                            QFileInfo(QDir(nzbPath), nzbName).absoluteFilePath(),
-                            filesToUpload,
-                            from,
-                            metaHeadNzb);
+    ngPost.startPostingJob(rarName,
+                           rarPass,
+                           QFileInfo(QDir(nzbPath), nzbName).absoluteFilePath(),
+                           filesToUpload,
+                           from,
+                           metaHeadNzb);
 }
 
 bool NgCmdLineLoader::getInputFilesToGroupPost(QList<QFileInfo>         &filesToUpload,
                                                QCommandLineParser const &parser,
-                                               NgPost *const             ngPost,
                                                SharedParams             &postingParams)
 {
     for (QString const &filePath : parser.values(kOptionNames[Opt::INPUT]))
@@ -291,8 +406,9 @@ bool NgCmdLineLoader::getInputFilesToGroupPost(QList<QFileInfo>         &filesTo
         QFileInfo fileInfo(filePath);
         if (!fileInfo.exists() || !fileInfo.isReadable())
         {
-            ngPost->criticalError(tr("Error: the input file '%1' is not readable...").arg(parser.value("input")),
-                                  ERR_CODE::ERR_INPUT_READ);
+            NgLogger::criticalError(
+                    tr("Error: the input file '%1' is not readable...").arg(parser.value("input")),
+                    NgError::ERR_CODE::ERR_INPUT_READ);
             return false; // end of game :(
         }
         else
@@ -300,19 +416,20 @@ bool NgCmdLineLoader::getInputFilesToGroupPost(QList<QFileInfo>         &filesTo
             if (fileInfo.isFile())
             {
                 filesToUpload << fileInfo;
-                if (ngPost->debugMode())
-                    ngPost->onLog(tr("+ File to %2: %1")
-                                          .arg(fileInfo.fileName())
-                                          .arg(postingParams->_doCompress ? tr("compress") : tr("post")),
-                                  true);
+                NgLogger::log(tr("+ File to %1: %2 (%3)")
+                                      .arg(postingParams->_doCompress ? tr("compress") : tr("post"))
+                                      .arg(fileInfo.fileName())
+                                      .arg(NgTools::humanSize(fileInfo.size())),
+                              true,
+                              NgLogger::DebugLevel::Debug);
             }
             else
             { // it's a directory
                 if (postingParams->_doCompress)
                 { // with compression
-                    if (ngPost->debugMode())
-                        ngPost->onLog(tr("+ Adding folder to Compress: %1").arg(fileInfo.absoluteFilePath()),
-                                      true);
+                    NgLogger::log(tr("+ Adding folder to Compress: %1").arg(fileInfo.absoluteFilePath()),
+                                  true,
+                                  NgLogger::DebugLevel::Debug);
                     filesToUpload << fileInfo;
                 }
                 else
@@ -324,14 +441,15 @@ bool NgCmdLineLoader::getInputFilesToGroupPost(QList<QFileInfo>         &filesTo
                         if (subFile.isReadable())
                         {
                             filesToUpload << subFile;
-                            if (ngPost->debugMode())
-                                ngPost->onLog(tr("+ subFile to post: %1").arg(subFile.fileName()), true);
+                            NgLogger::log(tr("+ subFile to post: %1").arg(subFile.fileName()),
+                                          true,
+                                          NgLogger::DebugLevel::Debug);
                         }
                         else
                         {
-                            ngPost->criticalError(tr("Error: the input subfile '%1' is not readable...")
-                                                          .arg(subFile.absoluteFilePath()),
-                                                  ERR_CODE::ERR_INPUT_READ);
+                            NgLogger::criticalError(tr("Error: the input subfile '%1' is not readable...")
+                                                            .arg(subFile.absoluteFilePath()),
+                                                    NgError::ERR_CODE::ERR_INPUT_READ);
                             return false; // end of game :(
                         }
                     } // for subfiles 1 level under directory
@@ -341,10 +459,10 @@ bool NgCmdLineLoader::getInputFilesToGroupPost(QList<QFileInfo>         &filesTo
 
         if (filesToUpload.isEmpty())
         {
-            ngPost->criticalError(tr("Error: the input folder '%1' has no files... (no recursivity without "
-                                     "--compress)")
-                                          .arg(fileInfo.absoluteFilePath()),
-                                  ERR_CODE::ERR_INPUT_READ);
+            NgLogger::criticalError(tr("Error: the input folder '%1' has no files... (no recursivity without "
+                                       "--compress)")
+                                            .arg(fileInfo.absoluteFilePath()),
+                                    NgError::ERR_CODE::ERR_INPUT_READ);
             return false; // end of game :(
         }
     }
@@ -353,17 +471,17 @@ bool NgCmdLineLoader::getInputFilesToGroupPost(QList<QFileInfo>         &filesTo
 
 bool NgCmdLineLoader::startFoldersMonitoring(bool                     &isMonitoring,
                                              QCommandLineParser const &parser,
-                                             NgPost *const             ngPost,
+                                             NgPost                   &ngPost,
                                              SharedParams             &postingParams)
 {
     if (parser.isSet(kOptionNames[Opt::MONITOR_DIR]))
     {
         if (!postingParams->_doCompress && (!postingParams->_doPar2 || !postingParams->_monitorIgnoreDir))
         {
-            ngPost->criticalError(
+            NgLogger::criticalError(
                     tr("Error syntax: --monitor only works with --compress or with --gen_par2 ONLY IF "
                        "MONITOR_IGNORE_DIR is enabled in config (--pack can be used)"),
-                    ERR_CODE::ERR_MONITOR_NO_COMPRESS);
+                    NgError::ERR_CODE::ERR_MONITOR_NO_COMPRESS);
             return false; // end of game :(
         }
         for (QString const &filePath : parser.values(kOptionNames[Opt::MONITOR_DIR]))
@@ -371,13 +489,13 @@ bool NgCmdLineLoader::startFoldersMonitoring(bool                     &isMonitor
             QFileInfo fi(filePath);
             if (!fi.exists() || !fi.isDir())
             {
-                ngPost->criticalError(tr("Error syntax: --monitor only uses folders as argument..."),
-                                      ERR_CODE::ERR_MONITOR_INPUT);
+                NgLogger::criticalError(tr("Error syntax: --monitor only uses folders as argument..."),
+                                        NgError::ERR_CODE::ERR_MONITOR_INPUT);
                 return false; // end of game :(
             }
             else
             {
-                ngPost->startFolderMonitoring(fi.absoluteFilePath());
+                ngPost.startFolderMonitoring(fi.absoluteFilePath());
                 isMonitoring = true;
             }
         }
@@ -387,17 +505,16 @@ bool NgCmdLineLoader::startFoldersMonitoring(bool                     &isMonitor
 
 bool NgCmdLineLoader::getAutoDirectories(QList<QDir>              &autoDirs,
                                          QCommandLineParser const &parser,
-                                         NgPost *const             ngPost,
                                          SharedParams             &postingParams)
 {
     if (parser.isSet(kOptionNames[Opt::AUTO_DIR]))
     {
         if (!postingParams->_doCompress && !postingParams->_doPar2)
         { // MB_TODO: not sure why? why ok with par2 but no compression?
-            ngPost->criticalError(
+            NgLogger::criticalError(
                     tr("Error syntax: --auto only works with --compress or --gen_par2 or --pack with at least "
                        "the keywords COMPRESS or GEN_PAR2 in PACK config"),
-                    ERR_CODE::ERR_AUTO_NO_COMPRESS);
+                    NgError::ERR_CODE::ERR_AUTO_NO_COMPRESS);
             return false; // end of game :(
         }
         for (QString const &filePath : parser.values(kOptionNames[Opt::AUTO_DIR]))
@@ -405,8 +522,8 @@ bool NgCmdLineLoader::getAutoDirectories(QList<QDir>              &autoDirs,
             QFileInfo fi(filePath);
             if (!fi.exists() || !fi.isDir())
             {
-                ngPost->criticalError(tr("Error syntax: --auto only uses folders as argument..."),
-                                      ERR_CODE::ERR_AUTO_INPUT);
+                NgLogger::criticalError(tr("Error syntax: --auto only uses folders as argument..."),
+                                        NgError::ERR_CODE::ERR_AUTO_INPUT);
                 return false; // end of game :(
             }
             else
@@ -419,12 +536,12 @@ bool NgCmdLineLoader::getAutoDirectories(QList<QDir>              &autoDirs,
                     QStringList subFolders = autoDirs.last().entryList(QDir::Dirs | QDir::NoDotAndDotDot);
                     if (subFolders.size())
                     {
-                        ngPost->criticalError(
+                        NgLogger::criticalError(
                                 tr("Error: you can only --auto without compression on folders that DON'T have "
                                    "any "
                                    "subfolders.\nThat's not the case for '%1' which contains folders: %2")
                                         .arg(fi.fileName(), subFolders.join(", ")),
-                                ERR_CODE::ERR_AUTO_INPUT);
+                                NgError::ERR_CODE::ERR_AUTO_INPUT);
                         return false; // end of game :(
                     }
                 }
@@ -434,9 +551,7 @@ bool NgCmdLineLoader::getAutoDirectories(QList<QDir>              &autoDirs,
     return true; // continue the game ;)
 }
 
-bool NgCmdLineLoader::loadPostingParameters(QCommandLineParser const &parser,
-                                            NgPost *const             ngPost,
-                                            SharedParams             &postingParams)
+bool NgCmdLineLoader::loadPostingParameters(QCommandLineParser const &parser, SharedParams &postingParams)
 {
     // number of threads
     if (parser.isSet(kOptionNames[Opt::THREAD]))
@@ -445,8 +560,8 @@ bool NgCmdLineLoader::loadPostingParameters(QCommandLineParser const &parser,
         postingParams->_nbThreads = parser.value(kOptionNames[Opt::THREAD]).toUShort(&ok);
         if (!ok)
         {
-            ngPost->criticalError(tr("You should give an integer for the number of threads (option -t)"),
-                                  ERR_CODE::ERR_NB_THREAD);
+            NgLogger::criticalError(tr("You should give an integer for the number of threads (option -t)"),
+                                    NgError::ERR_CODE::ERR_NB_THREAD);
             return false; // end of game :'(
         }
         if (postingParams->_nbThreads < 1)
@@ -463,11 +578,11 @@ bool NgCmdLineLoader::loadPostingParameters(QCommandLineParser const &parser,
             NntpArticle::setNbMaxRetry(nbRetry);
         else
         {
-            ngPost->criticalError(
+            NgLogger::criticalError(
                     tr("You should give an unisgned integer for the number of retry for posting an Article "
                        "(option "
                        "-r)"),
-                    ERR_CODE::ERR_NB_RETRY);
+                    NgError::ERR_CODE::ERR_NB_RETRY);
             return false; // end of game :'(
         }
     }
@@ -481,8 +596,8 @@ bool NgCmdLineLoader::loadPostingParameters(QCommandLineParser const &parser,
             NgConf::kArticleSize = size;
         else
         {
-            ngPost->criticalError(tr("You should give an integer for the article size (option -a)"),
-                                  ERR_CODE::ERR_ARTICLE_SIZE);
+            NgLogger::criticalError(tr("You should give an integer for the article size (option -a)"),
+                                    NgError::ERR_CODE::ERR_ARTICLE_SIZE);
             return false; // end of game :'(
         }
     }
@@ -498,14 +613,12 @@ bool NgCmdLineLoader::loadPostingParameters(QCommandLineParser const &parser,
     {
         postingParams->_obfuscateArticles = true;
         if (!postingParams->quietMode())
-            ngPost->onLog(tr("Do article obfuscation (the subject of each Article will be a UUID)\n"), true);
+            NgLogger::log(tr("Do article obfuscation (the subject of each Article will be a UUID)\n"), true);
     }
     return true; // continue the game ;)
 }
 
-bool NgCmdLineLoader::loadServersParameters(QCommandLineParser const &parser,
-                                            NgPost *const             ngPost,
-                                            SharedParams             &postingParams)
+bool NgCmdLineLoader::loadServersParameters(QCommandLineParser const &parser, SharedParams &postingParams)
 {
     // 1.: NNTP server following the format (<user>:<pass>@@@)?<host>:<port>:<nbCons>:(no)?ssl
     if (parser.isSet(kOptionNames[Opt::SERVER]))
@@ -534,10 +647,10 @@ bool NgCmdLineLoader::loadServersParameters(QCommandLineParser const &parser,
             }
             else
             {
-                ngPost->criticalError(tr("Syntax error on server details for %1, the format should be: %2")
-                                              .arg(serverParam)
-                                              .arg("(<user>:<pass>@@@)?<host>:<port>:<nbCons>:(no)?ssl"),
-                                      ERR_CODE::ERR_SERVER_REGEX);
+                NgLogger::criticalError(tr("Syntax error on server details for %1, the format should be: %2")
+                                                .arg(serverParam)
+                                                .arg("(<user>:<pass>@@@)?<host>:<port>:<nbCons>:(no)?ssl"),
+                                        NgError::ERR_CODE::ERR_SERVER_REGEX);
                 return false; // end of game :'(
             }
         }
@@ -570,8 +683,8 @@ bool NgCmdLineLoader::loadServersParameters(QCommandLineParser const &parser,
                 server->port = port;
             else
             {
-                ngPost->criticalError(tr("You should give an integer for the port (option -P)"),
-                                      ERR_CODE::ERR_SERVER_PORT);
+                NgLogger::criticalError(tr("You should give an integer for the port (option -P)"),
+                                        NgError::ERR_CODE::ERR_SERVER_PORT);
                 return false; // end of game :'(
             }
         }
@@ -592,8 +705,9 @@ bool NgCmdLineLoader::loadServersParameters(QCommandLineParser const &parser,
                 server->nbCons = nbCons;
             else
             {
-                ngPost->criticalError(tr("You should give an integer for the number of connections (option -n)"),
-                                      ERR_CODE::ERR_SERVER_CONS);
+                NgLogger::criticalError(
+                        tr("You should give an integer for the number of connections (option -n)"),
+                        NgError::ERR_CODE::ERR_SERVER_CONS);
                 return false; // end of game :'(
             }
         }
@@ -602,9 +716,7 @@ bool NgCmdLineLoader::loadServersParameters(QCommandLineParser const &parser,
     return true; // continue the game ;)
 }
 
-bool NgCmdLineLoader::loadPackingParameters(QCommandLineParser const &parser,
-                                            NgPost *const             ngPost,
-                                            SharedParams             &postingParams)
+bool NgCmdLineLoader::loadPackingParameters(QCommandLineParser const &parser, SharedParams &postingParams)
 {
     // General packing attributes:
     if (parser.isSet(kOptionNames[Opt::PACK]))
@@ -679,29 +791,29 @@ bool NgCmdLineLoader::loadPackingParameters(QCommandLineParser const &parser,
                 postingParams->_par2Path = val;
             else
             {
-                ngPost->criticalError(tr("The given par2 path is not executable: %1").arg(val),
-                                      ERR_CODE::ERR_PAR2_PATH);
+                NgLogger::criticalError(tr("The given par2 path is not executable: %1").arg(val),
+                                        NgError::ERR_CODE::ERR_PAR2_PATH);
                 return false; // end of game :'(
             }
         }
     }
     if (postingParams->_doPar2 && postingParams->_par2Pct == 0 && postingParams->_par2Args.isEmpty())
     {
-        ngPost->criticalError(
+        NgLogger::criticalError(
                 tr("Error: can't generate par2 if the redundancy percentage is null or PAR2_ARGS is not "
                    "provided...\nEither use --par2_pct or set PAR2_PCT or PAR2_ARGS in the config file."),
-                ERR_CODE::ERR_PAR2_ARGS);
+                NgError::ERR_CODE::ERR_PAR2_ARGS);
         return false; // end of game :'(
     }
 
     return true; // continue the game ;)
 }
 
-void NgCmdLineLoader::syntax(NgPost *const ngPost, char *appName)
+void NgCmdLineLoader::syntax(NgPost const &ngPost, char *appName)
 {
-    QString      app  = QFileInfo(appName).fileName();
-    QTextStream &cout = ngPost->cout();
-    cout << ngPost->desc() << "\n"
+    QString     app = QFileInfo(appName).fileName();
+    QTextStream cout(stdout);
+    cout << ngPost.desc() << "\n"
          << tr("Syntax: ") << app
          << " (options)* (-i <file or folder> | --auto <folder> | --monitor <folder>)+\n";
     for (QCommandLineOption const &opt : kCmdOptions)

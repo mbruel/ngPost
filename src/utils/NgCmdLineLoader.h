@@ -30,7 +30,8 @@ class NgCmdLineLoader : public PureStaticClass
 {
     Q_DECLARE_TR_FUNCTIONS(NgCmdLineLoader); // tr() without QObject using QCoreApplication::translate
 
-    static constexpr char const *kNntpServerStrRegExp =
+    static QList<QCommandLineOption> const kCmdOptions;
+    static constexpr char const           *kNntpServerStrRegExp =
             "^(([^:]+):([^@]+)@@@)?([\\w\\.\\-_]+):(\\d+):(\\d+):(no)?ssl$";
 
 public:
@@ -40,42 +41,36 @@ public:
      * \param SharedParams that will be overwritten (previous unset parameters are kept)
      * \return list of errors (empty if all ok)
      */
-    static bool loadCmdLine(char *appName, NgPost *const ngPost, SharedParams &postingParams);
+    static bool loadCmdLine(char *appName, NgPost &ngPost, SharedParams &postingParams);
 
 private:
-    static void syntax(NgPost *const ngPost, char *appName);
+    static void syntax(NgPost const &ngPost, char *appName);
 
     static void prepareAndStartPostingSingleFiles(QString                  &rarName,
                                                   QString                  &rarPass,
                                                   std::string const        &from,
                                                   QList<QFileInfo>         &filesToUpload,
                                                   QCommandLineParser const &parser,
-                                                  NgPost *const             ngPost,
+                                                  NgPost                   &ngPost,
                                                   SharedParams             &postingParams);
 
     static bool getInputFilesToGroupPost(QList<QFileInfo>         &filesToUpload,
                                          QCommandLineParser const &parser,
-                                         NgPost *const             ngPost,
                                          SharedParams             &postingParams);
 
     static bool startFoldersMonitoring(bool                     &isMonitoring,
                                        QCommandLineParser const &parser,
-                                       NgPost *const             ngPost,
+                                       NgPost                   &ngPost,
                                        SharedParams             &postingParams);
 
-    static bool getAutoDirectories(QList<QDir>              &autoDirs,
-                                   QCommandLineParser const &parser,
-                                   NgPost *const             ngPost,
-                                   SharedParams             &postingParams);
-
     static bool
-    loadServersParameters(QCommandLineParser const &parser, NgPost *const ngPost, SharedParams &postingParams);
+    getAutoDirectories(QList<QDir> &autoDirs, QCommandLineParser const &parser, SharedParams &postingParams);
 
-    static bool
-    loadPackingParameters(QCommandLineParser const &parser, NgPost *const ngPost, SharedParams &postingParams);
+    static bool loadServersParameters(QCommandLineParser const &parser, SharedParams &postingParams);
 
-    static bool
-    loadPostingParameters(QCommandLineParser const &parser, NgPost *const ngPost, SharedParams &postingParams);
+    static bool loadPackingParameters(QCommandLineParser const &parser, SharedParams &postingParams);
+
+    static bool loadPostingParameters(QCommandLineParser const &parser, SharedParams &postingParams);
 };
 
 #endif // NGCMDLINELOADER_H

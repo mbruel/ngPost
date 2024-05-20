@@ -27,6 +27,7 @@
 #endif
 
 #include "NgPost.h"
+#include "utils/NgLogger.h"
 #include "utils/NgTools.h"
 
 #ifdef __linux__
@@ -56,6 +57,9 @@ int main(int argc, char *argv[])
     signal(SIGUSR1, &handleSigUsr); // kill -s SIGUSR1 $(pidof ngPost) to hide/show the GUI
 #endif
 
+    // Initialigze the logger!
+    NgLogger::createInstance();
+
     //    qDebug() << "argc: " << argc;
     app = new NgPost(argc, argv);
     app->checkForNewVersion();
@@ -77,6 +81,7 @@ int main(int argc, char *argv[])
     {
         if (app->checkSupportSSL())
         {
+            app->initHistoryDatabase();
             exitCode = app->startEventLoop();
 
             if (app->nzbCheck())
@@ -89,14 +94,17 @@ int main(int argc, char *argv[])
     }
     else
     {
+        // Process events without starting the event loop to print the logs/errors
+        qApp->processEvents();
+
 #ifdef __DEBUG__
         std::cout << "Nothing to do...\n";
         std::cout.flush();
 #endif
     }
 
-    if (app->errCode() != 0)
-        exitCode = app->errCode();
+    if (NgError::errCode() != NgError::ERR_CODE::NONE)
+        exitCode = static_cast<int>(NgError::errCode());
 
     delete app;
     return exitCode;

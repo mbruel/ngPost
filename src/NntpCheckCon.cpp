@@ -18,19 +18,22 @@
 //========================================================================
 
 #include "NntpCheckCon.h"
-#include "NzbCheck.h"
 #include "nntp/Nntp.h"
+#include "NzbCheck.h"
 #include <QSslSocket>
 
-NntpCheckCon::NntpCheckCon(NzbCheck *nzbCheck, int id, const NntpServerParams &srvParams)
-    : QObject(),
-      _nzbCheck(nzbCheck), _id(id), _srvParams(srvParams),
-      _socket(nullptr), _isConnected(false),
-      _postingState(PostingState::NOT_CONNECTED),
-      _currentArticle()
+NntpCheckCon::NntpCheckCon(NzbCheck *nzbCheck, int id, NntpServerParams const &srvParams)
+    : QObject()
+    , _nzbCheck(nzbCheck)
+    , _id(id)
+    , _srvParams(srvParams)
+    , _socket(nullptr)
+    , _isConnected(false)
+    , _postingState(PostingState::NOT_CONNECTED)
+    , _currentArticle()
 {
     connect(this, &NntpCheckCon::startConnection, this, &NntpCheckCon::onStartConnection, Qt::QueuedConnection);
-    connect(this, &NntpCheckCon::killConnection,  this, &NntpCheckCon::onKillConnection,  Qt::QueuedConnection);
+    connect(this, &NntpCheckCon::killConnection, this, &NntpCheckCon::onKillConnection, Qt::QueuedConnection);
 }
 
 NntpCheckCon::~NntpCheckCon()
@@ -38,7 +41,7 @@ NntpCheckCon::~NntpCheckCon()
     if (_socket)
     {
         disconnect(_socket, &QAbstractSocket::disconnected, this, &NntpCheckCon::onDisconnected);
-        disconnect(_socket, &QIODevice::readyRead,          this, &NntpCheckCon::onReadyRead);
+        disconnect(_socket, &QIODevice::readyRead, this, &NntpCheckCon::onReadyRead);
         _socket->disconnectFromHost();
         if (_socket->state() != QAbstractSocket::UnconnectedState)
             _socket->waitForDisconnected();
@@ -56,13 +59,16 @@ void NntpCheckCon::onStartConnection()
     _socket->setSocketOption(QAbstractSocket::KeepAliveOption, true);
     _socket->setSocketOption(QAbstractSocket::LowDelayOption, 1);
 
-    connect(_socket, &QAbstractSocket::connected,    this, &NntpCheckCon::onConnected,    Qt::DirectConnection);
+    connect(_socket, &QAbstractSocket::connected, this, &NntpCheckCon::onConnected, Qt::DirectConnection);
     connect(_socket, &QAbstractSocket::disconnected, this, &NntpCheckCon::onDisconnected, Qt::DirectConnection);
-    connect(_socket, &QIODevice::readyRead,          this, &NntpCheckCon::onReadyRead,    Qt::DirectConnection);
+    connect(_socket, &QIODevice::readyRead, this, &NntpCheckCon::onReadyRead, Qt::DirectConnection);
 
-    qRegisterMetaType<QAbstractSocket::SocketError>("SocketError" );
-    connect(_socket, SIGNAL(errorOccurred(QAbstractSocket::SocketError)),
-            this, SLOT(onErrors(QAbstractSocket::SocketError)), Qt::DirectConnection);
+    qRegisterMetaType<QAbstractSocket::SocketError>("SocketError");
+    connect(_socket,
+            SIGNAL(errorOccurred(QAbstractSocket::SocketError)),
+            this,
+            SLOT(onErrors(QAbstractSocket::SocketError)),
+            Qt::DirectConnection);
 
     _socket->connectToHost(_srvParams.host, _srvParams.port);
 }
@@ -71,7 +77,7 @@ void NntpCheckCon::onKillConnection()
 {
     if (_socket)
     {
-        disconnect(_socket, &QIODevice::readyRead,          this, &NntpCheckCon::onReadyRead);
+        disconnect(_socket, &QIODevice::readyRead, this, &NntpCheckCon::onReadyRead);
         disconnect(_socket, &QAbstractSocket::disconnected, this, &NntpCheckCon::onDisconnected);
         _socket->disconnectFromHost();
         if (_socket->state() != QAbstractSocket::UnconnectedState)
@@ -86,9 +92,12 @@ void NntpCheckCon::onConnected()
     _isConnected = true;
     if (_srvParams.useSSL)
     {
-        QSslSocket *sslSock = static_cast<QSslSocket*>(_socket);
-        connect(sslSock, SIGNAL(sslErrors(QList<QSslError>)),
-                this, SLOT(onSslErrors(QList<QSslError>)), Qt::DirectConnection);
+        QSslSocket *sslSock = static_cast<QSslSocket *>(_socket);
+        connect(sslSock,
+                SIGNAL(sslErrors(QList<QSslError>)),
+                this,
+                SLOT(onSslErrors(QList<QSslError>)),
+                Qt::DirectConnection);
 
         connect(sslSock, &QSslSocket::encrypted, this, &NntpCheckCon::onEncrypted, Qt::DirectConnection);
         emit sslSock->startClientEncryption();
@@ -116,7 +125,7 @@ void NntpCheckCon::onDisconnected()
 {
     if (_socket)
     {
-        _isConnected    = false;
+        _isConnected = false;
         _socket->deleteLater();
         _socket = nullptr;
     }
@@ -128,11 +137,11 @@ void NntpCheckCon::onReadyRead()
     while (_isConnected && _socket->canReadLine())
     {
         QByteArray line = _socket->readLine();
-//        qDebug() << "line: " << line.constData();
+        //        qDebug() << "line: " << line.constData();
 
         if (_postingState == PostingState::CHECKING_ARTICLE)
         {
-            if(strncmp(line.constData(), Nntp::getResponse(430), 3) == 0)
+            if (strncmp(line.constData(), Nntp::getResponse(430), 3) == 0)
                 _nzbCheck->missingArticle(_currentArticle);
 
             _nzbCheck->articleChecked();
@@ -142,9 +151,12 @@ void NntpCheckCon::onReadyRead()
         else if (_postingState == PostingState::CONNECTED)
         {
             // Check welcome message
-            if(strncmp(line.constData(), Nntp::getResponse(200), 3) != 0){
-                emit errorConnecting(tr("[Connection #%1] Error connecting to server %2:%3").arg(
-                                         _id).arg(_srvParams.host).arg(_srvParams.port));
+            if (strncmp(line.constData(), Nntp::getResponse(200), 3) != 0)
+            {
+                emit errorConnecting(tr("[Connection #%1] Error connecting to server %2:%3")
+                                             .arg(_id)
+                                             .arg(_srvParams.host)
+                                             .arg(_srvParams.port));
                 _closeConnection();
             }
             else
@@ -169,9 +181,13 @@ void NntpCheckCon::onReadyRead()
         else if (_postingState == PostingState::AUTH_USER)
         {
             // validate the reply
-            if(strncmp(line.constData(), Nntp::getResponse(381), 2) != 0){
-                emit errorConnecting(tr("[Connection #%1] Error sending user '%4' to server %2:%3").arg(
-                                         _id).arg(_srvParams.host).arg(_srvParams.port).arg(_srvParams.user.c_str()));
+            if (strncmp(line.constData(), Nntp::getResponse(381), 2) != 0)
+            {
+                emit errorConnecting(tr("[Connection #%1] Error sending user '%4' to server %2:%3")
+                                             .arg(_id)
+                                             .arg(_srvParams.host)
+                                             .arg(_srvParams.port)
+                                             .arg(_srvParams.user.c_str()));
                 _closeConnection();
             }
             else
@@ -187,10 +203,15 @@ void NntpCheckCon::onReadyRead()
         }
         else if (_postingState == PostingState::AUTH_PASS)
         {
-            if(strncmp(line.constData(), Nntp::getResponse(281), 2) != 0){
-                emit errorConnecting(tr("[Connection #%1] Error authentication to server %2:%3 with user '%4' and pass '%5'").arg(
-                                         _id).arg(_srvParams.host).arg(_srvParams.port).arg(
-                                         _srvParams.user.c_str()).arg(_srvParams.pass.c_str()));
+            if (strncmp(line.constData(), Nntp::getResponse(281), 2) != 0)
+            {
+                emit errorConnecting(
+                        tr("[Connection #%1] Error authentication to server %2:%3 with user '%4' and pass '%5'")
+                                .arg(_id)
+                                .arg(_srvParams.host)
+                                .arg(_srvParams.port)
+                                .arg(_srvParams.user.c_str())
+                                .arg(_srvParams.pass.c_str()));
                 _closeConnection();
             }
             else
@@ -202,14 +223,13 @@ void NntpCheckCon::onReadyRead()
     }
 }
 
-void NntpCheckCon::onSslErrors(const QList<QSslError> &errors)
+void NntpCheckCon::onSslErrors(QList<QSslError> const &errors)
 {
     QString err("Error SSL Socket:\n");
-    for(int i = 0 ; i< errors.size() ; ++i)
+    for (int i = 0; i < errors.size(); ++i)
         err += QString("\t- %1\n").arg(errors[i].errorString());
     _nzbCheck->error(err);
     _closeConnection();
-
 }
 
 void NntpCheckCon::onErrors(QAbstractSocket::SocketError)

@@ -19,15 +19,18 @@
 #ifndef POSTER_H
 #define POSTER_H
 
+#include <QCoreApplication>
 #include <QMutex>
 #include <QQueue>
 #include <QThread>
 #include <QVector>
-class NgPost;
+
 class ArticleBuilder;
 class NntpConnection;
 class NntpArticle;
 class PostingJob;
+
+using AtomicBool = QAtomicInteger<unsigned short>; // 16 bit only (faster than using 8 bit variable...)
 
 /*!
  * \brief Poster is a container class that has 2 Threads
@@ -42,34 +45,38 @@ class PostingJob;
  */
 class Poster
 {
-    friend class ArticleBuilder;
+    Q_DECLARE_TR_FUNCTIONS(Poster); // tr() without QObject using QCoreApplication::translate
+
+    friend class ArticleBuilder; // MB_TODO: check if we can avoid! we could?
 
 private:
-    const ushort      _id;
-    NgPost *const     _ngPost;
-    PostingJob *const _job;
+    const ushort      _id;  //!< poster id (a PostingJob, its owner, has several)
+    PostingJob *const _job; //!< owner
 
-    QThread _builderThread;
-    QThread _connectionsThread;
+    QString _logPrefix; //!< log prefix: Poster[<_id>]
 
-    ArticleBuilder           *_articleBuilder;
-    QVector<NntpConnection *> _nntpConnections; //!< we don't own them, we just move them to _connectionsThread
+    QThread _builderThread;     //!< thread that runs _articleBuilder
+    QThread _connectionsThread; //!< thread that runs the _nntpConnections
 
-    QQueue<NntpArticle *> _articles;
-    QMutex                _secureArticles;
+    ArticleBuilder           *_articleBuilder;  //!< build NntpArticles. deleteLater when stopThreads()
+    QVector<NntpConnection *> _nntpConnections; //!< post NntpArticles. deleteLater when stopThreads()
+
+    QQueue<NntpArticle *> _articles; //!< NntpArticle produced by _articleBuilder posted on _nntpConnections
+    QMutex                _secureArticles; //!< secure _articles as different producer and consumer threads
+
+    AtomicBool _hasBeenStopped; //!< know if the the posting has been stopped before normal end
 
 public:
     Poster(PostingJob *job, ushort id);
     ~Poster();
 
     void addConnection(NntpConnection *connection);
-#ifdef __RELEASE_ARTICLES_WHEN_CON_FAILS__
-    uint nbActiveConnections() const;
-#endif
 
     NntpArticle *getNextArticle(QString const &conPrefix);
+
 #ifdef __RELEASE_ARTICLES_WHEN_CON_FAILS__
     void releaseArticle(QString const &conPrefix, NntpArticle *article);
+    uint nbActiveConnections() const;
 #endif
 
     bool tryResumePostWhenConnectionLost() const;
@@ -88,6 +95,9 @@ public:
 
 private:
     NntpArticle *_prepareNextArticle(QString const &threadName, bool fillQueue = true);
+
+    void _log(QString const &aMsg, bool newline = true) const; //!< log function for QString
+    void _error(QString const &error) const;
 };
 
 void Poster::lockQueue() { _secureArticles.lock(); }

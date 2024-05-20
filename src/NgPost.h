@@ -49,6 +49,7 @@ class Database;
 #include "NgConf.h"
 #include "NgError.h"
 #include "PostingParams.h"
+#include "utils/NgLogger.h"
 
 #include <QTimer>
 
@@ -76,10 +77,6 @@ class NgPost : public QObject, public CmdOrGuiApp
     friend class PostingJob;
     friend class AboutNgPost;
 
-signals:
-    void log(QString msg, bool newline) const; //!< in case we signal from another thread
-    void error(QString msg);                   //!< in case we signal from another thread
-
 private:
     enum class AppMode
     {
@@ -103,13 +100,8 @@ private:
      */
     NzbCheck *_nzbCheck;
 
-    mutable QTextStream _cout; //!< stream for stdout
-    mutable QTextStream _cerr; //!< stream for stderr
-
-    NgError::ERR_CODE _err;
-    ushort            _debug;
-    bool              _dispProgressBar;
-    bool              _dispFilesPosting;
+    bool _dispProgressBar;
+    bool _dispFilesPosting;
 
     QTimer    _progressbarTimer; //!< timer to refresh the upload information (progressbar bar, avg. speed)
     int const _refreshRate;      //!< refresh rate
@@ -138,9 +130,6 @@ private:
     QNetworkProxy _proxySocks5;
     QString       _proxyUrl;
 
-    QFile       *_logFile;
-    QTextStream *_logStream;
-
     Database *_dbHistory;
 
 #ifdef __USE_HMI__
@@ -148,9 +137,6 @@ private:
 #endif
 
     static constexpr char const *kTranslationPath = ":/lang";
-
-    //    static constexpr char const *sNntpServerStrRegExp =
-    //            "^(([^:]+):([^@]+)@@@)?([\\w\\.\\-_]+):(\\d+):(\\d+):(no)?ssl$";
 
     static constexpr char const *kProxyStrRegExp = "^(([^:]+):([^@]+)@)?([\\w\\.\\-_]+):(\\d+)$";
 
@@ -173,16 +159,16 @@ public:
     int startHMI() override;
 #endif
 
-    QTextStream &cout() { return _cout; }
-
-    inline int errCode() const;
+    bool quietMode() const { return _postingParams->quietMode(); }
 
     void beQuiet()
     {
-        _debug            = 0;
+        NgLogger::setDebug(NgLogger::DebugLevel::None);
         _dispProgressBar  = false;
         _dispFilesPosting = false;
     }
+
+    bool initHistoryDatabase();
 
     QStringList parseDefaultConfig();
 
@@ -214,10 +200,6 @@ public:
     bool hasMonitoringPostingJobs() const;
     void closeAllMonitoringJobs();
 
-    inline bool debugMode() const;
-    inline bool debugFull() const;
-    inline void setDebug(ushort level);
-
     inline bool dispPostingFile() const;
 
     void saveConfig() const;
@@ -247,7 +229,7 @@ public:
     bool                  initHistoryDatabase() const;
     inline Database      *historyDatabase() const;
 
-    void           startLogInFile();
+    void           startLogInFile() const;
     void           setDisplayProgress(QString const &txtValue);
     void           setProxy(QString const &url);
     void           setShutdownCmd(QString const &cmd) { _shutdownCmd = cmd; }
@@ -256,19 +238,13 @@ public:
     bool dispProgressBar() const { return _dispProgressBar; }
     bool dispFilesPosting() const { return _dispFilesPosting; }
 
-    bool loggingInFile() const { return _logStream != nullptr; }
-
 #ifdef __USE_HMI__
     bool hmiUseFixedPassword() const;
 #endif
 
     void showVersionASCII() const;
-    void setDebugLevel(ushort lvl) { _debug = lvl; }
 
     bool doNzbCheck(QString const &nzbPath);
-
-    //! available for NgCmdLineLoader
-    void criticalError(QString const &error, NgError::ERR_CODE code);
 
     void startFolderMonitoring(QString const &folderPath);
     void post(QFileInfo const &fileInfo, QString const &monitorFolder = "");
@@ -295,11 +271,8 @@ public slots:
 #if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
     void onNetworkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility accessible);
 #endif
-    void onLog(QString msg, bool newline) const;
-    void onError(QString msg);
 
 private slots:
-    void onErrorConnecting(QString err);
     void onRefreshprogressbarBar();
 
     void onNewFileToProcess(QFileInfo const &fileInfo);
@@ -316,14 +289,6 @@ private:
     void _prepareNextPacking();
 
     void _stopMonitoring();
-
-    void _log(QString const &aMsg, bool newline = true) const; //!< log function for QString
-    void _error(QString const &error) const;
-    void _error(QStringList const &errors) const
-    {
-        for (auto const &err : errors)
-            _error(err);
-    }
 
     // Static functions
 public:
@@ -347,8 +312,6 @@ public:
 
 bool NgPost::nzbCheck() const { return _nzbCheck != nullptr; }
 
-int NgPost::errCode() const { return static_cast<int>(_err); }
-
 QString NgPost::asciiArtWithVersion()
 {
     return QString("%1                          v%2\n").arg(NgConf::kNgPostASCII, NgConf::kVersion);
@@ -359,14 +322,7 @@ QList<QString> NgPost::languages() const { return _translators.keys(); }
 bool NgPost::isPosting() const { return _activeJob != nullptr; }
 bool NgPost::hasPostingJobs() const { return (_activeJob || _pendingJobs.size()) ? true : false; }
 
-bool NgPost::debugMode() const { return _debug != 0; }
-bool NgPost::debugFull() const { return _debug == 2; }
-void NgPost::setDebug(ushort level) { _debug = level; }
-
 bool NgPost::dispPostingFile() const { return _dispFilesPosting; }
-
-// qint64         NgPost::articleSize() { return NgConf::kArticleSize; }
-// QString const &NgPost::space() { return NgConf::kSpace; }
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
 QStringList NgPost::parseCombinedArgString(QString const &program)

@@ -1,12 +1,14 @@
 #include "PostingParams.h"
+
 #include <QCoreApplication>
 #include <QDir>
 #include <QThread>
+#include <QUrl>
 #ifdef __USE_TMP_RAM__
 #  include <QStorageInfo>
 #endif
 
-#include "NgPost.h" // for treadsafe logging
+#include "NgPost.h" // for MainParams::saveConfig
 #include "nntp/NntpArticle.h"
 #include "nntp/NntpServerParams.h"
 #include "utils/NgTools.h"
@@ -16,7 +18,7 @@ using namespace NgConf;
 MainParams::~MainParams()
 {
 #ifdef __DEBUG__
-    qDebug() << "[MB_TRACE][MainParams] destroyed... is it on purpose?";
+    qDebug() << "[MB_TRACE][MainParams] destroyed... is it on purpose? (QSharedData)";
 #endif
 #ifdef __USE_TMP_RAM__
     if (_storage)
@@ -99,7 +101,7 @@ std::string MainParams::getFrom() const
     return _from;
 }
 
-QString MainParams::setRamPathAndTestStorage(NgPost *const ngPost, QString const &ramPath)
+QString MainParams::setRamPathAndTestStorage(QString const &ramPath)
 {
     QFileInfo fi(ramPath);
     if (!fi.isDir())
@@ -109,7 +111,7 @@ QString MainParams::setRamPathAndTestStorage(NgPost *const ngPost, QString const
 
     _ramPath = ramPath;
     _storage = new QStorageInfo(_ramPath);
-    ngPost->onLog(tr("Using RAM Storage %1, root: %2, type: %3, size: %4, available: %5")
+    NgLogger::log(tr("Using RAM Storage %1, root: %2, type: %3, size: %4, available: %5")
                           .arg(_ramPath)
                           .arg(_storage->rootPath())
                           .arg(QString(_storage->fileSystemType()))
@@ -196,11 +198,9 @@ QStringList PostingParams::buildCompressionCommandArgumentsList() const
             else
                 volSize = static_cast<uint>(postSize / _params->rarMax()) + 1;
 
-            if (_ngPost->debugMode())
-                emit _ngPost->log(
-                        QCoreApplication::translate("PostingParams", "postSize for %1 : %2 MB => volSize: %3")
-                                .arg(_nzbFilePath, postSize)
-                                .arg(volSize),
+            if (NgLogger::isDebugMode())
+                NgLogger::log(
+                        tr("postSize for %1 : %2 MB => volSize: %3").arg(_nzbFilePath, postSize).arg(volSize),
                         true);
         }
         args << QString("-v%1m").arg(volSize);
@@ -213,16 +213,14 @@ bool PostingParams::_checkTmpFolder() const
 {
     if (_params->tmpPath().isEmpty())
     {
-        emit _ngPost->error(QCoreApplication::translate(
-                "PostingParams", "NO_POSSIBLE_COMPRESSION: You must define the temporary directory..."));
+        NgLogger::error(tr("NO_POSSIBLE_COMPRESSION: You must define the temporary directory..."));
         return false;
     }
 
     QFileInfo fi(_params->tmpPath());
     if (!fi.exists() || !fi.isDir() || !fi.isWritable())
     {
-        emit _ngPost->error(QCoreApplication::translate(
-                "PostingParams", "ERROR: the temporary directory must be a WRITABLE directory..."));
+        NgLogger::error(tr("ERROR: the temporary directory must be a WRITABLE directory..."));
         return false;
     }
 
@@ -239,8 +237,7 @@ bool PostingParams::canCompress() const
     QFileInfo fi(_params->rarPath());
     if (!fi.exists() || !fi.isFile() || !fi.isExecutable())
     {
-        emit _ngPost->error(
-                QCoreApplication::translate("PostingParams", "ERROR: the RAR path is not executable..."));
+        NgLogger::error(tr("ERROR: the RAR path is not executable..."));
         return false;
     }
 
@@ -257,7 +254,7 @@ bool PostingParams::canGenPar2() const
     QFileInfo fi(_params->par2Path());
     if (!fi.exists() || !fi.isFile() || !fi.isExecutable())
     {
-        emit _ngPost->error(QCoreApplication::translate("PostingParams", "ERROR: par2 is not available..."));
+        NgLogger::error(tr("ERROR: par2 is not available..."));
         return false;
     }
 
@@ -522,7 +519,7 @@ bool MainParams::saveConfig(QString const &configFilePath, NgPost const &ngPost)
            << tr("## ~/ngPost.log on Linux and MacOS, in the executable folder for Windows") << "\n"
            << tr("## The log is overwritten each time ngPost is launched") << "\n"
            << tr("## => after a crash, please SAVE the log before relaunching ngPost") << "\n"
-           << (ngPost.loggingInFile() ? "" : "#") << "LOG_IN_FILE = true"
+           << (NgLogger::loggingInFile() ? "" : "#") << "LOG_IN_FILE = true"
            << "\n"
            << "\n"
            << "\n"

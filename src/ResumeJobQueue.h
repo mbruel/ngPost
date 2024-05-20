@@ -19,17 +19,14 @@
 #ifndef RESUMEJOBQUEUE_H
 #define RESUMEJOBQUEUE_H
 
-#include "NgPost.h"
 #include "utils/PureStaticClass.h"
 #include <QStringList>
 #include <QtGlobal>
 
-class NgPost;
-
 class ResumeJobQueue : public PureStaticClass
 {
 public:
-    static QStringList postedFilesFromNzb(NgPost const &ngPost, QString const &nzbPath);
+    static QStringList postedFilesFromNzb(QString const &nzbPath);
 };
 
 #endif // RESUMEJOBQUEUE_H

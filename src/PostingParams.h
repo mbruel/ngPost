@@ -29,11 +29,11 @@
 #ifdef __USE_TMP_RAM__
 class QStorageInfo;
 #endif
-class NgPost;
 struct NntpServerParams;
 class PostingParams;
 class MainParams;
 class PostingWidget;
+class NgPost;
 
 // SharedParams is shared by all PostingJobs::PostingParamsPtr
 // if a PostingJobs wants a variant of the MainParams it will have to explicitely call detach()
@@ -248,15 +248,17 @@ private:
     //    QList<NntpServerParams *> &nntpServers() { return _nntpServers; }
 
 #ifdef __USE_TMP_RAM__
-    QString setRamPathAndTestStorage(NgPost *const ngPost, QString const &ramPath);
+    QString setRamPathAndTestStorage(QString const &ramPath);
 #endif
 };
 
 class PostingParams
 {
+    Q_DECLARE_TR_FUNCTIONS(PostingParams); // tr() without QObject using QCoreApplication::translate
+
 private:
-    NgPost *const _ngPost;
-    SharedParams  _params;
+    NgPost      &_ngPost;
+    SharedParams _params;
 
     const QString       _rarName;
     const QString       _rarPass;
@@ -276,7 +278,7 @@ private:
     mutable bool _splitArchive; //!< might be set by buildCompressionCommandArgumentsList
 
 public:
-    PostingParams(NgPost *const                 ngPost,
+    PostingParams(NgPost                       &ngPost,
                   QString const                &rarName,
                   QString const                &rarPass,
                   QString const                &nzbFilePath,

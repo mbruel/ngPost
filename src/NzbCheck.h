@@ -43,6 +43,7 @@ private:
     QString         _nzbPath;
     QStack<QString> _articles;
 
+    // MB_TODO : make NzbCheck use NgLogger...
     QTextStream _cout; //!< stream for stdout
     QTextStream _cerr; //!< stream for stderr
 

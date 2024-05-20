@@ -23,15 +23,15 @@
 #include <QRegularExpression>
 #include <QXmlStreamReader>
 
-#include "NgPost.h"
+#include "utils/NgLogger.h"
 #include "utils/NgTools.h"
 
-QStringList ResumeJobQueue::postedFilesFromNzb(NgPost const &ngPost, QString const &nzbPath)
+QStringList ResumeJobQueue::postedFilesFromNzb(QString const &nzbPath)
 {
     QFile xmlFile(nzbPath);
     if (!xmlFile.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        ngPost.onLog(QString("Can't open nzb file: %1").arg(nzbPath), true);
+        NgLogger::error(QString("Can't open nzb file: %1").arg(nzbPath));
         return QStringList();
     }
     QXmlStreamReader xmlReader(&xmlFile);

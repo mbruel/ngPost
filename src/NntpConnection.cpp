@@ -37,7 +37,7 @@
 #  include <QTimer>
 #endif
 
-NntpConnection::NntpConnection(NgPost *ngPost, int id, NntpServerParams const &srvParams)
+NntpConnection::NntpConnection(NgPost const &ngPost, int id, NntpServerParams const &srvParams)
     : QObject()
     , _id(id)
     , _srvParams(srvParams)
@@ -72,9 +72,9 @@ NntpConnection::NntpConnection(NgPost *ngPost, int id, NntpServerParams const &s
 NntpConnection::~NntpConnection()
 {
 #if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
-    qDebug() << "Destruction NntpConnection " << _logPrefix;
+    qDebug() << "Destruction " << _logPrefix << " from thread: " << QThread::currentThread()->objectName();
 #endif
-    if (_ngPost->debugMode())
+    if (NgLogger::isDebugMode())
         _log("Destructing connection..");
 
     // this should already have been triggered as the sockets lives in another thread
@@ -137,7 +137,7 @@ void NntpConnection::onStartConnection()
         _timeout = new QTimer();
         connect(_timeout, &QTimer::timeout, this, &NntpConnection::onTimeout);
     }
-    _timeout->start(_ngPost->getSocketTimeout());
+    _timeout->start(_ngPost.getSocketTimeout());
 #endif
 }
 
@@ -153,7 +153,7 @@ void NntpConnection::onKillConnection()
 
     if (_socket)
     {
-        if (_ngPost->debugMode())
+        if (NgLogger::isDebugMode())
             _log("Killing connection..");
 
         disconnect(_socket, &QAbstractSocket::disconnected, this, &NntpConnection::onDisconnected);
@@ -181,7 +181,7 @@ void NntpConnection::_closeConnection()
 #if defined(__DEBUG__) && defined(LOG_CONNECTION_STEPS)
     _log("closeConnection");
 #endif
-    if (_ngPost->debugMode())
+    if (NgLogger::isDebugMode())
         _log("Closing connection...");
 #ifdef __USE_CONNECTION_TIMEOUT__
     if (_timeout)
@@ -208,7 +208,7 @@ void NntpConnection::_closeConnection()
         if (_currentArticle && !_poster->tryResumePostWhenConnectionLost())
         {
 #ifdef __DISP_ARTICLE_SERVER__
-            if (_ngPost->debugMode())
+            if (NgLogger::isDebugMode())
                 _log(tr("Article FAIL2: %1 (on %2)").arg(_currentArticle->id()).arg(_srvParams.host));
 #endif
 #ifdef __RELEASE_ARTICLES_WHEN_CON_FAILS__
@@ -249,7 +249,7 @@ void NntpConnection::onDisconnected()
         if (_currentArticle)
         {
 #ifdef __DISP_ARTICLE_SERVER__
-            if (_ngPost->debugMode())
+            if (NgLogger::isDebugMode())
                 _log(tr("Article FAIL3: %1 (on %2)").arg(_currentArticle->id()).arg(_srvParams.host));
 #endif
 #ifdef __RELEASE_ARTICLES_WHEN_CON_FAILS__
@@ -257,7 +257,7 @@ void NntpConnection::onDisconnected()
 #else
             emit _currentArticle->failed(_currentArticle->size());
 #endif
-            if (_ngPost->debugMode())
+            if (NgLogger::isDebugMode())
                 _error(tr("Closing connection, Failed Article: %1").arg(_currentArticle->str()));
             _currentArticle = nullptr;
         }
@@ -318,7 +318,7 @@ void NntpConnection::onErrors(QAbstractSocket::SocketError)
 #ifdef __USE_CONNECTION_TIMEOUT__
 void NntpConnection::onTimeout()
 {
-    _error(QString("Socket Timeout (%1 ms)").arg(_ngPost->getSocketTimeout()));
+    _error(QString("Socket Timeout (%1 ms)").arg(_ngPost.getSocketTimeout()));
     _closeConnection();
 }
 #endif
@@ -330,7 +330,7 @@ void NntpConnection::onReadyRead()
         QByteArray line = _socket->readLine();
 #ifdef __USE_CONNECTION_TIMEOUT__
         if (_timeout)
-            _timeout->start(_ngPost->getSocketTimeout());
+            _timeout->start(_ngPost.getSocketTimeout());
 #endif
 
 #if defined(__DEBUG__) && defined(LOG_NEWS_DATA)
@@ -346,7 +346,7 @@ void NntpConnection::onReadyRead()
             {
                 _postingState = PostingState::WAITING_ANSWER;
                 _currentArticle->write(this, NgConf::kArticleIdSignature); // This will be done async
-                if (_ngPost->dispPostingFile() && _currentArticle->isFirstArticle())
+                if (_ngPost.dispPostingFile() && _currentArticle->isFirstArticle())
                     emit _currentArticle->nntpFile()->startPosting();
             }
             else
@@ -354,7 +354,7 @@ void NntpConnection::onReadyRead()
                 //                if (++_nbErrors < NntpArticle::nbMaxTrySending())
                 //                {
                 //                    _socket->write(Nntp::POST);
-                //                    if (_ngPost->debugMode())
+                //                    if (NgLogger::isDebugMode())
                 //                        _error(tr("ERROR on post command: %1").arg(line.constData()));
                 //                }
                 //                else
@@ -382,7 +382,7 @@ void NntpConnection::onReadyRead()
                     {
                         line[static_cast<int>(gt - line.constData())] = '\0';
                         QString newMsgId(lt + 1);
-                        if (_ngPost->debugFull())
+                        if (NgLogger::isFullDebug())
                             _log(QString("the server has overwritten the Message-ID to : %1 (article: %2)")
                                          .arg(newMsgId)
                                          .arg(_currentArticle->id()));
@@ -394,7 +394,7 @@ void NntpConnection::onReadyRead()
                 _log(tr("POSTED: %1").arg(_currentArticle->str()));
 #endif
 #ifdef __DISP_ARTICLE_SERVER__
-                if (_ngPost->debugMode())
+                if (NgLogger::isDebugMode())
                     _log(tr("Article posted: %1 (on %2) %3")
                                  .arg(_currentArticle->id())
                                  .arg(_srvParams.host)
@@ -411,7 +411,7 @@ void NntpConnection::onReadyRead()
                 {
                     _postingState = PostingState::SENDING_ARTICLE;
                     _socket->write(Nntp::POST);
-                    if (_ngPost->debugMode())
+                    if (NgLogger::isDebugMode())
                         _log(tr("ReTry %1 (Error: '%2')").arg(_currentArticle->str()).arg(line.constData()));
                 }
                 else
@@ -421,7 +421,7 @@ void NntpConnection::onReadyRead()
                                    .arg(_currentArticle->str())
                                    .arg(line.constData()));
 #ifdef __DISP_ARTICLE_SERVER__
-                    if (_ngPost->debugMode())
+                    if (NgLogger::isDebugMode())
                         _log(tr("Article FAIL: %1 (on %2) %3")
                                      .arg(_currentArticle->id())
                                      .arg(_srvParams.host)
@@ -448,7 +448,7 @@ void NntpConnection::onReadyRead()
             {
                 QString err("Reading welcome message. Should start with 200... Server message: ");
                 err += line.constData();
-                if (_ngPost->debugMode())
+                if (NgLogger::isDebugMode())
                     _error(err);
                 // #if defined(__DEBUG__) && defined(LOG_CONNECTION_ERRORS_BEFORE_EMIT_SIGNALS)
                 //                 _error(err);
@@ -491,7 +491,7 @@ void NntpConnection::onReadyRead()
                 err += Nntp::AUTHINFO_USER;
                 err += "' should start with 38... resp: ";
                 err += line.constData();
-                if (_ngPost->debugMode())
+                if (NgLogger::isDebugMode())
                     _error(err);
                 // #if defined(__DEBUG__) && defined(LOG_CONNECTION_ERRORS_BEFORE_EMIT_SIGNALS)
                 //                 _error(err);
@@ -526,7 +526,7 @@ void NntpConnection::onReadyRead()
                 err += Nntp::AUTHINFO_PASS;
                 err += "' should start with 28... resp: ";
                 err += line.constData();
-                if (_ngPost->debugMode())
+                if (NgLogger::isDebugMode())
                     _error(err);
                 // #if defined(__DEBUG__) && defined(LOG_CONNECTION_ERRORS_BEFORE_EMIT_SIGNALS)
                 //                 _error(err);
@@ -560,7 +560,7 @@ void NntpConnection::_sendNextArticle()
     if (_currentArticle)
     {
         _postingState = PostingState::SENDING_ARTICLE;
-        if (_ngPost->debugFull())
+        if (NgLogger::isFullDebug())
             _log(tr("start sending article: %1").arg(_currentArticle->str()));
         _socket->write(Nntp::POST);
     }
@@ -571,7 +571,7 @@ void NntpConnection::_sendNextArticle()
         if (_timeout)
             _timeout->stop();
 #endif
-        if (_ngPost->debugMode())
+        if (NgLogger::isDebugMode())
             _log("No more articles");
         _closeConnection();
     }

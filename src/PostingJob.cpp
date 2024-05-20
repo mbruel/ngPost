@@ -18,6 +18,16 @@
 //========================================================================
 
 #include "PostingJob.h"
+
+#include <cmath>
+#include <QCoreApplication>
+#include <QDebug>
+#include <QDir>
+#include <QMutex>
+#include <QProcess>
+#include <QRegularExpression>
+#include <QThread>
+
 #include "NgPost.h"
 #include "nntp/NntpArticle.h"
 #include "nntp/NntpFile.h"
@@ -29,15 +39,8 @@
 #ifdef __USE_HMI__
 #  include "hmi/PostingWidget.h"
 #endif
-#include <cmath>
-#include <QCoreApplication>
-#include <QDebug>
-#include <QDir>
-#include <QMutex>
-#include <QProcess>
-#include <QThread>
 
-PostingJob::PostingJob(NgPost                 *ngPost,
+PostingJob::PostingJob(NgPost                 &ngPost,
                        PostingWidget          *postWidget,
                        PostingParamsPtr const &params,
                        QObject                *parent)
@@ -92,13 +95,13 @@ PostingJob::PostingJob(NgPost                 *ngPost,
     , _immediateSize(0)
     , _immediateSpeedTimer()
     , _immediateSpeed("0 B/s")
-    , _useHMI(_ngPost->useHMI())
+    , _useHMI(_ngPost.useHMI())
 #endif
 {
     _init();
 }
 
-PostingJob::PostingJob(NgPost                       *ngPost,
+PostingJob::PostingJob(NgPost                       &ngPost,
                        QString const                &rarName,
                        QString const                &rarPass,
                        QString const                &nzbFilePath,
@@ -160,7 +163,7 @@ PostingJob::PostingJob(NgPost                       *ngPost,
     , _immediateSize(0)
     , _immediateSpeedTimer()
     , _immediateSpeed("0 B/s")
-    , _useHMI(_ngPost->useHMI())
+    , _useHMI(_ngPost.useHMI())
 #endif
 {
     _init();
@@ -168,14 +171,20 @@ PostingJob::PostingJob(NgPost                       *ngPost,
 
 PostingJob::~PostingJob()
 {
-
 #ifdef __DEBUG__
     _log("Destructing PostingJob");
-    qDebug() << "[PostingJob] <<<< Destruction " << this;
+    qDebug() << "[PostingJob] <<<< Destruction " << NgTools::ptrAddrInHex(this)
+             << " in thread : " << QThread::currentThread()->objectName();
 #endif
 
-    if (_ngPost->debugMode())
+    if (NgLogger::isDebugMode())
         _log("Deleting PostingJob");
+
+    // stopThreads so it quits and waits _builderThread and _connectionsThread
+    // threads will emit void QThread::finished()
+    // that will run QObject::deleteLater for NntpConnections and
+    for (Poster *poster : _posters)
+        poster->stopThreads();
 
     if (_compressDir)
     {
@@ -191,14 +200,24 @@ PostingJob::~PostingJob()
     qDeleteAll(_filesFailed);
     qDeleteAll(_filesInProgress);
     qDeleteAll(_filesToUpload);
-    qDeleteAll(_nntpConnections);
-    qDeleteAll(_closedConnections);
+
     qDeleteAll(_posters);
+
+    // no need to delete the NntpConnections as they deleteLater themselves
+    // in the Poster::_builderThread where they have been moved
 
     if (_nzb)
         delete _nzb;
     if (_file)
         delete _file;
+
+    _ngPost.doNzbPostCMD(this);
+}
+
+void PostingJob::_log(QString const &aMsg, bool newline) const
+{
+    if (!_ngPost.quietMode())
+        NgLogger::log(aMsg, newline);
 }
 
 void PostingJob::_init()
@@ -208,10 +227,10 @@ void PostingJob::_init()
 #endif
     connect(this, &PostingJob::startPosting, this, &PostingJob::onStartPosting, Qt::QueuedConnection);
     connect(this, &PostingJob::stopPosting, this, &PostingJob::onStopPosting, Qt::QueuedConnection);
-    connect(this, &PostingJob::postingStarted, _ngPost, &NgPost::onPostingJobStarted, Qt::QueuedConnection);
-    connect(this, &PostingJob::packingDone, _ngPost, &NgPost::onPackingDone, Qt::QueuedConnection);
-    connect(this, &PostingJob::postingFinished, _ngPost, &NgPost::onPostingJobFinished, Qt::QueuedConnection);
-    connect(this, &PostingJob::noMoreConnection, _ngPost, &NgPost::onPostingJobFinished, Qt::QueuedConnection);
+    connect(this, &PostingJob::postingStarted, &_ngPost, &NgPost::onPostingJobStarted, Qt::QueuedConnection);
+    connect(this, &PostingJob::packingDone, &_ngPost, &NgPost::onPackingDone, Qt::QueuedConnection);
+    connect(this, &PostingJob::postingFinished, &_ngPost, &NgPost::onPostingJobFinished, Qt::QueuedConnection);
+    connect(this, &PostingJob::noMoreConnection, &_ngPost, &NgPost::onPostingJobFinished, Qt::QueuedConnection);
 
     //    connect(this, &PostingJob::scheduleNextArticle, this, &PostingJob::onPrepareNextArticle,
     //    Qt::QueuedConnection);
@@ -253,7 +272,7 @@ void PostingJob::_init()
                 Qt::QueuedConnection);
 #endif
 
-    if (_ngPost->debugMode())
+    if (NgLogger::isDebugMode())
         _log(NntpConnection::sslSupportInfo());
 }
 
@@ -334,7 +353,7 @@ bool PostingJob::startCompressFiles()
 
 #if defined(Q_OS_WIN)
     if (archiveTmpFolder.startsWith("//"))
-        archiveTmpFolder.replace(QRegExp("^//"), "\\\\");
+        archiveTmpFolder.replace(QRegularExpression("^//"), "\\\\");
 #endif
     args << QString("%1/%2.%3").arg(archiveTmpFolder, _params->rarName(), _params->use7z() ? "7z" : "rar");
 
@@ -359,7 +378,7 @@ bool PostingJob::startCompressFiles()
             else
             {
                 _files << fileInfo;
-                _error(tr("Couldn't rename file %1").arg(fileName));
+                NgLogger::error(tr("Couldn't rename file %1").arg(fileName));
             }
         }
     }
@@ -373,7 +392,7 @@ bool PostingJob::startCompressFiles()
         QString          path     = fileInfo.absoluteFilePath();
 #if defined(Q_OS_WIN)
         if (path.startsWith("//"))
-            path.replace(QRegExp("^//"), "\\\\");
+            path.replace(QRegularExpression("^//"), "\\\\");
 #endif
         if (fileInfo.isDir())
         {
@@ -390,7 +409,7 @@ bool PostingJob::startCompressFiles()
             QString path = fileInfo.absoluteFilePath();
 #if defined(Q_OS_WIN)
             if (path.startsWith("//"))
-                path.replace(QRegExp("^//"), "\\\\");
+                path.replace(QRegularExpression("^//"), "\\\\");
 #endif
             if (fileInfo.isDir())
                 hasDir = true;
@@ -403,7 +422,7 @@ bool PostingJob::startCompressFiles()
         args << "-r";
 
     // launch the compression! and ends up just under in onCompressionFinished if all ok...
-    if (_ngPost->debugMode() || !_postWidget)
+    if (NgLogger::isDebugMode() || !_postWidget)
         _log(QString("[%1] %2: %3 %4\n")
                      .arg(timestamp())
                      .arg(tr("Compressing files"))
@@ -423,7 +442,7 @@ bool PostingJob::startCompressFiles()
 
 void PostingJob::onCompressionFinished(int exitCode)
 {
-    if (_ngPost->debugMode())
+    if (NgLogger::isDebugMode())
         _log(tr("=> rar exit code: %1\n").arg(exitCode));
     else
         _log("\n");
@@ -443,7 +462,7 @@ void PostingJob::onCompressionFinished(int exitCode)
     // if the compression process failed we stop here...
     if (exitCode != 0)
     {
-        _error(tr("Error during compression: %1").arg(exitCode));
+        NgLogger::error(tr("Error during compression: %1").arg(exitCode));
         _cleanCompressDir();
         emit postingFinished();
         return;
@@ -477,7 +496,7 @@ void PostingJob::onCompressionFinished(int exitCode)
     // Rq 2024.05: seems the _isActiveJob is useless no?
     _packed = true;
     _cleanExtProc();
-    if (this == _ngPost->_activeJob)
+    if (this == _ngPost._activeJob)
         _postFiles();
 
     emit packingDone(); //!< no par2 generation so next job can start packing ;)
@@ -515,7 +534,7 @@ bool PostingJob::startGenPar2()
             else
                 args << QString("%1/%2*rar").arg(archiveTmpFolder, _params->rarName());
 
-            if (_params->par2Args().isEmpty() && (_ngPost->debugMode() || !_postWidget))
+            if (_params->par2Args().isEmpty() && (NgLogger::isDebugMode() || !_postWidget))
                 args << "-q"; // remove the progressbar bar
         }
     }
@@ -535,7 +554,7 @@ bool PostingJob::startGenPar2()
 #if defined(Q_OS_WIN)
             QString basePathWin(basePath);
             basePathWin.replace("/", "\\");
-            if (_ngPost->useMultiPar())
+            if (_ngPost.useMultiPar())
                 args << QString("/d%1").arg(basePathWin);
             else
                 args << "-B" << basePathWin;
@@ -552,17 +571,18 @@ bool PostingJob::startGenPar2()
         {
             if (fileInfo.isDir())
             {
-                _error(tr("you can't post folders without compression..."));
+                NgLogger::error(tr("you can't post folders without compression..."));
                 return false;
             }
             QString path = fileInfo.absoluteFilePath();
 #if defined(Q_OS_WIN)
             if (!useParPar && basePath != fileInfo.absolutePath())
             {
-                //                _error(tr("Due to par2 software limitation and to avoid unnecessary copies, all
-                //                files must be in the same folder..."));
-                _error(tr("only ParPar allows to generate par2 for files from different folders... you should "
-                          "consider using it ;)"));
+                //                NgLogger::error(tr("Due to par2 software limitation and to avoid unnecessary
+                //                copies, all files must be in the same folder..."));
+                NgLogger::error(
+                        tr("only ParPar allows to generate par2 for files from different folders... you should "
+                           "consider using it ;)"));
                 return false;
             }
             path.replace("/", "\\");
@@ -593,7 +613,7 @@ bool PostingJob::startGenPar2()
             &PostingJob::onGenPar2Finished,
             Qt::QueuedConnection);
 
-    if (_ngPost->debugMode() || !_postWidget)
+    if (NgLogger::isDebugMode() || !_postWidget)
         _log(QString("[%1] %2: %3 %4")
                      .arg(timestamp())
                      .arg(tr("Generating par2"))
@@ -611,7 +631,7 @@ bool PostingJob::startGenPar2()
 
 void PostingJob::onGenPar2Finished(int exitCode)
 {
-    if (_ngPost->debugMode())
+    if (NgLogger::isDebugMode())
         _log(tr("=> par2 exit code: %1\n").arg(exitCode));
     else
         _log("\n");
@@ -620,7 +640,7 @@ void PostingJob::onGenPar2Finished(int exitCode)
 
     if (exitCode != 0)
     {
-        _error(tr("Error during par2 generation: %1").arg(exitCode));
+        NgLogger::error(tr("Error during par2 generation: %1").arg(exitCode));
         _cleanCompressDir();
         emit postingFinished();
         return;
@@ -630,7 +650,7 @@ void PostingJob::onGenPar2Finished(int exitCode)
     _updateFilesListFromCompressDir();
 
     _packed = true;
-    if (this == _ngPost->_activeJob)
+    if (this == _ngPost._activeJob)
         _postFiles();
 
     emit packingDone(); //!< no par2 generation so next job can start packing ;)
@@ -660,14 +680,16 @@ void PostingJob::_postFiles()
     int nbCon = _createNntpConnections();
     if (!nbCon)
     {
-        _error(tr("Error: there are no NntpConnection..."));
+        NgLogger::error(tr("Error: there are no NntpConnection..."));
+        _finishPosting(); // MB_TODO shall we?
         emit postingFinished();
         return;
     }
 
     if (!_nzb->open(QIODevice::WriteOnly))
     {
-        _error(tr("Error: Can't create nzb output file: %1").arg(_params->nzbFilePath()));
+        NgLogger::error(tr("Error: Can't create nzb output file: %1").arg(_params->nzbFilePath()));
+        _finishPosting(); // MB_TODO shall we?
         emit postingFinished();
         return;
     }
@@ -747,6 +769,12 @@ void PostingJob::_postFiles()
 
 void PostingJob::onStopPosting()
 {
+#ifdef __MOVETOTHREAD_TRACKING__
+    qDebug() << QString("[THREAD] %1 PostingJob %2 onStopPosting")
+                        .arg(QThread::currentThread()->objectName())
+                        .arg(NgTools::ptrAddrInHex(this));
+#endif
+
     if (_extProc)
     {
         _log(tr("killing external process..."));
@@ -766,7 +794,7 @@ void PostingJob::onDisconnectedConnection(NntpConnection *con)
         return; // we're destructing all the connections
 
     if (!con->hasNoMoreFiles())
-        _error(tr("Error: disconnected connection: #%1\n").arg(con->getId()));
+        NgLogger::error(tr("Error: disconnected connection: #%1\n").arg(con->getId()));
 
     if (_nntpConnections.removeOne(con))
     {
@@ -783,12 +811,12 @@ void PostingJob::onDisconnectedConnection(NntpConnection *con)
             }
             else
             {
-                _error(tr("we lost all the connections..."));
+                NgLogger::error(tr("we lost all the connections..."));
                 if (_params->tryResumePostWhenConnectionLost())
                 {
                     int sleepDurationInSec = _params->waitDurationBeforeAutoResume();
                     _log(tr("Sleep for %1 sec before trying to reconnect").arg(sleepDurationInSec));
-                    _ngPost->pause();
+                    _ngPost.pause();
                     _resumeTimer.start(sleepDurationInSec * 1000);
                 }
                 else
@@ -805,7 +833,7 @@ void PostingJob::onDisconnectedConnection(NntpConnection *con)
 void PostingJob::onNntpFileStartPosting()
 {
     NntpFile *nntpFile = static_cast<NntpFile *>(sender());
-    if (!_ngPost->useHMI())
+    if (!_ngPost.useHMI())
         _log(QString("[%1][%2: %3] >>>>> %4")
                      .arg(timestamp())
                      .arg(tr("avg. speed"))
@@ -821,7 +849,7 @@ void PostingJob::onNntpFilePosted()
     if (_postWidget)
         emit filePosted(nntpFile->path(), nntpFile->nbArticles(), nntpFile->nbFailedArticles());
 
-    if (_ngPost->_dispFilesPosting && !_ngPost->useHMI())
+    if (_ngPost._dispFilesPosting && !_ngPost.useHMI())
         _log(QString("[%1][%2: %3] <<<<< %4")
                      .arg(timestamp())
                      .arg(tr("avg. speed"))
@@ -854,7 +882,7 @@ void PostingJob::onNntpErrorReading()
     if (_postWidget)
         emit filePosted(nntpFile->path(), nntpFile->nbArticles(), nntpFile->nbArticles());
 
-    if (_ngPost->_dispFilesPosting && !_ngPost->useHMI())
+    if (_ngPost._dispFilesPosting && !_ngPost.useHMI())
         _log(tr("[avg. speed: %1] <<<<< %2").arg(avgSpeed()).arg(nntpFile->name()));
 
     _filesInProgress.remove(nntpFile);
@@ -874,10 +902,6 @@ void PostingJob::onNntpErrorReading()
     }
 }
 
-void PostingJob::_log(QString const &aMsg, bool newline) const { emit _ngPost->log(aMsg, newline); }
-
-void PostingJob::_error(QString const &error) const { emit _ngPost->error(error); }
-
 int PostingJob::_createNntpConnections()
 {
     _nbConnections = _params->nbNntpConnections();
@@ -890,13 +914,11 @@ int PostingJob::_createNntpConnections()
             for (int k = 0; k < srvParams->nbCons; ++k)
             {
                 NntpConnection *nntpCon = new NntpConnection(_ngPost, ++conIdx, *srvParams);
-                connect(nntpCon, &NntpConnection::log, _ngPost, &NgPost::onLog, Qt::QueuedConnection);
-                connect(nntpCon, &NntpConnection::error, _ngPost, &NgPost::onError, Qt::QueuedConnection);
                 connect(nntpCon,
-                        &NntpConnection::errorConnecting,
-                        _ngPost,
-                        &NgPost::onErrorConnecting,
-                        Qt::QueuedConnection);
+                        &NntpConnection::log,
+                        [](QString msg, bool newline = true) { NgLogger::log(msg, newline); });
+                connect(nntpCon, &NntpConnection::error, qOverload<QString>(&NgLogger::error));
+                connect(nntpCon, &NntpConnection::errorConnecting, qOverload<QString>(&NgLogger::error));
                 connect(nntpCon,
                         &NntpConnection::disconnected,
                         this,
@@ -907,7 +929,7 @@ int PostingJob::_createNntpConnections()
         }
     }
 
-    if (_ngPost->useHMI())
+    if (_ngPost.useHMI())
         _log(tr("Number of available Nntp Connections: %1").arg(_nbConnections));
     else
         _log(QString("[%1] %2: %3")
@@ -920,7 +942,7 @@ int PostingJob::_createNntpConnections()
 
 void PostingJob::_preparePostersArticles()
 {
-    if (_ngPost->debugFull())
+    if (NgLogger::isFullDebug())
         _log("PostingJob::_prepareArticles");
 
     for (int i = 0; i < kNbPreparedArticlePerConnection; ++i)
@@ -972,16 +994,16 @@ NntpArticle *PostingJob::_readNextArticleIntoBufferPtr(QString const &threadName
         _file = new QFile(_nntpFile->path());
         if (_file->open(QIODevice::ReadOnly))
         {
-            if (_ngPost->debugFull())
+            if (NgLogger::isFullDebug())
                 _log(tr("[%1] starting processing file %2").arg(threadName).arg(_nntpFile->path()));
             _part = 0;
         }
         else
         {
-            if (_ngPost->debugMode())
-                _error(tr("[%1] Error: couldn't open file %2").arg(threadName).arg(_nntpFile->path()));
+            if (NgLogger::isDebugMode())
+                NgLogger::error(tr("[%1] Error: couldn't open file %2").arg(threadName).arg(_nntpFile->path()));
             else
-                _error(tr("Error: couldn't open file %1").arg(_nntpFile->path()));
+                NgLogger::error(tr("Error: couldn't open file %1").arg(_nntpFile->path()));
             emit _nntpFile->errorReadingFile();
             delete _file;
             _file     = nullptr;
@@ -997,7 +1019,7 @@ NntpArticle *PostingJob::_readNextArticleIntoBufferPtr(QString const &threadName
         if (bytesRead > 0)
         {
             (*bufferPtr)[bytesRead] = '\0';
-            if (_ngPost->debugFull())
+            if (NgLogger::isFullDebug())
                 _log(tr("[%1] we've read %2 bytes from %3 (=> new pos: %4)")
                              .arg(threadName)
                              .arg(bytesRead)
@@ -1015,7 +1037,7 @@ NntpArticle *PostingJob::_readNextArticleIntoBufferPtr(QString const &threadName
         }
         else
         {
-            if (_ngPost->debugFull())
+            if (NgLogger::isFullDebug())
                 _log(tr("[%1] finished processing file %2").arg(threadName).arg(_nntpFile->path()));
 
             _file->close();
@@ -1032,35 +1054,7 @@ void PostingJob::_initPosting()
 {
     qDebug() << "[MB_TRACE][PostingJob::_initPosting] nzbFilePath: " << _params->nzbFilePath()
              << ", overwriteNzb: " << _params->overwriteNzb();
-    //    emit postingFinished(); // MB_TODO MB_TODEL!!!! No posting!
-    // // MB_TODO MB_TODEL: Shall we investigate we would have a crash...
-    /* MB_TODO MB_TODEL
-    unexpected job finished packing...
-    [PostingJob] <<<< Destruction  PostingJob(0x564511556de0)
-    Destruction nntpFile:  "/tmp/newshosting_installer.nzb/newshosting_installer.nzb.part1.rar"
-    Destruction nntpFile:  "/tmp/newshosting_installer.nzb/newshosting_installer.nzb.par2"
-    Destruction nntpFile:  "/tmp/newshosting_installer.nzb/newshosting_installer.nzb.part2.rar"
-    Destruction nntpFile:  "/tmp/newshosting_installer.nzb/newshosting_installer.nzb.part3.rar"
-    Destruction nntpFile:  "/tmp/newshosting_installer.nzb/newshosting_installer.nzb.vol00+01.par2"
-    Destruction nntpFile:  "/tmp/newshosting_installer.nzb/newshosting_installer.nzb.vol01+02.par2"
-    Destruction NntpConnection  "Poster #0 {NntpCon #1}"
-    QObject: Cannot create children for a parent that is in a different thread.
-    (Parent is QTcpSocket(0x7fd454005a30), parent's thread is QThread(0x5645114a3eb8), current thread is
-    QThread(0x564511495980) QObject: Cannot create children for a parent that is in a different thread. (Parent
-    is QTcpSocket(0x7fd454005a30), parent's thread is QThread(0x5645114a3eb8), current thread is
-    QThread(0x564511495980) QObject::killTimer: Timers cannot be stopped from another thread QObject::~QObject:
-    Timers cannot be stopped from another thread Destruction NntpConnection  "Poster #1 {NntpCon #2}"
-    QSocketNotifier: Socket notifiers cannot be enabled or disabled from another thread
-    QSocketNotifier: Socket notifiers cannot be enabled or disabled from another thread
-    QSocketNotifier: Socket notifiers cannot be enabled or disabled from another thread
-    QObject::killTimer: Timers cannot be stopped from another thread
-    QObject::~QObject: Timers cannot be stopped from another thread
-    Destruction NntpConnection  "Poster #2 {NntpCon #3}"
-    QSocketNotifier: Socket notifiers cannot be enabled or disabled from another thread
-    QObject::killTimer: Timers cannot be stopped from another thread
-    QObject::~QObject: Timers cannot be stopped from another thread
-    Destruction Poster # 0
-    */
+
     // initialize buffer and nzb file
     if (!_params->overwriteNzb()) // MB_TODO: for now never overwrite!
     {
@@ -1108,7 +1102,7 @@ void PostingJob::_initPosting()
                 this,
                 &PostingJob::onNntpErrorReading,
                 Qt::QueuedConnection);
-        if (_ngPost->_dispFilesPosting && _ngPost->debugMode())
+        if (_ngPost._dispFilesPosting && NgLogger::isDebugMode())
             connect(nntpFile,
                     &NntpFile::startPosting,
                     this,
@@ -1126,6 +1120,9 @@ void PostingJob::_finishPosting()
 #ifdef __DEBUG__
     qDebug() << "[MB_TRACE][PostingJob::_finishPosting]";
 #endif
+    if (MB_LoadAtomic(_stopPosting))
+        return; // already came here
+
     _stopPosting = 0x1;
 
     if (_timeStart.isValid() && _postFinished)
@@ -1134,10 +1131,10 @@ void PostingJob::_finishPosting()
         _uploadedSize       = _totalSize;
     }
 
-    if (_ngPost->debugMode())
+    if (NgLogger::isDebugMode())
         _log("Finishing posting...");
 
-    _ngPost->_finishPosting(); // to update progress bar
+    _ngPost._finishPosting(); // to update progress bar
 
     // 1.: print stats
     if (_timeStart.isValid())
@@ -1156,44 +1153,43 @@ void PostingJob::_finishPosting()
     // 2.: close nzb file
     _closeNzb();
 
-    if (_ngPost->debugMode())
+    if (NgLogger::isDebugMode())
         _log("All posters stopped...");
 
 #ifdef __DEBUG__
     _log("All connections are closed...");
 #endif
 
-    _ngPost->doNzbPostCMD(this);
-
     // 5.: print out the list of files that havn't been posted
     // (in case of disconnection)
     int nbPendingFiles = _filesToUpload.size() + _filesInProgress.size() + _filesFailed.size();
     if (nbPendingFiles)
     {
-        _error(tr("ERROR: there were %1 on %2 that havn't been posted:").arg(nbPendingFiles).arg(_nbFiles));
-        bool isDebugMode = _ngPost->debugMode();
+        NgLogger::error(
+                tr("ERROR: there were %1 on %2 that havn't been posted:").arg(nbPendingFiles).arg(_nbFiles));
+        bool isDebugMode = NgLogger::isDebugMode();
         for (NntpFile *file : _filesInProgress)
         {
             QString msg = QString("  - %1").arg(file->stats());
             if (isDebugMode)
                 msg += QString(" (fInProgress%1)").arg(file->missingArticles());
-            _error(msg);
+            NgLogger::error(msg);
         }
         for (NntpFile *file : _filesToUpload)
         {
             QString msg = QString("  - %1").arg(file->stats());
             if (isDebugMode)
                 msg += QString(" (fToUpload%1)").arg(file->missingArticles());
-            _error(msg);
+            NgLogger::error(msg);
         }
         for (NntpFile *file : _filesFailed)
         {
             QString msg = QString("  - %1").arg(file->stats());
             if (isDebugMode)
                 msg += QString(" (fFailed%1)").arg(file->missingArticles());
-            _error(msg);
+            NgLogger::error(msg);
         }
-        _error(tr("you can try to repost only those and concatenate the nzb with the current one ;)"));
+        NgLogger::error(tr("you can try to repost only those and concatenate the nzb with the current one ;)"));
     }
     else if (_postFinished && MB_LoadAtomic(_delFilesAfterPost))
         _delOriginalFiles();
@@ -1221,7 +1217,7 @@ void PostingJob::_printStats() const
     double sec      = duration / 1000;
 
     QString msgEnd("\n"), ts = QString("[%1] ").arg(timestamp());
-    if (!_ngPost->useHMI())
+    if (!_ngPost.useHMI())
         msgEnd += ts;
     msgEnd += tr("Upload size: %1 in %2 (%3 sec) \
                  => average speed: %4 (%5 connections on %6 threads)\n")
@@ -1240,12 +1236,12 @@ void PostingJob::_printStats() const
 
     if (_nzb)
     {
-        if (!_ngPost->useHMI())
+        if (!_ngPost.useHMI())
             msgEnd += ts;
         msgEnd += tr("nzb file: %1\n").arg(_params->nzbFilePath());
         if (_params->doCompress())
         {
-            if (!_ngPost->useHMI())
+            if (!_ngPost.useHMI())
                 msgEnd += ts;
             msgEnd += tr("file: %1, rar name: %2").arg(nzbName()).arg(_params->rarName());
             if (!_params->rarPass().isEmpty())
@@ -1262,7 +1258,7 @@ void PostingJob::_cleanExtProc()
 {
     delete _extProc;
     _extProc = nullptr;
-    if (_ngPost->debugFull())
+    if (NgLogger::isFullDebug())
         _log(tr("External process deleted."));
 }
 
@@ -1270,7 +1266,7 @@ void PostingJob::_cleanCompressDir()
 {
     if (!_params->keepRar())
         _compressDir->removeRecursively();
-    if (_ngPost->debugMode())
+    if (NgLogger::isDebugMode())
         _log(tr("Compressed files deleted."));
 }
 
@@ -1282,8 +1278,7 @@ QStringList PostingJob::_updateFilesListFromCompressDir()
     {
         _files << file;
         archiveNames << file.absoluteFilePath();
-        if (_ngPost->debugMode())
-            _ngPost->_log(QString("  - %1").arg(file.fileName()));
+        NgLogger::log(QString("  - %1").arg(file.fileName()), true, NgLogger::DebugLevel::Debug);
     }
     emit archiveFileNames(archiveNames); // to update the content of _postWidget
     return archiveNames;
@@ -1295,8 +1290,9 @@ QString PostingJob::_createArchiveFolder(QString const &tmpFolder, QString const
     _compressDir             = new QDir(archiveTmpFolder);
     if (_compressDir->exists())
     {
-        _error(tr("The temporary directory '%1' already exists... (either remove it or change the archive name)")
-                       .arg(archiveTmpFolder));
+        NgLogger::error(tr("The temporary directory '%1' already exists... (either remove it or change the "
+                           "archive name)")
+                                .arg(archiveTmpFolder));
         delete _compressDir;
         _compressDir = nullptr;
         return QString();
@@ -1305,7 +1301,7 @@ QString PostingJob::_createArchiveFolder(QString const &tmpFolder, QString const
     {
         if (!_compressDir->mkpath("."))
         {
-            _error(tr("Couldn't create the temporary folder: '%1'...").arg(archiveTmpFolder));
+            NgLogger::error(tr("Couldn't create the temporary folder: '%1'...").arg(archiveTmpFolder));
             delete _compressDir;
             _compressDir = nullptr;
             return QString();
@@ -1316,7 +1312,7 @@ QString PostingJob::_createArchiveFolder(QString const &tmpFolder, QString const
 
 void PostingJob::onExtProcReadyReadStandardOutput()
 {
-    if (_ngPost->debugMode())
+    if (NgLogger::isDebugMode())
         _log(_extProc->readAllStandardOutput(), false);
     else if (_isActiveJob)
     {
@@ -1325,9 +1321,9 @@ void PostingJob::onExtProcReadyReadStandardOutput()
     }
 }
 
-void PostingJob::onExtProcReadyReadStandardError() { _error(_extProc->readAllStandardError()); }
+void PostingJob::onExtProcReadyReadStandardError() { NgLogger::error(_extProc->readAllStandardError()); }
 
-QString PostingJob::nzbName() const { return _ngPost->getNzbName(QFileInfo(_params->nzbFilePath())); }
+QString PostingJob::nzbName() const { return _ngPost.getNzbName(QFileInfo(_params->nzbFilePath())); }
 
 QString PostingJob::postSize() const { return NgTools::humanSize(static_cast<double>(_totalSize)); }
 
@@ -1361,7 +1357,7 @@ void PostingJob::onResumeTriggered()
     {
         _log(tr("Try to resume posting"));
         _nntpConnections.swap(_closedConnections);
-        _ngPost->resume();
+        _ngPost.resume();
     }
 }
 
@@ -1407,10 +1403,10 @@ void PostingJob::shallWeUseTmpRam()
         }
         else
         {
-            _error(tr("Couldn't use TMP_RAM as there is not enough space: %1 available for a Post with "
-                      "ratio of %2")
-                           .arg(NgTools::humanSize(availableSize))
-                           .arg(NgTools::humanSize(sourceSizeWithRatio)));
+            NgLogger::error(tr("Couldn't use TMP_RAM as there is not enough space: %1 available for a Post with "
+                               "ratio of %2")
+                                    .arg(NgTools::humanSize(availableSize))
+                                    .arg(NgTools::humanSize(sourceSizeWithRatio)));
         }
     }
 }

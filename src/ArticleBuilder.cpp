@@ -36,7 +36,13 @@ ArticleBuilder::ArticleBuilder(Poster *poster, QObject *parent)
             Qt::QueuedConnection);
 }
 
-ArticleBuilder::~ArticleBuilder() { delete[] _buffer; }
+ArticleBuilder::~ArticleBuilder()
+{
+#if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
+    qDebug() << objectName() << "is destroyed in thread: " << QThread::currentThread()->objectName();
+#endif
+    delete[] _buffer;
+}
 
 NntpArticle *ArticleBuilder::getNextArticle(QString const &threadName)
 {
@@ -55,9 +61,11 @@ NntpArticle *ArticleBuilder::getNextArticle(QString const &threadName)
 
 void ArticleBuilder::onPrepareNextArticle()
 {
-    QMutexLocker lock(&_poster->_secureArticles); // thread safety (coming from _builderThread)
+    _poster->lockQueue(); // thread safety (coming from _builderThread)
 
     NntpArticle *article = getNextArticle(_poster->_builderThread.objectName());
     if (article)
         _poster->_articles.enqueue(article);
+
+    _poster->unlockQueue();
 }

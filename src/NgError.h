@@ -18,60 +18,73 @@
 //========================================================================
 #ifndef NGERROR_H
 #define NGERROR_H
+#include "utils/PureStaticClass.h"
 
 #include <QMap>
 #include <QString>
 
-namespace NgError
+class NgError : public PureStaticClass
 {
+public:
+    enum class ERR_CODE : char
+    {
+        NONE = 0,
+        COMPLETED_WITH_ERRORS,
+        ERR_CONF_FILE,
+        ERR_WRONG_ARG,
+        ERR_NO_INPUT,
+        ERR_DEL_AUTO,
+        ERR_AUTO_NO_COMPRESS,
+        ERR_AUTO_INPUT,
+        ERR_MONITOR_NO_COMPRESS,
+        ERR_MONITOR_INPUT,
+        ERR_NB_THREAD,
+        ERR_ARTICLE_SIZE,
+        ERR_NB_RETRY,
+        ERR_PAR2_PATH,
+        ERR_PAR2_ARGS,
+        ERR_NO_SERVER,
+        ERR_SERVER_REGEX,
+        ERR_SERVER_PORT,
+        ERR_SERVER_CONS,
+        ERR_INPUT_READ
+    };
 
-enum class ERR_CODE : char
-{
-    NONE = 0,
-    COMPLETED_WITH_ERRORS,
-    ERR_CONF_FILE,
-    ERR_WRONG_ARG,
-    ERR_NO_INPUT,
-    ERR_DEL_AUTO,
-    ERR_AUTO_NO_COMPRESS,
-    ERR_AUTO_INPUT,
-    ERR_MONITOR_NO_COMPRESS,
-    ERR_MONITOR_INPUT,
-    ERR_NB_THREAD,
-    ERR_ARTICLE_SIZE,
-    ERR_NB_RETRY,
-    ERR_PAR2_PATH,
-    ERR_PAR2_ARGS,
-    ERR_NO_SERVER,
-    ERR_SERVER_REGEX,
-    ERR_SERVER_PORT,
-    ERR_SERVER_CONS,
-    ERR_INPUT_READ
+    static ERR_CODE errCode() { return sErrCode; }
+    static void     setErrCode(ERR_CODE code) { sErrCode = code; }
+
+    static QString const &errorName(ERR_CODE code)
+    {
+        auto it = kErrorNames.constFind(code);
+        return it == kErrorNames.constEnd() ? sUnknown : it.value();
+    }
+
+private:
+    inline static ERR_CODE sErrCode = ERR_CODE::NONE;
+    inline static QString  sUnknown = QStringLiteral("UNKNOWN");
+
+    inline static QMap<ERR_CODE, QString> const kErrorNames = {
+        {ERR_CODE::NONE,                     QStringLiteral("NONE")                   },
+        { ERR_CODE::COMPLETED_WITH_ERRORS,   QStringLiteral("COMPLETED_WITH_ERRORS")  },
+        { ERR_CODE::ERR_CONF_FILE,           QStringLiteral("ERR_CONF_FILE")          },
+        { ERR_CODE::ERR_WRONG_ARG,           QStringLiteral("ERR_WRONG_ARG")          },
+        { ERR_CODE::ERR_NO_INPUT,            QStringLiteral("ERR_NO_INPUT")           },
+        { ERR_CODE::ERR_DEL_AUTO,            QStringLiteral("ERR_DEL_AUTO")           },
+        { ERR_CODE::ERR_AUTO_NO_COMPRESS,    QStringLiteral("ERR_AUTO_NO_COMPRESS")   },
+        { ERR_CODE::ERR_AUTO_INPUT,          QStringLiteral("ERR_AUTO_INPUT")         },
+        { ERR_CODE::ERR_MONITOR_NO_COMPRESS, QStringLiteral("ERR_MONITOR_NO_COMPRESS")},
+        { ERR_CODE::ERR_MONITOR_INPUT,       QStringLiteral("ERR_MONITOR_INPUT")      },
+        { ERR_CODE::ERR_NB_THREAD,           QStringLiteral("ERR_NB_THREAD")          },
+        { ERR_CODE::ERR_ARTICLE_SIZE,        QStringLiteral("ERR_ARTICLE_SIZE")       },
+        { ERR_CODE::ERR_NB_RETRY,            QStringLiteral("ERR_NB_RETRY")           },
+        { ERR_CODE::ERR_PAR2_PATH,           QStringLiteral("ERR_PAR2_PATH")          },
+        { ERR_CODE::ERR_PAR2_ARGS,           QStringLiteral("ERR_PAR2_ARGS")          },
+        { ERR_CODE::ERR_NO_SERVER,           QStringLiteral("ERR_NO_SERVER")          },
+        { ERR_CODE::ERR_SERVER_REGEX,        QStringLiteral("ERR_SERVER_REGEX")       },
+        { ERR_CODE::ERR_SERVER_PORT,         QStringLiteral("ERR_SERVER_PORT")        },
+        { ERR_CODE::ERR_SERVER_CONS,         QStringLiteral("ERR_SERVER_CONS")        },
+        { ERR_CODE::ERR_INPUT_READ,          QStringLiteral("ERR_INPUT_READ")         },
+    };
 };
-
-QMap<ERR_CODE, QString> const kErrorNames = {
-    {ERR_CODE::NONE,                     "NONE"                   },
-    { ERR_CODE::COMPLETED_WITH_ERRORS,   "COMPLETED_WITH_ERRORS"  },
-    { ERR_CODE::ERR_CONF_FILE,           "ERR_CONF_FILE"          },
-    { ERR_CODE::ERR_WRONG_ARG,           "ERR_WRONG_ARG"          },
-    { ERR_CODE::ERR_NO_INPUT,            "ERR_NO_INPUT"           },
-    { ERR_CODE::ERR_DEL_AUTO,            "ERR_DEL_AUTO"           },
-    { ERR_CODE::ERR_AUTO_NO_COMPRESS,    "ERR_AUTO_NO_COMPRESS"   },
-    { ERR_CODE::ERR_AUTO_INPUT,          "ERR_AUTO_INPUT"         },
-    { ERR_CODE::ERR_MONITOR_NO_COMPRESS, "ERR_MONITOR_NO_COMPRESS"},
-    { ERR_CODE::ERR_MONITOR_INPUT,       "ERR_MONITOR_INPUT"      },
-    { ERR_CODE::ERR_NB_THREAD,           "ERR_NB_THREAD"          },
-    { ERR_CODE::ERR_ARTICLE_SIZE,        "ERR_ARTICLE_SIZE"       },
-    { ERR_CODE::ERR_NB_RETRY,            "ERR_NB_RETRY"           },
-    { ERR_CODE::ERR_PAR2_PATH,           "ERR_PAR2_PATH"          },
-    { ERR_CODE::ERR_PAR2_ARGS,           "ERR_PAR2_ARGS"          },
-    { ERR_CODE::ERR_NO_SERVER,           "ERR_NO_SERVER"          },
-    { ERR_CODE::ERR_SERVER_REGEX,        "ERR_SERVER_REGEX"       },
-    { ERR_CODE::ERR_SERVER_PORT,         "ERR_SERVER_PORT"        },
-    { ERR_CODE::ERR_SERVER_CONS,         "ERR_SERVER_CONS"        },
-    { ERR_CODE::ERR_INPUT_READ,          "ERR_INPUT_READ"         },
-};
-
-} // namespace NgError
 
 #endif // NGERROR_H

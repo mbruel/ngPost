@@ -56,6 +56,15 @@ NntpArticle::NntpArticle(
     }
 }
 
+NntpArticle::~NntpArticle()
+{
+#if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
+    qDebug() << "\t - Destruction NntpArticle #" << _part;
+#endif
+
+    freeMemory();
+}
+
 void NntpArticle::yEncBody(char const data[])
 {
     // do the yEnc encoding
@@ -77,8 +86,6 @@ void NntpArticle::yEncBody(char const data[])
     _body            = new char[body.length() + 1];
     std::strcpy(_body, body.c_str());
 }
-
-NntpArticle::~NntpArticle() { freeMemory(); }
 
 // NntpArticle::NntpArticle(const std::string &from, const std::string &groups, const std::string &subject, const
 // std::string &body):

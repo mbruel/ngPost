@@ -19,10 +19,13 @@
 #ifndef DATABASE_H
 #define DATABASE_H
 
+#include <QCoreApplication>
 #include <QSqlDatabase>
 
 class Database
 {
+    Q_DECLARE_TR_FUNCTIONS(Database); // tr() without QObject using QCoreApplication::translate
+
 public:
     enum class TYPE : char
     {
@@ -40,6 +43,7 @@ public:
 private:
     TYPE         _type;
     QSqlDatabase _db;
+    bool         _isDbInitialized;
 
     static constexpr char const *kDriverSqlite = "QSQLITE";
 
@@ -57,6 +61,11 @@ private:
 public:
     Database(); //!< for SQLITE
     ~Database();
+
+    bool isDbInitialized() const
+    {
+        return _isDbInitialized; // MB_TODO: could be _db.isOpen() ?
+    }
 
     bool initSQLite(QString const &dbPath);
     int  insertPost(QString const &date,

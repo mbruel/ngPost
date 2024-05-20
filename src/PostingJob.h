@@ -77,7 +77,7 @@ signals:
     void packingDone(); //!< end of packing (compression and or par2)
 
 private:
-    NgPost *_ngPost; //!< handle on the application to access global configs
+    NgPost &_ngPost; //!< handle on the application to access global configs
 
     PostingParamsPtr     _params;     //!< all posting parameters including the list of files
     PostingWidget *const _postWidget; //!< attached Windows
@@ -160,7 +160,7 @@ public:
      * \param params
      * \param parent
      */
-    PostingJob(NgPost                 *ngPost,
+    PostingJob(NgPost &ngPost,
                PostingWidget          *postWidget,
                PostingParamsPtr const &params,
                QObject                *parent = nullptr);
@@ -172,7 +172,7 @@ public:
      * \param params
      * \param parent
      */
-    PostingJob(NgPost                       *ngPost,
+    PostingJob(NgPost &ngPost,
                QString const                &rarName,
                QString const                &rarPass,
                QString const                &nzbFilePath,
@@ -198,6 +198,8 @@ public:
     inline uint nbArticlesUploaded() const { return _nbArticlesUploaded; }
     inline uint nbArticlesFailed() const { return _nbArticlesFailed; }
     inline bool hasUploaded() const { return _nbArticlesTotal > 0; }
+
+    QString const &tmpPath() const { return _tmpPath; }
 
     QString               nzbName() const;
     inline QString const &nzbFilePath() const { return _params->nzbFilePath(); }
@@ -275,6 +277,8 @@ private slots:
 #endif
 
 private:
+    void _log(QString const &aMsg, bool newline = true) const; //!< log function for QString
+
     void _init(); //!< mainly do the connection with itself, NgPost and PostingWidget
 
     void _initPosting();
@@ -285,9 +289,6 @@ private:
      */
     void _postFiles();
     void _finishPosting();
-
-    void _log(QString const &aMsg, bool newline = true) const; //!< log function for QString
-    void _error(QString const &error) const;
 
     int  _createNntpConnections();
     void _preparePostersArticles();

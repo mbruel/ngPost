@@ -17,8 +17,11 @@
 //
 //========================================================================
 #include "NgTools.h"
+#include <QDateTime>
 #include <QDir>
 #include <QFileInfo>
+
+QString NgTools::currentDateTime() { return QDateTime::currentDateTime().toString(kDateTimeFormat); }
 
 void NgTools::removeAccentsFromString(QString &str)
 {

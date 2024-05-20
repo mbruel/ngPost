@@ -41,6 +41,9 @@ inline const QChar kLtChar    = '<';
 inline const QChar kGtChar    = '>';
 inline const QChar kQuoteChar = '"';
 inline const QChar kAPosChar  = '\'';
+
+inline const QString kDateTimeFormat = "yyyy-MM-dd hh:mm:ss"; //!< SQLite format
+
 } // namespace NgConf
 
 using namespace NgConf;
@@ -48,11 +51,14 @@ using namespace NgConf;
 class NgTools : public PureStaticClass
 {
 public:
+    static QString currentDateTime();
+
     static void removeAccentsFromString(QString &str);
 
     static qint64 recursivePathSize(QFileInfo const &fi);
 
     inline static QString humanSize(double size);
+    inline static QString humanSize(qint64 size) { return humanSize(static_cast<double>(size)); }
 
     inline static std::string randomStdFrom(ushort length = 13);
 
@@ -68,6 +74,11 @@ public:
     inline static QString escapeXML(QString const &str);
     inline static QString xml2txt(char const *str);
     inline static QString xml2txt(QString const &str);
+
+    inline static QString ptrAddrInHex(void *ptr)
+    {
+        return QString("0x%1").arg(reinterpret_cast<quintptr>(ptr), QT_POINTER_SIZE * 2, 16, QChar('0'));
+    }
 };
 
 QString NgTools::humanSize(double size)

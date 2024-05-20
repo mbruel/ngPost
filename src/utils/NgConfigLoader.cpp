@@ -30,7 +30,7 @@
 
 using namespace NgConf;
 
-QStringList NgConfigLoader::loadConfig(NgPost *ngPost, QString const &configPath, SharedParams &postingParams)
+QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath, SharedParams &postingParams)
 {
     QFileInfo fileInfo(configPath);
     if (!fileInfo.exists() || !fileInfo.isFile() || !fileInfo.isReadable())
@@ -195,9 +195,8 @@ QStringList NgConfigLoader::loadConfig(NgPost *ngPost, QString const &configPath
                 else if (opt == kOptionNames[Opt::AUTO_CLOSE_TABS])
                     setBoolean(postingParams->_autoCloseTabs, val);
 
-                else if (opt == kOptionNames[Opt::LOG_IN_FILE] && ngPost->useHMI() && isBooleanTrue(val))
-
-                    ngPost->startLogInFile();
+                else if (opt == kOptionNames[Opt::LOG_IN_FILE] && ngPost.useHMI() && isBooleanTrue(val))
+                    ngPost.startLogInFile();
 
                 else if (opt == kOptionNames[Opt::MONITOR_EXT])
                 {
@@ -209,7 +208,7 @@ QStringList NgConfigLoader::loadConfig(NgPost *ngPost, QString const &configPath
                     if (val.toLower().startsWith("article"))
                     {
                         postingParams->_obfuscateArticles = true;
-                        ngPost->onLog(
+                        NgLogger::log(
                                 tr("Doing article obfuscation (the subject of each Article will be a UUID)"),
                                 true);
                     }
@@ -220,23 +219,25 @@ QStringList NgConfigLoader::loadConfig(NgPost *ngPost, QString const &configPath
                     if (valLower == kGroupPolicies[GROUP_POLICY::EACH_POST])
                     {
                         postingParams->_groupPolicy = GROUP_POLICY::EACH_POST;
-                        ngPost->onLog(tr("Group Policy EACH_POST: each post on a different group"), true);
+                        if (!ngPost.quietMode())
+                            NgLogger::log(tr("Group Policy EACH_POST: each post on a different group"), true);
                     }
                     else if (val == kGroupPolicies[GROUP_POLICY::EACH_FILE])
                     {
                         postingParams->_groupPolicy = GROUP_POLICY::EACH_FILE;
-                        ngPost->onLog(tr("Group Policy EACH_FILE: each file on a different group"), true);
+                        if (!ngPost.quietMode())
+                            NgLogger::log(tr("Group Policy EACH_FILE: each file on a different group"), true);
                     }
-                    else
-                        ngPost->onLog(tr("Group Policy ALL: posting everything on all newsgroup"), true);
+                    else if (!ngPost.quietMode())
+                        NgLogger::log(tr("Group Policy ALL: posting everything on all newsgroup"), true);
                 }
                 else if (opt == kOptionNames[Opt::DISP_PROGRESS])
 
-                    ngPost->setDisplayProgress(val);
+                    ngPost.setDisplayProgress(val);
                 else if (opt == kOptionNames[Opt::MSG_ID])
                 {
                     kArticleIdSignature = val.toStdString();
-                    ngPost->onLog(tr("Using personal signature for articles: %1").arg(val), true);
+                    NgLogger::log(tr("Using personal signature for articles: %1").arg(val), true);
                 }
                 else if (opt == kOptionNames[Opt::ARTICLE_SIZE])
                     setUInt64(kArticleSize, val, errors, lineNumber, opt.toUpper());
@@ -260,19 +261,20 @@ QStringList NgConfigLoader::loadConfig(NgPost *ngPost, QString const &configPath
                 else if (opt == kOptionNames[Opt::GEN_FROM])
                 {
                     setBoolean(postingParams->_genFrom, val);
-                    ngPost->onLog(tr("Generate new random poster for each post"), true);
+                    if (!ngPost.quietMode())
+                        NgLogger::log(tr("Generate new random poster for each post"), true);
                 }
                 else if (opt == kOptionNames[Opt::GROUPS])
                     postingParams->updateGroups(val);
 
                 else if (opt == kOptionNames[Opt::LANG])
-                    ngPost->changeLanguage(val.toLower());
+                    ngPost.changeLanguage(val.toLower());
 
                 else if (opt == kOptionNames[Opt::SHUTDOWN_CMD])
-                    ngPost->setShutdownCmd(val);
+                    ngPost.setShutdownCmd(val);
 
                 else if (opt == kOptionNames[Opt::PROXY_SOCKS5])
-                    ngPost->setProxy(val);
+                    ngPost.setProxy(val);
 
                 else if (opt == kOptionNames[Opt::NZB_POST_CMD])
                 {
@@ -319,7 +321,7 @@ QStringList NgConfigLoader::loadConfig(NgPost *ngPost, QString const &configPath
 #ifdef __USE_TMP_RAM__
                 else if (opt == kOptionNames[Opt::TMP_RAM])
                 {
-                    QString err = postingParams->setRamPathAndTestStorage(ngPost, val);
+                    QString err = postingParams->setRamPathAndTestStorage(val);
                     if (!err.isEmpty())
                         addError(errors, lineNumber, tr("Error with %1: %2").arg(line, err));
                 }
@@ -360,14 +362,14 @@ QStringList NgConfigLoader::loadConfig(NgPost *ngPost, QString const &configPath
                     setBoolean(postingParams->_keepRar, val);
                 else if (opt == kOptionNames[Opt::AUTO_COMPRESS])
                 {
-                    if (ngPost->useHMI())
-                        ngPost->onLog(
+                    if (ngPost.useHMI())
+                        NgLogger::log(
                                 tr("obsolete keyword AUTO_COMPRESS, you should use PACK instead, please click "
                                    "SAVE to "
                                    "update your conf and then go check it."),
                                 true);
                     else
-                        ngPost->onLog(
+                        NgLogger::log(
                                 tr("obsolete keyword AUTO_COMPRESS, you should use PACK instead, please refer "
                                    "to "
                                    "the conf "
@@ -397,7 +399,7 @@ QStringList NgConfigLoader::loadConfig(NgPost *ngPost, QString const &configPath
                                  lineNumber,
                                  tr("Wrong keywords for PACK: %1. It should be a subset of (%2)")
                                          .arg(wrongKeywords.join(", "), allowedKeywords.join(", ").toUpper()));
-                    else if (ngPost->useHMI())
+                    else if (ngPost.useHMI())
                         postingParams->enableAutoPacking();
                 }
                 else if (opt == kOptionNames[Opt::RAR_NO_ROOT_FOLDER])

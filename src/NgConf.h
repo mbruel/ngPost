@@ -41,7 +41,11 @@ inline const QString kDonationURL =
         "webscr?cmd=_donations&business=W2C236U6JNTUA&item_name=ngPost&currency_code=EUR";
 inline const QString kDonationBtcURL = "https://github.com/mbruel/ngPost#donations";
 
-inline const QString  kMainThreadName       = "MainThread";
+inline const QString kThreadNameMain    = "MainThread";
+inline const QString kThreadNameMonitor = "MonitorThread";
+inline const QString kThreadNameBuilder = "BuilderThread #%1";
+inline const QString kThreadNameNntp    = "NntpThread #%1";
+
 constexpr char const *kFolderMonitoringName = QT_TRANSLATE_NOOP("NgPost", "Auto Posting");
 constexpr char const *kQuickJobName         = QT_TRANSLATE_NOOP("NgPost", "Quick Post");
 constexpr char const *kDonationTooltip =
@@ -105,9 +109,9 @@ constexpr char kDefaultFieldSeparator = ';';
 
 inline std::string       kArticleIdSignature = kDefaultMsgIdSignature;
 inline const std::string kRandomAlphabet     = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-inline const QString     kFileNameAlphabet = "._-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+inline const QString     kFileNameAlphabet = "_-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 inline const QString     kPasswordAlphabet =
-        "!#$%&()*+,-./:;=?@[]^_`{|}~ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        "$%;,+-=[^_`]~@!#ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
 inline const QStringList kDefaultGroups = { "alt.binaries.test", "alt.binaries.misc" };
 
@@ -282,156 +286,6 @@ inline QMap<Opt, QString> const kOptionNames = {
     { Opt::CONNECTION,             "connection"            },
     { Opt::ENABLED,                "enabled"               },
     { Opt::NZBCHECK,               "nzbcheck"              }
-};
-
-inline QList<QCommandLineOption> const kCmdOptions = {
-    { kOptionNames[Opt::HELP], QCoreApplication::translate("NgPost", "Help: display syntax") },
-    { { "v", kOptionNames[Opt::VERSION] }, QCoreApplication::translate("NgPost", "app version") },
-    { { "c", kOptionNames[Opt::CONF] },
-     QCoreApplication::translate("NgPost",
-     "use configuration file (if not provided, we try to load $HOME/.ngPost)"),
-     kOptionNames[Opt::CONF] },
-    { kOptionNames[Opt::DISP_PROGRESS],
-     QCoreApplication::translate("NgPost", "display cmd progressbar: NONE (default), BAR or FILES"),
-     kOptionNames[Opt::DISP_PROGRESS] },
-    { { "d", kOptionNames[Opt::DEBUG] }, QCoreApplication::translate("NgPost", "display extra information") },
-    { kOptionNames[Opt::DEBUG_FULL], QCoreApplication::translate("NgPost", "display full debug information") },
-    { { "l", kOptionNames[Opt::LANG] },
-     QCoreApplication::translate("NgPost", "application language"),
-     kOptionNames[Opt::LANG] },
-
-    { kOptionNames[Opt::CHECK],
-     QCoreApplication::translate(
-              "NgPost", "check nzb file (if articles are available on Usenet) cf https://github.com/mbruel/nzbCheck"),
-     kOptionNames[Opt::CHECK] },
-    { { "q", kOptionNames[Opt::QUIET] },
-     QCoreApplication::translate("NgPost", "quiet mode (no output on stdout)") },
-
- // automated posting (scanning and/or monitoring)
-    { kOptionNames[Opt::AUTO_DIR],
-     QCoreApplication::translate(
-              "NgPost", "parse directory and post every file/folder separately. You must use --compress, "
-              "should add --gen_par2, --gen_name and --gen_pass"),
-     kOptionNames[Opt::AUTO_DIR] },
-    { kOptionNames[Opt::MONITOR_DIR],
-     QCoreApplication::translate(
-              "NgPost", "monitor directory and post every new file/folder. You must use --compress, should "
-              "add --gen_par2, --gen_name and --gen_pass"),
-     kOptionNames[Opt::MONITOR_DIR] },
-    { kOptionNames[Opt::DEL_AUTO],
-     QCoreApplication::translate(
-              "NgPost", "delete file/folder once posted. You must use --auto or --monitor with this option.") },
-
- // quick posting (several files/folders)
-    { { "i", kOptionNames[Opt::INPUT] },
-     QCoreApplication::translate(
-              "NgPost", "input file to upload (single file or directory), you can use it multiple times"),
-     kOptionNames[Opt::INPUT] },
-    { { "o", kOptionNames[Opt::OUTPUT] },
-     QCoreApplication::translate("NgPost", "output file path (nzb)"),
-     kOptionNames[Opt::OUTPUT] },
-
- // general options
-    { { "x", kOptionNames[Opt::OBFUSCATE] },
-     QCoreApplication::translate("NgPost",
-     "obfuscate the subjects of the articles (CAREFUL you won't find your post "
-                                  "if you lose the nzb file)") },
-    { { "g", kOptionNames[Opt::GROUPS] },
-     QCoreApplication::translate("NgPost", "newsgroups where to post the files (coma separated without space)"),
-     kOptionNames[Opt::GROUPS] },
-    { { "m", kOptionNames[Opt::META] },
-     QCoreApplication::translate("NgPost", "extra meta data in header (typically \"password=qwerty42\")"),
-     kOptionNames[Opt::META] },
-    { { "f", kOptionNames[Opt::FROM] },
-     QCoreApplication::translate("NgPost", "poster email (random one if not provided)"),
-     kOptionNames[Opt::FROM] },
-    { { "a", kOptionNames[Opt::ARTICLE_SIZE] },
-     QCoreApplication::translate("NgPost", "article size (default one: %1)").arg(kDefaultArticleSize),
-     kOptionNames[Opt::ARTICLE_SIZE] },
-    { { "z", kOptionNames[Opt::MSG_ID] },
-     QCoreApplication::translate("NgPost", "msg id signature, after the @ (default one: ngPost)"),
-     kOptionNames[Opt::MSG_ID] },
-    { { "r", kOptionNames[Opt::NB_RETRY] },
-     QCoreApplication::translate("NgPost", "number of time we retry to an Article that failed (default: 5)"),
-     kOptionNames[Opt::NB_RETRY] },
-    { { "t", kOptionNames[Opt::THREAD] },
-     QCoreApplication::translate("NgPost",
-     "number of Threads (the connections will be distributed amongs them)"),
-     kOptionNames[Opt::THREAD] },
-    { kOptionNames[Opt::GEN_FROM],
-     QCoreApplication::translate("NgPost", "generate a new random email for each Post (--auto or --monitor)") },
-
- // for compression and par2 support
-    { kOptionNames[Opt::TMP_DIR],
-     QCoreApplication::translate("NgPost",
-     "temporary folder where the compressed files and par2 will be stored"),
-     kOptionNames[Opt::TMP_DIR] },
-    { kOptionNames[Opt::RAR_PATH],
-     QCoreApplication::translate("NgPost", "RAR absolute file path (external application)"),
-     kOptionNames[Opt::RAR_PATH] },
-    { kOptionNames[Opt::RAR_SIZE],
-     QCoreApplication::translate("NgPost", "size in MB of the RAR volumes (0 by default meaning NO split)"),
-     kOptionNames[Opt::RAR_SIZE] },
-    { kOptionNames[Opt::RAR_MAX],
-     QCoreApplication::translate("NgPost", "maximum number of archive volumes"),
-     kOptionNames[Opt::RAR_MAX] },
-    { kOptionNames[Opt::PAR2_PCT],
-     QCoreApplication::translate("NgPost",
-     "par2 redundancy percentage (0 by default meaning NO par2 generation)"),
-     kOptionNames[Opt::PAR2_PCT] },
-    { kOptionNames[Opt::PAR2_PATH],
-     QCoreApplication::translate("NgPost", "par2 absolute file path (in case of self compilation of ngPost)"),
-     kOptionNames[Opt::PAR2_PCT] },
-
-    { kOptionNames[Opt::PACK],
-     QCoreApplication::translate("NgPost",
-     "Pack posts using config PACK definition with a subset of (COMPRESS, "
-                                  "GEN_NAME, GEN_PASS, GEN_PAR2)") },
-    { kOptionNames[Opt::COMPRESS], QCoreApplication::translate("NgPost", "compress inputs using RAR or 7z") },
-    { kOptionNames[Opt::GEN_PAR2],
-     QCoreApplication::translate("NgPost", "generate par2 (to be used with --compress)") },
-    { kOptionNames[Opt::RAR_NAME],
-     QCoreApplication::translate("NgPost", "provide the RAR file name (to be used with --compress)"),
-     kOptionNames[Opt::RAR_NAME] },
-    { kOptionNames[Opt::RAR_PASS],
-     QCoreApplication::translate("NgPost", "provide the RAR password (to be used with --compress)"),
-     kOptionNames[Opt::RAR_PASS] },
-    { kOptionNames[Opt::GEN_NAME],
-     QCoreApplication::translate("NgPost", "generate random RAR name (to be used with --compress)") },
-    { kOptionNames[Opt::GEN_PASS],
-     QCoreApplication::translate("NgPost", "generate random RAR password (to be used with --compress)") },
-    { kOptionNames[Opt::LENGTH_NAME],
-     QCoreApplication::translate("NgPost",
-     "length of the random RAR name (to be used with --gen_name), default: 17"),
-     kOptionNames[Opt::LENGTH_NAME] },
-    { kOptionNames[Opt::LENGTH_PASS],
-     QCoreApplication::translate("NgPost",
-     "length of the random RAR password (to be used with --gen_pass), default: 13"),
-     kOptionNames[Opt::LENGTH_PASS] },
-    { kOptionNames[Opt::RAR_NO_ROOT_FOLDER],
-     QCoreApplication::translate("NgPost", "Remove root (parent) folder when compressing Folders using RAR") },
-
-    { { "S", kOptionNames[Opt::SERVER] },
-     QCoreApplication::translate(
-              "NgPost", "NNTP server following the format (<user>:<pass>@@@)?<host>:<port>:<nbCons>:(no)?ssl"),
-     kOptionNames[Opt::SERVER] },
- // without config file, you can provide all the parameters to connect to ONE SINGLE server
-    { { "h", kOptionNames[Opt::HOST] },
-     QCoreApplication::translate("NgPost", "NNTP server hostname (or IP)"),
-     kOptionNames[Opt::HOST] },
-    { { "P", kOptionNames[Opt::PORT] },
-     QCoreApplication::translate("NgPost", "NNTP server port"),
-     kOptionNames[Opt::PORT] },
-    { { "s", kOptionNames[Opt::SSL] }, QCoreApplication::translate("NgPost", "use SSL") },
-    { { "u", kOptionNames[Opt::USER] },
-     QCoreApplication::translate("NgPost", "NNTP server username"),
-     kOptionNames[Opt::USER] },
-    { { "p", kOptionNames[Opt::PASS] },
-     QCoreApplication::translate("NgPost", "NNTP server password"),
-     kOptionNames[Opt::PASS] },
-    { { "n", kOptionNames[Opt::CONNECTION] },
-     QCoreApplication::translate("NgPost", "number of NNTP connections"),
-     kOptionNames[Opt::CONNECTION] },
 };
 
 enum class PostCmdPlaceHolders

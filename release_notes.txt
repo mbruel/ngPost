@@ -20,25 +20,25 @@ TODO: switch using c++17 std::filesystem in PostingJob...
 ###       Release: ngPost v5.0                   ###
 ###       date:    2024/05/??                    ###
 ####################################################
-- for gimly26: TODO for Linux and Mac, 
+[OK] - for gimly26: TODO for Linux and Mac, 
 check if the default config file (~/.ngPost) exists
 if it is not the case, create it with all default values
 especially set TMP_DIR = /tmp so the user can post 
 instead of having a write permission issue
 
-- major refactoring / tidying / comment of the code 
+[WIP] - major refactoring / tidying / comment of the code 
 use of clang-format (home made :))
 to approach a real production standard
 
-- migration to Qt6. Release of 2 versions with SSL 3 and SSL 1.1
+[OK] - migration to Qt6. Release of 2 versions with SSL 3 and SSL 1.1
 ngPost_v5.0_libssl1.1-x86_64.AppImage & ngPost_v5.0_libssl3-x86_64.AppImage
 Windows and Mac versions upgrade to SSL 3 only
 
-- migration to an SQLite database for the history
+[WIP] - migration to an SQLite database for the history
 => users can get stats (upload per day, week, month, year)
 + possibility to restart posts that were stopped for whatever reason \o/
 
-- basic night mode for the GUI (css found on the web)
+[OK] - basic night mode for the GUI (css found on the web)
 
 - switch to cmake instead of pro/pri files
 use of cpack to generate a .deb? This would deploy the config file :)
@@ -49,6 +49,8 @@ Or maybe bit more clever and simulate a fake ones so providers don't catch it st
 
 - try to set up weblate for translations
 https://hosted.weblate.org/projects/ngpost/
+
+- remove all usage of NgPost * ! rather use references ! for HMI part
 
 
 ####################################################
