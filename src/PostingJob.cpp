@@ -554,7 +554,7 @@ bool PostingJob::startGenPar2()
 #if defined(Q_OS_WIN)
             QString basePathWin(basePath);
             basePathWin.replace("/", "\\");
-            if (_ngPost.useMultiPar())
+            if (_params->useMultiPar())
                 args << QString("/d%1").arg(basePathWin);
             else
                 args << "-B" << basePathWin;
@@ -1392,6 +1392,7 @@ void PostingJob::shallWeUseTmpRam()
         qint64 sourceSize = 0;
         for (QFileInfo const &fi : _params->files())
             sourceSize += NgTools::recursivePathSize(fi);
+
 
         double sourceSizeWithRatio = _params->ramRatio() * sourceSize,
                availableSize       = static_cast<double>(_params->ramAvailable());

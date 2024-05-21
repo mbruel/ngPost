@@ -80,7 +80,7 @@ NgPost::NgPost(int &argc, char *argv[])
     , _postHistoryFile()
 
 #if defined(WIN32) || defined(__MINGW64__)
-    , _dbHistoryFile(sDbHistoryFile)
+    , _dbHistoryFile(kDbHistoryFile)
 #else
     , _dbHistoryFile(QString("%1/%2").arg(getenv("HOME"), kDbHistoryFile))
 #endif
@@ -946,7 +946,7 @@ void NgPost::onShutdownProcReadyReadStandardOutput()
 
 void NgPost::onShutdownProcReadyReadStandardError()
 {
-    NgLogger::error(QString("Shutdown ERROR: %1").arg(_shutdownProc->readAllStandardError()));
+    NgLogger::error(QString("Shutdown ERROR: %1").arg(_shutdownProc->readAllStandardError().constData()));
 }
 
 void NgPost::onShutdownProcFinished(int exitCode)

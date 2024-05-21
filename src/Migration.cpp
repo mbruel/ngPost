@@ -40,7 +40,8 @@ bool Migration::migrate()
         _doMigration();
     else
     {
-        v             = confVersionStr.split(".");
+        v = confVersionStr.split(".");
+
         int confBuild = v.at(0).toInt() * 100 + v.at(1).toInt();
         if (confBuild > buildVersion)
         {
@@ -57,12 +58,18 @@ bool Migration::migrate()
 
 void Migration::_doMigration(unsigned short const confBuild)
 {
+#ifdef _MSC_VER // MSVC compiler...
+    // Fallback for other compilers
+    if (confBuild < 500)
+        _migrateTo500();
+#else
     switch (confBuild)
     {
     case 1 ... 416:
         _migrateTo500();
         // no break so all new updates will be done!
     }
+#endif // <-- Add this line
 
     ResumeJobQueue::postedFilesFromNzb("/home/mb/Downloads/nzb/newshosting_installer.nzb");
     //    _ngPost.saveConfig(); // Update conf

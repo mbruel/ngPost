@@ -22,6 +22,7 @@
 #include <QFile>
 #include <QRegularExpression>
 #include <QXmlStreamReader>
+#include <QDebug> //MB_TODO: use NgLogger instead!
 
 #include "utils/NgLogger.h"
 #include "utils/NgTools.h"

@@ -40,7 +40,11 @@ class NgPost;
 using SharedParams = QExplicitlySharedDataPointer<MainParams>;
 
 // shared between a PostingJobs and its PostingWidget
+#ifndef _MSC_VER // MB_TODO: investigate why MSVC compiler has an issue with QSharedPointer and initialization...
 using PostingParamsPtr = QSharedPointer<PostingParams>;
+#else
+using PostingParamsPtr = std::shared_ptr<PostingParams>;
+#endif
 
 class MainParams : public QSharedData
 {
@@ -301,8 +305,11 @@ public:
         , _splitArchive(false)
     {
     }
-    Q_DISABLE_COPY_MOVE(PostingParams);
 
+    PostingParams(PostingParams const &)                         = default;
+    PostingParams &operator=(PostingParams const &)              = delete;
+    PostingParams(PostingParams &&)                              = default;
+    PostingParams                   &operator=(PostingParams &&) = delete;
     QList<NntpServerParams *> const &nntpServers() const { return _params->nntpServers(); }
 
     QMap<QString, QString> const &meta() { return _meta; }

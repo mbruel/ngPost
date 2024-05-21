@@ -18,6 +18,9 @@
 //========================================================================
 
 #include "ArticleBuilder.h"
+
+#include <QDebug> //MB_TODO: use NgLogger instead!
+
 #include "NgConf.h"
 #include "nntp/NntpArticle.h"
 #include "Poster.h"
