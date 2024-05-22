@@ -1,6 +1,6 @@
 //========================================================================
 //
-// Copyright (C) 2020 Matthieu Bruel <Matthieu.Bruel@gmail.com>
+// Copyright (C) 2020-2024 Matthieu Bruel <Matthieu.Bruel@gmail.com>
 // This file is a part of ngPost : https://github.com/mbruel/ngPost
 //
 // This program is free software: you can redistribute it and/or modify
@@ -19,6 +19,7 @@
 
 #include "NzbCheck.h"
 #include <cmath>
+#include <iostream> // for the progressbar
 
 #include <QCoreApplication>
 #include <QFile>
@@ -30,81 +31,20 @@
 #include "NgConf.h"
 #include "nntp/NntpServerParams.h"
 #include "NntpCheckCon.h"
+#include "utils/NgLogger.h"
 
-const QRegularExpression NzbCheck::sNntpArticleYencSubjectRegExp =
-        QRegularExpression(kNntpArticleYencSubjectStrRegExp);
-
-void NzbCheck::onDisconnected(NntpCheckCon *con)
-{
-    _connections.remove(con);
-    if (_connections.isEmpty())
-    {
-        if (_dispProgressBar)
-        {
-            disconnect(&_progressbarTimer, &QTimer::timeout, this, &NzbCheck::onRefreshprogressbarBar);
-            onRefreshprogressbarBar();
-            _cout << "\n" << MB_FLUSH;
-        }
-
-        if (!_quietMode)
-        {
-            qint64 duration = _timeStart.elapsed();
-            _cout << tr("Nb Missing Article(s): %1/%2 (check done in %3 (%4 sec) using %5 connections on %6 "
-                        "server(s))")
-                             .arg(_nbMissingArticles)
-                             .arg(_nbTotalArticles)
-                             .arg(QTime::fromMSecsSinceStartOfDay(static_cast<int>(duration))
-                                          .toString("hh:mm:ss.zzz"))
-                             .arg(std::round(1. * duration / 1000))
-                             .arg(_nbCons)
-                             .arg(nbCheckingServers())
-                  << "\n"
-                  << MB_FLUSH;
-        }
-        qApp->quit();
-    }
-}
-
-void NzbCheck::onRefreshprogressbarBar()
-{
-    float progressbar = static_cast<float>(_nbCheckedArticles);
-    progressbar /= _nbTotalArticles;
-
-    _cout << "\r[";
-    int pos = static_cast<int>(std::floor(progressbar * NgConf::kProgressbarBarWidth));
-    for (int i = 0; i < NgConf::kProgressbarBarWidth; ++i)
-    {
-        if (i < pos)
-            _cout << "=";
-        else if (i == pos)
-            _cout << ">";
-        else
-            _cout << " ";
-    }
-    _cout << "] " << int(progressbar * 100) << " %"
-          << " (" << _nbCheckedArticles << " / " << _nbTotalArticles << ")" << tr(" missing: ")
-          << _nbMissingArticles;
-    _cout.flush();
-
-    if (_nbCheckedArticles < _nbTotalArticles)
-        _progressbarTimer.start(NgConf::kDefaultRefreshRate);
-}
-
-NzbCheck::NzbCheck()
-    : QObject()
-    , _nzbPath()
+NzbCheck::NzbCheck(SharedParams const &postingParams, QString const &nzbPath)
+    : QObject(nullptr)
+    , _postingParams(postingParams)
+    , _nzbPath(nzbPath)
     , _articles()
-    , _cout(stdout)
-    , _cerr(stderr)
-    , _nbTotalArticles(0)
-    , _nbMissingArticles(0)
-    , _nbCheckedArticles(0)
-    , _nntpServers()
-    , _debug(0)
-    , _connections()
     , _dispProgressBar(false)
     , _progressbarTimer()
-    , _quietMode(false)
+    , _nntpServers()
+    , _connections()
+    , _nbArticlesTotal(0)
+    , _nbArticlesMissing(0)
+    , _nbArticlesChecked(0)
 {
 }
 
@@ -114,56 +54,76 @@ NzbCheck::~NzbCheck()
         _progressbarTimer.stop();
 }
 
-int NzbCheck::parseNzb()
+void NzbCheck::_clear()
+{
+    _articles.clear();
+    _nntpServers.clear();
+    _nbArticlesTotal   = 0;
+    _nbArticlesMissing = 0;
+    _nbArticlesChecked = 0;
+}
+
+int NzbCheck::hasCheckingConnections()
+{
+    auto const &allNntpSrvs = _postingParams->nntpServers();
+    for (NntpServerParams *srvParam : allNntpSrvs)
+    {
+        if (srvParam->nzbCheck)
+        {
+            _nntpServers << srvParam;
+            _nbCons += srvParam->nbCons;
+        }
+    }
+    return _nbCons;
+}
+
+bool NzbCheck::parseNzb()
 {
     QFile file(_nzbPath);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        _cerr << tr("Error opening nzb file...") << "\n" << MB_FLUSH;
-        return -1;
+        NgLogger::criticalError(tr("Error opening nzb file %1").arg(_nzbPath),
+                                NgError::ERR_CODE::ERR_FILE_NOT_EXIST);
+        return false;
     }
 
     QXmlStreamReader xmlReader(&file);
     while (!xmlReader.atEnd())
     {
         QXmlStreamReader::TokenType type = xmlReader.readNext();
-        if (type == QXmlStreamReader::TokenType::StartElement
-            && xmlReader.name().compare(QLatin1String("file")) == 0)
+        if (type == QXmlStreamReader::TokenType::StartElement && xmlReader.name().compare(kXMLTokenFile) == 0)
         {
-            QString                 subject    = xmlReader.attributes().value("subject").toString();
-            QRegularExpressionMatch match      = sNntpArticleYencSubjectRegExp.match(subject);
-            int                     nbArticles = 0, nbExpectedArticles = 0;
+            auto subject    = xmlReader.attributes().value(kXMLTagSubject).toString();
+            auto match      = kNntpArticleYencSubjectRegExp.match(subject);
+            int  nbArticles = 0, nbExpectedArticles = 0;
             if (match.hasMatch())
                 nbExpectedArticles = match.captured(1).toInt();
             while (!xmlReader.atEnd())
             {
-                QXmlStreamReader::TokenType type = xmlReader.readNext();
+                auto type = xmlReader.readNext();
                 if (type == QXmlStreamReader::TokenType::EndElement
-                    && xmlReader.name().compare(QLatin1String("file")) == 0)
+                    && xmlReader.name().compare(kXMLTokenFile) == 0)
                 {
-                    if (debugMode())
-                        _cout << tr("The file '%1' has %2 articles in the nzb (expected: %3)")
-                                         .arg(subject)
-                                         .arg(nbArticles)
-                                         .arg(nbExpectedArticles)
-                              << "\n"
-                              << MB_FLUSH;
+                    NgLogger::log(tr("The file '%1' has %2 articles in the nzb (expected: %3)")
+                                          .arg(subject)
+                                          .arg(nbArticles)
+                                          .arg(nbExpectedArticles),
+                                  true,
+                                  NgLogger::DebugLevel::Debug);
                     if (nbArticles < nbExpectedArticles)
                     {
-                        if (!_quietMode)
-                            _cout << tr("- %1 missing Article(s) in nzb for '%2'")
-                                             .arg(nbExpectedArticles - nbArticles)
-                                             .arg(subject)
-                                  << "\n"
-                                  << MB_FLUSH;
-
-                        _nbMissingArticles += nbExpectedArticles - nbArticles;
+                        if (!_postingParams->quietMode())
+                            NgLogger::log(tr("- %1 missing Article(s) in nzb for '%2'")
+                                                  .arg(nbExpectedArticles - nbArticles)
+                                                  .arg(subject),
+                                          true);
+                        _nbArticlesMissing += nbExpectedArticles - nbArticles;
                     }
 
                     break;
                 }
                 else if (type == QXmlStreamReader::TokenType::StartElement
-                         && xmlReader.name().compare(QLatin1String("segment")) == 0)
+                         && xmlReader.name().compare(kXMLTokenSegment) == 0)
                 {
                     ++nbArticles;
                     xmlReader.readNext();
@@ -175,29 +135,23 @@ int NzbCheck::parseNzb()
 
     if (xmlReader.hasError())
     {
-        _cerr << "parsing error: " << xmlReader.errorString() << " at line: " << xmlReader.lineNumber() << "\n"
-              << MB_FLUSH;
-        return -2;
+        NgLogger::criticalError(tr("Error parsing nzb file at line %1 : %2")
+                                        .arg(xmlReader.lineNumber())
+                                        .arg(xmlReader.errorString()),
+                                NgError::ERR_CODE::ERR_FILE_NOT_EXIST);
+        return false;
     }
-    _nbTotalArticles = _articles.size();
-    if (!_quietMode)
-        _cout << tr("%1 has %2 articles").arg(QFileInfo(_nzbPath).fileName()).arg(_nbTotalArticles) << "\n"
-              << MB_FLUSH;
-    return _nbTotalArticles;
+    _nbArticlesTotal = _articles.size();
+    if (!_postingParams->quietMode())
+        NgLogger::log(tr("%1 has %2 articles").arg(_nzbPath).arg(_nbArticlesTotal), true);
+    return _nbArticlesTotal;
 }
 
-void NzbCheck::checkPost()
+void NzbCheck::startCheckingNzb()
 {
     _timeStart.start();
 
-    _nbCons = 0;
-    for (NntpServerParams *srvParam : _nntpServers)
-    {
-        if (srvParam->nzbCheck)
-            _nbCons += srvParam->nbCons;
-    }
-
-    _nbCons = std::min(_nbTotalArticles, _nbCons);
+    _nbCons = std::min(_nbArticlesTotal, _nbCons);
 
     int nb = 0;
     for (NntpServerParams *srvParam : _nntpServers)
@@ -220,8 +174,11 @@ void NzbCheck::checkPost()
         }
     }
 
-    if (debugMode())
-        _cout << tr("Using %1 Connections").arg(_nbCons) << "\n" << MB_FLUSH;
+    if (!_postingParams->quietMode())
+        NgLogger::log(tr("Start checking the nzb with %1 connections on %1 servers)")
+                              .arg(_nbCons)
+                              .arg(_nntpServers.size()),
+                      true);
 
     if (_dispProgressBar)
     {
@@ -234,13 +191,69 @@ void NzbCheck::checkPost()
     }
 }
 
-int NzbCheck::nbCheckingServers()
+void NzbCheck::missingArticle(QString const &article)
 {
-    int nb = 0;
-    for (NntpServerParams *srvParam : _nntpServers)
+    if (!_postingParams->quietMode())
     {
-        if (srvParam->nzbCheck)
-            ++nb;
+        if (_dispProgressBar)
+            std::cout << "\n";
+        NgLogger::log(tr("+ Missing Article on server: %1)").arg(article), true);
     }
-    return nb;
+    ++_nbArticlesMissing;
+}
+
+void NzbCheck::onDisconnected(NntpCheckCon *con)
+{
+    _connections.remove(con);
+    if (_connections.isEmpty())
+    {
+        if (_dispProgressBar)
+        {
+            disconnect(&_progressbarTimer, &QTimer::timeout, this, &NzbCheck::onRefreshprogressbarBar);
+            onRefreshprogressbarBar();
+            std::cout << "\n\n";
+        }
+
+        if (!_postingParams->quietMode())
+        {
+            qint64 duration = _timeStart.elapsed();
+            NgLogger::log(
+                    tr("Nb Missing Article(s): %1/%2 (check done in %3 (%4 sec) using %5 connections on %6 "
+                       "server(s))")
+                            .arg(_nbArticlesMissing)
+                            .arg(_nbArticlesTotal)
+                            .arg(QTime::fromMSecsSinceStartOfDay(static_cast<int>(duration))
+                                         .toString("hh:mm:ss.zzz"))
+                            .arg(std::round(1. * duration / 1000))
+                            .arg(_nbCons)
+                            .arg(_nntpServers.size()),
+                    true);
+        }
+        qApp->quit(); // end of game :)
+    }
+}
+
+void NzbCheck::onRefreshprogressbarBar()
+{
+    float progressbar = static_cast<float>(_nbArticlesChecked);
+    progressbar /= _nbArticlesTotal;
+
+    std::cout << "\r[";
+    int pos = static_cast<int>(std::floor(progressbar * NgConf::kProgressbarBarWidth));
+    for (int i = 0; i < NgConf::kProgressbarBarWidth; ++i)
+    {
+        if (i < pos)
+            std::cout << "=";
+        else if (i == pos)
+            std::cout << ">";
+        else
+            std::cout << " ";
+    }
+    std::cout << "] " << int(progressbar * 100) << " %"
+              << " (" << _nbArticlesChecked << " / " << _nbArticlesTotal << ")" << tr(" missing: ").toStdString()
+              << _nbArticlesMissing;
+    std::cout.flush();
+
+    if (_nbArticlesChecked < _nbArticlesTotal)
+        _progressbarTimer.start(NgConf::kDefaultRefreshRate);
 }

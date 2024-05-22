@@ -1,6 +1,6 @@
 //========================================================================
 //
-// Copyright (C) 2020 Matthieu Bruel <Matthieu.Bruel@gmail.com>
+// Copyright (C) 2020-2024 Matthieu Bruel <Matthieu.Bruel@gmail.com>
 // This file is a part of ngPost : https://github.com/mbruel/ngPost
 //
 // This program is free software: you can redistribute it and/or modify
@@ -18,9 +18,11 @@
 //========================================================================
 
 #include "NntpCheckCon.h"
+#include <QSslSocket>
+
 #include "nntp/Nntp.h"
 #include "NzbCheck.h"
-#include <QSslSocket>
+#include "utils/NgLogger.h"
 
 NntpCheckCon::NntpCheckCon(NzbCheck *nzbCheck, int id, NntpServerParams const &srvParams)
     : QObject()
@@ -104,9 +106,7 @@ void NntpCheckCon::onConnected()
     }
     else
     {
-        if (_nzbCheck->debugMode())
-            _nzbCheck->log(tr("[Con #%1] Connected").arg(_id));
-
+        NgLogger::log(tr("[Con #%1] Connected").arg(_id), true, NgLogger::DebugLevel::Debug);
         _postingState = PostingState::CONNECTED;
         // We should receive the Hello Message
     }
@@ -114,9 +114,7 @@ void NntpCheckCon::onConnected()
 
 void NntpCheckCon::onEncrypted()
 {
-    if (_nzbCheck->debugMode())
-        _nzbCheck->log(tr("[Con #%1] Connected").arg(_id));
-
+    NgLogger::log(tr("[Con #%1] Connected").arg(_id), true, NgLogger::DebugLevel::Debug);
     _postingState = PostingState::CONNECTED;
     // We should receive the Hello Message
 }
@@ -137,8 +135,6 @@ void NntpCheckCon::onReadyRead()
     while (_isConnected && _socket->canReadLine())
     {
         QByteArray line = _socket->readLine();
-        //        qDebug() << "line: " << line.constData();
-
         if (_postingState == PostingState::CHECKING_ARTICLE)
         {
             if (strncmp(line.constData(), Nntp::getResponse(430), 3) == 0)
@@ -225,16 +221,17 @@ void NntpCheckCon::onReadyRead()
 
 void NntpCheckCon::onSslErrors(QList<QSslError> const &errors)
 {
-    QString err("Error SSL Socket:\n");
+    QString err = tr("Error SSL Socket:\n");
     for (int i = 0; i < errors.size(); ++i)
         err += QString("\t- %1\n").arg(errors[i].errorString());
-    _nzbCheck->error(err);
+
+    NgLogger::error(err);
     _closeConnection();
 }
 
 void NntpCheckCon::onErrors(QAbstractSocket::SocketError)
 {
-    _nzbCheck->error(QString("Error Socket: %1").arg(_socket->errorString()));
+    NgLogger::error(tr("Error Socket: %1").arg(_socket->errorString()));
     _closeConnection();
 }
 
@@ -260,17 +257,15 @@ void NntpCheckCon::_checkNextArticle()
 
     if (!_currentArticle.isNull())
     {
-        if (_nzbCheck->debugMode())
-            _nzbCheck->log(tr("[Con #%1] Checking article %2").arg(_id).arg(_currentArticle));
-
+        NgLogger::log(tr("[Con #%1] Checking article %2").arg(_id).arg(_currentArticle),
+                      true,
+                      NgLogger::DebugLevel::Debug);
         _postingState = PostingState::CHECKING_ARTICLE;
         _socket->write(QString("%1 %2\r\n").arg(Nntp::STAT).arg(_currentArticle).toLocal8Bit());
     }
     else
     {
-        if (_nzbCheck->debugMode())
-            _nzbCheck->log(tr("[Con #%1] No more Article").arg(_id));
-
+        NgLogger::log(tr("[Con #%1] No more Article").arg(_id), true, NgLogger::DebugLevel::Debug);
         _postingState = PostingState::IDLE;
         _closeConnection();
     }

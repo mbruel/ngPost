@@ -222,7 +222,7 @@ public:
     inline bool groupPolicyPerFile() const;
 
     inline bool nzbCheck() const;
-    int         nbMissingArticles() const;
+    int         nbMissingArticles() const; //!< output of the program when doing nzbCheck
 
     inline QString const &postHistoryFile() const;
     inline QString const &historyFieldSeparator() const;

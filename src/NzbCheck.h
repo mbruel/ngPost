@@ -1,6 +1,6 @@
 //========================================================================
 //
-// Copyright (C) 2020 Matthieu Bruel <Matthieu.Bruel@gmail.com>
+// Copyright (C) 2020-2024 Matthieu Bruel <Matthieu.Bruel@gmail.com>
 // This file is a part of ngPost : https://github.com/mbruel/ngPost
 //
 // This program is free software: you can redistribute it and/or modify
@@ -27,122 +27,89 @@
 #include <QString>
 #include <QTextStream>
 #include <QTimer>
-struct NntpServerParams;
-class NntpCheckCon;
 
-#include "utils/Macros.h" // MB_FLUSH
+#include "PostingParams.h"
+class NntpCheckCon;
 
 class NzbCheck : public QObject
 {
     Q_OBJECT
+    friend NntpCheckCon; // only class allowed to use getNextArticle and update _nbArticles*
 
 private:
-    static constexpr char const *kNntpArticleYencSubjectStrRegExp = "^\\[\\d+/\\d+\\]\\s+.+\\(\\d+/(\\d+)\\)$";
-    static const QRegularExpression sNntpArticleYencSubjectRegExp;
+    inline static const QString       kXMLTagSubject   = "subject";
+    inline static const QLatin1String kXMLTokenFile    = QLatin1String("file");
+    inline static const QLatin1String kXMLTokenSegment = QLatin1String("segment");
 
-    QString         _nzbPath;
-    QStack<QString> _articles;
+    inline static const QRegularExpression kNntpArticleYencSubjectRegExp =
+            QRegularExpression("^\\[\\d+/\\d+\\]\\s+.+\\(\\d+/(\\d+)\\)$");
 
-    // MB_TODO : make NzbCheck use NgLogger...
-    QTextStream _cout; //!< stream for stdout
-    QTextStream _cerr; //!< stream for stderr
-
-    int _nbTotalArticles;
-    int _nbMissingArticles;
-    int _nbCheckedArticles;
-
-    QList<NntpServerParams *> _nntpServers; //!< the servers parameters
-
-    ushort _debug;
-
-    QSet<NntpCheckCon *> _connections;
+    SharedParams const &_postingParams; //!< owned by NgPost (no need to copy as we won't modify it or detach)
+    QString             _nzbPath;       //!< path of the nzb we need to check
+    QStack<QString>     _articles;      //!< ids of all the articles of the nzb (
 
     bool   _dispProgressBar;
     QTimer _progressbarTimer; //!< timer to refresh the upload information (progressbar bar, avg. speed)
 
-    bool _quietMode;
+    QList<NntpServerParams *> _nntpServers; //!< the servers parameters that are allowed for checking headers
+
+    QSet<NntpCheckCon *> _connections;
+    int                  _nbCons;
+
+    int _nbArticlesTotal;
+    int _nbArticlesMissing;
+    int _nbArticlesChecked;
 
     QElapsedTimer _timeStart;
-    int           _nbCons;
 
-public slots:
+public:
+    NzbCheck(SharedParams const &postingParams, QString const &nzbPath);
+    ~NzbCheck();
+
+    /*!
+     * \brief from postingParams->nntpServers() save the ones with nzbCheck allowed in _nntpServers
+     *  most servers are only used for posting (upload)
+     *  others can be used for download (even if checking header doesn't use download quota normally)
+     * \return _nbCons
+     */
+    int hasCheckingConnections();
+
+    /*!
+     * \brief parseNzb the nzb file to fill _articles with the ids of the aticles
+     * \return the total number of Articles (_nbArticlesTotal)
+     */
+    bool parseNzb();
+
+    /*!
+     * \brief start the actual job:
+     * create the NntpCheckCon and start them
+     * start the progress bar (if not quiet mode)
+     */
+    void startCheckingNzb();
+
+    void setDispProgressBar(bool display) { _dispProgressBar = display; }
+
+    //! result of the check (output of the program)
+    int nbMissingArticles() const { return _nbArticlesMissing; }
+
+private slots:
     void onDisconnected(NntpCheckCon *con);
     void onRefreshprogressbarBar();
 
-public:
-    NzbCheck();
-    ~NzbCheck();
+    // only for NntpCheckCon as a friend will use those methods
+private:
+    QString getNextArticle()
+    {
+        if (_articles.isEmpty())
+            return QString();
+        else
+            return _articles.pop();
+    }
 
-    int  parseNzb();
-    void checkPost();
-    int  nbCheckingServers();
+    void missingArticle(QString const &article);
+    void articleChecked() { ++_nbArticlesChecked; }
 
-    // For ngPost integration
-    inline int  parseNzb(QString const &nzbPath);
-    inline void checkPost(QList<NntpServerParams *> const &nntpServers);
-    inline void setDispProgressBar(bool display);
-    inline void setQuiet(bool quiet);
-
-    inline void    missingArticle(QString const &article);
-    inline QString getNextArticle();
-    inline void    articleChecked();
-
-    inline int  nbMissingArticles() const;
-    inline bool debugMode() const;
-    inline void setDebug(ushort level);
-
-    inline void log(QString const &aMsg);
-    inline void log(char const *aMsg);
-    inline void log(std::string const &aMsg);
-    inline void error(QString const &aMsg);
-    inline void error(char const *aMsg);
-    inline void error(std::string const &aMsg);
+    void _clear();
 };
-
-int NzbCheck::parseNzb(QString const &nzbPath)
-{
-    _nzbPath = nzbPath;
-    return parseNzb();
-}
-
-void NzbCheck::checkPost(QList<NntpServerParams *> const &nntpServers)
-{
-    _nntpServers = nntpServers;
-    checkPost();
-}
-
-void NzbCheck::setDispProgressBar(bool display) { _dispProgressBar = display; }
-void NzbCheck::setQuiet(bool quiet) { _quietMode = quiet; }
-
-void NzbCheck::missingArticle(QString const &article)
-{
-    if (!_quietMode)
-        _cout << (_dispProgressBar ? "\n" : "") << tr("+ Missing Article on server: ") << article << "\n"
-              << MB_FLUSH;
-    ++_nbMissingArticles;
-}
-
-QString NzbCheck::getNextArticle()
-{
-    if (_articles.isEmpty())
-        return QString();
-    else
-        return _articles.pop();
-}
-
-void NzbCheck::articleChecked() { ++_nbCheckedArticles; }
-
-int NzbCheck::nbMissingArticles() const { return _nbMissingArticles; }
-
-bool NzbCheck::debugMode() const { return _debug != 0; }
-void NzbCheck::setDebug(ushort level) { _debug = level; }
-
-void NzbCheck::log(QString const &aMsg) { _cout << aMsg << "\n" << MB_FLUSH; }
-void NzbCheck::log(char const *aMsg) { _cout << aMsg << "\n" << MB_FLUSH; }
-void NzbCheck::log(std::string const &aMsg) { _cout << aMsg.c_str() << "\n" << MB_FLUSH; }
-
-void NzbCheck::error(QString const &aMsg) { _cerr << aMsg << "\n" << MB_FLUSH; }
-void NzbCheck::error(char const *aMsg) { _cerr << aMsg << "\n" << MB_FLUSH; }
-void NzbCheck::error(std::string const &aMsg) { _cerr << aMsg.c_str() << "\n" << MB_FLUSH; }
 
 #endif // NZBCHECK_H

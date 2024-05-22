@@ -19,7 +19,7 @@
 
 #include "NgPost.h"
 #include <cmath>
-#include <iostream>
+#include <iostream> // for the progressbar
 
 #ifdef __USE_HMI__
 #  include <QApplication>
@@ -220,7 +220,13 @@ NgPost::~NgPost()
 
 int NgPost::nbMissingArticles() const { return _nzbCheck->nbMissingArticles(); }
 
-bool NgPost::initHistoryDatabase() { return _dbHistory->initSQLite(_dbHistoryFile); }
+bool NgPost::initHistoryDatabase()
+{
+    if (_nzbCheck)
+        return false; // no need of the History Database...
+
+    return _dbHistory->initSQLite(_dbHistoryFile);
+}
 
 void NgPost::startLogInFile() const
 {
@@ -1215,28 +1221,28 @@ void NgPost::addMonitoringFolder(QString const &dirPath)
 
 bool NgPost::doNzbCheck(QString const &nzbPath)
 {
-    _nzbCheck = new NzbCheck();                           // it's a one shot, no leak ;)
-    _nzbCheck->setDebug(NgLogger::isDebugMode() ? 0 : 1); // MB_TODO : make NzbCheck use NgLogger...
-    _nzbCheck->setDispProgressBar(_dispProgressBar || _dispFilesPosting);
-    _nzbCheck->setQuiet(_postingParams->quietMode());
-    int nbArticles = _nzbCheck->parseNzb(nzbPath);
-    if (nbArticles == 0)
-        return false;
+    _nzbCheck = new NzbCheck(_postingParams, nzbPath); // it's a one shot, no leak ;)
+    if (!_postingParams->quietMode())
+        _nzbCheck->setDispProgressBar(_dispProgressBar || _dispFilesPosting);
 
-    auto const &nntpServers = _postingParams->nntpServers();
-    if (nntpServers.isEmpty())
+    // Check if there are connection usable for downloading headers
+    if (_nzbCheck->hasCheckingConnections() == 0)
     {
-        NgLogger::criticalError(
-                tr("No server found to launch nzbCheck on %1...\nCheck config or add some in command "
-                   "line. cf --help")
-                        .arg(nzbPath),
-                NgError::ERR_CODE::ERR_NO_SERVER);
+        NgLogger::criticalError(tr("No server found to launch nzbCheck for %1...\n"
+                                   "Check config (some servers needs to have 'nzbCheck = true' ;"
+                                   "otherwise add servers in command line. cf --help")
+                                        .arg(nzbPath),
+                                NgError::ERR_CODE::ERR_NO_SERVER);
         return false;
     }
 
-    // _nzbCheck is a big boy, we just let him the hand ;)
-    _nzbCheck->checkPost(nntpServers);
-    return true;
+    // Load the nzb file: make sure the path is ok, that it is an nzb file and an non empty one!
+    if (!_nzbCheck->parseNzb())
+        return false; // The error will be noticed in the function
+
+    // _nzbCheck is a big boy, we just let him do its job!
+    _nzbCheck->startCheckingNzb();
+    return true; // when the job it's finished the event loop will be stopped
 }
 
 bool NgPost::removeNntpServer(NntpServerParams *server) { return _postingParams->removeNntpServer(server); }

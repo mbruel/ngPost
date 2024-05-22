@@ -85,7 +85,10 @@ int main(int argc, char *argv[])
             exitCode = app->startEventLoop();
 
             if (app->nzbCheck())
+            {
                 exitCode = app->nbMissingArticles();
+                qApp->processEvents(); // to see the last summary log (in queue...)
+            }
         }
 #ifdef __DEBUG__
         std::cout << app->appName() << " closed properly!\n";
