@@ -33,6 +33,9 @@ MainParams::~MainParams()
 MainParams::MainParams()
     : QSharedData()
     , _quiet(false)
+    , _dispProgressBar(false)
+    , _dispFilesPosting(false)
+
 #ifdef __USE_TMP_RAM__
     , _storage(nullptr)
     , _ramPath()
@@ -89,6 +92,30 @@ MainParams::MainParams()
     , _delAuto(false)
 
 {
+}
+
+void MainParams::setDisplayProgress(QString const &txtValue)
+{
+    QString val = txtValue.toLower();
+    if (val == kDisplayProgress[DISP_PROGRESS::BAR])
+    {
+        _dispProgressBar  = true;
+        _dispFilesPosting = false;
+        qDebug() << "Display progressbar bar\n";
+    }
+    else if (val == kDisplayProgress[DISP_PROGRESS::FILES])
+    {
+        _dispProgressBar  = false;
+        _dispFilesPosting = true;
+        qDebug() << "Display Files when start posting\n";
+    }
+    else if (val == kDisplayProgress[DISP_PROGRESS::NONE])
+    { // force it in case in the config file something was on
+        _dispProgressBar  = false;
+        _dispFilesPosting = false;
+    }
+    else
+        NgLogger::error(tr("Wrong display keyword: %1").arg(val.toUpper()));
 }
 
 #ifdef __USE_TMP_RAM__
@@ -199,9 +226,12 @@ QStringList PostingParams::buildCompressionCommandArgumentsList() const
                 volSize = static_cast<uint>(postSize / _params->rarMax()) + 1;
 
             if (NgLogger::isDebugMode())
-                NgLogger::log(
-                        tr("postSize for %1 : %2 MB => volSize: %3").arg(_nzbFilePath, postSize).arg(volSize),
-                        true);
+                NgLogger::log(tr("postSize for %1 : %2 MB => volSize: %3")
+                                      .arg(_nzbFilePath)
+                                      .arg(postSize)
+                                      .arg(volSize),
+                              true,
+                              NgLogger::DebugLevel::Debug);
         }
         args << QString("-v%1m").arg(volSize);
         _splitArchive = true; // used for par2cmd
@@ -462,8 +492,8 @@ bool MainParams::saveConfig(QString const &configFilePath, NgPost const &ngPost)
            << "\n"
            << "\n"
            << tr("## How to display progressbar in command line: NONE, BAR, FILES") << "\n"
-           << (ngPost.dispProgressBar() ? "" : "#") << "DISP_Progress = BAR\n"
-           << (ngPost.dispFilesPosting() ? "" : "#") << "DISP_Progress = FILES\n"
+           << (dispProgressBar() ? "" : "#") << "DISP_Progress = BAR\n"
+           << (dispFilesPosting() ? "" : "#") << "DISP_Progress = FILES\n"
            << "\n"
            << "\n"
            << tr("## suffix of the msg_id for all the articles (cf nzb file)") << "\n"

@@ -87,6 +87,7 @@ public:
     void start();
 #endif
 
+    void clear() { setProgressCallback(nullptr); }
     void stop(bool lastRefresh);
 };
 

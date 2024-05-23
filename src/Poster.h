@@ -30,6 +30,8 @@ class NntpConnection;
 class NntpArticle;
 class PostingJob;
 
+#include "utils/NgLogger.h"
+
 using AtomicBool = QAtomicInteger<unsigned short>; // 16 bit only (faster than using 8 bit variable...)
 
 /*!
@@ -96,7 +98,9 @@ public:
 private:
     NntpArticle *_prepareNextArticle(QString const &threadName, bool fillQueue = true);
 
-    void _log(QString const &aMsg, bool newline = true) const; //!< log function for QString
+    void _log(QString const       &aMsg,
+              NgLogger::DebugLevel debugLvl,
+              bool                 newline = true) const; //!< log function for QString
     void _error(QString const &error) const;
 };
 

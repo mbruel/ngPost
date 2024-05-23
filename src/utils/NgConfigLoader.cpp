@@ -232,8 +232,7 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
                         NgLogger::log(tr("Group Policy ALL: posting everything on all newsgroup"), true);
                 }
                 else if (opt == kOptionNames[Opt::DISP_PROGRESS])
-
-                    ngPost.setDisplayProgress(val);
+                    postingParams->setDisplayProgress(val);
                 else if (opt == kOptionNames[Opt::MSG_ID])
                 {
                     kArticleIdSignature = val.toStdString();

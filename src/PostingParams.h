@@ -56,6 +56,8 @@ class MainParams : public QSharedData
 
 private:
     bool _quiet;
+    bool _dispProgressBar;
+    bool _dispFilesPosting;
 
     QList<NntpServerParams *> _nntpServers; //!< the parameters of the available servers
 
@@ -144,6 +146,9 @@ public:
     MainParams &operator=(MainParams &&)      = delete;
 
     bool quietMode() const { return _quiet; }
+    bool dispProgressBar() const { return _dispProgressBar; }
+    bool dispFilesPosting() const { return _dispFilesPosting; }
+    void setDisplayProgress(QString const &txtValue);
 
 #ifdef __USE_TMP_RAM__
     qint64 ramAvailable() const;
@@ -306,10 +311,15 @@ public:
     {
     }
 
-    PostingParams(PostingParams const &)                         = default;
-    PostingParams &operator=(PostingParams const &)              = delete;
-    PostingParams(PostingParams &&)                              = default;
-    PostingParams                   &operator=(PostingParams &&) = delete;
+    PostingParams(PostingParams const &)            = default;
+    PostingParams &operator=(PostingParams const &) = delete;
+    PostingParams(PostingParams &&)                 = default;
+    PostingParams &operator=(PostingParams &&)      = delete;
+
+    bool quietMode() const { return _params->quietMode(); }
+    bool dispProgressBar() const { return _params->dispProgressBar(); }
+    bool dispFilesPosting() const { return _params->dispFilesPosting(); }
+
     QList<NntpServerParams *> const &nntpServers() const { return _params->nntpServers(); }
 
     QMap<QString, QString> const &meta() { return _meta; }

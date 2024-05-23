@@ -86,13 +86,14 @@ void NgLogger::startLogInFile(QString const &logFilePath)
 
 void NgLogger::createProgressBar(ProgressBar::ProgressCallback const &callback, bool startIt)
 {
-    sInstance->_progressCallback = callback;
-
-    if (!sInstance->_progressBar)
+    if (sInstance->_progressBar)
+        sInstance->_progressBar->clear();
+    else
         sInstance->_progressBar = new ::ProgressBar::ShellBar([](ProgressBar::UpdateBarInfo &currentPos)
                                                               { sInstance->_doProgressBarUpdate(currentPos); },
                                                               NgConf::kProgressBarWidth,
                                                               NgConf::kDefaultRefreshRate);
+    sInstance->_progressCallback = callback;
     if (startIt)
         startProgressBar(true);
 }
@@ -119,10 +120,10 @@ bool NgLogger::startProgressBar(bool waitEventLoopStarted)
 void NgLogger::stopProgressBar(bool lastRefresh)
 {
     if (sInstance->_progressBar)
-        sInstance->_progressBar->start(lastRefresh);
+        sInstance->_progressBar->stop(lastRefresh);
 }
 
-void NgLogger::onLog(QString msg, bool newline)
+void NgLogger::onLog(QString msg, bool newline, DebugLevel debugLvl)
 {
 #ifdef __USE_HMI__
     if (_hmi)
@@ -133,7 +134,7 @@ void NgLogger::onLog(QString msg, bool newline)
         if (_lastLogByProgressBar)
             _cout << Qt::endl;
 
-        _cout << logColor() << msg;
+        _cout << logColor(debugLvl) << msg;
         if (newline)
             _cout << Qt::endl;
         _cout << kColorReset << MB_FLUSH;

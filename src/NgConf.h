@@ -64,6 +64,9 @@ constexpr char const *kDefaultShutdownCmdMacOS   = "sudo -n shutdown -h now";
 
 constexpr int kProgressBarWidth   = 50;
 constexpr int kDefaultRefreshRate = 500; //!< how often shall we refresh the progressbar bar?
+#ifdef __COMPUTE_IMMEDIATE_SPEED__
+constexpr int kImmediateSpeedDurationMs = 3000;
+#endif
 
 constexpr int kNbPreparedArticlePerConnection = 3;
 

@@ -177,8 +177,7 @@ PostingJob::~PostingJob()
              << " in thread : " << QThread::currentThread()->objectName();
 #endif
 
-    if (NgLogger::isDebugMode())
-        _log("Deleting PostingJob");
+    _log("Deleting PostingJob", NgLogger::DebugLevel::Debug);
 
     // stopThreads so it quits and waits _builderThread and _connectionsThread
     // threads will emit void QThread::finished()
@@ -214,10 +213,13 @@ PostingJob::~PostingJob()
     _ngPost.doNzbPostCMD(this);
 }
 
-void PostingJob::_log(QString const &aMsg, bool newline) const
+void PostingJob::_log(QString const &aMsg, NgLogger::DebugLevel debugLvl, bool newLine) const
 {
-    if (!_ngPost.quietMode())
-        NgLogger::log(aMsg, newline);
+    //    NgLogger::log(QString("aMsg = %1, quiestMode: %2").arg(aMsg).arg(_params->quietMode()), newLine,
+    //    debugLvl);
+    if (_params->quietMode())
+        return;
+    NgLogger::log(aMsg, newLine, debugLvl);
 }
 
 void PostingJob::_init()
@@ -230,7 +232,6 @@ void PostingJob::_init()
     connect(this, &PostingJob::postingStarted, &_ngPost, &NgPost::onPostingJobStarted, Qt::QueuedConnection);
     connect(this, &PostingJob::packingDone, &_ngPost, &NgPost::onPackingDone, Qt::QueuedConnection);
     connect(this, &PostingJob::postingFinished, &_ngPost, &NgPost::onPostingJobFinished, Qt::QueuedConnection);
-    connect(this, &PostingJob::noMoreConnection, &_ngPost, &NgPost::onPostingJobFinished, Qt::QueuedConnection);
 
     //    connect(this, &PostingJob::scheduleNextArticle, this, &PostingJob::onPrepareNextArticle,
     //    Qt::QueuedConnection);
@@ -254,17 +255,12 @@ void PostingJob::_init()
                 _postWidget,
                 &PostingWidget::onPostingJobDone,
                 Qt::QueuedConnection);
-        connect(this,
-                &PostingJob::noMoreConnection,
-                _postWidget,
-                &PostingWidget::onPostingJobDone,
-                Qt::QueuedConnection);
     }
 #endif
 
     connect(&_resumeTimer, &QTimer::timeout, this, &PostingJob::onResumeTriggered);
 #ifdef __COMPUTE_IMMEDIATE_SPEED__
-    if (_useHMI)
+    if (_useHMI || _params->dispProgressBar())
         connect(&_immediateSpeedTimer,
                 &QTimer::timeout,
                 this,
@@ -272,8 +268,7 @@ void PostingJob::_init()
                 Qt::QueuedConnection);
 #endif
 
-    if (NgLogger::isDebugMode())
-        _log(NntpConnection::sslSupportInfo());
+    _log(NntpConnection::sslSupportInfo(), NgLogger::DebugLevel::Debug);
 }
 
 void PostingJob::onStartPosting(bool isActiveJob)
@@ -288,7 +283,8 @@ void PostingJob::onStartPosting(bool isActiveJob)
         _log(tr("<h3>Start Post #%1: %2</h3>").arg(_postWidget->jobNumber()).arg(nzbName()));
     else
 #endif
-        _log(QString("[%1] %2: %3").arg(timestamp()).arg(tr("Start posting")).arg(nzbName()));
+        _log(QString("[%1] %2: %3").arg(timestamp()).arg(tr("Start posting")).arg(nzbName()),
+             NgLogger::DebugLevel::None);
 
     // 1.: If we need compression we jump in startCompressFiles
     // and when the _extProcess is done we should arrive in onCompressionFinished
@@ -422,14 +418,15 @@ bool PostingJob::startCompressFiles()
         args << "-r";
 
     // launch the compression! and ends up just under in onCompressionFinished if all ok...
-    if (NgLogger::isDebugMode() || !_postWidget)
+    if (NgLogger::isDebugMode())
         _log(QString("[%1] %2: %3 %4\n")
                      .arg(timestamp())
                      .arg(tr("Compressing files"))
                      .arg(_params->rarPath())
-                     .arg(args.join(" ")));
+                     .arg(args.join(" ")),
+             NgLogger::DebugLevel::None);
     else
-        _log(QString("%1...\n").arg(tr("Compressing files")));
+        _log(QString("%1...").arg(tr("Compressing files")), NgLogger::DebugLevel::None);
     _limitProcDisplay = false;
     _extProc->start(_params->rarPath(), args);
 
@@ -443,9 +440,9 @@ bool PostingJob::startCompressFiles()
 void PostingJob::onCompressionFinished(int exitCode)
 {
     if (NgLogger::isDebugMode())
-        _log(tr("=> rar exit code: %1\n").arg(exitCode));
+        _log(tr("=> rar exit code: %1\n").arg(exitCode), NgLogger::DebugLevel::Debug);
     else
-        _log("\n");
+        _log("", NgLogger::DebugLevel::None);
 
 #ifdef __DEBUG__
     _log("[PostingJob::_compressFiles] compression finished...");
@@ -613,14 +610,16 @@ bool PostingJob::startGenPar2()
             &PostingJob::onGenPar2Finished,
             Qt::QueuedConnection);
 
-    if (NgLogger::isDebugMode() || !_postWidget)
+    if (NgLogger::isDebugMode())
         _log(QString("[%1] %2: %3 %4")
                      .arg(timestamp())
                      .arg(tr("Generating par2"))
                      .arg(_params->par2Path())
-                     .arg(args.join(" ")));
+                     .arg(args.join(" ")),
+             NgLogger::DebugLevel::None);
     else
-        _log(QString("%1...\n").arg(tr("Generating par2")));
+        _log(QString("%1...").arg(tr("Generating par2")), NgLogger::DebugLevel::None);
+
     if (!_params->useParPar())
         _limitProcDisplay = true;
     _nbProcDisp = 0;
@@ -632,9 +631,9 @@ bool PostingJob::startGenPar2()
 void PostingJob::onGenPar2Finished(int exitCode)
 {
     if (NgLogger::isDebugMode())
-        _log(tr("=> par2 exit code: %1\n").arg(exitCode));
+        _log(tr("=> par2 exit code: %1\n").arg(exitCode), NgLogger::DebugLevel::Debug);
     else
-        _log("\n");
+        _log("", NgLogger::DebugLevel::None);
 
     _cleanExtProc();
 
@@ -682,7 +681,6 @@ void PostingJob::_postFiles()
     {
         NgLogger::error(tr("Error: there are no NntpConnection..."));
         _finishPosting(); // MB_TODO shall we?
-        emit postingFinished();
         return;
     }
 
@@ -690,7 +688,6 @@ void PostingJob::_postFiles()
     {
         NgLogger::error(tr("Error: Can't create nzb output file: %1").arg(_params->nzbFilePath()));
         _finishPosting(); // MB_TODO shall we?
-        emit postingFinished();
         return;
     }
     else
@@ -758,7 +755,8 @@ void PostingJob::_postFiles()
     _preparePostersArticles();
 
 #ifdef __COMPUTE_IMMEDIATE_SPEED__
-    _immediateSpeedTimer.start(NgPost::immediateSpeedDurationMs());
+    if (_useHMI || _params->dispProgressBar())
+        _immediateSpeedTimer.start(kImmediateSpeedDurationMs);
 #endif
 
     for (Poster *poster : _posters)
@@ -777,7 +775,7 @@ void PostingJob::onStopPosting()
 
     if (_extProc)
     {
-        _log(tr("killing external process..."));
+        _log(tr("killing external process..."), NgLogger::DebugLevel::None);
         _extProc->terminate();
         _extProc->waitForFinished();
     }
@@ -804,27 +802,20 @@ void PostingJob::onDisconnectedConnection(NntpConnection *con)
         if (_nntpConnections.isEmpty())
         {
             if (con->hasNoMoreFiles())
-            {
                 _finishPosting();
-                if (!_postFinished)
-                    emit noMoreConnection();
-            }
             else
             {
                 NgLogger::error(tr("we lost all the connections..."));
                 if (_params->tryResumePostWhenConnectionLost())
                 {
                     int sleepDurationInSec = _params->waitDurationBeforeAutoResume();
-                    _log(tr("Sleep for %1 sec before trying to reconnect").arg(sleepDurationInSec));
+                    _log(tr("Sleep for %1 sec before trying to reconnect").arg(sleepDurationInSec),
+                         NgLogger::DebugLevel::None);
                     _ngPost.pause();
                     _resumeTimer.start(sleepDurationInSec * 1000);
                 }
                 else
-                {
                     _finishPosting();
-                    if (!_postFinished)
-                        emit noMoreConnection();
-                }
             }
         }
     }
@@ -838,7 +829,8 @@ void PostingJob::onNntpFileStartPosting()
                      .arg(timestamp())
                      .arg(tr("avg. speed"))
                      .arg(avgSpeed())
-                     .arg(nntpFile->name()));
+                     .arg(nntpFile->name()),
+             NgLogger::DebugLevel::None);
 }
 
 void PostingJob::onNntpFilePosted()
@@ -849,12 +841,13 @@ void PostingJob::onNntpFilePosted()
     if (_postWidget)
         emit filePosted(nntpFile->path(), nntpFile->nbArticles(), nntpFile->nbFailedArticles());
 
-    if (_ngPost._dispFilesPosting && !_ngPost.useHMI())
+    if (_params->dispFilesPosting() && !_ngPost.useHMI())
         _log(QString("[%1][%2: %3] <<<<< %4")
                      .arg(timestamp())
                      .arg(tr("avg. speed"))
                      .arg(avgSpeed())
-                     .arg(nntpFile->name()));
+                     .arg(nntpFile->name()),
+             NgLogger::DebugLevel::None);
 
     nntpFile->writeToNZB(_nzbStream,
                          _params->from(false)); // we don't want empty value if _obfuscateArticles
@@ -865,13 +858,12 @@ void PostingJob::onNntpFilePosted()
 #ifdef __DEBUG__
         _log(QString("All files have been posted => closing Job (nb article uploaded: %1, failed: %2)")
                      .arg(_nbArticlesUploaded)
-                     .arg(_nbArticlesFailed));
+                     .arg(_nbArticlesFailed),
+             NgLogger::DebugLevel::Debug);
 #endif
 
         _postFinished = true;
         _finishPosting();
-
-        emit postingFinished();
     }
 }
 
@@ -882,8 +874,8 @@ void PostingJob::onNntpErrorReading()
     if (_postWidget)
         emit filePosted(nntpFile->path(), nntpFile->nbArticles(), nntpFile->nbArticles());
 
-    if (_ngPost._dispFilesPosting && !_ngPost.useHMI())
-        _log(tr("[avg. speed: %1] <<<<< %2").arg(avgSpeed()).arg(nntpFile->name()));
+    if (_params->dispFilesPosting() && !_ngPost.useHMI())
+        _log(tr("[avg. speed: %1] <<<<< %2").arg(avgSpeed()).arg(nntpFile->name()), NgLogger::DebugLevel::None);
 
     _filesInProgress.remove(nntpFile);
     _filesFailed.insert(nntpFile);
@@ -892,13 +884,12 @@ void PostingJob::onNntpErrorReading()
 #ifdef __DEBUG__
         _log(QString("All files have been posted => closing Job (nb article uploaded: %1, failed: %2)")
                      .arg(_nbArticlesUploaded)
-                     .arg(_nbArticlesFailed));
+                     .arg(_nbArticlesFailed),
+             NgLogger::DebugLevel::Debug);
 #endif
 
         _postFinished = true;
         _finishPosting();
-
-        emit postingFinished();
     }
 }
 
@@ -930,20 +921,20 @@ int PostingJob::_createNntpConnections()
     }
 
     if (_ngPost.useHMI())
-        _log(tr("Number of available Nntp Connections: %1").arg(_nbConnections));
+        _log(tr("Number of available Nntp Connections: %1").arg(_nbConnections), NgLogger::DebugLevel::None);
     else
         _log(QString("[%1] %2: %3")
                      .arg(timestamp())
                      .arg(tr("Number of available Nntp Connections"))
-                     .arg(_nbConnections));
+                     .arg(_nbConnections),
+             NgLogger::DebugLevel::None);
 
     return _nbConnections;
 }
 
 void PostingJob::_preparePostersArticles()
 {
-    if (NgLogger::isFullDebug())
-        _log("PostingJob::_prepareArticles");
+    _log("PostingJob::_prepareArticles", NgLogger::DebugLevel::FullDebug);
 
     for (int i = 0; i < kNbPreparedArticlePerConnection; ++i)
     {
@@ -962,7 +953,8 @@ void PostingJob::_delOriginalFiles()
     for (QFileInfo const &fi : _params->files())
     {
         QString path = fi.absoluteFilePath();
-        _log(tr("Deleting posted %1: %2").arg(fi.isDir() ? tr("folder") : tr("file")).arg(path));
+        _log(tr("Deleting posted %1: %2").arg(fi.isDir() ? tr("folder") : tr("file")).arg(path),
+             NgLogger::DebugLevel::None);
         if (fi.isDir())
         {
             QDir dir(path);
@@ -983,7 +975,7 @@ NntpArticle *PostingJob::_readNextArticleIntoBufferPtr(QString const &threadName
         {
             _noMoreFiles = 0x1;
 #ifdef __DEBUG__
-            _log(tr("[%1] No more file to post...").arg(threadName));
+            _log(tr("[%1] No more file to post...").arg(threadName), NgLogger::DebugLevel::Debug);
 #endif
             return nullptr;
         }
@@ -994,8 +986,8 @@ NntpArticle *PostingJob::_readNextArticleIntoBufferPtr(QString const &threadName
         _file = new QFile(_nntpFile->path());
         if (_file->open(QIODevice::ReadOnly))
         {
-            if (NgLogger::isFullDebug())
-                _log(tr("[%1] starting processing file %2").arg(threadName).arg(_nntpFile->path()));
+            _log(tr("[%1] starting processing file %2").arg(threadName).arg(_nntpFile->path()),
+                 NgLogger::DebugLevel::FullDebug);
             _part = 0;
         }
         else
@@ -1019,12 +1011,12 @@ NntpArticle *PostingJob::_readNextArticleIntoBufferPtr(QString const &threadName
         if (bytesRead > 0)
         {
             (*bufferPtr)[bytesRead] = '\0';
-            if (NgLogger::isFullDebug())
-                _log(tr("[%1] we've read %2 bytes from %3 (=> new pos: %4)")
-                             .arg(threadName)
-                             .arg(bytesRead)
-                             .arg(pos)
-                             .arg(_file->pos()));
+            _log(tr("[%1] we've read %2 bytes from %3 (=> new pos: %4)")
+                         .arg(threadName)
+                         .arg(bytesRead)
+                         .arg(pos)
+                         .arg(_file->pos()),
+                 NgLogger::DebugLevel::FullDebug);
             ++_part;
             NntpArticle *article =
                     new NntpArticle(_nntpFile,
@@ -1037,8 +1029,8 @@ NntpArticle *PostingJob::_readNextArticleIntoBufferPtr(QString const &threadName
         }
         else
         {
-            if (NgLogger::isFullDebug())
-                _log(tr("[%1] finished processing file %2").arg(threadName).arg(_nntpFile->path()));
+            _log(tr("[%1] finished processing file %2").arg(threadName).arg(_nntpFile->path()),
+                 NgLogger::DebugLevel::FullDebug);
 
             _file->close();
             delete _file;
@@ -1102,7 +1094,7 @@ void PostingJob::_initPosting()
                 this,
                 &PostingJob::onNntpErrorReading,
                 Qt::QueuedConnection);
-        if (_ngPost._dispFilesPosting && NgLogger::isDebugMode())
+        if (_params->dispFilesPosting()) //&& NgLogger::isDebugMode())
             connect(nntpFile,
                     &NntpFile::startPosting,
                     this,
@@ -1131,10 +1123,12 @@ void PostingJob::_finishPosting()
         _uploadedSize       = _totalSize;
     }
 
+    NgLogger::stopProgressBar(true);
     if (NgLogger::isDebugMode())
-        _log("Finishing posting...");
+        _log("Finishing posting...", NgLogger::DebugLevel::Debug);
 
-    _ngPost._finishPosting(); // to update progress bar
+    // MB_TODO for v5 how to do that better!
+    //    _ngPost._finishPosting(); // to update progress bar
 
     // 1.: print stats
     if (_timeStart.isValid())
@@ -1154,10 +1148,10 @@ void PostingJob::_finishPosting()
     _closeNzb();
 
     if (NgLogger::isDebugMode())
-        _log("All posters stopped...");
+        _log("All posters stopped...", NgLogger::DebugLevel::Debug);
 
 #ifdef __DEBUG__
-    _log("All connections are closed...");
+    _log("All connections are closed...", NgLogger::DebugLevel::Debug);
 #endif
 
     // 5.: print out the list of files that havn't been posted
@@ -1193,6 +1187,8 @@ void PostingJob::_finishPosting()
     }
     else if (_postFinished && MB_LoadAtomic(_delFilesAfterPost))
         _delOriginalFiles();
+
+    emit postingFinished();
 }
 
 void PostingJob::_closeNzb()
@@ -1251,15 +1247,14 @@ void PostingJob::_printStats() const
             msgEnd += "\n";
     }
 
-    _log(msgEnd);
+    _log(msgEnd, NgLogger::DebugLevel::None);
 }
 
 void PostingJob::_cleanExtProc()
 {
     delete _extProc;
     _extProc = nullptr;
-    if (NgLogger::isFullDebug())
-        _log(tr("External process deleted."));
+    _log(tr("External process deleted."), NgLogger::DebugLevel::FullDebug);
 }
 
 void PostingJob::_cleanCompressDir()
@@ -1267,7 +1262,7 @@ void PostingJob::_cleanCompressDir()
     if (!_params->keepRar())
         _compressDir->removeRecursively();
     if (NgLogger::isDebugMode())
-        _log(tr("Compressed files deleted."));
+        _log(tr("Compressed files deleted."), NgLogger::DebugLevel::Debug);
 }
 
 QStringList PostingJob::_updateFilesListFromCompressDir()
@@ -1313,11 +1308,11 @@ QString PostingJob::_createArchiveFolder(QString const &tmpFolder, QString const
 void PostingJob::onExtProcReadyReadStandardOutput()
 {
     if (NgLogger::isDebugMode())
-        _log(_extProc->readAllStandardOutput(), false);
+        _log(_extProc->readAllStandardOutput(), NgLogger::DebugLevel::Debug, false);
     else if (_isActiveJob)
     {
         if (!_limitProcDisplay || ++_nbProcDisp % 42 == 0)
-            _log("*", false);
+            _log("*", NgLogger::DebugLevel::None, false);
     }
 }
 
@@ -1329,7 +1324,7 @@ QString PostingJob::postSize() const { return NgTools::humanSize(static_cast<dou
 
 void PostingJob::pause()
 {
-    _log("Pause posting...");
+    _log("Pause posting...", NgLogger::DebugLevel::None);
     for (NntpConnection *con : _nntpConnections)
         emit con->killConnection();
 
@@ -1339,7 +1334,7 @@ void PostingJob::pause()
 
 void PostingJob::resume()
 {
-    _log("Resume posting...");
+    _log("Resume posting...", NgLogger::DebugLevel::None);
     for (NntpConnection *con : _nntpConnections)
         emit con->startConnection();
 
@@ -1355,7 +1350,7 @@ void PostingJob::onResumeTriggered()
 {
     if (_isPaused)
     {
-        _log(tr("Try to resume posting"));
+        _log(tr("Try to resume posting"), NgLogger::DebugLevel::None);
         _nntpConnections.swap(_closedConnections);
         _ngPost.resume();
     }
@@ -1365,7 +1360,7 @@ void PostingJob::onResumeTriggered()
 void PostingJob::onImmediateSpeedComputation()
 {
     QString power                    = " ";
-    int     immediateSpeedDurationMs = NgPost::immediateSpeedDurationMs();
+    int     immediateSpeedDurationMs = kImmediateSpeedDurationMs;
     double  bandwidth                = 1000. * _immediateSize / immediateSpeedDurationMs;
     if (bandwidth > 1024)
     {
@@ -1377,10 +1372,12 @@ void PostingJob::onImmediateSpeedComputation()
         bandwidth /= 1024;
         power = "M";
     }
-
-    _immediateSpeed = QString("%1 %2B/s").arg(bandwidth, 6, 'f', 2).arg(power);
-    _immediateSize  = 0;
-    _immediateSpeedTimer.start(immediateSpeedDurationMs);
+    if (_useHMI || _params->dispProgressBar())
+    {
+        _immediateSpeed = QString("%1 %2B/s").arg(bandwidth, 6, 'f', 2).arg(power);
+        _immediateSize  = 0;
+        _immediateSpeedTimer.start(kImmediateSpeedDurationMs);
+    }
 }
 #endif
 
@@ -1393,14 +1390,14 @@ void PostingJob::shallWeUseTmpRam()
         for (QFileInfo const &fi : _params->files())
             sourceSize += NgTools::recursivePathSize(fi);
 
-
         double sourceSizeWithRatio = _params->ramRatio() * sourceSize,
                availableSize       = static_cast<double>(_params->ramAvailable());
         if (sourceSizeWithRatio < availableSize)
         {
             _tmpPath = _params->ramPath();
             _log(tr("Using TMP_RAM path as temporary folder. Post size: %1")
-                         .arg(NgTools::humanSize(static_cast<double>(sourceSize))));
+                         .arg(NgTools::humanSize(static_cast<double>(sourceSize))),
+                 NgLogger::DebugLevel::None);
         }
         else
         {

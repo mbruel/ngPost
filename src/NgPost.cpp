@@ -67,11 +67,6 @@ NgPost::NgPost(int &argc, char *argv[])
     , CmdOrGuiApp(argc, argv)
     , _postingParams(new MainParams)
     , _nzbCheck(nullptr)
-    , _dispProgressBar(false)
-    , _dispFilesPosting(false)
-    , _progressbarTimer()
-
-    , _refreshRate(kDefaultRefreshRate)
 
     , _activeJob(nullptr)
     , _pendingJobs()
@@ -207,10 +202,6 @@ NgPost::~NgPost()
 
     _stopMonitoring();
 
-    //    _finishPosting();
-
-    _progressbarTimer.stop();
-
     closeAllPostingJobs();
 
     if (_activeJob)
@@ -238,30 +229,6 @@ void NgPost::startLogInFile() const
     NgLogger::startLogInFile(logFilePath);
 }
 
-void NgPost::setDisplayProgress(QString const &txtValue)
-{
-    QString val = txtValue.toLower();
-    if (val == kDisplayProgress[DISP_PROGRESS::BAR])
-    {
-        _dispProgressBar  = true;
-        _dispFilesPosting = false;
-        qDebug() << "Display progressbar bar\n";
-    }
-    else if (val == kDisplayProgress[DISP_PROGRESS::FILES])
-    {
-        _dispProgressBar  = false;
-        _dispFilesPosting = true;
-        qDebug() << "Display Files when start posting\n";
-    }
-    else if (val == kDisplayProgress[DISP_PROGRESS::NONE])
-    { // force it in case in the config file something was on
-        _dispProgressBar  = false;
-        _dispFilesPosting = false;
-    }
-    else
-        NgLogger::error(tr("Wrong display keyword: %1").arg(val.toUpper()));
-}
-
 void NgPost::setProxy(QString const &url)
 {
     QRegularExpression      regExp(kProxyStrRegExp, QRegularExpression::CaseInsensitiveOption);
@@ -286,32 +253,6 @@ void NgPost::setProxy(QString const &url)
 #ifdef __USE_HMI__
 bool NgPost::hmiUseFixedPassword() const { return _hmi->useFixedPassword(); }
 #endif
-
-void NgPost::_finishPosting()
-{
-#ifdef __USE_HMI__
-    if (_hmi || _dispProgressBar)
-#else
-    if (_dispProgressBar)
-#endif
-        disconnect(&_progressbarTimer, &QTimer::timeout, this, &NgPost::onRefreshprogressbarBar);
-
-    if (_activeJob && _activeJob->hasUploaded())
-    {
-#ifdef __USE_HMI__
-        if (_hmi || _dispProgressBar)
-#else
-        if (_dispProgressBar)
-#endif
-        {
-            onRefreshprogressbarBar();
-#ifdef __USE_HMI__
-            if (!_hmi)
-#endif
-                std::cout << std::endl;
-        }
-    }
-}
 
 #ifdef __USE_HMI__
 int NgPost::startHMI()
@@ -361,12 +302,7 @@ void NgPost::onSwitchNightMode()
 }
 #endif
 
-// void NgPost::onLog(QString msg, bool newline) const { NgLogger::log(msg, newline); }
-
-// void NgPost::onError(QString msg) { criticalError(msg, ERR_CODE::COMPLETED_WITH_ERRORS); }
-
-// void NgPost::onErrorConnecting(QString err) { criticalError(err, ERR_CODE::COMPLETED_WITH_ERRORS); }
-
+#ifdef __USE_HMI__
 void NgPost::onRefreshprogressbarBar()
 {
     if (_activeJob && _activeJob->isPaused())
@@ -374,53 +310,42 @@ void NgPost::onRefreshprogressbarBar()
 
     uint    nbArticlesUploaded = 0, nbArticlesTotal = 0;
     QString avgSpeed("0 B/s");
-#ifdef __COMPUTE_IMMEDIATE_SPEED__
+#  ifdef __COMPUTE_IMMEDIATE_SPEED__
     QString immediateSpeed("0 B/s");
-#endif
+#  endif
     if (_activeJob)
     {
         nbArticlesTotal    = _activeJob->nbArticlesTotal();
         nbArticlesUploaded = _activeJob->nbArticlesUploaded();
         avgSpeed           = _activeJob->avgSpeed();
-#ifdef __COMPUTE_IMMEDIATE_SPEED__
+#  ifdef __COMPUTE_IMMEDIATE_SPEED__
         immediateSpeed = _activeJob->immediateSpeed();
-#endif
+#  endif
     }
-#ifdef __USE_HMI__
+    // MB_TODO: the _progressbarTimer should go in the HMI
+    // and as in CMD, it should use the new method under progressUpdateInfo (from ngPost v5)
+    // to get the new values => one HMI call removed from NgPost.cpp!
     if (_hmi)
 #  ifdef __COMPUTE_IMMEDIATE_SPEED__
         _hmi->updateProgressBar(nbArticlesTotal, nbArticlesUploaded, avgSpeed, immediateSpeed);
 #  else
         _hmi->updateProgressBar(nbArticlesTotal, nbArticlesUploaded, avgSpeed);
 #  endif
-    else
+}
 #endif
-    {
-        float progressbar = static_cast<float>(nbArticlesUploaded);
-        progressbar /= nbArticlesTotal;
 
-        //        qDebug() << "[NgPost::onRefreshprogressbarBar] uploaded: " << nbArticlesUploaded
-        //                 << " / " << nbArticlesTotal
-        //                 << " => progressbar: " << progressbar << "\n";
-
-        std::cout << "\r[";
-        int pos = static_cast<int>(std::floor(progressbar * kProgressBarWidth));
-        for (int i = 0; i < kProgressBarWidth; ++i)
-        {
-            if (i < pos)
-                std::cout << "=";
-            else if (i == pos)
-                std::cout << ">";
-            else
-                std::cout << " ";
-        }
-        std::cout << "] " << int(progressbar * 100) << " %"
-                  << " (" << nbArticlesUploaded << " / " << nbArticlesTotal << ")"
-                  << " avg. speed: " << avgSpeed.toStdString();
-        std::cout.flush();
-    }
-    if (nbArticlesUploaded < nbArticlesTotal)
-        _progressbarTimer.start(_refreshRate);
+void NgPost::progressUpdateInfo(ProgressBar::UpdateBarInfo &currentPos)
+{
+    currentPos.update(_activeJob->nbArticlesUploaded(),
+                      _activeJob->nbArticlesTotal(),
+#ifdef __COMPUTE_IMMEDIATE_SPEED__
+                      QString(tr("upload rate (on %1ms): %2 (avg.: %3)")
+                                      .arg(kImmediateSpeedDurationMs)
+                                      .arg(_activeJob->immediateSpeed(), _activeJob->avgSpeed()))
+#else
+                      QString(tr("avg. speed: %1").arg(_activeJob->avgSpeed()))
+#endif
+    );
 }
 
 void NgPost::onNewFileToProcess(QFileInfo const &fileInfo)
@@ -615,8 +540,9 @@ void NgPost::resume()
 #ifdef __USE_HMI__
         if (_hmi)
             _hmi->setPauseIcon(true);
-#endif
+        // MB_TODO: warn the progress bar to restart     (no more timer here ;))
         _progressbarTimer.start(_refreshRate);
+#endif
     }
 }
 
@@ -714,11 +640,10 @@ void NgPost::onAboutClicked()
 void NgPost::onPostingJobStarted()
 {
 #ifdef __USE_HMI__
-    if (_hmi || _dispProgressBar)
-#else
-    if (_dispProgressBar)
-#endif
+    if (_hmi || useHMI())
     {
+        // MB_TODO: Old code to update in v5
+        // no more timer here!
         connect(&_progressbarTimer,
                 &QTimer::timeout,
                 this,
@@ -726,6 +651,13 @@ void NgPost::onPostingJobStarted()
                 Qt::DirectConnection);
         _progressbarTimer.start(_refreshRate);
     }
+#else
+    if (_postingParams->dispProgressBar())
+    {
+        NgLogger::createProgressBar([this](ProgressBar::UpdateBarInfo &currentPos)
+                                    { progressUpdateInfo(currentPos); });
+    }
+#endif
 }
 
 void NgPost::onPackingDone()

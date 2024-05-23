@@ -155,8 +155,10 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost &ngPost, SharedParams &p
     // 0.: Set the quiet mode if needed ;)
     if (parser.isSet(kOptionNames[Opt::QUIET]))
     {
-        postingParams->_quiet = true;
-        ngPost.beQuiet();
+        NgLogger::setDebug(NgLogger::DebugLevel::None);
+        postingParams->_quiet            = true;
+        postingParams->_dispProgressBar  = false;
+        postingParams->_dispFilesPosting = false;
     }
 
     // 1.: show version ?
@@ -222,7 +224,7 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost &ngPost, SharedParams &p
     if (parser.isSet(kOptionNames[Opt::DISP_PROGRESS]))
     {
         QString val = parser.value(kOptionNames[Opt::DISP_PROGRESS]);
-        ngPost.setDisplayProgress(val.trimmed());
+        postingParams->setDisplayProgress(val.trimmed());
     }
 
     // 7.: Load server(s) if given (so we can do a nzbCheck if required)

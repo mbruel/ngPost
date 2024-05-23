@@ -100,12 +100,6 @@ private:
      */
     NzbCheck *_nzbCheck;
 
-    bool _dispProgressBar;
-    bool _dispFilesPosting;
-
-    QTimer    _progressbarTimer; //!< timer to refresh the upload information (progressbar bar, avg. speed)
-    int const _refreshRate;      //!< refresh rate
-
     // Thread safe, only main thread is using this (NgPost or HMI)
     PostingJob          *_activeJob;
     QQueue<PostingJob *> _pendingJobs;
@@ -140,10 +134,6 @@ private:
 
     static constexpr char const *kProxyStrRegExp = "^(([^:]+):([^@]+)@)?([\\w\\.\\-_]+):(\\d+)$";
 
-#ifdef __COMPUTE_IMMEDIATE_SPEED__
-    static constexpr int kImmediateSpeedDurationMs = 3000;
-#endif
-
 public:
     explicit NgPost(int &argc, char *argv[]);
     ~NgPost() override;
@@ -161,12 +151,8 @@ public:
 
     bool quietMode() const { return _postingParams->quietMode(); }
 
-    void beQuiet()
-    {
-        NgLogger::setDebug(NgLogger::DebugLevel::None);
-        _dispProgressBar  = false;
-        _dispFilesPosting = false;
-    }
+    //!< to update cmd ProgressBar
+    void progressUpdateInfo(ProgressBar::UpdateBarInfo &currentPos);
 
     bool initHistoryDatabase();
 
@@ -200,7 +186,7 @@ public:
     bool hasMonitoringPostingJobs() const;
     void closeAllMonitoringJobs();
 
-    inline bool dispPostingFile() const;
+    inline bool dispPostingFile() const { return _postingParams->dispFilesPosting(); }
 
     void saveConfig() const;
 
@@ -230,13 +216,9 @@ public:
     inline Database      *historyDatabase() const;
 
     void           startLogInFile() const;
-    void           setDisplayProgress(QString const &txtValue);
     void           setProxy(QString const &url);
     void           setShutdownCmd(QString const &cmd) { _shutdownCmd = cmd; }
     QString const &shutdownCmd() const { return _shutdownCmd; }
-
-    bool dispProgressBar() const { return _dispProgressBar; }
-    bool dispFilesPosting() const { return _dispFilesPosting; }
 
 #ifdef __USE_HMI__
     bool hmiUseFixedPassword() const;
@@ -273,18 +255,16 @@ public slots:
 #endif
 
 private slots:
-    void onRefreshprogressbarBar();
 
     void onNewFileToProcess(QFileInfo const &fileInfo);
 
 #ifdef __USE_HMI__
+    void onRefreshprogressbarBar();
     void onSwitchNightMode();
 #endif
 
 private:
     void _loadTanslators();
-
-    void _finishPosting();
 
     void _prepareNextPacking();
 
@@ -300,8 +280,7 @@ public:
 #endif
 
 #ifdef __COMPUTE_IMMEDIATE_SPEED__
-    inline static int immediateSpeedDuration();
-    inline static int immediateSpeedDurationMs();
+    inline static int immediateSpeedDuration() { return NgConf::kImmediateSpeedDurationMs / 1000; }
 #endif
 
     inline static QString optionName(NgConf::Opt key);
@@ -321,8 +300,6 @@ QList<QString> NgPost::languages() const { return _translators.keys(); }
 
 bool NgPost::isPosting() const { return _activeJob != nullptr; }
 bool NgPost::hasPostingJobs() const { return (_activeJob || _pendingJobs.size()) ? true : false; }
-
-bool NgPost::dispPostingFile() const { return _dispFilesPosting; }
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
 QStringList NgPost::parseCombinedArgString(QString const &program)
@@ -379,11 +356,6 @@ inline QString const &NgPost::postHistoryFile() const { return _postHistoryFile;
 inline QString const &NgPost::historyFieldSeparator() const { return _historyFieldSeparator; }
 
 inline Database *NgPost::historyDatabase() const { return _dbHistory; }
-
-#ifdef __COMPUTE_IMMEDIATE_SPEED__
-int NgPost::immediateSpeedDuration() { return kImmediateSpeedDurationMs / 1000; }
-int NgPost::immediateSpeedDurationMs() { return kImmediateSpeedDurationMs; }
-#endif
 
 QString NgPost::optionName(NgConf::Opt key) { return NgConf::kOptionNames.value(key, ""); }
 

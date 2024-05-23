@@ -19,8 +19,6 @@
 #ifndef POSTINGJOB_H
 #define POSTINGJOB_H
 
-#include "utils/Macros.h"
-
 #include <QElapsedTimer>
 #include <QFileInfoList>
 #include <QMutex>
@@ -31,6 +29,9 @@
 #include <QTimer>
 #include <QVector>
 class QProcess;
+
+#include "utils/Macros.h"
+#include "utils/NgLogger.h"
 class NgPost;
 class NntpConnection;
 class NntpFile;
@@ -62,8 +63,7 @@ signals:
     void startPosting(bool isActiveJob);
     void stopPosting(); //!< stop posting (pause by user (from GUI))
 
-    void postingStarted(); //!< emitted at the end of onStartPosting
-    void noMoreConnection();
+    void postingStarted();  //!< emitted at the end of onStartPosting
     void postingFinished(); //!< posting is finished
 
     //! to update the PostingWidget with the names of the archives that will be posted
@@ -160,7 +160,7 @@ public:
      * \param params
      * \param parent
      */
-    PostingJob(NgPost &ngPost,
+    PostingJob(NgPost                 &ngPost,
                PostingWidget          *postWidget,
                PostingParamsPtr const &params,
                QObject                *parent = nullptr);
@@ -172,7 +172,7 @@ public:
      * \param params
      * \param parent
      */
-    PostingJob(NgPost &ngPost,
+    PostingJob(NgPost                       &ngPost,
                QString const                &rarName,
                QString const                &rarPass,
                QString const                &nzbFilePath,
@@ -277,7 +277,9 @@ private slots:
 #endif
 
 private:
-    void _log(QString const &aMsg, bool newline = true) const; //!< log function for QString
+    void _log(QString const       &aMsg,
+              NgLogger::DebugLevel debugLvl,
+              bool                 newLine = true) const; //!< log function for QString
 
     void _init(); //!< mainly do the connection with itself, NgPost and PostingWidget
 
@@ -363,7 +365,7 @@ void PostingJob::articlePosted(quint64 size)
     _uploadedSize += size;
     ++_nbArticlesUploaded;
 #ifdef __COMPUTE_IMMEDIATE_SPEED__
-    if (_useHMI)
+    if (_useHMI || _params->dispProgressBar())
         _immediateSize += size;
 #endif
 }
@@ -374,7 +376,7 @@ void PostingJob::articleFailed(quint64 size)
     ++_nbArticlesUploaded;
     ++_nbArticlesFailed;
 #ifdef __COMPUTE_IMMEDIATE_SPEED__
-    if (_useHMI)
+    if (_useHMI || _params->dispProgressBar())
         _immediateSize += size;
 #endif
 }

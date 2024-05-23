@@ -22,7 +22,6 @@
 #include "nntp/NntpArticle.h"
 #include "NntpConnection.h"
 #include "PostingJob.h"
-#include "utils/NgLogger.h"
 
 Poster::Poster(PostingJob *job, ushort id)
     : _id(id)
@@ -99,8 +98,8 @@ NntpArticle *Poster::getNextArticle(QString const &conPrefix)
     if (MB_LoadAtomic(_job->_stopPosting))
         return nullptr;
 
-    if (NgLogger::isFullDebug())
-        _log(QString("[%1] getNextArticle _articles.size() = %2").arg(conPrefix).arg(_articles.size()));
+    _log(QString("[%1] getNextArticle _articles.size() = %2").arg(conPrefix).arg(_articles.size()),
+         NgLogger::DebugLevel::FullDebug);
 
     NntpArticle *article = nullptr;
     if (_articles.size())
@@ -110,8 +109,7 @@ NntpArticle *Poster::getNextArticle(QString const &conPrefix)
         if (!MB_LoadAtomic(_job->_noMoreFiles))
         {
             // we should never come here as the goal is to have articles prepared in advance in the queue
-            if (NgLogger::isFullDebug())
-                _log(tr("no article prepared..."), true);
+            _log(tr("no article prepared..."), NgLogger::DebugLevel::FullDebug);
 
             article = _prepareNextArticle(conPrefix, false);
         }
@@ -139,8 +137,8 @@ uint Poster::nbActiveConnections() const
 void Poster::releaseArticle(QString const &conPrefix, NntpArticle *article)
 {
     QMutexLocker lock(&_secureArticles); // thread safety (coming from a posting thread)
-    if (NgLogger::isDebugMode())
-        _log(QString("[%1] try to release Article: %2").arg(conPrefix).arg(article->str()));
+    _log(QString("[%1] try to release Article: %2").arg(conPrefix).arg(article->str()),
+         NgLogger::DebugLevel::Debug);
 
     // the current NntpConnection releasing the Article will close
     // so we need at least another one that would try to post the Article
@@ -193,9 +191,9 @@ NntpArticle *Poster::_prepareNextArticle(QString const &threadName, bool fillQue
     return article;
 }
 
-void Poster::_log(QString const &aMsg, bool newline) const
+void Poster::_log(QString const &aMsg, NgLogger::DebugLevel debugLvl, bool newline) const
 {
-    NgLogger::log(QString("[%1] %2").arg(_logPrefix).arg(aMsg), newline);
+    NgLogger::log(QString("[%1] %2").arg(_logPrefix).arg(aMsg), newline, debugLvl);
 }
 
 void Poster::_error(QString const &error) const
@@ -209,19 +207,16 @@ void Poster::stopThreads()
 {
     _builderThread.quit();
     _connectionsThread.quit();
-
-    if (NgLogger::isDebugMode())
-        _log(tr("threads: %1, %2 are stopped (no more event queue)")
-                     .arg(_builderThread.objectName(), _connectionsThread.objectName()));
+    _log(tr("threads: %1, %2 are stopped (no more event queue)")
+                 .arg(_builderThread.objectName(), _connectionsThread.objectName()),
+         NgLogger::DebugLevel::Debug);
 
     bool threadDone = _connectionsThread.wait();
-    if (NgLogger::isDebugMode())
-        _log(tr("Connection thread is done: %2").arg(threadDone));
+    _log(tr("Connection thread is done: %2").arg(threadDone), NgLogger::DebugLevel::Debug);
 
     threadDone = _builderThread.wait();
 
-    if (NgLogger::isDebugMode())
-        _log(tr("all threads done: %2").arg(threadDone));
+    _log(tr("all threads done: %2").arg(threadDone), NgLogger::DebugLevel::Debug);
 
     _hasBeenStopped = 0x1;
 }

@@ -65,7 +65,7 @@ public:
     };
 
 signals:
-    void sigLog(QString msg, bool newline);
+    void sigLog(QString msg, bool newline, DebugLevel debugLvl);
     void sigError(QString msg);
 
 private:
@@ -118,7 +118,7 @@ public:
     {
         if (instance()._debugLevel < debugLvl)
             return;
-        emit sInstance->sigLog(msg, newline);
+        emit sInstance->sigLog(msg, newline, debugLvl);
     }
     static void error(QString err) { emit sInstance->sigError(err); }
     static void error(QStringList const &errors)
@@ -141,15 +141,15 @@ public:
     static void stopProgressBar(bool lastRefresh);
 
 public slots:
-    void onLog(QString msg, bool newline);
+    void onLog(QString msg, bool newline, DebugLevel debugLvl);
     void onError(QString error);
 
 private:
     NgLogger();
 
-    QString const &logColor() const
+    QString const &logColor(DebugLevel debugLvl) const
     {
-        switch (_debugLevel)
+        switch (debugLvl)
         {
         case DebugLevel::None:
             return kColorInfo;
