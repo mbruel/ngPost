@@ -224,14 +224,10 @@ QStringList PostingParams::buildCompressionCommandArgumentsList() const
             }
             else
                 volSize = static_cast<uint>(postSize / _params->rarMax()) + 1;
-
-            if (NgLogger::isDebugMode())
-                NgLogger::log(tr("postSize for %1 : %2 MB => volSize: %3")
-                                      .arg(_nzbFilePath)
-                                      .arg(postSize)
-                                      .arg(volSize),
-                              true,
-                              NgLogger::DebugLevel::Debug);
+            NgLogger::log(
+                    tr("postSize for %1 : %2 MB => volSize: %3").arg(_nzbFilePath).arg(postSize).arg(volSize),
+                    true,
+                    NgLogger::DebugLevel::Debug);
         }
         args << QString("-v%1m").arg(volSize);
         _splitArchive = true; // used for par2cmd

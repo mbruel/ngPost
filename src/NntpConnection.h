@@ -22,6 +22,8 @@
 #include <QSslError>
 #include <QTcpSocket>
 
+#include "utils/NgLogger.h"
+
 struct NntpServerParams;
 class NntpArticle;
 class NgPost;
@@ -49,8 +51,8 @@ signals:
     void socketError(QString aError); //!< Error during socket creation (ssl or not)
     void errorConnecting(QString aError);
     void disconnected(NntpConnection *con);
-    void log(QString msg, bool newline = true) const;
-    void error(QString msg) const;
+    void log(QString const &msg, bool newline, NgLogger::DebugLevel debugLvl) const;
+    void error(QString const &msg) const;
 
 private:
     enum class PostingState
@@ -131,12 +133,38 @@ public slots:
 #endif
 
 private:
-    inline void _log(QString const &aMsg) const;       //!< log function for QString
-    inline void _log(char const *aMsg) const;          //!< log function for char *
-    inline void _log(std::string const &aMsg) const;   //!< log function for std::string
-    inline void _error(QString const &aMsg) const;     //!< log function for QString
-    inline void _error(char const *aMsg) const;        //!< log function for char *
-    inline void _error(std::string const &aMsg) const; //!< log function for std::string
+    //! log function for QString
+    inline void _log(QString const &aMsg, NgLogger::DebugLevel debugLvl = NgLogger::DebugLevel::None) const
+    {
+        emit log(QString("[%1] %2").arg(_logPrefix).arg(aMsg), true, debugLvl);
+    }
+
+    //! overload for log function for char *
+    inline void _log(char const *aMsg, NgLogger::DebugLevel debugLvl = NgLogger::DebugLevel::None) const
+    {
+        emit log(QString("[%1] %2").arg(_logPrefix).arg(aMsg), true, debugLvl);
+    }
+
+    //! overload log function for std::string
+    inline void _log(std::string const &aMsg, NgLogger::DebugLevel debugLvl = NgLogger::DebugLevel::None) const
+    {
+        emit log(QString("[%1] %2").arg(_logPrefix).arg(QString::fromStdString(aMsg)), true, debugLvl);
+    }
+
+    //! error function for QString
+    inline void _error(QString const &aMsg) const { emit error(QString("[%1] %2").arg(_logPrefix).arg(aMsg)); }
+
+    //! overload error function for std::string
+    inline void _error(std::string const &aMsg) const
+    {
+        emit error(QString("[%1] %2").arg(_logPrefix).arg(QString::fromStdString(aMsg)));
+    }
+
+    //! overload error function for char *
+    inline void _error(char const *aMsg) const
+    {
+        emit error(QString("[%1] %2").arg(_logPrefix).arg(aMsg));
+    } //!< log function for char *
 
     void _sendNextArticle();
     void _closeConnection();
@@ -153,23 +181,6 @@ void NntpConnection::resetErrorCount() { _nbDisconnected = 0; }
 bool NntpConnection::isConnected() const { return _isConnected; }
 
 bool NntpConnection::hasNoMoreFiles() const { return _postingState == PostingState::NO_MORE_FILES; }
-
-void NntpConnection::_log(char const *aMsg) const { emit log(QString("[%1] %2").arg(_logPrefix).arg(aMsg)); }
-void NntpConnection::_log(QString const &aMsg) const { emit log(QString("[%1] %2").arg(_logPrefix).arg(aMsg)); }
-void NntpConnection::_log(std::string const &aMsg) const
-{
-    emit log(QString("[%1] %2").arg(_logPrefix).arg(QString::fromStdString(aMsg)));
-}
-
-void NntpConnection::_error(char const *aMsg) const { emit error(QString("[%1] %2").arg(_logPrefix).arg(aMsg)); }
-void NntpConnection::_error(QString const &aMsg) const
-{
-    emit error(QString("[%1] %2").arg(_logPrefix).arg(aMsg));
-}
-void NntpConnection::_error(std::string const &aMsg) const
-{
-    emit error(QString("[%1] %2").arg(_logPrefix).arg(QString::fromStdString(aMsg)));
-}
 
 void NntpConnection::deleteSocket()
 {

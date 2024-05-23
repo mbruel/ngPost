@@ -67,6 +67,13 @@ NntpConnection::NntpConnection(NgPost const &ngPost, int id, NntpServerParams co
             this,
             &NntpConnection::onKillConnection,
             Qt::QueuedConnection);
+
+    connect(this,
+            &NntpConnection::log,
+            [](QString const &msg, bool newline, NgLogger::DebugLevel debugLvl)
+            { NgLogger::log(msg, newline, debugLvl); });
+    connect(this, &NntpConnection::error, qOverload<QString>(&NgLogger::error));
+    connect(this, &NntpConnection::errorConnecting, qOverload<QString>(&NgLogger::error));
 }
 
 NntpConnection::~NntpConnection()
@@ -74,8 +81,7 @@ NntpConnection::~NntpConnection()
 #if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
     qDebug() << "Destruction " << _logPrefix << " from thread: " << QThread::currentThread()->objectName();
 #endif
-    if (NgLogger::isDebugMode())
-        _log("Destructing connection..");
+    _log("Destructing connection..", NgLogger::DebugLevel::Debug);
 
     // this should already have been triggered as the sockets lives in another thread
     if (_socket)
@@ -153,9 +159,7 @@ void NntpConnection::onKillConnection()
 
     if (_socket)
     {
-        if (NgLogger::isDebugMode())
-            _log("Killing connection..");
-
+        _log("Killing connection..", NgLogger::DebugLevel::Debug);
         disconnect(_socket, &QAbstractSocket::disconnected, this, &NntpConnection::onDisconnected);
         disconnect(_socket, &QIODevice::readyRead, this, &NntpConnection::onReadyRead);
         disconnect(_socket,
@@ -181,8 +185,7 @@ void NntpConnection::_closeConnection()
 #if defined(__DEBUG__) && defined(LOG_CONNECTION_STEPS)
     _log("closeConnection");
 #endif
-    if (NgLogger::isDebugMode())
-        _log("Closing connection...");
+    _log("Closing connection...", NgLogger::DebugLevel::Debug);
 #ifdef __USE_CONNECTION_TIMEOUT__
     if (_timeout)
         _timeout->stop();
@@ -209,7 +212,7 @@ void NntpConnection::_closeConnection()
         {
 #ifdef __DISP_ARTICLE_SERVER__
             if (NgLogger::isDebugMode())
-                _log(tr("Article FAIL2: %1 (on %2)").arg(_currentArticle->id()).arg(_srvParams.host));
+                _error(tr("Article FAIL2: %1 (on %2)").arg(_currentArticle->id()).arg(_srvParams.host));
 #endif
 #ifdef __RELEASE_ARTICLES_WHEN_CON_FAILS__
             _poster->releaseArticle(_logPrefix, _currentArticle);
@@ -250,7 +253,7 @@ void NntpConnection::onDisconnected()
         {
 #ifdef __DISP_ARTICLE_SERVER__
             if (NgLogger::isDebugMode())
-                _log(tr("Article FAIL3: %1 (on %2)").arg(_currentArticle->id()).arg(_srvParams.host));
+                _error(tr("Article FAIL3: %1 (on %2)").arg(_currentArticle->id()).arg(_srvParams.host));
 #endif
 #ifdef __RELEASE_ARTICLES_WHEN_CON_FAILS__
             _poster->releaseArticle(_logPrefix, _currentArticle);
@@ -394,11 +397,11 @@ void NntpConnection::onReadyRead()
                 _log(tr("POSTED: %1").arg(_currentArticle->str()));
 #endif
 #ifdef __DISP_ARTICLE_SERVER__
-                if (NgLogger::isDebugMode())
-                    _log(tr("Article posted: %1 (on %2) %3")
-                                 .arg(_currentArticle->id())
-                                 .arg(_srvParams.host)
-                                 .arg(line.constData()));
+                _log(tr("Article posted: %1 (on %2) %3")
+                             .arg(_currentArticle->id())
+                             .arg(_srvParams.host)
+                             .arg(line.constData()),
+                     NgLogger::DebugLevel::Debug);
 #endif
                 emit _currentArticle->posted(_currentArticle->size());
             }
@@ -411,8 +414,8 @@ void NntpConnection::onReadyRead()
                 {
                     _postingState = PostingState::SENDING_ARTICLE;
                     _socket->write(Nntp::POST);
-                    if (NgLogger::isDebugMode())
-                        _log(tr("ReTry %1 (Error: '%2')").arg(_currentArticle->str()).arg(line.constData()));
+                    _log(tr("ReTry %1 (Error: '%2')").arg(_currentArticle->str()).arg(line.constData()),
+                         NgLogger::DebugLevel::Debug);
                 }
                 else
                 {
@@ -421,11 +424,11 @@ void NntpConnection::onReadyRead()
                                    .arg(_currentArticle->str())
                                    .arg(line.constData()));
 #ifdef __DISP_ARTICLE_SERVER__
-                    if (NgLogger::isDebugMode())
-                        _log(tr("Article FAIL: %1 (on %2) %3")
-                                     .arg(_currentArticle->id())
-                                     .arg(_srvParams.host)
-                                     .arg(line.constData()));
+                    _log(tr("Article FAIL: %1 (on %2) %3")
+                                 .arg(_currentArticle->id())
+                                 .arg(_srvParams.host)
+                                 .arg(line.constData()),
+                         NgLogger::DebugLevel::Debug);
 #endif
 
 #ifdef __RELEASE_ARTICLES_WHEN_CON_FAILS__
@@ -571,8 +574,7 @@ void NntpConnection::_sendNextArticle()
         if (_timeout)
             _timeout->stop();
 #endif
-        if (NgLogger::isDebugMode())
-            _log("No more articles");
+        _log("No more articles", NgLogger::DebugLevel::Debug);
         _closeConnection();
     }
 }

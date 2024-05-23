@@ -906,11 +906,6 @@ int PostingJob::_createNntpConnections()
             {
                 NntpConnection *nntpCon = new NntpConnection(_ngPost, ++conIdx, *srvParams);
                 connect(nntpCon,
-                        &NntpConnection::log,
-                        [](QString msg, bool newline = true) { NgLogger::log(msg, newline); });
-                connect(nntpCon, &NntpConnection::error, qOverload<QString>(&NgLogger::error));
-                connect(nntpCon, &NntpConnection::errorConnecting, qOverload<QString>(&NgLogger::error));
-                connect(nntpCon,
                         &NntpConnection::disconnected,
                         this,
                         &PostingJob::onDisconnectedConnection,
