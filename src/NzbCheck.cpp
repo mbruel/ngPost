@@ -81,7 +81,7 @@ void NzbCheck::startCheckingNzb()
 void NzbCheck::missingArticle(QString const &article)
 {
     if (!_postingParams->quietMode())
-        NgLogger::log(tr("+ Missing Article on server: %1)").arg(article), true);
+        NgLogger::error(tr("+ Missing Article on server: %1").arg(article));
 
     ++_nbArticlesMissing;
 }

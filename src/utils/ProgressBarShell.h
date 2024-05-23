@@ -24,6 +24,20 @@ struct UpdateBarInfo
         end = e;
         msg = m;
     }
+
+    ushort nbDigitsEndBar() const
+    { // The loop method should be the fastest than the 2 others in comment
+        //  return  static_cast<int>(std::log10(end)) + 1.0;
+        //  return QString::number(end).length();
+        uint   num      = end;
+        ushort nbDigits = 0;
+        while (num != 0)
+        {
+            num /= 10;
+            ++nbDigits;
+        }
+        return nbDigits;
+    };
 };
 
 using ProgressCallback = std::function<void(UpdateBarInfo &currentPos)>;
@@ -34,6 +48,11 @@ class ShellBar : public QObject
 
     static constexpr ushort kProgressBarWidth   = 50;
     static constexpr int    kDefaultRefreshRate = 500; //!< how often shall we refresh the progressbar?
+
+    inline static const QString kColorBar      = "\x1B[1;30;46m"; //!< bold black with magenta background
+    inline static const QString kColorText     = "\x1B[1;30";     //!< bold black
+    inline static const QString kColorReset    = "\x1B[0m";       //!< reset all text attributes
+    inline static const QChar   kPaddingNumber = QChar(' ');
 
 private slots:
     void onRefresh();

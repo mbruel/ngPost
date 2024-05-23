@@ -46,11 +46,15 @@ class NgLogger : public QObject, private Singleton<NgLogger>
     Q_OBJECT
     friend class Singleton<NgLogger>;
 
-    inline static const QString kColorReset     = "\x1B[0m";
-    inline static const QString kColorInfo      = "\x1B[1;34m";
-    inline static const QString kColorDebug     = "\x1B[1;30m";
-    inline static const QString kColorFullDebug = "\x1B[1;33m";
-    inline static const QString kColorError     = "\x1B[31m";
+    /*!
+     * \brief ANSI/VT100 Terminal Control Escape Sequences
+     * cf https://www2.ccs.neu.edu/research/gpc/VonaUtils/vona/terminal/vtansi.htm
+     */
+    inline static const QString kColorReset     = "\x1B[0m";    //!< reset all text attributes
+    inline static const QString kColorInfo      = "\x1B[1;30m"; //!< bold black
+    inline static const QString kColorDebug     = "\x1B[2;34m"; //!< dim green
+    inline static const QString kColorFullDebug = "\x1B[2;33m"; //!< dim yellow
+    inline static const QString kColorError     = "\x1B[1;31m"; //!< bold red
 
 public:
     enum class DebugLevel

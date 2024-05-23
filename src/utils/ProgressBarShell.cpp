@@ -84,7 +84,7 @@ void ShellBar::onRefresh()
     float progress = static_cast<float>(_currentPos.pos);
     progress /= _currentPos.end;
 
-    _cout << "\r[";
+    _cout << kColorBar << "\r[";
     ushort positionInBar = static_cast<ushort>(std::floor(progress * kProgressBarWidth));
     for (ushort i = 0; i < kProgressBarWidth; ++i)
     {
@@ -95,8 +95,12 @@ void ShellBar::onRefresh()
         else
             _cout << " ";
     }
-    _cout << "] " << static_cast<int>(progress) * 100 << " %"
-          << " (" << _currentPos.pos << " / " << _currentPos.end << ") " << _currentPos.msg << Qt::flush;
+    _cout << "]" << kColorReset
+          << QString(" %1 % (%2 / %3) ")
+                     .arg(static_cast<int>(progress * 100), 3, 10, kPaddingNumber)
+                     .arg(_currentPos.pos, _currentPos.nbDigitsEndBar(), 10, kPaddingNumber)
+                     .arg(_currentPos.end)
+          << _currentPos.msg << Qt::flush;
 
     if (_currentPos.pos < _currentPos.end)
         _progressTimer.start(_refreshRateMs);
