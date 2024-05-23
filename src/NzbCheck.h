@@ -36,6 +36,7 @@ class NntpCheckCon;
 class NzbCheck : public QObject
 {
     Q_OBJECT
+    friend NgPost;       // to use progressUpdateInfo via NgLogger::createProgressBar
     friend NntpCheckCon; // only class allowed to use getNextArticle and update _nbArticles*
 
 private:
@@ -50,21 +51,22 @@ private:
     QString             _nzbPath;       //!< path of the nzb we need to check
     QStack<QString>     _articles;      //!< ids of all the articles of the nzb (
 
-    QList<NntpServerParams *> _nntpServers; //!< the servers parameters that are allowed for checking headers
+    //! the servers parameters that are allowed for checking headers
+    //! we don't own them, we just kept the list from _postingParams during hasCheckingConnections
+    QList<NntpServerParams *> _nntpServers;
 
-    QSet<NntpCheckCon *> _connections;
+    QSet<NntpCheckCon *> _connections; //!< they will deleteLater
     uint                 _nbCons;
 
     uint _nbArticlesTotal;
     uint _nbArticlesMissing;
     uint _nbArticlesChecked;
 
-    QElapsedTimer          _timeStart;
-    ProgressBar::ShellBar *_progressBar;
+    QElapsedTimer _timeStart;
 
 public:
     NzbCheck(SharedParams const &postingParams, QString const &nzbPath);
-    ~NzbCheck();
+    ~NzbCheck() = default; //!< we don't own anything on the heap
 
     /*!
      * \brief from postingParams->nntpServers() save the ones with nzbCheck allowed in _nntpServers
@@ -86,8 +88,6 @@ public:
      * start the progress bar (if not quiet mode)
      */
     void startCheckingNzb();
-
-    void useProgressBar(bool display);
 
     //! result of the check (output of the program)
     int nbMissingArticles() const { return _nbArticlesMissing; }

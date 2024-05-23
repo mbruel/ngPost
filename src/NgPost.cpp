@@ -1223,7 +1223,8 @@ bool NgPost::doNzbCheck(QString const &nzbPath)
 {
     _nzbCheck = new NzbCheck(_postingParams, nzbPath); // it's a one shot, no leak ;)
     if (!_postingParams->quietMode())
-        _nzbCheck->useProgressBar(_dispProgressBar || _dispFilesPosting);
+        NgLogger::createProgressBar([this](ProgressBar::UpdateBarInfo &currentPos)
+                                    { _nzbCheck->progressUpdateInfo(currentPos); });
 
     // Check if there are connection usable for downloading headers
     if (_nzbCheck->hasCheckingConnections() == 0)

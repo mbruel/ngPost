@@ -36,6 +36,9 @@ NgLogger::NgLogger()
 #else
     , _debugLevel(DebugLevel::None)
 #endif
+    , _progressBar(nullptr)
+    , _progressCallback(nullptr)
+    , _lastLogByProgressBar(false)
 {
 #if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
     qDebug() << "Creation of the singleton NgLogger";
@@ -56,6 +59,8 @@ NgLogger::~NgLogger()
         delete _logStream;
         delete _logFile;
     }
+    if (_progressBar)
+        _progressBar->deleteLater();
 }
 
 void NgLogger::startLogInFile(QString const &logFilePath)
@@ -79,6 +84,44 @@ void NgLogger::startLogInFile(QString const &logFilePath)
     }
 }
 
+void NgLogger::createProgressBar(ProgressBar::ProgressCallback const &callback, bool startIt)
+{
+    sInstance->_progressCallback = callback;
+
+    if (!sInstance->_progressBar)
+        sInstance->_progressBar = new ::ProgressBar::ShellBar([](ProgressBar::UpdateBarInfo &currentPos)
+                                                              { sInstance->_doProgressBarUpdate(currentPos); },
+                                                              NgConf::kProgressBarWidth,
+                                                              NgConf::kDefaultRefreshRate);
+    if (startIt)
+        startProgressBar(true);
+}
+
+void NgLogger::_doProgressBarUpdate(ProgressBar::UpdateBarInfo &currentPos)
+{
+    if (!_lastLogByProgressBar)
+        _cout << Qt::endl;
+    _progressCallback(currentPos);
+    _lastLogByProgressBar = true;
+}
+
+bool NgLogger::startProgressBar(bool waitEventLoopStarted)
+{
+    if (!sInstance->_progressBar)
+    {
+        error(tr("No progess bar... a call to createProgressBar is needed."));
+        return false;
+    }
+    sInstance->_progressBar->start(waitEventLoopStarted);
+    return true;
+}
+
+void NgLogger::stopProgressBar(bool lastRefresh)
+{
+    if (sInstance->_progressBar)
+        sInstance->_progressBar->start(lastRefresh);
+}
+
 void NgLogger::onLog(QString msg, bool newline)
 {
 #ifdef __USE_HMI__
@@ -87,10 +130,14 @@ void NgLogger::onLog(QString msg, bool newline)
     else
 #endif
     {
+        if (_lastLogByProgressBar)
+            _cout << Qt::endl;
+
         _cout << logColor() << msg;
         if (newline)
             _cout << Qt::endl;
         _cout << kColorReset << MB_FLUSH;
+        _lastLogByProgressBar = false;
     }
 
     if (_logStream && newline)
@@ -104,7 +151,13 @@ void NgLogger::onError(QString error)
         _hmi->logError(error);
     else
 #endif
+    {
+        if (_lastLogByProgressBar)
+            _cout << Qt::endl;
+
         _cerr << kColorError << error << Qt::endl << kColorReset << MB_FLUSH;
+        _lastLogByProgressBar = false;
+    }
 
     if (_logStream)
         *_logStream << "ERR: " << error << Qt::endl << MB_FLUSH; // force flush in case of crash

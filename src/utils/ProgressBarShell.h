@@ -60,13 +60,15 @@ public:
              QObject                *parent        = nullptr);
     ~ShellBar();
 
+    void setProgressCallback(ProgressCallback const &progressCallback);
+
 #ifdef __PROGRESS_BAR_HOOKED_BY_LOGGER__
     void start(bool waitEventLoopStarted);
 #else
     void start();
 #endif
 
-    void stop(bool lastRefresh = false);
+    void stop(bool lastRefresh);
 };
 
 } // namespace ProgressBar

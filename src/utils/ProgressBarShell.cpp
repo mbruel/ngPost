@@ -29,16 +29,26 @@ ShellBar::~ShellBar()
         _progressTimer.stop();
 }
 
+void ShellBar::setProgressCallback(ProgressCallback const &progressCallback)
+{
+    stop(false);
+    _currentPos       = { 0, 0, QString() };
+    _progressCallback = progressCallback;
+}
+
 #ifdef __PROGRESS_BAR_HOOKED_BY_LOGGER__
 void ShellBar::start(bool waitEventLoopStarted)
 {
     _waitEventLoopStarted = waitEventLoopStarted;
+    // QueuedConnection to make sure we won't print the bar before
+    // the queued log events that where stored before the event loop was started
+    connect(&_progressTimer, &QTimer::timeout, this, &ShellBar::onRefresh, Qt::QueuedConnection);
 #else
 void ShellBar::start()
 {
-#endif
     connect(&_progressTimer, &QTimer::timeout, this, &ShellBar::onRefresh, Qt::DirectConnection);
     onRefresh();
+#endif
     _progressTimer.start(_refreshRateMs);
 }
 
@@ -50,8 +60,10 @@ void ShellBar::stop(bool lastRefresh)
         disconnect(&_progressTimer, &QTimer::timeout, this, &ShellBar::onRefresh);
     }
     if (lastRefresh)
+    {
         onRefresh();
-    _cout << Qt::endl << Qt::endl << Qt::flush;
+        _cout << Qt::endl << Qt::endl << Qt::flush;
+    }
 }
 
 void ShellBar::onRefresh()

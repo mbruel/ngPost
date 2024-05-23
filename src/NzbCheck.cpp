@@ -42,24 +42,7 @@ NzbCheck::NzbCheck(SharedParams const &postingParams, QString const &nzbPath)
     , _nbArticlesTotal(0)
     , _nbArticlesMissing(0)
     , _nbArticlesChecked(0)
-    , _progressBar(nullptr)
 {
-}
-
-NzbCheck::~NzbCheck()
-{
-    if (_progressBar)
-        _progressBar->deleteLater();
-}
-
-void NzbCheck::useProgressBar(bool display)
-{
-    if (display && !_postingParams->quietMode())
-
-        _progressBar = new ::ProgressBar::ShellBar([this](ProgressBar::UpdateBarInfo &currentPos)
-                                                   { progressUpdateInfo(currentPos); },
-                                                   NgConf::kProgressBarWidth,
-                                                   NgConf::kDefaultRefreshRate);
 }
 
 void NzbCheck::startCheckingNzb()
@@ -93,19 +76,13 @@ void NzbCheck::startCheckingNzb()
                               .arg(_nbCons)
                               .arg(_nntpServers.size()),
                       true);
-
-    if (_progressBar)
-        _progressBar->start(true);
 }
 
 void NzbCheck::missingArticle(QString const &article)
 {
     if (!_postingParams->quietMode())
-    {
-        if (_progressBar)
-            NgLogger::log("", true);
         NgLogger::log(tr("+ Missing Article on server: %1)").arg(article), true);
-    }
+
     ++_nbArticlesMissing;
 }
 
@@ -114,9 +91,7 @@ void NzbCheck::onDisconnected(NntpCheckCon *con)
     _connections.remove(con);
     if (_connections.isEmpty())
     {
-        if (_progressBar)
-            _progressBar->stop();
-
+        NgLogger::stopProgressBar(true);
         if (!_postingParams->quietMode())
         {
             qint64 duration = _timeStart.elapsed();

@@ -24,6 +24,7 @@
 #include <QTextStream>
 
 #include "NgError.h"
+#include "ProgressBarShell.h"
 
 class QFile;
 #ifdef __USE_HMI__
@@ -72,6 +73,24 @@ private:
 
     DebugLevel _debugLevel;
 
+    /*!
+     * \brief CMD programs (like ngPost) may want a Progress Bar
+     * If they want to use a Logger also, for a nice integration
+     * the logger should own it to be able to return to the line
+     * before writting a new log if the progress bar is running.
+     * otherwise there is an overlap...
+     *
+     * To be able to do that we hook the ProgressCallback of the ProgressBar:
+     * we always connect the _progressBar to our NgLogger::_doProgressBarUpdate
+     * so it forwards to _progressCallback requested by the user
+     * having added a Qt::endl before depending on _lastLogByProgressBar
+     */
+    ProgressBar::ShellBar        *_progressBar;
+    ProgressBar::ProgressCallback _progressCallback;
+    bool _lastLogByProgressBar; //!< if true, on normal log we should first return to the line
+
+    void _doProgressBarUpdate(ProgressBar::UpdateBarInfo &currentPos); //!< progressBar hook
+
 #ifdef __USE_HMI__
     MainWindow *_hmi;
 #endif
@@ -112,6 +131,10 @@ public:
         else
             error(QString("[%1] %2").arg(NgError::errorName(errCode), errorMsg));
     }
+
+    static void createProgressBar(ProgressBar::ProgressCallback const &callback, bool startIt = true);
+    static bool startProgressBar(bool waitEventLoopStarted);
+    static void stopProgressBar(bool lastRefresh);
 
 public slots:
     void onLog(QString msg, bool newline);
