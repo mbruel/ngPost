@@ -62,8 +62,8 @@ constexpr char const *kDefaultShutdownCmdLinux   = "sudo -n /sbin/poweroff";
 constexpr char const *kDefaultShutdownCmdWindows = "shutdown /s /f /t 0";
 constexpr char const *kDefaultShutdownCmdMacOS   = "sudo -n shutdown -h now";
 
-constexpr int kProgressbarBarWidth = 50;
-constexpr int kDefaultRefreshRate  = 500; //!< how often shall we refresh the progressbar bar?
+constexpr int kProgressBarWidth   = 50;
+constexpr int kDefaultRefreshRate = 500; //!< how often shall we refresh the progressbar bar?
 
 constexpr int kNbPreparedArticlePerConnection = 3;
 

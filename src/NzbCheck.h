@@ -29,6 +29,8 @@
 #include <QTimer>
 
 #include "PostingParams.h"
+#include "utils/ProgressBarShell.h"
+
 class NntpCheckCon;
 
 class NzbCheck : public QObject
@@ -48,19 +50,17 @@ private:
     QString             _nzbPath;       //!< path of the nzb we need to check
     QStack<QString>     _articles;      //!< ids of all the articles of the nzb (
 
-    bool   _dispProgressBar;
-    QTimer _progressbarTimer; //!< timer to refresh the upload information (progressbar bar, avg. speed)
-
     QList<NntpServerParams *> _nntpServers; //!< the servers parameters that are allowed for checking headers
 
     QSet<NntpCheckCon *> _connections;
-    int                  _nbCons;
+    uint                 _nbCons;
 
-    int _nbArticlesTotal;
-    int _nbArticlesMissing;
-    int _nbArticlesChecked;
+    uint _nbArticlesTotal;
+    uint _nbArticlesMissing;
+    uint _nbArticlesChecked;
 
-    QElapsedTimer _timeStart;
+    QElapsedTimer          _timeStart;
+    ProgressBar::ShellBar *_progressBar;
 
 public:
     NzbCheck(SharedParams const &postingParams, QString const &nzbPath);
@@ -87,18 +87,23 @@ public:
      */
     void startCheckingNzb();
 
-    void setDispProgressBar(bool display) { _dispProgressBar = display; }
+    void useProgressBar(bool display);
 
     //! result of the check (output of the program)
     int nbMissingArticles() const { return _nbArticlesMissing; }
 
 private slots:
     void onDisconnected(NntpCheckCon *con);
-    void onRefreshprogressbarBar();
 
-    // only for NntpCheckCon as a friend will use those methods
 private:
-    QString getNextArticle()
+    void progressUpdateInfo(ProgressBar::UpdateBarInfo &currentPos)
+    {
+        currentPos.update(_nbArticlesChecked,
+                          _nbArticlesTotal,
+                          QString(tr("missing articles: %1").arg(_nbArticlesMissing)));
+    }
+
+    QString getNextArticle() //!< only used by NntpCheckCons
     {
         if (_articles.isEmpty())
             return QString();
@@ -106,10 +111,8 @@ private:
             return _articles.pop();
     }
 
-    void missingArticle(QString const &article);
-    void articleChecked() { ++_nbArticlesChecked; }
-
-    void _clear();
+    void missingArticle(QString const &article);    //!< only used by NntpCheckCons
+    void articleChecked() { ++_nbArticlesChecked; } //!< only used by NntpCheckCons
 };
 
 #endif // NZBCHECK_H

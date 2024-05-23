@@ -18,8 +18,6 @@
 //========================================================================
 
 #include "NzbCheck.h"
-#include <cmath>
-#include <iostream> // for the progressbar
 
 #include <QCoreApplication>
 #include <QFile>
@@ -38,29 +36,104 @@ NzbCheck::NzbCheck(SharedParams const &postingParams, QString const &nzbPath)
     , _postingParams(postingParams)
     , _nzbPath(nzbPath)
     , _articles()
-    , _dispProgressBar(false)
-    , _progressbarTimer()
     , _nntpServers()
     , _connections()
+    , _nbCons(0)
     , _nbArticlesTotal(0)
     , _nbArticlesMissing(0)
     , _nbArticlesChecked(0)
+    , _progressBar(nullptr)
 {
 }
 
 NzbCheck::~NzbCheck()
 {
-    if (_dispProgressBar)
-        _progressbarTimer.stop();
+    if (_progressBar)
+        _progressBar->deleteLater();
 }
 
-void NzbCheck::_clear()
+void NzbCheck::useProgressBar(bool display)
 {
-    _articles.clear();
-    _nntpServers.clear();
-    _nbArticlesTotal   = 0;
-    _nbArticlesMissing = 0;
-    _nbArticlesChecked = 0;
+    if (display && !_postingParams->quietMode())
+
+        _progressBar = new ::ProgressBar::ShellBar([this](ProgressBar::UpdateBarInfo &currentPos)
+                                                   { progressUpdateInfo(currentPos); },
+                                                   NgConf::kProgressBarWidth,
+                                                   NgConf::kDefaultRefreshRate);
+}
+
+void NzbCheck::startCheckingNzb()
+{
+    _timeStart.start();
+    _nbCons = std::min(_nbArticlesTotal, _nbCons);
+
+    uint nb = 0;
+    for (NntpServerParams *srvParam : _nntpServers)
+    {
+        if (srvParam->nzbCheck)
+        {
+            for (int i = 1; i <= srvParam->nbCons; ++i)
+            {
+                NntpCheckCon *con = new NntpCheckCon(this, i, *srvParam);
+                connect(con, &NntpCheckCon::disconnected, this, &NzbCheck::onDisconnected, Qt::DirectConnection);
+                emit con->startConnection();
+
+                _connections.insert(con);
+
+                if (++nb == _nbCons)
+                    break;
+            }
+            if (nb == _nbCons)
+                break;
+        }
+    }
+
+    if (!_postingParams->quietMode())
+        NgLogger::log(tr("Start checking the nzb with %1 connections on %2 servers)")
+                              .arg(_nbCons)
+                              .arg(_nntpServers.size()),
+                      true);
+
+    if (_progressBar)
+        _progressBar->start();
+}
+
+void NzbCheck::missingArticle(QString const &article)
+{
+    if (!_postingParams->quietMode())
+    {
+        if (_progressBar)
+            NgLogger::log("", true);
+        NgLogger::log(tr("+ Missing Article on server: %1)").arg(article), true);
+    }
+    ++_nbArticlesMissing;
+}
+
+void NzbCheck::onDisconnected(NntpCheckCon *con)
+{
+    _connections.remove(con);
+    if (_connections.isEmpty())
+    {
+        if (_progressBar)
+            _progressBar->stop();
+
+        if (!_postingParams->quietMode())
+        {
+            qint64 duration = _timeStart.elapsed();
+            NgLogger::log(
+                    tr("Nb Missing Article(s): %1/%2 (check done in %3 (%4 sec) using %5 connections on %6 "
+                       "server(s))")
+                            .arg(_nbArticlesMissing)
+                            .arg(_nbArticlesTotal)
+                            .arg(QTime::fromMSecsSinceStartOfDay(static_cast<int>(duration))
+                                         .toString("hh:mm:ss.zzz"))
+                            .arg(std::round(1. * duration / 1000))
+                            .arg(_nbCons)
+                            .arg(_nntpServers.size()),
+                    true);
+        }
+        qApp->quit(); // end of game :)
+    }
 }
 
 int NzbCheck::hasCheckingConnections()
@@ -145,115 +218,4 @@ bool NzbCheck::parseNzb()
     if (!_postingParams->quietMode())
         NgLogger::log(tr("%1 has %2 articles").arg(_nzbPath).arg(_nbArticlesTotal), true);
     return _nbArticlesTotal;
-}
-
-void NzbCheck::startCheckingNzb()
-{
-    _timeStart.start();
-
-    _nbCons = std::min(_nbArticlesTotal, _nbCons);
-
-    int nb = 0;
-    for (NntpServerParams *srvParam : _nntpServers)
-    {
-        if (srvParam->nzbCheck)
-        {
-            for (int i = 1; i <= srvParam->nbCons; ++i)
-            {
-                NntpCheckCon *con = new NntpCheckCon(this, i, *srvParam);
-                connect(con, &NntpCheckCon::disconnected, this, &NzbCheck::onDisconnected, Qt::DirectConnection);
-                emit con->startConnection();
-
-                _connections.insert(con);
-
-                if (++nb == _nbCons)
-                    break;
-            }
-            if (nb == _nbCons)
-                break;
-        }
-    }
-
-    if (!_postingParams->quietMode())
-        NgLogger::log(tr("Start checking the nzb with %1 connections on %1 servers)")
-                              .arg(_nbCons)
-                              .arg(_nntpServers.size()),
-                      true);
-
-    if (_dispProgressBar)
-    {
-        connect(&_progressbarTimer,
-                &QTimer::timeout,
-                this,
-                &NzbCheck::onRefreshprogressbarBar,
-                Qt::DirectConnection);
-        _progressbarTimer.start(NgConf::kDefaultRefreshRate);
-    }
-}
-
-void NzbCheck::missingArticle(QString const &article)
-{
-    if (!_postingParams->quietMode())
-    {
-        if (_dispProgressBar)
-            std::cout << "\n";
-        NgLogger::log(tr("+ Missing Article on server: %1)").arg(article), true);
-    }
-    ++_nbArticlesMissing;
-}
-
-void NzbCheck::onDisconnected(NntpCheckCon *con)
-{
-    _connections.remove(con);
-    if (_connections.isEmpty())
-    {
-        if (_dispProgressBar)
-        {
-            disconnect(&_progressbarTimer, &QTimer::timeout, this, &NzbCheck::onRefreshprogressbarBar);
-            onRefreshprogressbarBar();
-            std::cout << "\n\n";
-        }
-
-        if (!_postingParams->quietMode())
-        {
-            qint64 duration = _timeStart.elapsed();
-            NgLogger::log(
-                    tr("Nb Missing Article(s): %1/%2 (check done in %3 (%4 sec) using %5 connections on %6 "
-                       "server(s))")
-                            .arg(_nbArticlesMissing)
-                            .arg(_nbArticlesTotal)
-                            .arg(QTime::fromMSecsSinceStartOfDay(static_cast<int>(duration))
-                                         .toString("hh:mm:ss.zzz"))
-                            .arg(std::round(1. * duration / 1000))
-                            .arg(_nbCons)
-                            .arg(_nntpServers.size()),
-                    true);
-        }
-        qApp->quit(); // end of game :)
-    }
-}
-
-void NzbCheck::onRefreshprogressbarBar()
-{
-    float progressbar = static_cast<float>(_nbArticlesChecked);
-    progressbar /= _nbArticlesTotal;
-
-    std::cout << "\r[";
-    int pos = static_cast<int>(std::floor(progressbar * NgConf::kProgressbarBarWidth));
-    for (int i = 0; i < NgConf::kProgressbarBarWidth; ++i)
-    {
-        if (i < pos)
-            std::cout << "=";
-        else if (i == pos)
-            std::cout << ">";
-        else
-            std::cout << " ";
-    }
-    std::cout << "] " << int(progressbar * 100) << " %"
-              << " (" << _nbArticlesChecked << " / " << _nbArticlesTotal << ")" << tr(" missing: ").toStdString()
-              << _nbArticlesMissing;
-    std::cout.flush();
-
-    if (_nbArticlesChecked < _nbArticlesTotal)
-        _progressbarTimer.start(NgConf::kDefaultRefreshRate);
 }

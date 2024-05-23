@@ -20,8 +20,6 @@
 
 #include <QDateTime>
 #include <QFile>
-#include <QDebug> //MB_TODO: use NgLogger instead!
-
 
 #include "Macros.h"
 #include "NgTools.h"

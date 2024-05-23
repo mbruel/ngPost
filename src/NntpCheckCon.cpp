@@ -259,7 +259,7 @@ void NntpCheckCon::_checkNextArticle()
     {
         NgLogger::log(tr("[Con #%1] Checking article %2").arg(_id).arg(_currentArticle),
                       true,
-                      NgLogger::DebugLevel::Debug);
+                      NgLogger::DebugLevel::FullDebug);
         _postingState = PostingState::CHECKING_ARTICLE;
         _socket->write(QString("%1 %2\r\n").arg(Nntp::STAT).arg(_currentArticle).toLocal8Bit());
     }

@@ -79,6 +79,7 @@ SOURCES += \
         $$PWD/utils/NgConfigLoader.cpp \
         $$PWD/utils/NgLogger.cpp \
         $$PWD/utils/NgTools.cpp \
+        $$PWD/utils/ProgressBarShell.cpp \
         ArticleBuilder.cpp \
         FileUploader.cpp \
         FoldersMonitorForNewFiles.cpp \
@@ -112,6 +113,7 @@ HEADERS += \
     $$PWD/utils/NgConfigLoader.h \
     $$PWD/utils/NgLogger.h \
     $$PWD/utils/NgTools.h \
+    $$PWD/utils/ProgressBarShell.h \
     $$PWD/utils/Singleton.h \
     ArticleBuilder.h \
     FileUploader.h \

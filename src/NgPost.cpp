@@ -404,8 +404,8 @@ void NgPost::onRefreshprogressbarBar()
         //                 << " => progressbar: " << progressbar << "\n";
 
         std::cout << "\r[";
-        int pos = static_cast<int>(std::floor(progressbar * kProgressbarBarWidth));
-        for (int i = 0; i < kProgressbarBarWidth; ++i)
+        int pos = static_cast<int>(std::floor(progressbar * kProgressBarWidth));
+        for (int i = 0; i < kProgressBarWidth; ++i)
         {
             if (i < pos)
                 std::cout << "=";
@@ -1223,7 +1223,7 @@ bool NgPost::doNzbCheck(QString const &nzbPath)
 {
     _nzbCheck = new NzbCheck(_postingParams, nzbPath); // it's a one shot, no leak ;)
     if (!_postingParams->quietMode())
-        _nzbCheck->setDispProgressBar(_dispProgressBar || _dispFilesPosting);
+        _nzbCheck->useProgressBar(_dispProgressBar || _dispFilesPosting);
 
     // Check if there are connection usable for downloading headers
     if (_nzbCheck->hasCheckingConnections() == 0)
