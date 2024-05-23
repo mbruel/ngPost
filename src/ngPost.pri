@@ -8,6 +8,11 @@ TEMPLATE = app
 CONFIG += c++17
 CONFIG -= app_bundle
 
+# To integrate the progress bar in the logger
+# to be thread safe, event if it already
+# but to not have it starting before the loading of the conf!
+DEFINES += __PROGRESS_BAR_HOOKED_BY_LOGGER__
+
 DEFINES += __MOVETOTHREAD_TRACKING__
 
 DEFINES += __USE_CONNECTION_TIMEOUT__

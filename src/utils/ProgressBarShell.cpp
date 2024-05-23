@@ -2,6 +2,11 @@
 
 #include <cmath> //std::floor
 
+#ifdef __PROGRESS_BAR_HOOKED_BY_LOGGER__
+#  include <QCoreApplication>
+#  include <QThread>
+#endif
+
 namespace ProgressBar
 {
 
@@ -11,6 +16,10 @@ ShellBar::ShellBar(ProgressCallback const &progressCallback, ushort barWidth, in
     , _cout(stdout)
     , _barWidth(barWidth)
     , _refreshRateMs(refreshRateMs)
+#ifdef __PROGRESS_BAR_HOOKED_BY_LOGGER__
+    , _waitEventLoopStarted(false)
+#endif
+
 {
 }
 
@@ -20,8 +29,14 @@ ShellBar::~ShellBar()
         _progressTimer.stop();
 }
 
+#ifdef __PROGRESS_BAR_HOOKED_BY_LOGGER__
+void ShellBar::start(bool waitEventLoopStarted)
+{
+    _waitEventLoopStarted = waitEventLoopStarted;
+#else
 void ShellBar::start()
 {
+#endif
     connect(&_progressTimer, &QTimer::timeout, this, &ShellBar::onRefresh, Qt::DirectConnection);
     onRefresh();
     _progressTimer.start(_refreshRateMs);
@@ -41,6 +56,16 @@ void ShellBar::stop(bool lastRefresh)
 
 void ShellBar::onRefresh()
 {
+#ifdef __PROGRESS_BAR_HOOKED_BY_LOGGER__
+    if (_waitEventLoopStarted && !QThread::currentThread()->isRunning())
+        return; // no display while the
+    else
+    {
+        qApp->processEvents();         // write first the logs in event queue before it was started
+        _waitEventLoopStarted = false; // no need to check if the event loop is running anymore
+    }
+#endif
+
     // update current position
     _progressCallback(_currentPos);
 

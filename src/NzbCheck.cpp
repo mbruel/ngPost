@@ -95,7 +95,7 @@ void NzbCheck::startCheckingNzb()
                       true);
 
     if (_progressBar)
-        _progressBar->start();
+        _progressBar->start(true);
 }
 
 void NzbCheck::missingArticle(QString const &article)

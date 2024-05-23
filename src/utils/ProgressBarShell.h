@@ -49,6 +49,10 @@ private:
 
     QTimer _progressTimer; //!< timer to refresh the refresh bar
 
+#ifdef __PROGRESS_BAR_HOOKED_BY_LOGGER__
+    bool _waitEventLoopStarted;
+#endif
+
 public:
     ShellBar(ProgressCallback const &progressCallback,
              ushort                  barWidth      = kProgressBarWidth,
@@ -56,7 +60,12 @@ public:
              QObject                *parent        = nullptr);
     ~ShellBar();
 
+#ifdef __PROGRESS_BAR_HOOKED_BY_LOGGER__
+    void start(bool waitEventLoopStarted);
+#else
     void start();
+#endif
+
     void stop(bool lastRefresh = false);
 };
 
