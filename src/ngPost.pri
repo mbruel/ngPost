@@ -31,6 +31,7 @@ TRANSLATIONS = lang/ngPost_en.ts lang/ngPost_fr.ts lang/ngPost_es.ts lang/ngPost
                lang/ngPost_nl.ts lang/ngPost_pt.ts lang/ngPost_zh.ts
 
 win32: {
+    LIBS += -luser32
     RC_ICONS += ngPost.ico
 
 # we need the console to be able to print stuff in command line mode...
