@@ -126,8 +126,8 @@ private:
     bool        _saveFrom;
     std::string _from; //!< email of poster (if empty, random one will be used for each file)
 
-    QList<QString> _grpList; //!< Newsgroup where we're posting in a list format to write in the nzb file
-    int            _nbGroups;
+    QStringList _grpList; //!< Newsgroup where we're posting in a list format to write in the nzb file
+    int         _nbGroups;
 
     QString _inputDir; //!< Default folder to open to select files from the HMI
 
@@ -139,16 +139,33 @@ public:
     MainParams();
     ~MainParams();
 
-    MainParams(MainParams const &) = default;
-    MainParams(MainParams &&)      = default;
-
+    MainParams(MainParams const &)            = default;
+    MainParams(MainParams &&)                 = default;
     MainParams &operator=(MainParams const &) = delete;
     MainParams &operator=(MainParams &&)      = delete;
 
-    bool quietMode() const { return _quiet; }
-    bool dispProgressBar() const { return _dispProgressBar; }
-    bool dispFilesPosting() const { return _dispFilesPosting; }
-    void setDisplayProgress(QString const &txtValue);
+    inline int         nbThreads() const { return _nbThreads; }
+    inline int         getSocketTimeout() const { return _socketTimeOut; }
+    QString const     &nzbPath() const { return _nzbPath; }
+    QStringList const &nzbPostCmd() const { return _nzbPostCmd; }
+
+    bool doCompress() const { return _doCompress; }
+    bool doPar2() const { return _doPar2; }
+    bool genName() const { return _genName; }
+    bool genPass() const { return _genPass; }
+    bool keepRar() const { return _keepRar; }
+    bool packAuto() const { return _packAuto; }
+
+    QString inputDir() const { return _inputDir; }
+    bool    delAuto() const { return _delAuto; }
+    ushort  monitorSecDelayScan() const { return _monitorSecDelayScan; }
+    bool    quietMode() const { return _quiet; }
+    bool    dispProgressBar() const { return _dispProgressBar; }
+    bool    dispFilesPosting() const { return _dispFilesPosting; }
+    void    setDisplayProgress(QString const &txtValue);
+
+    QStringList const   &groupList() const { return _grpList; }
+    NgConf::GROUP_POLICY groupPolicy() const { return _groupPolicy; }
 
 #ifdef __USE_TMP_RAM__
     qint64 ramAvailable() const;
@@ -157,13 +174,6 @@ public:
 
     QString const &ramPath() const { return _ramPath; }
 #endif
-
-    bool doCompress() const { return _doCompress; }
-    bool doPar2() const { return _doPar2; }
-    bool genName() const { return _genName; }
-    bool genPass() const { return _genPass; }
-    bool keepRar() const { return _keepRar; }
-    bool packAuto() const { return _packAuto; }
 
     QString const     &rarPath() const { return _rarPath; }
     QStringList const &rarArgs() const { return _rarArgs; }
@@ -180,18 +190,19 @@ public:
     QString const &par2Args() const { return _par2Args; }
     QString const &par2PathConfig() const { return _par2PathConfig; }
 
-    QString const     &tmpPath() const { return _tmpPath; }
-    QString const     &nzbPath() const { return _nzbPath; }
-    QStringList const &nzbPostCmd() const { return _nzbPostCmd; }
+    QString const &tmpPath() const { return _tmpPath; }
 
+    QString     urlNzbUploadStr() const { return _urlNzbUploadStr; }
     QUrl const *urlNzbUpload() const { return _urlNzbUpload; }
 
     bool               monitorNzbFolders() const { return _monitorNzbFolders; }
     QStringList const &monitorExtensions() const { return _monitorExtensions; }
     bool               monitorIgnoreDir() const { return _monitorIgnoreDir; }
 
-    inline int nbThreads() const { return _nbThreads; }
-    inline int getSocketTimeout() const { return _socketTimeOut; }
+    bool obfuscateArticles() const { return _obfuscateArticles; }
+    bool obfuscateFileName() const { return _obfuscateFileName; }
+    bool delFilesAfterPost() const { return _delFilesAfterPost; }
+    bool overwriteNzb() const { return _overwriteNzb; }
 
     inline bool useParPar() const { return _par2Path.toLower().contains("parpar"); }
     inline bool useMultiPar() const { return _par2Path.toLower().contains("par2j"); }
@@ -212,11 +223,6 @@ public:
     bool   tryResumePostWhenConnectionLost() const { return _tryResumePostWhenConnectionLost; }
     ushort waitDurationBeforeAutoResume() const { return _waitDurationBeforeAutoResume; }
 
-    bool obfuscateArticles() const { return _obfuscateArticles; }
-    bool obfuscateFileName() const { return _obfuscateFileName; }
-    bool delFilesAfterPost() const { return _delFilesAfterPost; }
-    bool overwriteNzb() const { return _overwriteNzb; }
-
     QStringList const &packAutoKeywords() const { return _packAutoKeywords; }
 
     bool autoCloseTabs() const { return _autoCloseTabs; }
@@ -233,9 +239,7 @@ public:
 
     bool removeAccentsOnNzbFileName() const { return _removeAccentsOnNzbFileName; }
 
-#ifdef __DEBUG__
     void dumpParams() const;
-#endif
 
 private:
     inline bool removeNntpServer(NntpServerParams *server)
@@ -296,128 +300,106 @@ public:
                   QList<QString> const         &grpList,
                   std::string const            &from,
                   SharedParams const           &mainParams,
-                  QMap<QString, QString> const &meta = QMap<QString, QString>())
-        : _ngPost(ngPost)
-        , _params(mainParams)
-        , _rarName(rarName)
-        , _rarPass(rarPass)
-        , _nzbFilePath(nzbFilePath)
-        , _files(files)
-        , _postWidget(postWidget)
-        , _grpList(grpList)
-        , _from(from)
-        , _meta(meta)
-        , _splitArchive(false)
-    {
-    }
+                  QMap<QString, QString> const &meta = QMap<QString, QString>());
 
     PostingParams(PostingParams const &)            = default;
     PostingParams &operator=(PostingParams const &) = delete;
     PostingParams(PostingParams &&)                 = default;
     PostingParams &operator=(PostingParams &&)      = delete;
 
-    bool quietMode() const { return _params->quietMode(); }
-    bool dispProgressBar() const { return _params->dispProgressBar(); }
-    bool dispFilesPosting() const { return _params->dispFilesPosting(); }
+    bool quietMode() const;
+    bool dispProgressBar() const;
+    bool dispFilesPosting() const;
 
-    QList<NntpServerParams *> const &nntpServers() const { return _params->nntpServers(); }
+    QList<NntpServerParams *> const &nntpServers() const;
 
-    QMap<QString, QString> const &meta() { return _meta; }
+    QMap<QString, QString> const &meta();
 
-    void setMeta(QMap<QString, QString> const &meta)
-    {
-        _meta = meta;
-        ;
-    }
-    void removeMeta(QString const &metaKey) { _meta.remove(metaKey); }
+    void setMeta(QMap<QString, QString> const &meta);
+    void removeMeta(QString const &metaKey);
 
     int nbNntpConnections() const;
 
-    void setNzbFilePath(QString const &updatedPath) { _nzbFilePath = updatedPath; }
+    void setNzbFilePath(QString const &updatedPath);
 
-    QString const &rarName() const { return _rarName; }
-    QString const &rarPass() const { return _rarPass; }
-    QString const &nzbFilePath() const { return _nzbFilePath; }
+    QString const &rarName() const;
+    QString const &rarPass() const;
+    QString const &nzbFilePath() const;
 
-    QFileInfoList const &files() const { return _files; }
+    QFileInfoList const &files() const;
 
-    inline int nbThreads() const { return _params->nbThreads(); }
+    int nbThreads() const;
 
-    QStringList groupsAccordingToPolicy() const
-    {
-        static int nbGroups = _grpList.size();
-        if (_params->obfuscateArticles() && _params->hasGroupPolicyEachFile() && nbGroups > 1)
-            return QStringList(_grpList.at(std::rand() % nbGroups));
-        return _grpList;
-    }
-    QString groups() const { return _grpList.join(","); }
-    QString from(bool emptyIfObfuscateArticle) const;
+    QStringList groupsAccordingToPolicy() const;
+    QString     groups() const;
+    QString     from(bool emptyIfObfuscateArticle) const;
 
-    std::string const *fromStdPtr() const { return &_from; }
+    std::string const *fromStdPtr() const;
 
-    QString const     &tmpPath() const { return _params->tmpPath(); }
-    QString const     &rarPath() const { return _params->rarPath(); }
-    QStringList const &rarArgs() const { return _params->rarArgs(); }
-    ushort             rarSize() const { return _params->rarSize(); }
-    bool               useRarMax() const { return _params->useRarMax(); }
-    ushort             rarMax() const { return _params->rarMax(); }
-    ushort             par2Pct() const { return _params->par2Pct(); }
+    QString const     &tmpPath() const;
+    QString const     &rarPath() const;
+    QStringList const &rarArgs() const;
+    ushort             rarSize() const;
+    bool               useRarMax() const;
+    ushort             rarMax() const;
+    ushort             par2Pct() const;
 
-    ushort         lengthName() const { return _params->lengthName(); }
-    ushort         lengthPass() const { return _params->lengthPass(); }
-    QString const &rarPassFixed() const { return _params->rarPassFixed(); }
+    ushort         lengthName() const;
+    ushort         lengthPass() const;
+    QString const &rarPassFixed() const;
 
-    QString const &par2Path() const { return _params->par2Path(); }
-    QString const &par2Args() const { return _params->par2Args(); }
-    QString const &par2PathConfig() const { return _params->par2PathConfig(); }
+    QString const &par2Path() const;
+    QString const &par2Args() const;
+    QString const &par2PathConfig() const;
 
-    bool doCompress() const { return _params->doCompress(); }
-    bool doPar2() const { return _params->doPar2(); }
-    bool genName() const { return _params->genName(); }
-    bool genPass() const { return _params->genPass(); }
-    bool keepRar() const { return _params->keepRar(); }
-    bool packAuto() const { return _params->packAuto(); }
+    bool doCompress() const;
+    bool doPar2() const;
+    bool genName() const;
+    bool genPass() const;
+    bool keepRar() const;
+    bool packAuto() const;
 
-    QStringList const &packAutoKeywords() const { return _params->packAutoKeywords(); }
+    QStringList const &packAutoKeywords() const;
 
-    QUrl const *urlNzbUpload() const { return _params->urlNzbUpload(); }
+    QUrl const *urlNzbUpload() const;
 
-    bool use7z() const { return _params->use7z(); }
-    bool hasCompressed() const { return _params->doCompress(); }
-    bool hasPacking() const { return _params->doCompress() || _params->doPar2(); }
+    bool use7z() const;
+    bool hasCompressed() const;
+    bool hasPacking() const;
 
-    bool saveOriginalFiles() const
-    {
-        return !_postWidget || _params->delFilesAfterPost() || _params->obfuscateFileName();
-    }
+    bool saveOriginalFiles() const;
 
-    bool obfuscateArticles() const { return _params->obfuscateArticles(); }
-    bool obfuscateFileName() const { return _params->obfuscateFileName(); }
-    bool delFilesAfterPost() const { return _params->delFilesAfterPost(); }
-    bool overwriteNzb() const { return _params->overwriteNzb(); }
+    bool obfuscateArticles() const;
+    bool obfuscateFileName() const;
+    bool delFilesAfterPost() const;
+    bool overwriteNzb() const;
 
     QStringList buildCompressionCommandArgumentsList() const;
 
     bool canCompress() const;
     bool canGenPar2() const;
 
-    bool splitArchive() const { return _splitArchive; }
+    bool splitArchive() const;
 
-    inline bool useParPar() const { return _params->useParPar(); }
-    inline bool useMultiPar() const { return _params->useMultiPar(); }
+    bool useParPar() const;
+    bool useMultiPar() const;
 
 #ifdef __USE_TMP_RAM__
-    qint64 ramAvailable() const { return _params->ramAvailable(); }
-    bool   useTmpRam() const { return _params->useTmpRam(); }
-    double ramRatio() const { return _params->ramRatio(); }
+    qint64 ramAvailable() const;
+    bool   useTmpRam() const;
+    double ramRatio() const;
 
-    QString const &ramPath() const { return _params->ramPath(); }
+    QString const &ramPath() const;
 #endif
 
     std::string fromStd() const;
-    bool        removeRarRootFolder() const { return _params->removeRarRootFolder(); }
-    bool        tryResumePostWhenConnectionLost() const { return _params->tryResumePostWhenConnectionLost(); }
-    ushort      waitDurationBeforeAutoResume() const { return _params->waitDurationBeforeAutoResume(); }
+    bool        removeRarRootFolder() const;
+    bool        tryResumePostWhenConnectionLost() const;
+    ushort      waitDurationBeforeAutoResume() const;
+
+    void dumpParams() const;
+
+    QString getFilesPaths() const;
 
 private:
     bool _checkTmpFolder() const;

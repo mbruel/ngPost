@@ -38,6 +38,7 @@ class NntpFile;
 class NntpArticle;
 class PostingWidget;
 class Poster;
+#include "PostingParams.h"
 
 using AtomicBool = QAtomicInteger<unsigned short>; // 16 bit only (faster than using 8 bit variable...)
 
@@ -186,6 +187,11 @@ public:
 
     void pause();
     void resume();
+
+    void                 dumpParams() const { _params->dumpParams(); }
+    QFileInfoList const &paramFiles() const { return _params->files(); }
+
+    QString getFilesPaths() const;
 
     bool tryResumePostWhenConnectionLost() const { return _params->tryResumePostWhenConnectionLost(); }
 

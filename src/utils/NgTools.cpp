@@ -17,9 +17,78 @@
 //
 //========================================================================
 #include "NgTools.h"
+#include "NgLogger.h"
 #include <QDateTime>
+#include <QDebug> // MB_TODO to be removed"
 #include <QDir>
 #include <QFileInfo>
+
+QString NgTools::substituteNZBNameForExistingFile(QFileInfo fi)
+{
+    QString inputFileName;
+    ushort  nbDuplicates = 0;
+    while (fi.exists())
+    {
+        QString baseName = fi.completeBaseName();
+        if (nbDuplicates != 0)
+        {
+            static QChar kUnderscore('_');
+            baseName.chop(baseName.length() - baseName.lastIndexOf(kUnderscore));
+        }
+        inputFileName = QFileInfo(fi.absoluteDir(), QString("%1_%2.nzb").arg(baseName).arg(++nbDuplicates))
+                                .absoluteFilePath();
+        fi = QFileInfo(inputFileName);
+    }
+    return inputFileName;
+}
+void NgTools::substituteNZBNameForExistingFileName(QString &inputFileName)
+{
+    QFileInfo fi(inputFileName);
+    ushort    nbDuplicates = 0;
+    while (fi.exists())
+    {
+        QString baseName = fi.completeBaseName();
+        if (nbDuplicates != 0)
+        {
+            static QChar kUnderscore('_');
+            baseName.chop(baseName.length() - baseName.lastIndexOf(kUnderscore));
+        }
+        inputFileName = QFileInfo(fi.absoluteDir(), QString("%1_%2.nzb").arg(baseName).arg(++nbDuplicates))
+                                .absoluteFilePath();
+        fi = QFileInfo(inputFileName);
+    }
+}
+
+uint NgTools::getUShortVersion(QString const &version)
+{
+    if (version.isEmpty())
+        return 0; // no version
+    QStringList majorAndMinor = version.split(".");
+    ushort      ushortVesion  = majorAndMinor.at(0).toInt() * 100;
+    if (majorAndMinor.size() > 1) // as 5.0 = 5 has no minor contrary to 5.11
+        ushortVesion += majorAndMinor.at(1).toUShort();
+    return ushortVesion;
+}
+
+//! return 0 if up to date with built version
+//! otherwise send back the configuration version as ushort
+ushort NgTools::isConfigurationVesionObsolete()
+{
+    ushort builtVersion = getUShortVersion(kVersion);
+    ushort confVersion  = getUShortVersion(kConfVersion);
+    qDebug() << "[MB_TRACE] isConfigurationVesionObsolete, kVersion: " << kVersion
+             << " kConfVersion: " << kConfVersion;
+    if (confVersion < builtVersion)
+    {
+        NgLogger::error(tr("Configuration version needs update!"));
+        return confVersion;
+    }
+    else
+    {
+        NgLogger::log(tr("Config Version up to date :)"), true);
+        return 0; // configuration version up to date
+    }
+}
 
 QString NgTools::currentDateTime() { return QDateTime::currentDateTime().toString(kDateTimeFormat); }
 

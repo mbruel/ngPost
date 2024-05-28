@@ -159,6 +159,48 @@ void MainParams::updateGroups(QString const &groups)
     _nbGroups = _grpList.size();
 }
 
+PostingParams::PostingParams(NgPost                       &ngPost,
+                             QString const                &rarName,
+                             QString const                &rarPass,
+                             QString const                &nzbFilePath,
+                             QFileInfoList const          &files,
+                             PostingWidget                *postWidget,
+                             QList<QString> const         &grpList,
+                             std::string const            &from,
+                             SharedParams const           &mainParams,
+                             QMap<QString, QString> const &meta)
+    : _ngPost(ngPost)
+    , _params(mainParams)
+    , _rarName(rarName)
+    , _rarPass(rarPass)
+    , _nzbFilePath(nzbFilePath)
+    , _files(files)
+    , _postWidget(postWidget)
+    , _grpList(grpList)
+    , _from(from)
+    , _meta(meta)
+    , _splitArchive(false)
+{
+}
+
+bool PostingParams::quietMode() const { return _params->quietMode(); }
+
+bool PostingParams::dispProgressBar() const { return _params->dispProgressBar(); }
+
+bool PostingParams::dispFilesPosting() const { return _params->dispFilesPosting(); }
+
+QList<NntpServerParams *> const &PostingParams::nntpServers() const { return _params->nntpServers(); }
+
+QMap<QString, QString> const &PostingParams::meta() { return _meta; }
+
+void PostingParams::setMeta(QMap<QString, QString> const &meta)
+{
+    _meta = meta;
+    ;
+}
+
+void PostingParams::removeMeta(QString const &metaKey) { _meta.remove(metaKey); }
+
 int PostingParams::nbNntpConnections() const
 {
     int nbConnections = 0;
@@ -170,6 +212,28 @@ int PostingParams::nbNntpConnections() const
     return nbConnections;
 }
 
+void PostingParams::setNzbFilePath(QString const &updatedPath) { _nzbFilePath = updatedPath; }
+
+QString const &PostingParams::rarName() const { return _rarName; }
+
+QString const &PostingParams::rarPass() const { return _rarPass; }
+
+QString const &PostingParams::nzbFilePath() const { return _nzbFilePath; }
+
+QFileInfoList const &PostingParams::files() const { return _files; }
+
+int PostingParams::nbThreads() const { return _params->nbThreads(); }
+
+QStringList PostingParams::groupsAccordingToPolicy() const
+{
+    static int nbGroups = _grpList.size();
+    if (_params->obfuscateArticles() && _params->hasGroupPolicyEachFile() && nbGroups > 1)
+        return QStringList(_grpList.at(std::rand() % nbGroups));
+    return _grpList;
+}
+
+QString PostingParams::groups() const { return _grpList.join(","); }
+
 QString PostingParams::from(bool emptyIfObfuscateArticle) const
 {
     if (emptyIfObfuscateArticle && _params->obfuscateArticles())
@@ -177,6 +241,69 @@ QString PostingParams::from(bool emptyIfObfuscateArticle) const
 
     return QString::fromStdString(_from);
 }
+
+std::string const *PostingParams::fromStdPtr() const { return &_from; }
+
+QString const &PostingParams::tmpPath() const { return _params->tmpPath(); }
+
+QString const &PostingParams::rarPath() const { return _params->rarPath(); }
+
+QStringList const &PostingParams::rarArgs() const { return _params->rarArgs(); }
+
+ushort PostingParams::rarSize() const { return _params->rarSize(); }
+
+bool PostingParams::useRarMax() const { return _params->useRarMax(); }
+
+ushort PostingParams::rarMax() const { return _params->rarMax(); }
+
+ushort PostingParams::par2Pct() const { return _params->par2Pct(); }
+
+ushort PostingParams::lengthName() const { return _params->lengthName(); }
+
+ushort PostingParams::lengthPass() const { return _params->lengthPass(); }
+
+QString const &PostingParams::rarPassFixed() const { return _params->rarPassFixed(); }
+
+QString const &PostingParams::par2Path() const { return _params->par2Path(); }
+
+QString const &PostingParams::par2Args() const { return _params->par2Args(); }
+
+QString const &PostingParams::par2PathConfig() const { return _params->par2PathConfig(); }
+
+bool PostingParams::doCompress() const { return _params->doCompress(); }
+
+bool PostingParams::doPar2() const { return _params->doPar2(); }
+
+bool PostingParams::genName() const { return _params->genName(); }
+
+bool PostingParams::genPass() const { return _params->genPass(); }
+
+bool PostingParams::keepRar() const { return _params->keepRar(); }
+
+bool PostingParams::packAuto() const { return _params->packAuto(); }
+
+QStringList const &PostingParams::packAutoKeywords() const { return _params->packAutoKeywords(); }
+
+QUrl const *PostingParams::urlNzbUpload() const { return _params->urlNzbUpload(); }
+
+bool PostingParams::use7z() const { return _params->use7z(); }
+
+bool PostingParams::hasCompressed() const { return _params->doCompress(); }
+
+bool PostingParams::hasPacking() const { return _params->doCompress() || _params->doPar2(); }
+
+bool PostingParams::saveOriginalFiles() const
+{
+    return !_postWidget || _params->delFilesAfterPost() || _params->obfuscateFileName();
+}
+
+bool PostingParams::obfuscateArticles() const { return _params->obfuscateArticles(); }
+
+bool PostingParams::obfuscateFileName() const { return _params->obfuscateFileName(); }
+
+bool PostingParams::delFilesAfterPost() const { return _params->delFilesAfterPost(); }
+
+bool PostingParams::overwriteNzb() const { return _params->overwriteNzb(); }
 
 QStringList PostingParams::buildCompressionCommandArgumentsList() const
 {
@@ -287,6 +414,20 @@ bool PostingParams::canGenPar2() const
     return true;
 }
 
+bool PostingParams::splitArchive() const { return _splitArchive; }
+
+bool PostingParams::useParPar() const { return _params->useParPar(); }
+
+bool PostingParams::useMultiPar() const { return _params->useMultiPar(); }
+
+qint64 PostingParams::ramAvailable() const { return _params->ramAvailable(); }
+
+bool PostingParams::useTmpRam() const { return _params->useTmpRam(); }
+
+double PostingParams::ramRatio() const { return _params->ramRatio(); }
+
+QString const &PostingParams::ramPath() const { return _params->ramPath(); }
+
 std::string PostingParams::fromStd() const
 {
     if (_params->genFrom() || _params->from().empty())
@@ -294,6 +435,15 @@ std::string PostingParams::fromStd() const
     else
         return _params->from();
 }
+
+bool PostingParams::removeRarRootFolder() const { return _params->removeRarRootFolder(); }
+
+bool PostingParams::tryResumePostWhenConnectionLost() const
+{
+    return _params->tryResumePostWhenConnectionLost();
+}
+
+ushort PostingParams::waitDurationBeforeAutoResume() const { return _params->waitDurationBeforeAutoResume(); }
 
 void MainParams::enableAutoPacking(bool enable)
 {
@@ -541,10 +691,12 @@ bool MainParams::saveConfig(QString const &configFilePath, NgPost const &ngPost)
            << (_preparePacking ? "" : "#") << "PREPARE_PACKING = true"
            << "\n"
            << "\n"
-           << tr("## For GUI ONLY, save the logs in a file (to debug potential crashes)") << "\n"
+           << tr("## save the logs in a file (to debug potential crashes)") << "\n"
            << tr("## ~/ngPost.log on Linux and MacOS, in the executable folder for Windows") << "\n"
            << tr("## The log is overwritten each time ngPost is launched") << "\n"
-           << tr("## => after a crash, please SAVE the log before relaunching ngPost") << "\n"
+           << tr("## => after a crash, please SAVE the log before relaunching ngPost and") << "\n"
+           << tr("## plz post it on github as an issue %1").arg("https://github.com/mbruel/ngPost/issues")
+           << "\n"
            << (NgLogger::loggingInFile() ? "" : "#") << "LOG_IN_FILE = true"
            << "\n"
            << "\n"
@@ -697,38 +849,63 @@ bool MainParams::saveConfig(QString const &configFilePath, NgPost const &ngPost)
     return true;
 }
 
-#ifdef __DEBUG__
 void MainParams::dumpParams() const
 {
     QString servers;
-    for (NntpServerParams *srv : _nntpServers)
+    for (NntpServerParams *srv : nntpServers())
         servers += srv->str() + " ";
     qDebug() << "[MainParams::_dumpParams]>>>>>>>>>>>>>>>>>>\n"
-             << "nb Servers: " << _nntpServers.size() << ": " << servers << "\n\nnbThreads: " << _nbThreads
-             << "\ninputDir: " << _inputDir << ", autoDelete: " << _delAuto << "\npackAuto: " << _packAuto
-             << ", packAutoKeywords:" << _packAutoKeywords << ", autoClose: " << _autoCloseTabs
-             << "\n, monitor delay: " << _monitorSecDelayScan << " ignore dir: " << _monitorIgnoreDir
-             << " ext: " << _monitorExtensions << "\nfrom: " << _from.c_str() << ", genFrom: " << _genFrom
-             << ", saveFrom: " << _saveFrom << ", groups: " << _grpList.join(",")
-             << " policy: " << kGroupPolicies[_groupPolicy].toUpper() << "\narticleSize: " << kArticleSize
-             << ", obfuscate articles: " << _obfuscateArticles
-             << ", obfuscate file names: " << _obfuscateFileName
-             << ", _delFilesAfterPost: " << _delFilesAfterPost << ", _overwriteNzb: " << _overwriteNzb
+             << "nb Servers: " << nntpServers().size() << ": " << servers << "\n\nnbThreads: " << nbThreads()
+             << "\ninputDir: " << inputDir() << ", autoDelete: " << delAuto() << "\npackAuto: " << packAuto()
+             << ", packAutoKeywords:" << packAutoKeywords() << ", autoClose: " << autoCloseTabs()
+             << "\n, monitor delay: " << monitorSecDelayScan() << " ignore dir: " << monitorIgnoreDir()
+             << " ext: " << monitorExtensions() << "\nfrom: " << from().c_str() << ", genFrom: " << genFrom()
+             << ", saveFrom: " << saveFrom() << ", groups: " << groupList().join(",")
+             << " policy: " << kGroupPolicies[groupPolicy()].toUpper() << "\narticleSize: " << kArticleSize
+             << ", obfuscate articles: " << obfuscateArticles()
+             << ", obfuscate file names: " << obfuscateFileName()
+             << ", _delFilesAfterPost: " << delFilesAfterPost() << ", _overwriteNzb: " << overwriteNzb()
 
-             << "\n\ncompression settings: <tmp_path: " << _tmpPath << ">"
-#  ifdef __USE_TMP_RAM__
-             << " <ram_path: " << _ramPath << " ratio: " << _ramRatio << ">"
-#  endif
-             << ", <rar_path: " << _rarPath << ">"
-             << ", <rar_size: " << _rarSize << ">"
-             << "\n<par2_pct: " << _par2Pct << ">"
-             << ", <par2_path: " << _par2Path << ">"
-             << ", <par2_pathCfg: " << _par2PathConfig << ">"
-             << ", <par2_args: " << _par2Args << ">"
-             << " _use7z: " << _use7z << "\n\ncompress: " << _doCompress << ", doPar2: " << _doPar2
-             << ", gen_name: " << _genName << ", genPass: " << _genPass << ", lengthName: " << _lengthName
-             << ", lengthPass: " << _lengthPass << "\n _urlNzbUploadStr:" << _urlNzbUploadStr
-             << " _urlNzbUpload :" << (_urlNzbUpload ? "yes" : "no") << ", _nzbPostCmd: " << _nzbPostCmd
-             << "\n_preparePacking: " << _preparePacking << "\n[MainParams::_dumpParams]<<<<<<<<<<<<<<<<<<\n";
-}
+             << "\n\ncompression settings: <tmp_path: " << tmpPath() << ">"
+#ifdef __USE_TMP_RAM__
+             << " <ram_path: " << ramPath() << " ratio: " << ramRatio() << ">"
 #endif
+             << ", <rar_path: " << rarPath() << ">"
+             << ", <rar_size: " << rarSize() << ">"
+             << "\n<par2_pct: " << par2Pct() << ">"
+             << ", <par2_path: " << par2Path() << ">"
+             << ", <par2_pathCfg: " << par2PathConfig() << ">"
+             << ", <par2_args: " << par2Args() << ">"
+             << " _use7z: " << use7z() << "\n\ncompress: " << doCompress() << ", doPar2: " << doPar2()
+             << ", gen_name: " << genName() << ", genPass: " << genPass() << ", lengthName: " << lengthName()
+             << ", lengthPass: " << lengthPass() << "\n _urlNzbUploadStr:" << urlNzbUploadStr()
+             << " _urlNzbUpload :" << (urlNzbUpload() ? "yes" : "no") << ", _nzbPostCmd: " << nzbPostCmd()
+             << "\n_preparePacking: " << preparePacking();
+    qDebug() << "\n[MainParams::_dumpParams]<<<<<<<<<<<<<<<<<<\n";
+}
+
+QString PostingParams::getFilesPaths() const
+{
+    QStringList filesPaths;
+    for (auto const &fi : _files)
+    {
+        qDebug() << "[PostingJob::getFilesPaths]" << fi.absoluteFilePath();
+        filesPaths << fi.absoluteFilePath();
+    }
+    return filesPaths.join(kInputFileSeparator);
+}
+
+void PostingParams::dumpParams() const
+{
+    qDebug() << "[PostingParams::_dumpParams]>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";
+    _params->dumpParams();
+    qDebug() << "<rarName : " << rarName() << ">";
+    qDebug() << "<rarPass : " << rarPass() << ">";
+    qDebug() << "<nzbFilePath : " << nzbFilePath() << ">\n";
+    qDebug() << "<files : " << getFilesPaths() << ">";
+    qDebug() << "<_grpList : " << groups() << ">";
+    qDebug() << "<_from : " << from(_params->obfuscateArticles()) << ">";
+    qDebug() << "<rarName : " << _meta << ">";
+
+    qDebug() << "[PostingParams::_dumpParams]<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<n";
+}

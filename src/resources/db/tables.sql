@@ -8,8 +8,9 @@ CREATE TABLE IF NOT EXISTS tHistory (
         nzbName      TEXT NOT NULL,
         size         TEXT NOT NULL,
         avgSpeed     TEXT NOT NULL,
-        archiveName  TEXT NOT NULL,
-        archivePass  TEXT NOT NULL,
+        files        TEXT NOT NULL, -- unpacked list of files MB_TODO why empty???
+        archiveName  TEXT,
+        archivePass  TEXT,
         groups       TEXT NOT NULL,
         poster       TEXT NOT NULL,
         tmpPath      TEXT NOT NULL,

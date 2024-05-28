@@ -172,7 +172,7 @@ PostingJob::PostingJob(NgPost                       &ngPost,
 PostingJob::~PostingJob()
 {
 #ifdef __DEBUG__
-    _log("Destructing PostingJob");
+    _log(QString("Destructing PostingJob %1").arg(NgTools::ptrAddrInHex(this)), NgLogger::DebugLevel::Debug);
     qDebug() << "[PostingJob] <<<< Destruction " << NgTools::ptrAddrInHex(this)
              << " in thread : " << QThread::currentThread()->objectName();
 #endif
@@ -294,7 +294,7 @@ void PostingJob::onStartPosting(bool isActiveJob)
         shallWeUseTmpRam(); // we might modify _tmpPath
 #endif
 #ifdef __DEBUG__
-        _log("[PostingJob::onStartPosting] Starting compression...");
+        _log("[PostingJob::onStartPosting] Starting compression...", NgLogger::DebugLevel::Debug);
 #endif
         if (!startCompressFiles())
             emit postingFinished();
@@ -314,7 +314,8 @@ void PostingJob::onStartPosting(bool isActiveJob)
     }
 
     // Otherwise no packing at all, we will post the original files
-    _packed = true;
+    _packed = false;
+    _files  = _params->files();
     _postFiles();
 }
 
@@ -431,7 +432,7 @@ bool PostingJob::startCompressFiles()
     _extProc->start(_params->rarPath(), args);
 
 #ifdef __DEBUG__
-    _log("[PostingJob::_compressFiles] compression started...");
+    _log("[PostingJob::_compressFiles] compression started...", NgLogger::DebugLevel::Debug);
 #endif
 
     return true;
@@ -445,7 +446,7 @@ void PostingJob::onCompressionFinished(int exitCode)
         _log("", NgLogger::DebugLevel::None);
 
 #ifdef __DEBUG__
-    _log("[PostingJob::_compressFiles] compression finished...");
+    _log("[PostingJob::_compressFiles] compression finished...", NgLogger::DebugLevel::Debug);
 #endif
 
     // if we've done the obfuscateFileName, we can revert the renaming
@@ -1044,23 +1045,7 @@ void PostingJob::_initPosting()
 
     // initialize buffer and nzb file
     if (!_params->overwriteNzb()) // MB_TODO: for now never overwrite!
-    {
-        QFileInfo fi(_params->nzbFilePath());
-        ushort    nbDuplicates = 0;
-        while (fi.exists())
-        {
-            QString baseName = fi.completeBaseName();
-            if (nbDuplicates != 0)
-            {
-                static QChar kUnderscore('_');
-                baseName.chop(baseName.length() - baseName.lastIndexOf(kUnderscore));
-            }
-            _params->setNzbFilePath(
-                    QFileInfo(fi.absoluteDir(), QString("%1_%2.nzb").arg(baseName).arg(++nbDuplicates))
-                            .absoluteFilePath());
-            fi = QFileInfo(_params->nzbFilePath());
-        }
-    }
+        _params->setNzbFilePath(NgTools::substituteNZBNameForExistingFile(QFileInfo(_params->nzbFilePath())));
     _nzb     = new QFile(_params->nzbFilePath());
     _nbFiles = static_cast<uint>(_files.size());
 
@@ -1336,6 +1321,8 @@ void PostingJob::resume()
     _isPaused = false;
     _pauseDuration += _pauseTimer.elapsed();
 }
+
+QString PostingJob::getFilesPaths() const { return _params->getFilesPaths(); }
 
 QString PostingJob::sslSupportInfo() { return NntpConnection::sslSupportInfo(); }
 

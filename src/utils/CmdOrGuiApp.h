@@ -19,6 +19,7 @@
 #ifndef CMDORGUIAPP_H
 #define CMDORGUIAPP_H
 
+#include "qnetworkreply.h"
 #include <QString>
 
 class MainWindow;
@@ -46,8 +47,8 @@ public:
 
     virtual char const *appName() = 0;
 
-    virtual bool parseCommandLine(int argc, char *argv[]) = 0;
-    virtual void checkForNewVersion();
+    virtual bool           parseCommandLine(int argc, char *argv[]) = 0;
+    virtual QNetworkReply *checkForNewVersion();
 
     int startEventLoop(); //!< to start in CMD
 

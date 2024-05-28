@@ -68,6 +68,8 @@ constexpr int kDefaultRefreshRate = 500; //!< how often shall we refresh the pro
 constexpr int kImmediateSpeedDurationMs = 3000;
 #endif
 
+inline constexpr QChar kInputFileSeparator = '|';
+
 constexpr int kNbPreparedArticlePerConnection = 3;
 
 constexpr int kDefaultResumeWaitInSec     = 30;

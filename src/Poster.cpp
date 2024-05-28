@@ -168,7 +168,8 @@ bool Poster::prepareArticlesInAdvance()
 #ifdef __DEBUG__
             _log(QString("[%1] prepareArticlesInAdvance : no more Articles to produce after i = %2")
                          .arg(_builderThread.objectName())
-                         .arg(i));
+                         .arg(i),
+                 NgLogger::DebugLevel::Debug);
 #endif
             canProduceAll = false;
             break;
@@ -177,7 +178,8 @@ bool Poster::prepareArticlesInAdvance()
 #ifdef __DEBUG__
     _log(QString("[%1] prepareArticlesInAdvance: Article queue size:  %2")
                  .arg(_builderThread.objectName())
-                 .arg(_articles.size()));
+                 .arg(_articles.size()),
+         NgLogger::DebugLevel::Debug);
 #endif
 
     return canProduceAll;

@@ -140,9 +140,14 @@ public:
     static bool startProgressBar(bool waitEventLoopStarted);
     static void stopProgressBar(bool lastRefresh);
 
+    static void destroy() { reset(); }
+
 public slots:
     void onLog(QString msg, bool newline, DebugLevel debugLvl);
     void onError(QString error);
+
+protected:
+    virtual void connectSignalSlots() override;
 
 private:
     NgLogger();

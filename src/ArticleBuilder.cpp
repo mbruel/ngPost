@@ -19,8 +19,6 @@
 
 #include "ArticleBuilder.h"
 
-#include <QDebug> //MB_TODO: use NgLogger instead!
-
 #include "NgConf.h"
 #include "nntp/NntpArticle.h"
 #include "Poster.h"
@@ -32,6 +30,9 @@ ArticleBuilder::ArticleBuilder(Poster *poster, QObject *parent)
     , _job(poster->_job)
     , _buffer(new char[static_cast<quint64>(NgConf::kArticleSize) + 1])
 {
+#if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
+    qDebug() << "Construction " << objectName() << " in thread: " << QThread::currentThread()->objectName();
+#endif
     connect(this,
             &ArticleBuilder::scheduleNextArticle,
             this,
@@ -42,7 +43,7 @@ ArticleBuilder::ArticleBuilder(Poster *poster, QObject *parent)
 ArticleBuilder::~ArticleBuilder()
 {
 #if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
-    qDebug() << objectName() << "is destroyed in thread: " << QThread::currentThread()->objectName();
+    qDebug() << "Destruction " << objectName() << "is thread: " << QThread::currentThread()->objectName();
 #endif
     delete[] _buffer;
 }

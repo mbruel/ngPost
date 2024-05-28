@@ -17,46 +17,29 @@
 //
 //========================================================================
 
-#include "Migration.h"
+#include "NgMigration.h"
 #include <QStringList>
 
 #include "NgPost.h"
 #include "utils/Database.h"
+#include "utils/NgTools.h"
 
 #include "ResumeJobQueue.h"
 
-Migration::Migration(NgPost &ngPost) : _ngPost(ngPost) { }
+NgMigration::NgMigration(NgPost &ngPost) : _ngPost(ngPost) { }
 
-bool Migration::migrate()
+bool NgMigration::migrate()
 {
     if (!_ngPost.initHistoryDatabase())
         return false;
 
-    QStringList v            = NgPost::version().split(".");
-    int         buildVersion = v.at(0).toInt() * 100 + v.at(1).toInt();
-
-    QString confVersionStr = NgPost::confVersion();
-    if (confVersionStr.isEmpty())
-        _doMigration();
-    else
-    {
-        v = confVersionStr.split(".");
-
-        int confBuild = v.at(0).toInt() * 100 + v.at(1).toInt();
-        if (confBuild > buildVersion)
-        {
-            qDebug() << "Error conf version > ngPost version...";
-            return false;
-        }
-        if (buildVersion == confBuild)
-            qDebug() << "Config Version up to date :)";
-        else
-            _doMigration(confBuild);
-    }
+    const uint confVersion = NgTools::isConfigurationVesionObsolete();
+    if (confVersion != 0)
+        _doNgMigration(confVersion);
     return true;
 }
 
-void Migration::_doMigration(unsigned short const confBuild)
+void NgMigration::_doNgMigration(unsigned short const confBuild)
 {
 #ifdef _MSC_VER // MSVC compiler...
     // Fallback for other compilers
@@ -75,7 +58,7 @@ void Migration::_doMigration(unsigned short const confBuild)
     //    _ngPost.saveConfig(); // Update conf
 }
 
-void Migration::_migrateTo500()
+void NgMigration::_migrateTo500()
 {
     qDebug() << "Migrate config to build 417";
     QString const &postHistoryFile = _ngPost.postHistoryFile();
@@ -99,22 +82,19 @@ void Migration::_migrateTo500()
             }
             else
             {
-                QString dateStr = v.at(0); // sizeStr = v.at(2), speedStr = v.at(3);
-                db->insertPost(dateStr.replace("/", "-"),
-                               v.at(1),
-                               v.at(2),
-                               v.at(3),
-                               //                               Database::byteSize(sizeStr),
-                               //                               Database::byteSize(speedStr),
-                               v.at(4),
-                               v.at(5),
-                               v.at(6),
-                               v.at(7),
-                               "",
-                               "",
-                               1);
-                //                qDebug() << "[ " << dateStr << "] " << v.at(1)
-                //                         << " : " << v.at(2) << " at " << v.at(3);
+                QString dateStr = v.at(0);                // sizeStr = v.at(2), speedStr = v.at(3);
+                db->insertPost(dateStr.replace("/", "-"), // date
+                               v.at(1),                   // nzbName
+                               v.at(2),                   // size (human readable string)
+                               v.at(3),                   // avgSpeed (human readable)
+                               "",                        // files (if unpcaked (not present in csv)
+                               v.at(4),                   // archiveName
+                               v.at(5),                   // archivePass
+                               v.at(6),                   // groups
+                               v.at(7),                   // poster
+                               "",                        // tmpPath not saved in csv
+                               "",                        // nzbFilePath not saved in csv
+                               1);                        // upload finished (done)
             }
         }
         qDebug() << postHistoryFile << " has been migrated to Sqlite DB!\n"

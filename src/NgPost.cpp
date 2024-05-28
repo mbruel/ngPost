@@ -39,7 +39,6 @@
 
 #include "FileUploader.h"
 #include "FoldersMonitorForNewFiles.h"
-#include "Migration.h"
 #include "nntp/NntpArticle.h"
 #include "nntp/NntpServerParams.h"
 #include "NzbCheck.h"
@@ -48,6 +47,7 @@
 #include "utils/Macros.h" // MB_FLUSH
 #include "utils/NgCmdLineLoader.h"
 #include "utils/NgConfigLoader.h"
+#include "utils/NgMigration.h"
 #include "utils/NgTools.h"
 
 #ifdef __USE_HMI__
@@ -208,6 +208,13 @@ NgPost::~NgPost()
         delete _activeJob;
     qDeleteAll(_pendingJobs);
 }
+
+#ifdef __test_ngPost__
+QStringList NgPost::loadConfig(QString const &config)
+{
+    return NgConfigLoader::loadConfig(*this, config, _postingParams);
+}
+#endif
 
 int NgPost::nbMissingArticles() const { return _nzbCheck->nbMissingArticles(); }
 
@@ -436,14 +443,15 @@ void NgPost::changeLanguage(QString const &lang)
         _app->installTranslator(_translators[_lang]);
 }
 
-void NgPost::checkForNewVersion()
+QNetworkReply *NgPost::checkForNewVersion()
 {
     QUrl            proFileURL(kProFileURL);
     QNetworkRequest req(proFileURL);
     req.setRawHeader("User-Agent", "ngPost C++ app");
 
     QNetworkReply *reply = _netMgr.get(req);
-    QObject::connect(reply, &QNetworkReply::finished, this, &NgPost::onCheckForNewVersion);
+    connect(reply, &QNetworkReply::finished, this, &NgPost::onCheckForNewVersion);
+    return reply;
 }
 
 bool NgPost::checkSupportSSL()
@@ -456,17 +464,22 @@ bool NgPost::checkSupportSSL()
     return true;
 }
 
+void NgPost::checkForMigration()
+{
+    NgMigration migration(*this);
+    migration.migrate();
+}
+
 void NgPost::doNzbPostCMD(PostingJob *job)
 {
     // first NZB_UPLOAD_URL
     if (_postingParams->urlNzbUpload())
     {
         FileUploader *testUpload = new FileUploader(_netMgr, job->nzbFilePath());
-        connect(testUpload, &FileUploader::error, qOverload<QString>(&NgLogger::error));
         connect(testUpload,
                 &FileUploader::log,
                 [](QString msg, bool newline = true) { NgLogger::log(msg, newline); });
-        connect(testUpload, &FileUploader::readyToDie, testUpload, &QObject::deleteLater, Qt::QueuedConnection);
+        connect(testUpload, &FileUploader::error, qOverload<QString>(&NgLogger::error));
         testUpload->startUpload(*_postingParams->urlNzbUpload());
     }
 
@@ -552,7 +565,7 @@ void NgPost::post(QFileInfo const &fileInfo, QString const &monitorFolder)
     QString nzbPath     = getNzbPath(monitorFolder);
     QString nzbFilePath = QFileInfo(QDir(nzbPath), nzbName).absoluteFilePath();
 
-    QString rarName = nzbName;
+    QString rarName = fileInfo.baseName();
     QString rarPass = "";
     if (_postingParams->doCompress())
     {
@@ -578,24 +591,16 @@ void NgPost::post(QFileInfo const &fileInfo, QString const &monitorFolder)
 
 void NgPost::onCheckForNewVersion()
 {
-    QNetworkReply *reply        = static_cast<QNetworkReply *>(sender());
-    QStringList    v            = kVersion.split(".");
-    int            currentMajor = v.at(0).toInt(), currentMinor = 0;
-    if (v.size() == 2) // 5.0 will get kVersion = "5"
-        currentMinor = v.at(1).toInt();
-
+    QNetworkReply *reply = static_cast<QNetworkReply *>(sender());
     while (!reply->atEnd())
     {
         QString                 line  = reply->readLine().trimmed();
         QRegularExpressionMatch match = kAppVersionRegExp.match(line);
         if (match.hasMatch())
         {
-            QString lastRealease = match.captured(1);
-            int     lastMajor = match.captured(2).toInt(), lastMinor = match.captured(3).toInt();
-            qDebug() << "lastMajor: " << lastMajor << ", lastMinor: " << lastMinor
-                     << " (currentMajor: " << currentMajor << ", currentMinor: " << currentMinor << ")";
-
-            if (lastMajor > currentMajor || (lastMajor == currentMajor && lastMinor > currentMinor))
+            ushort lastRelease  = match.captured(2).toUShort() * 100 + match.captured(3).toUShort();
+            ushort currentBuilt = NgTools::getUShortVersion(kVersion);
+            if (lastRelease > currentBuilt)
             {
 #ifdef __USE_HMI__
                 if (_hmi)
@@ -603,7 +608,8 @@ void NgPost::onCheckForNewVersion()
                     QString msg = tr("<center><h3>New version available on GitHUB</h3></center>");
                     msg += tr("<br/>The last release is now <b>v%1</b>").arg(lastRealease);
                     msg += tr("<br/><br/>You can download it from the <a "
-                              "href='https://github.com/mbruel/ngPost/releases/tag/v%1'>release directory</a>")
+                              "href='https://github.com/mbruel/ngPost/releases/tag/v%1'>release "
+                              "directory</a>")
                                    .arg(lastRealease);
                     msg += tr("<br/><br/>Here are the full <a "
                               "href='https://github.com/mbruel/ngPost/blob/master/"
@@ -614,9 +620,11 @@ void NgPost::onCheckForNewVersion()
                 }
                 else
 #endif
-                    qCritical() << "There is a new version available on GitHUB: v" << lastRealease
+                    qCritical() << "There is a new version available on GitHUB: v" << match.captured(1)
                                 << " (visit https://github.com/mbruel/ngPost/ to get it)";
             }
+            qDebug() << "currentBuilt: " << currentBuilt << " ( kVersio: " << kVersion
+                     << ", lastRelease from net : " << lastRelease;
 
             break; // no need to continue to parse the page
         }
@@ -707,7 +715,7 @@ void NgPost::_prepareNextPacking()
                       NgLogger::DebugLevel::FullDebug);
     }
 }
-
+#include <QDebug>
 void NgPost::onPostingJobFinished()
 {
     PostingJob *job = static_cast<PostingJob *>(sender());
@@ -724,10 +732,12 @@ void NgPost::onPostingJobFinished()
                                                   job->nbArticlesUploaded(),
                                                   job->nbArticlesFailed());
 #endif
+        qDebug() << "[MB_TRACE][onPostingJobFinished]getFilesPaths: " << _activeJob->getFilesPaths();
         _dbHistory->insertPost(NgTools::currentDateTime(),
                                _activeJob->nzbName(),
                                _activeJob->postSize(),
                                _activeJob->avgSpeed(),
+                               _activeJob->getFilesPaths(),
                                _activeJob->hasCompressed() ? _activeJob->rarName() : QString(),
                                _activeJob->hasCompressed() ? _activeJob->rarPass() : QString(),
                                _activeJob->groups(),
@@ -1086,6 +1096,9 @@ bool NgPost::startPostingJob(PostingJob *job)
 {
 #ifdef __DEBUG__
     qDebug() << "[MB_TRACE][Issue#82][NgPost::startPostingJob] job: " << job << ", file: " << job->nzbName();
+    job->dumpParams();
+    qDebug() << "[MB_TRACE]filesToUpload: " << job->paramFiles();
+
 #endif
 #ifdef __USE_HMI__
     if (_hmi)

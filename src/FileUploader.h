@@ -29,7 +29,6 @@ class FileUploader : public QObject
 {
     Q_OBJECT
 signals:
-    void readyToDie();
     void error(QString const &msg);
     void log(QString const &msg, bool newline = true);
 

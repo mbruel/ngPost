@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>config/ngPost_noConfVersion.conf</file>
+        <file>testNgTools/filename.nzb</file>
+        <file>testNgTools/filename_1.nzb</file>
+        <file>testNgTools/filename_2.nzb</file>
+        <file>testNgTools/filename_3.nzb</file>
+    </qresource>
+</RCC>

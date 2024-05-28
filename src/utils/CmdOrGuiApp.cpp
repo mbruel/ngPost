@@ -55,8 +55,9 @@ CmdOrGuiApp::~CmdOrGuiApp()
     delete _app;
 }
 
-void CmdOrGuiApp::checkForNewVersion()
+QNetworkReply *CmdOrGuiApp::checkForNewVersion()
 {
+    return nullptr;
     // No need here
     // check ngPost implementation if required
     // https://github.com/mbruel/ngPost

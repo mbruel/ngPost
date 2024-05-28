@@ -16,25 +16,25 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>
 //
 //========================================================================
-#ifndef MIGRATION_H
-#define MIGRATION_H
-
+#ifndef NgMigration_H
+#define NgMigration_H
 class NgPost;
 
-class Migration
+class NgMigration
 {
     NgPost &_ngPost;
+    bool    _migrationDone;
 
 public:
-    Migration(NgPost &ngPost);
-    ~Migration() = default;
+    NgMigration(NgPost &ngPost);
+    ~NgMigration() = default;
 
     bool migrate();
 
 private:
-    void _doMigration(unsigned short const confBuild = 1);
+    void _doNgMigration(unsigned short const confBuild = 1);
 
     void _migrateTo500();
 };
 
-#endif // MIGRATION_H
+#endif // NgMigration_H

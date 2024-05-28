@@ -1,6 +1,6 @@
 QT += core network sql
 
-DEFINES += "APP_VERSION=\"5.0\""
+DEFINES += "APP_VERSION=\"4.0\""
 
 INCLUDEPATH += $$PWD
 TARGET = ngPost
@@ -77,7 +77,6 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-        $$PWD/Migration.cpp \
         $$PWD/PostingParams.cpp \
         $$PWD/ResumeJobQueue.cpp \
         $$PWD/utils/Database.cpp \
@@ -95,11 +94,11 @@ SOURCES += \
         NzbCheck.cpp \
         Poster.cpp \
         PostingJob.cpp \
-        main.cpp \
         nntp/Nntp.cpp \
         nntp/NntpArticle.cpp \
         nntp/NntpFile.cpp \
         utils/CmdOrGuiApp.cpp \
+        utils/NgMigration.cpp \
         utils/Yenc.cpp
 
 
@@ -109,7 +108,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
-    $$PWD/Migration.h \
     $$PWD/NgConf.h \
     $$PWD/NgError.h \
     $$PWD/PostingParams.h \
@@ -136,6 +134,7 @@ HEADERS += \
     nntp/NntpServerParams.h \
     utils/CmdOrGuiApp.h \
     utils/Macros.h \
+    utils/NgMigration.h \
     utils/PureStaticClass.h \
     utils/Yenc.h
 

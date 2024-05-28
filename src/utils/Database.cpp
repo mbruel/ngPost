@@ -22,10 +22,11 @@
 #include <QSqlError>
 #include <QSqlQuery>
 
+#include "NgLogger.h"
+#include <QCoreApplication>
+#include <QDebug> // MB_TODO to be removed"
 #include <QFileInfo>
 #include <QRegularExpression>
-
-#include "NgLogger.h"
 
 Database::Database() : _type(TYPE::SQLITE), _db(), _isDbInitialized(false) { }
 
@@ -38,6 +39,12 @@ Database::~Database()
 
 bool Database::initSQLite(QString const &dbPath)
 {
+    if (_isDbInitialized)
+    {
+        qDebug() << "DB already initialized";
+        return true;
+    }
+
     // 1.: SQLite driver not available
     _db = QSqlDatabase::addDatabase(kDriverSqlite);
     if (!_db.isValid())
@@ -79,6 +86,7 @@ int Database::insertPost(QString const &date,
                          QString const &nzbName,
                          QString const &size,
                          QString const &avgSpeed,
+                         QString const  files, // separator kInputFileSeparator
                          QString const &archiveName,
                          QString const &archivePass,
                          QString const &groups,
@@ -95,10 +103,10 @@ int Database::insertPost(QString const &date,
     QSqlQuery query;
     query.prepare(kInsertStatement);
     query.bindValue(":date", date);
-    //    query.bindValue(":date", date.toString("yyyy-MM-dd"));
     query.bindValue(":nzbName", nzbName);
     query.bindValue(":size", size);
     query.bindValue(":avgSpeed", avgSpeed);
+    query.bindValue(":files", "files1|foiles2");
     query.bindValue(":archiveName", archiveName);
     query.bindValue(":archivePass", archivePass);
     query.bindValue(":groups", groups);
@@ -107,11 +115,41 @@ int Database::insertPost(QString const &date,
     query.bindValue(":nzbFilePath", nzbFilePath);
     query.bindValue(":done", done);
 
+    qDebug() << tr("[MB_TRACE][insertPost] %1")
+                        .arg(QString("<:date : %1><:nzbName : %2><:size: %3><:avgSpeed : %4><:files "
+                                     "%5><:archiveName: %6><:archivePass %7><:groups "
+                                     "%8><:from : %9><:tmpPath %10><:nzbFilePath %11><:done %12>")
+                                     .arg(date)
+                                     .arg(nzbName)
+                                     .arg(size)
+                                     .arg(avgSpeed)
+                                     .arg(files)
+                                     .arg(archiveName)
+                                     .arg(archivePass)
+                                     .arg(groups)
+                                     .arg(from)
+                                     .arg(tmpPath)
+                                     .arg(done ? "yes" : "no"));
     if (!query.exec())
     {
-        NgLogger::error(tr("Error inserting post to history DB: %1  (query: %2)")
+        NgLogger::error(tr("Error inserting post to history DB: %1  (query: %2) args: %3")
                                 .arg(query.lastError().text())
-                                .arg(query.lastQuery()));
+                                .arg(query.lastQuery())
+                                .arg(QString("<:date : %1><:nzbName : %2><:size: %3><:avgSpeed : %4><:files "
+                                             "%5><:archiveName: %6><:archivePass %7><:groups "
+                                             "%8><:from : %9><:tmpPath %10><:nzbFilePath %11><:done %12>")
+                                             .arg(date)
+                                             .arg(nzbName)
+                                             .arg(size)
+                                             .arg(avgSpeed)
+                                             .arg(files)
+                                             .arg(archiveName)
+                                             .arg(archivePass)
+                                             .arg(groups)
+                                             .arg(from)
+                                             .arg(tmpPath)
+                                             .arg(done ? "yes" : "no")));
+        qApp->processEvents(); // As it happens at PostingJob destruction, make sure the log event is processed
         return 0;
     }
 

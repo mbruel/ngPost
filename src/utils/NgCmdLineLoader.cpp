@@ -233,7 +233,30 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost &ngPost, SharedParams &p
 
     // 8.: is it an nzbCheck demand ? (no posting)
     if (parser.isSet(kOptionNames[Opt::CHECK]))
+    {
+        QFileInfo fi(parser.value(kOptionNames[Opt::CHECK]).trimmed());
+        if (!fi.exists())
+        {
+            NgLogger::error(tr("Input file %1 doesn't exist...").arg(fi.absoluteFilePath()));
+            return false; // end of Game :(
+        }
+        // for testing
+        if (parser.isSet("o"))
+        {
+            QString nzbPath = parser.value(kOptionNames[Opt::OUTPUT]);
+            if (QDir(nzbPath).exists())
+                nzbPath = QFileInfo(QDir(nzbPath), QString("%1.nzb").arg(fi.baseName())).absoluteFilePath();
+            else
+            {
+                NgLogger::error(tr("Destination directory %1 doesn't exist...").arg(nzbPath));
+                return false; // end of Game :(
+            }
+            if (!postingParams->overwriteNzb())
+                postingParams->_nzbPath = NgTools::substituteNZBNameForExistingFile(
+                        QFileInfo(QDir(nzbPath), QString("%1.nzb").arg(fi.baseName())));
+        }
         return ngPost.doNzbCheck(parser.value(kOptionNames[Opt::CHECK]).trimmed());
+    }
 
     // 9.: check if we've inputs (either files, auto directory or monitoring one
     if (!parser.isSet(kOptionNames[Opt::INPUT]) && !parser.isSet(kOptionNames[Opt::AUTO_DIR])
@@ -316,6 +339,7 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost &ngPost, SharedParams &p
 
 #ifdef __DEBUG__
     postingParams->dumpParams();
+    qDebug() << "[MB_TRACE]filesToUpload: " << filesToUpload;
 #endif
 
     // 16.: start posting the filesToUpload (if we have some)
@@ -362,7 +386,7 @@ void NgCmdLineLoader::prepareAndStartPostingSingleFiles(QString                 
         nzbPath = nzb.absolutePath();
     }
     if (rarName.isEmpty())
-        rarName = nzbName;
+        rarName = filesToUpload.front().baseName();
 
     if (postingParams->doCompress())
     {

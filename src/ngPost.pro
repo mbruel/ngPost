@@ -12,6 +12,8 @@ else {
 }
 
 include(ngPost.pri)
+SOURCES += \
+    main.cpp
 
 use_hmi {
 SOURCES += \

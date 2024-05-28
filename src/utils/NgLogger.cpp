@@ -23,6 +23,7 @@
 
 #include "Macros.h"
 #include "NgTools.h"
+#include <QDebug> // MB_TODO to be removed"
 
 NgLogger::NgLogger()
     : QObject(nullptr)
@@ -43,7 +44,10 @@ NgLogger::NgLogger()
 #if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
     qDebug() << "Creation of the singleton NgLogger";
 #endif
+}
 
+void NgLogger::connectSignalSlots()
+{
     // Qt::QueuedConnection for thread safety !
     connect(this, &NgLogger::sigLog, this, &NgLogger::onLog, Qt::QueuedConnection);
     connect(this, &NgLogger::sigError, this, &NgLogger::onError, Qt::QueuedConnection);

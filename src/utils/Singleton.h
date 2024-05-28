@@ -30,6 +30,8 @@ protected:
     Singleton()          = default;
     virtual ~Singleton() = default;
 
+    virtual void connectSignalSlots() { }
+
 public:
     Singleton(Singleton const &)             = delete;
     Singleton(Singleton const &&)            = delete;
@@ -43,6 +45,7 @@ public:
     {
         if (!sInstance)
             sInstance = new T;
+        sInstance->connectSignalSlots();
     }
 
     static bool isCreated() { return sInstance != nullptr; }

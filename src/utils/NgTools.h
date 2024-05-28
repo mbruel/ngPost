@@ -21,6 +21,8 @@
 
 #include "../NgConf.h"
 #include "./PureStaticClass.h"
+#include <QCoreApplication>
+
 class QFileInfo;
 namespace NgConf
 {
@@ -50,7 +52,21 @@ using namespace NgConf;
 
 class NgTools : public PureStaticClass
 {
+    Q_DECLARE_TR_FUNCTIONS(NgCmdLineLoader); // tr() without QObject using QCoreApplication::translate
+
 public:
+    //! modify input string adding _x until file name is not usesd anymore...
+    //! so the reference in attribute
+    //! MB_TESTED: TestNgTools::onSubstituteNZBNameForExistingFileName
+    static void substituteNZBNameForExistingFileName(QString &inputFileName);
+
+    //! similar than above but with a different signature
+    static QString substituteNZBNameForExistingFile(QFileInfo inputFile);
+
+    //! MB_TESTED:
+    static uint getUShortVersion(QString const &version);
+    static ushort isConfigurationVesionObsolete();
+
     static QString currentDateTime();
 
     static void removeAccentsFromString(QString &str);

@@ -195,7 +195,7 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
                 else if (opt == kOptionNames[Opt::AUTO_CLOSE_TABS])
                     setBoolean(postingParams->_autoCloseTabs, val);
 
-                else if (opt == kOptionNames[Opt::LOG_IN_FILE] && ngPost.useHMI() && isBooleanTrue(val))
+                else if (opt == kOptionNames[Opt::LOG_IN_FILE] && isBooleanTrue(val))
                     ngPost.startLogInFile();
 
                 else if (opt == kOptionNames[Opt::MONITOR_EXT])

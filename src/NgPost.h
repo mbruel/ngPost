@@ -138,16 +138,23 @@ public:
     explicit NgPost(int &argc, char *argv[]);
     ~NgPost() override;
 
+#ifdef __test_ngPost__
+    //    SharedParams &postingParams() { return _postingParams; }
+    QStringList loadConfig(QString const &config);
+#endif
+    SharedParams const &postingParams() { return _postingParams; }
+
     // pure virtual from CmdOrGuiApp
     bool parseCommandLine(int argc, char *argv[]) override;
 
     inline char const *appName() override { return NgConf::kAppName; }
 
-    void checkForNewVersion() override;
+    QNetworkReply *checkForNewVersion() override;
     bool checkSupportSSL();
 #ifdef __USE_HMI__
     int startHMI() override;
 #endif
+    void checkForMigration();
 
     bool quietMode() const { return _postingParams->quietMode(); }
 
@@ -358,9 +365,6 @@ inline QString const &NgPost::historyFieldSeparator() const { return _historyFie
 inline Database *NgPost::historyDatabase() const { return _dbHistory; }
 
 QString NgPost::optionName(NgConf::Opt key) { return NgConf::kOptionNames.value(key, ""); }
-
-inline QString const NgPost::version() { return NgConf::kVersion; }
-inline QString       NgPost::confVersion() { return NgConf::kConfVersion; }
 
 QString NgPost::desc(bool useHTML)
 {

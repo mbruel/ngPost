@@ -68,17 +68,19 @@ public:
     }
 
     bool initSQLite(QString const &dbPath);
-    int  insertPost(QString const &date,
-                    QString const &nzbName,
-                    QString const &size,
-                    QString const &avgSpeed,
-                    QString const &archiveName,
-                    QString const &archivePass,
-                    QString const &groups,
-                    QString const &from,
-                    QString const &tmpPath,
-                    QString const &nzbFilePath,
-                    int            done);
+
+    int insertPost(QString const &date,
+                   QString const &nzbName,
+                   QString const &size,
+                   QString const &avgSpeed,
+                   const QString files,
+                   QString const &archiveName,
+                   QString const &archivePass,
+                   QString const &groups,
+                   QString const &from,
+                   QString const &tmpPath,
+                   QString const &nzbFilePath,
+                   int            done);
 
     qint64  postedSizeInMB(DATE_CONDITION since) const;
     QString postedSize(DATE_CONDITION since) const;
