@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nzb PUBLIC "-//newzBin//DTD NZB 1.1//EN" "http://www.newzbin.com/DTD/nzb/nzb-1.1.dtd">
+<nzb xmlns="http://www.newzbin.com/DTD/2003/nzb">
+  <file poster="UkozsZXxrPUbz@ngPost.com" date="1716936224" subject="[1/1] - &quot;ngPost_v4.16_libssl1.1-x86_64.AppImage&quot; yEnc (1/52) 37000384">
+    <groups>
+      <group>alt.binaries.superman</group>
+    </groups>
+    <segments>
+      <segment bytes="716800" number="1">784a802e875b4f68926f9bcdef1adac2@ngPost</segment>
+      <segment bytes="716800" number="2">774d85bc4af94bcfad65097889398b91@ngPost</segment>
+      <segment bytes="716800" number="3">331fb6a8077941c2b962dcf430c1d240@ngPost</segment>
+      <segment bytes="716800" number="4">df023d64208e48ff918a51f0dd4abaef@ngPost</segment>
+      <segment bytes="716800" number="5">092643a5614241c9bfebed5a1b456141@ngPost</segment>
+      <segment bytes="716800" number="6">abfcb07972034d8ba3b042b13caf06b4@ngPost</segment>
+      <segment bytes="716800" number="7">f3da4a86ccb640349f6ee851d3cc8ea8@ngPost</segment>
+      <segment bytes="716800" number="8">b95ca5096f6f44458fe4427a65800a51@ngPost</segment>
+      <segment bytes="716800" number="9">758da13175994dd58e75f7339ba85f20@ngPost</segment>
+      <segment bytes="716800" number="10">89bb36aa92bc4dc7b3dbac656eeb1830@ngPost</segment>
+      <segment bytes="716800" number="11">8eb74c0a7d86462f968e149fc4aed642@ngPost</segment>
+      <segment bytes="716800" number="12">74dfb8315d294dbebb65abdd236cb29e@ngPost</segment>
+      <segment bytes="716800" number="13">6ac04f32a61540adac7f3a790b8fbe22@ngPost</segment>
+      <segment bytes="716800" number="14">1b0668c75cdf4915b83fbd86d87651dd@ngPost</segment>
+      <segment bytes="716800" number="15">5ddda0da54a64d8a81efe9528aa41cf0@ngPost</segment>
+      <segment bytes="716800" number="16">81bb910dcf2d4b0f8221c4f3d06d7cb6@ngPost</segment>
+      <segment bytes="716800" number="17">95ef272ef4884d17910647e9413b4816@ngPost</segment>
+      <segment bytes="716800" number="18">9ee5ca0355894a5180fb497e9b8ae06e@ngPost</segment>
+      <segment bytes="716800" number="19">9589327176174e0f893cf143fff77ae2@ngPost</segment>
+      <segment bytes="716800" number="20">da0a77c737ae47d7bfca485df0d0d8a2@ngPost</segment>
+      <segment bytes="716800" number="21">68ade537ba824db6b43f26e9aa3af44d@ngPost</segment>
+      <segment bytes="716800" number="22">afc35e5114344f0aa50d08735c815a85@ngPost</segment>
+      <segment bytes="716800" number="23">dad9a60fcb9a4f9891b5dd20e4377207@ngPost</segment>
+      <segment bytes="716800" number="24">1d5dfbed9d45445fb9c2086027152826@ngPost</segment>
+      <segment bytes="716800" number="25">25d9f4124e1d41ac8d691e99d2ff87e6@ngPost</segment>
+      <segment bytes="716800" number="26">2c5d1a4b9eeb4febb338acb06693e590@ngPost</segment>
+      <segment bytes="716800" number="27">23a8aeddb82042ee81ca8801b5d15081@ngPost</segment>
+      <segment bytes="716800" number="28">6e36fc746a2143bab4836413a6b49fc0@ngPost</segment>
+      <segment bytes="716800" number="29">8f06479f9ff648b084a0589528fcd41e@ngPost</segment>
+      <segment bytes="716800" number="30">3686e12b6b9b4ddf81a72d86774c38c2@ngPost</segment>
+      <segment bytes="716800" number="31">14aace7d7ab547d79a74c241a19cd7fd@ngPost</segment>
+      <segment bytes="716800" number="32">f17e8b7cefdc4c77b3a4b71dda4379f8@ngPost</segment>
+      <segment bytes="716800" number="33">76fcc011a54a4fba9d3227ff5ede75fa@ngPost</segment>
+      <segment bytes="716800" number="34">2352f72a7d8447178a6a4a3996999f8d@ngPost</segment>
+      <segment bytes="716800" number="35">9f1f4f1fc14447b284ae6063fefa96ab@ngPost</segment>
+      <segment bytes="716800" number="36">b20a36c3bc754508b159dab4483950c1@ngPost</segment>
+      <segment bytes="716800" number="37">80e4c7b315a245d68c832d0854925445@ngPost</segment>
+      <segment bytes="716800" number="38">1e44fef15e0a49fd8e11b1dcd07ec521@ngPost</segment>
+      <segment bytes="716800" number="39">48adacc3281545078e350d142aa5f159@ngPost</segment>
+      <segment bytes="716800" number="40">abd23604540c44e29e33dab6e602f752@ngPost</segment>
+      <segment bytes="716800" number="41">f0b6825f80bb47a19c618a0affad4225@ngPost</segment>
+      <segment bytes="716800" number="42">afb7663342fb452c84de99092840e107@ngPost</segment>
+      <segment bytes="716800" number="43">23e9a92f2b0344b8b6ffe1a72684042c@ngPost</segment>
+      <segment bytes="716800" number="44">75d54e14f363488c8b4bd20c0a284e26@ngPost</segment>
+      <segment bytes="716800" number="45">9fda7a6171184de9979c8ca6c00a441e@ngPost</segment>
+      <segment bytes="716800" number="46">25284f20d39e44f5b33695b41e214ed9@ngPost</segment>
+      <segment bytes="716800" number="47">3b7a3adca7ae49b4ab7df1ef194a34e6@ngPost</segment>
+      <segment bytes="716800" number="48">2bb791bea6a34a7f8bad742738677803@ngPost</segment>
+      <segment bytes="716800" number="49">75d7b10324544825b09d0bf885b8a6ef@ngPost</segment>
+      <segment bytes="716800" number="50">4fd9135d781240fe9f2c244299528a29@ngPost</segment>
+      <segment bytes="716800" number="51">d79f766749df405e883655e4cc0f8bd9@ngPost</segment>
+      <segment bytes="443584" number="52">1328c2c009484047980cf2e83a7473f7@ngPost</segment>
+    </segments>
+  </file>
+</nzb>
