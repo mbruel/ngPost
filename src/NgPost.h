@@ -142,6 +142,11 @@ public:
     //    SharedParams &postingParams() { return _postingParams; }
     QStringList loadConfig(QString const &config);
     NzbCheck   *getNzbCheck() const { return _nzbCheck; }
+    void        beQuiet()
+    {
+        NgLogger::sQuietMode = true;
+        _postingParams->beQuiet();
+    }
 #endif
     SharedParams const &postingParams() { return _postingParams; }
 

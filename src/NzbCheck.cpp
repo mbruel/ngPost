@@ -43,10 +43,16 @@ NzbCheck::NzbCheck(SharedParams const &postingParams, QString const &nzbPath)
     , _nbArticlesMissing(0)
     , _nbArticlesChecked(0)
 {
+#ifdef __test_ngPost__
+    this->moveToThread(&_threadChecks);
+#endif
 }
 
 void NzbCheck::startCheckingNzb()
 {
+#ifdef __test_ngPost__
+    connect(this, &NzbCheck::checkFinished, &_threadChecks, &QThread::exit);
+#endif
     _timeStart.start();
     _nbCons = std::min(_nbArticlesTotal, _nbCons);
 
@@ -58,7 +64,11 @@ void NzbCheck::startCheckingNzb()
             for (int i = 1; i <= srvParam->nbCons; ++i)
             {
                 NntpCheckCon *con = new NntpCheckCon(this, i, *srvParam);
-                connect(con, &NntpCheckCon::disconnected, this, &NzbCheck::onDisconnected, Qt::DirectConnection);
+#ifdef __test_ngPost__
+                con->moveToThread(&_threadChecks);
+                connect(&_threadChecks, &QThread::finished, con, &QObject::deleteLater);
+#endif
+                connect(con, &NntpCheckCon::disconnected, this, &NzbCheck::onDisconnected, Qt::QueuedConnection);
                 emit con->startConnection();
 
                 _connections.insert(con);
@@ -70,6 +80,9 @@ void NzbCheck::startCheckingNzb()
                 break;
         }
     }
+#ifdef __test_ngPost__
+    _threadChecks.start();
+#endif
 
     if (!_postingParams->quietMode())
         NgLogger::log(tr("Start checking the nzb with %1 connections on %2 servers)")
@@ -89,6 +102,7 @@ void NzbCheck::missingArticle(QString const &article)
 void NzbCheck::onDisconnected(NntpCheckCon *con)
 {
     _connections.remove(con);
+    con->deleteLater();
     if (_connections.isEmpty())
     {
         NgLogger::stopProgressBar(true);
@@ -109,6 +123,7 @@ void NzbCheck::onDisconnected(NntpCheckCon *con)
         }
 #ifdef __test_ngPost__
         emit checkFinished(_nbArticlesMissing);
+        _isDone = true;
 #else
         qApp->quit(); // end of game :)
 #endif

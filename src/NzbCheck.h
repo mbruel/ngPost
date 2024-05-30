@@ -27,7 +27,9 @@
 #include <QString>
 #include <QTextStream>
 #include <QTimer>
-
+#ifdef __test_ngPost__
+#  include <QThread>
+#endif
 #include "PostingParams.h"
 #include "utils/ProgressBarShell.h"
 
@@ -43,6 +45,9 @@ signals:
     void checkFinished(uint nbArticlesMissing);
 
 private:
+#ifdef __test_ngPost__
+    QThread _threadChecks;
+#endif
     inline static const QString       kXMLTagSubject   = "subject";
     inline static const QLatin1String kXMLTokenFile    = QLatin1String("file");
     inline static const QLatin1String kXMLTokenSegment = QLatin1String("segment");
@@ -68,8 +73,17 @@ private:
     QElapsedTimer _timeStart;
 
 public:
+#ifdef __test_ngPost__
+    bool _isDone = false;
+    void waitThreadChecks() { _threadChecks.wait(); }
+    bool isDone() const { return _isDone; }
+    void setIsDone() { _isDone = true; }
+#endif
+
     NzbCheck(SharedParams const &postingParams, QString const &nzbPath);
     ~NzbCheck() = default; //!< we don't own anything on the heap
+
+    uint nbConnectionsAvailableForChecking() const { return _nbCons; }
 
     /*!
      * \brief from postingParams->nntpServers() save the ones with nzbCheck allowed in _nntpServers

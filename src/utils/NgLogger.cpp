@@ -90,6 +90,9 @@ void NgLogger::startLogInFile(QString const &logFilePath)
 
 void NgLogger::createProgressBar(ProgressBar::ProgressCallback const &callback, bool startIt)
 {
+    if (sQuietMode)
+        return;
+
     if (sInstance->_progressBar)
         sInstance->_progressBar->clear();
     else
@@ -104,6 +107,9 @@ void NgLogger::createProgressBar(ProgressBar::ProgressCallback const &callback, 
 
 void NgLogger::_doProgressBarUpdate(ProgressBar::UpdateBarInfo &currentPos)
 {
+    if (sQuietMode)
+        return;
+
     if (!_lastLogByProgressBar)
         _cout << Qt::endl;
     _progressCallback(currentPos);
@@ -112,6 +118,9 @@ void NgLogger::_doProgressBarUpdate(ProgressBar::UpdateBarInfo &currentPos)
 
 bool NgLogger::startProgressBar(bool waitEventLoopStarted)
 {
+    if (sQuietMode)
+        return false;
+
     if (!sInstance->_progressBar)
     {
         error(tr("No progess bar... a call to createProgressBar is needed."));
@@ -123,6 +132,9 @@ bool NgLogger::startProgressBar(bool waitEventLoopStarted)
 
 void NgLogger::stopProgressBar(bool lastRefresh)
 {
+    if (sQuietMode)
+        return;
+
     if (sInstance->_progressBar)
         sInstance->_progressBar->stop(lastRefresh);
 }

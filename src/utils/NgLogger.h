@@ -45,6 +45,7 @@ class NgLogger : public QObject, private Singleton<NgLogger>
 {
     Q_OBJECT
     friend class Singleton<NgLogger>;
+    friend class NgPost;
 
     /*!
      * \brief ANSI/VT100 Terminal Control Escape Sequences
@@ -55,6 +56,8 @@ class NgLogger : public QObject, private Singleton<NgLogger>
     inline static const QString kColorDebug     = "\x1B[2;34m"; //!< dim green
     inline static const QString kColorFullDebug = "\x1B[2;33m"; //!< dim yellow
     inline static const QString kColorError     = "\x1B[1;31m"; //!< bold red
+
+    inline static bool sQuietMode = false;
 
 public:
     enum class DebugLevel
@@ -116,13 +119,23 @@ public:
     // static thred safe methods to hide the use of signals/slots
     static void log(QString msg, bool newline, DebugLevel debugLvl = DebugLevel::None)
     {
+        if (sQuietMode)
+            return;
+
         if (instance()._debugLevel < debugLvl)
             return;
         emit sInstance->sigLog(msg, newline, debugLvl);
     }
-    static void error(QString err) { emit sInstance->sigError(err); }
+    static void error(QString err)
+    {
+        if (sQuietMode)
+            return;
+        emit sInstance->sigError(err);
+    }
     static void error(QStringList const &errors)
     {
+        if (sQuietMode)
+            return;
         for (auto const &err : errors)
             emit sInstance->sigError(err);
     }

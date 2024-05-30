@@ -160,9 +160,15 @@ public:
     bool    delAuto() const { return _delAuto; }
     ushort  monitorSecDelayScan() const { return _monitorSecDelayScan; }
     bool    quietMode() const { return _quiet; }
-    bool    dispProgressBar() const { return _dispProgressBar; }
-    bool    dispFilesPosting() const { return _dispFilesPosting; }
+    bool    dispProgressBar() const { return _dispProgressBar && !_quiet; }
+    bool    dispFilesPosting() const { return _dispFilesPosting && !_quiet; }
     void    setDisplayProgress(QString const &txtValue);
+    void    beQuiet()
+    {
+        _quiet            = true;
+        _dispProgressBar  = false;
+        _dispFilesPosting = false;
+    }
 
     QStringList const   &groupList() const { return _grpList; }
     NgConf::GROUP_POLICY groupPolicy() const { return _groupPolicy; }

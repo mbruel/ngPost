@@ -39,6 +39,7 @@ int main(int argc, char *argv[])
     {
         TestNzbGet test("TestVesions", argc, argv);
         launchTest(&test, failedTests);
+        QTest::qWait(20000);
     }
 #endif
 
