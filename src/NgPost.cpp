@@ -733,18 +733,19 @@ void NgPost::onPostingJobFinished()
                                                   job->nbArticlesFailed());
 #endif
         qDebug() << "[MB_TRACE][onPostingJobFinished]getFilesPaths: " << _activeJob->getFilesPaths();
-        _dbHistory->insertPost(NgTools::currentDateTime(),
-                               _activeJob->nzbName(),
-                               _activeJob->postSize(),
-                               _activeJob->avgSpeed(),
-                               _activeJob->getFilesPaths(),
-                               _activeJob->hasCompressed() ? _activeJob->rarName() : QString(),
-                               _activeJob->hasCompressed() ? _activeJob->rarPass() : QString(),
-                               _activeJob->groups(),
-                               _activeJob->from(false),
-                               _activeJob->tmpPath(),
-                               _activeJob->nzbFilePath(),
-                               _activeJob->hasPostFinished());
+        // MB_TODO
+        //        _dbHistory->insertPost(NgTools::currentDateTime(),
+        //                               _activeJob->nzbName(),
+        //                               _activeJob->postSize(),
+        //                               _activeJob->avgSpeed(),
+        //                               _activeJob->getFilesPaths(),
+        //                               _activeJob->hasCompressed() ? _activeJob->rarName() : QString(),
+        //                               _activeJob->hasCompressed() ? _activeJob->rarPass() : QString(),
+        //                               _activeJob->groups(),
+        //                               _activeJob->from(false),
+        //                               _activeJob->tmpPath(),
+        //                               _activeJob->nzbFilePath(),
+        //                               _activeJob->hasPostFinished());
 
         if (_activeJob->hasPostFinished() && !_postHistoryFile.isEmpty())
         {
@@ -1059,7 +1060,19 @@ QStringList NgPost::parseDefaultConfig()
             process->setProgram(kDefaultTxtEditorLinux);
 #    endif
             process->setArguments({ conf });
-            connect(process, &QProcess::finished, process, &QObject::deleteLater);
+
+            connect(process
+#    if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+                    ,
+                    qOverload<int>(&QProcess::finished)
+#    else
+                    ,
+                    &QProcess::finished
+#    endif
+                            ,
+                    process,
+                    &QObject::deleteLater,
+                    Qt::QueuedConnection);
             process->start();
             if (process->waitForStarted())
                 NgLogger::log(tr("Please save and close the editor to continue..."), true);

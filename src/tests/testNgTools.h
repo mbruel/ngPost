@@ -16,7 +16,7 @@ private slots:
     void onTestLoadDefautConfig();
     void onTestLoadOldConfig();
 
-    void onSubstituteNZBNameForExistingFileName();
+    void onSubstituteExistingFile();
     void onTestgetUShortVersion(QString const &version);
 
     void onCheckForNewVesion();

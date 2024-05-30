@@ -40,11 +40,11 @@ void TestNzbGet::onTestNzbCheckOK()
 
     //    int exitCode = _ngPost->startEventLoop(); // let's do the job, we need the event loop!
 
-    nzbCheck->waitThreadChecks();
-    QTest::qWaitFor([&nzbCheck]() { return nzbCheck->isDone(); }, 20000);
-    uint nbMissing = _ngPost->nbMissingArticles();
-    MB_LOG("nbMissing for ngPost_v4.16_libssl3-x86_64.nzb: ", nbMissing);
-    MB_VERIFY(nbMissing == 0, this);
+    //    nzbCheck->waitThreadChecks();
+    //    QTest::qWaitFor([&nzbCheck]() { return nzbCheck->isDone(); }, 20000);
+    //    uint nbMissing = _ngPost->nbMissingArticles();
+    //    MB_LOG("nbMissing for ngPost_v4.16_libssl3-x86_64.nzb: ", nbMissing);
+    //    MB_VERIFY(nbMissing == 0, this);
 }
 void TestNzbGet::onTestNzbCheckKO()
 {

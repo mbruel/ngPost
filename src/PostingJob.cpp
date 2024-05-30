@@ -325,8 +325,8 @@ bool PostingJob::startCompressFiles()
         return false;
 
     // 1.: create archive temporary folder
-    QString archiveTmpFolder = _createArchiveFolder(_tmpPath, _params->rarName());
-    if (archiveTmpFolder.isEmpty())
+    _archiveTmpFolder = _createArchiveFolder(_tmpPath, _params->rarName());
+    if (_archiveTmpFolder.isEmpty())
         return false;
 
     _extProc = new QProcess(this);
@@ -349,10 +349,10 @@ bool PostingJob::startCompressFiles()
     QStringList args = _params->buildCompressionCommandArgumentsList();
 
 #if defined(Q_OS_WIN)
-    if (archiveTmpFolder.startsWith("//"))
-        archiveTmpFolder.replace(QRegularExpression("^//"), "\\\\");
+    if (_archiveTmpFolder.startsWith("//"))
+        _archiveTmpFolder.replace(QRegularExpression("^//"), "\\\\");
 #endif
-    args << QString("%1/%2.%3").arg(archiveTmpFolder, _params->rarName(), _params->use7z() ? "7z" : "rar");
+    args << QString("%1/%2.%3").arg(_archiveTmpFolder, _params->rarName(), _params->use7z() ? "7z" : "rar");
 
     // With the option obfuscateFileName users want to rename the files
     // before puting them in the archive
@@ -513,24 +513,23 @@ bool PostingJob::startGenPar2()
     else
         args << _params->par2Args().split(kCmdArgsSeparator);
 
-    bool    useParPar        = _params->useParPar();
-    QString archiveTmpFolder = QString("%1/%2").arg(_tmpPath, _params->rarName());
+    bool useParPar = _params->useParPar();
 
     // we've already compressed => we gen par2 for the files in the archive folder
     if (_extProc)
     {
         if (useParPar && args.last().trimmed() != "-o")
             args << "-o";
-        args << QString("%1/%2.par2").arg(archiveTmpFolder, _params->rarName());
+        args << QString("%1/%2.par2").arg(_archiveTmpFolder, _params->rarName());
         if (useParPar)
-            args << "-R" << archiveTmpFolder;
+            args << "-R" << _archiveTmpFolder;
         else
         {
             if (_params->use7z())
                 args << QString("%1/%2.7z%3")
-                                .arg(archiveTmpFolder, _params->rarName(), _params->splitArchive() ? "*" : "");
+                                .arg(_archiveTmpFolder, _params->rarName(), _params->splitArchive() ? "*" : "");
             else
-                args << QString("%1/%2*rar").arg(archiveTmpFolder, _params->rarName());
+                args << QString("%1/%2*rar").arg(_archiveTmpFolder, _params->rarName());
 
             if (_params->par2Args().isEmpty() && (NgLogger::isDebugMode() || !_postWidget))
                 args << "-q"; // remove the progressbar bar
@@ -545,7 +544,7 @@ bool PostingJob::startGenPar2()
                  << "basename";
             if (args.last().trimmed() != "-o")
                 args << "-o";
-            args << QString("%1/%2.par2").arg(archiveTmpFolder, _params->rarName());
+            args << QString("%1/%2.par2").arg(_archiveTmpFolder, _params->rarName());
         }
         else
         {
@@ -556,12 +555,12 @@ bool PostingJob::startGenPar2()
                 args << QString("/d%1").arg(basePathWin);
             else
                 args << "-B" << basePathWin;
-            QString par2File = QString("%1/%2.par2").arg(archiveTmpFolder, _params->rarName());
+            QString par2File = QString("%1/%2.par2").arg(_archiveTmpFolder, _params->rarName());
             par2File.replace("/", "\\");
             args << par2File;
 #else
             args << "-B" << basePath;
-            args << QString("%1/%2.par2").arg(archiveTmpFolder, _params->rarName());
+            args << QString("%1/%2.par2").arg(_archiveTmpFolder, _params->rarName());
 #endif
         }
 
@@ -588,8 +587,8 @@ bool PostingJob::startGenPar2()
             args << path;
         }
 
-        QString archiveTmpFolder = _createArchiveFolder(_tmpPath, _params->rarName());
-        if (archiveTmpFolder.isEmpty())
+        //        QString archiveTmpFolder = _createArchiveFolder(_tmpPath, _params->rarName());
+        if (_archiveTmpFolder.isEmpty())
             return false;
 
         _extProc = new QProcess(this);
@@ -685,7 +684,7 @@ void PostingJob::_postFiles()
         return;
     }
 
-    if (!_nzb->open(QIODevice::WriteOnly))
+    if (!_nzb->open(QIODevice::WriteOnly | QIODevice::Text))
     {
         NgLogger::error(tr("Error: Can't create nzb output file: %1").arg(_params->nzbFilePath()));
         _finishPosting(); // MB_TODO shall we?
@@ -1045,9 +1044,11 @@ void PostingJob::_initPosting()
 
     // initialize buffer and nzb file
     if (!_params->overwriteNzb()) // MB_TODO: for now never overwrite!
-        _params->setNzbFilePath(NgTools::substituteNZBNameForExistingFile(QFileInfo(_params->nzbFilePath())));
-    _nzb     = new QFile(_params->nzbFilePath());
+        _params->setNzbFilePath(NgTools::substituteExistingFile(_params->nzbFilePath()));
+    _nzb = new QFile(_params->nzbFilePath());
+    qDebug() << tr("[MB_TRACE ]Creating QFile(%1)").arg(_params->nzbFilePath());
     _nbFiles = static_cast<uint>(_files.size());
+    _params->dumpParams();
 
     int    numPadding = 1;
     double padding    = static_cast<double>(_nbFiles) / 10.;
@@ -1265,23 +1266,28 @@ QString PostingJob::_createArchiveFolder(QString const &tmpFolder, QString const
     _compressDir             = new QDir(archiveTmpFolder);
     if (_compressDir->exists())
     {
-        NgLogger::error(tr("The temporary directory '%1' already exists... (either remove it or change the "
-                           "archive name)")
-                                .arg(archiveTmpFolder));
+        NgLogger::log(tr("The temporary directory '%1' already exists...").arg(archiveTmpFolder), true);
+        archiveTmpFolder = NgTools::substituteExistingFile(archiveTmpFolder, false, false);
         delete _compressDir;
-        _compressDir = nullptr;
-        return QString();
-    }
-    else
-    {
-        if (!_compressDir->mkpath("."))
+        _compressDir = new QDir(archiveTmpFolder);
+        if (_compressDir->exists())
         {
-            NgLogger::error(tr("Couldn't create the temporary folder: '%1'...").arg(archiveTmpFolder));
             delete _compressDir;
             _compressDir = nullptr;
             return QString();
         }
+        else
+            NgLogger::error(tr("We're using another temporary folder : %1").arg(archiveTmpFolder));
     }
+
+    if (!_compressDir->mkpath("."))
+    {
+        NgLogger::error(tr("Couldn't create the temporary folder: '%1'...").arg(_compressDir->absolutePath()));
+        delete _compressDir;
+        _compressDir = nullptr;
+        return QString();
+    }
+
     return archiveTmpFolder;
 }
 

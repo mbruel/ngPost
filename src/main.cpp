@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
     if (app->parseCommandLine(argc, argv))
 #endif
     {
-        app->checkForMigration();
+        //        app->checkForMigration();
         if (app->checkSupportSSL())
         {
             app->initHistoryDatabase();

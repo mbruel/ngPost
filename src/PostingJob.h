@@ -83,7 +83,8 @@ private:
     PostingParamsPtr     _params;     //!< all posting parameters including the list of files
     PostingWidget *const _postWidget; //!< attached Windows
 
-    QString _tmpPath; //!< can be _params->tmpPath() or _params->ramPath()
+    QString _tmpPath;          //!< can be _params->tmpPath() or _params->ramPath()
+    QString _archiveTmpFolder; //!< _tmpPath + name of folder
 
     /*!
      * \brief _files that will be posted by _postFiles()

@@ -18,6 +18,7 @@
 //========================================================================
 
 #include "NzbCheck.h"
+#include <cmath> // std::round
 
 #include <QCoreApplication>
 #include <QFile>

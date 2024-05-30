@@ -41,8 +41,10 @@ using SharedParams = QExplicitlySharedDataPointer<MainParams>;
 
 // shared between a PostingJobs and its PostingWidget
 #ifndef _MSC_VER // MB_TODO: investigate why MSVC compiler has an issue with QSharedPointer and initialization...
+#  include <QSharedPointer>
 using PostingParamsPtr = QSharedPointer<PostingParams>;
 #else
+#  include <memory>
 using PostingParamsPtr = std::shared_ptr<PostingParams>;
 #endif
 

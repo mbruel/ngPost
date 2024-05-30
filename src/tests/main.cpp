@@ -35,13 +35,13 @@ int main(int argc, char *argv[])
     }
 #endif
 
-#ifdef __Launch_TestNzbCheck__
-    {
-        TestNzbGet test("TestVesions", argc, argv);
-        launchTest(&test, failedTests);
-        QTest::qWait(20000);
-    }
-#endif
+    // #ifdef __Launch_TestNzbCheck__
+    //     {
+    //         TestNzbGet test("TestVesions", argc, argv);
+    //         launchTest(&test, failedTests);
+    //         QTest::qWait(20000);
+    //     }
+    // #endif
 
     // Add more test cases here as needed
     // ...

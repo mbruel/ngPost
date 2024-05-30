@@ -23,40 +23,25 @@
 #include <QDir>
 #include <QFileInfo>
 
-QString NgTools::substituteNZBNameForExistingFile(QFileInfo fi)
+QString NgTools::substituteExistingFile(QString const &path, bool isNzbFile, bool useBasename)
 {
-    QString inputFileName;
-    ushort  nbDuplicates = 0;
-    while (fi.exists())
-    {
-        QString baseName = fi.completeBaseName();
-        if (nbDuplicates != 0)
-        {
-            static QChar kUnderscore('_');
-            baseName.chop(baseName.length() - baseName.lastIndexOf(kUnderscore));
-        }
-        inputFileName = QFileInfo(fi.absoluteDir(), QString("%1_%2.nzb").arg(baseName).arg(++nbDuplicates))
-                                .absoluteFilePath();
-        fi = QFileInfo(inputFileName);
-    }
-    return inputFileName;
-}
-void NgTools::substituteNZBNameForExistingFileName(QString &inputFileName)
-{
-    QFileInfo fi(inputFileName);
+    QString   inputPath = path;
+    QFileInfo fi(inputPath);
     ushort    nbDuplicates = 0;
     while (fi.exists())
     {
-        QString baseName = fi.completeBaseName();
+        QString baseName = useBasename ? fi.completeBaseName() : fi.fileName();
         if (nbDuplicates != 0)
         {
             static QChar kUnderscore('_');
             baseName.chop(baseName.length() - baseName.lastIndexOf(kUnderscore));
         }
-        inputFileName = QFileInfo(fi.absoluteDir(), QString("%1_%2.nzb").arg(baseName).arg(++nbDuplicates))
-                                .absoluteFilePath();
-        fi = QFileInfo(inputFileName);
+        inputPath = QFileInfo(fi.absoluteDir(),
+                              QString("%1_%2%3").arg(baseName).arg(++nbDuplicates).arg(isNzbFile ? ".nzb" : ""))
+                            .absoluteFilePath();
+        fi = QFileInfo(inputPath);
     }
+    return inputPath;
 }
 
 uint NgTools::getUShortVersion(QString const &version)

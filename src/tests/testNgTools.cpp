@@ -1,5 +1,7 @@
 #include "testNgTools.h"
 
+#include <filesystem> // std::filesystem::create_directory (faster that QDir!)
+
 #include <QDebug>
 #include <QNetworkReply>
 #include <QtTest/QtTest>
@@ -81,12 +83,49 @@ void TestNgTools::onTestLoadOldConfig()
     MB_VERIFY(confVersion == 302, this);
 }
 
-void TestNgTools::onSubstituteNZBNameForExistingFileName()
+void TestNgTools::onSubstituteExistingFile()
 {
+    // 1.: test for nzbFile
     QString nzbNzame("://testNgTools/filename.nzb");
-    NgTools::substituteNZBNameForExistingFileName(nzbNzame);
+    nzbNzame = NgTools::NgTools::substituteExistingFile(nzbNzame);
     MB_LOG("substituteNZBNameForExistingFileName(nzbNzame)=", nzbNzame);
     MB_VERIFY(nzbNzame == "://testNgTools/filename_4.nzb", this);
+
+    // 2.: test for temp folder (bored to have to manually remove it during my tests...)
+#if defined(__linux__) || defined(__APPLE__)
+    QString               testPathQStr = "/tmp/substituteExistingFolder";
+    std::filesystem::path testFolder   = testPathQStr.toStdString();
+    // if it exist first we remove it
+    if (std::filesystem::exists(testFolder))
+        std::filesystem::remove(testFolder);
+
+    // then we create it
+    MB_VERIFY(std::filesystem::create_directory(testFolder), this);
+    // try to create again, it should fail...
+    MB_VERIFY(std::filesystem::create_directory(testFolder) == false, this);
+
+    // create 4 alternatives
+    for (int i = 1; i < 4; ++i)
+    {
+        QString currentPath = testFolder.string().c_str();
+        // not forget the 2 false in substituteExistingFile to say it's not an nzb file but a directory
+        QString newPath = NgTools::substituteExistingFile(currentPath, false, false);
+        MB_VERIFY(newPath == QString("%1_%2").arg(currentPath).arg(i), this);
+        MB_VERIFY(std::filesystem::create_directory(QString("%1_%2").arg(currentPath).arg(i).toStdString())
+                          == true,
+                  this);
+    }
+    // delete all folders
+    for (int i = 1; i < 4; ++i)
+    {
+        MB_VERIFY(std::filesystem::remove(
+                          std::filesystem::path(QString("%1_%2").arg(testPathQStr).arg(i).toStdString()))
+                          == true,
+                  this);
+    }
+
+    std::filesystem::create_directory("/tmp/onSubstituteNZBNameForExistingFileName");
+#endif
 }
 
 void TestNgTools::onTestgetUShortVersion(QString const &version)

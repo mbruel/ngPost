@@ -18,6 +18,9 @@
 //========================================================================
 
 #include "ArticleBuilder.h"
+#if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
+#  include <QDebug>
+#endif
 
 #include "NgConf.h"
 #include "nntp/NntpArticle.h"

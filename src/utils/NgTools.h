@@ -55,16 +55,18 @@ class NgTools : public PureStaticClass
     Q_DECLARE_TR_FUNCTIONS(NgCmdLineLoader); // tr() without QObject using QCoreApplication::translate
 
 public:
-    //! modify input string adding _x until file name is not usesd anymore...
-    //! so the reference in attribute
-    //! MB_TESTED: TestNgTools::onSubstituteNZBNameForExistingFileName
-    static void substituteNZBNameForExistingFileName(QString &inputFileName);
-
-    //! similar than above but with a different signature
-    static QString substituteNZBNameForExistingFile(QFileInfo inputFile);
+    /*!
+     * \brief if the path exists (either for an nzbFilePath or archiveTmpFolder)
+     *  we'll give an alternative: nzbFilePath_1.nzb or archiveTmpFolder_1
+     * \param full path either of a directory or the nzb file
+     * \param isNzbFile (so we add the .nzb at the end)
+     * \param useBasename (we remove the extension)
+     * \return the non existing path that we can use!
+     */
+    static QString substituteExistingFile(QString const &path, bool isNzbFile = true, bool useBasename = true);
 
     //! MB_TESTED:
-    static uint getUShortVersion(QString const &version);
+    static uint   getUShortVersion(QString const &version);
     static ushort isConfigurationVesionObsolete();
 
     static QString currentDateTime();

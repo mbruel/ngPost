@@ -252,8 +252,8 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost &ngPost, SharedParams &p
                 return false; // end of Game :(
             }
             if (!postingParams->overwriteNzb())
-                postingParams->_nzbPath = NgTools::substituteNZBNameForExistingFile(
-                        QFileInfo(QDir(nzbPath), QString("%1.nzb").arg(fi.baseName())));
+                postingParams->_nzbPath = NgTools::substituteExistingFile(
+                        QFileInfo(QDir(nzbPath), QString("%1.nzb").arg(fi.baseName())).absoluteFilePath());
         }
         return ngPost.doNzbCheck(parser.value(kOptionNames[Opt::CHECK]).trimmed());
     }
