@@ -27,6 +27,7 @@ DEFINES += __Launch_TestNgTools__
 
 DEFINES += __Launch_TestVesions__
 
+DEFINES += __Launch_TestNzbCheck__
 
 #-------------------------------------------------
 # MACROS for TRACES

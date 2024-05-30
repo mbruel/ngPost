@@ -1,24 +1,21 @@
-// #ifndef TESTNZBCHECK_H
-// #define TESTNZBCHECK_H
-// #include "tests/MacroTest.h"
-// class NgPost;
+#ifndef TESTNZBCHECK_H
+#define TESTNZBCHECK_H
+#include "tests/MacroTest.h"
+class NgPost;
 
-// class TestNzbGet : public MacroTest
-//{
-//     Q_OBJECT
-//     NgPost *_ngPost;
+class TestNzbGet : public MacroTest
+{
+    Q_OBJECT
+public:
+    TestNzbGet(QString const &testName, int argc, char *argv[]);
+    ~TestNzbGet();
+private slots:
 
-// public:
-//     TestNzbGet(QString const &testName, int argc, char *argv[]);
+    //    void init();    // called before each test case
+    void cleanup() override; // called after each test case
 
-// private slots:
-//     void initTestCase();    // Called once before the test cases
-//     void cleanupTestCase(); // Called once after all test cases
-
-//    //    void init();    // called before each test case
-//    void cleanup(); // called after each test case
-
-//    void onTestNzbCheckOK();
-//    void onTestNzbCheckKO();
-//};
-// #endif // TESTNZBCHECK_H
+    void onTestNzbCheckOK();
+    void onTestNzbCheckKO();
+    void onNzbCheckFinished(uint missingArticles);
+};
+#endif // TESTNZBCHECK_H

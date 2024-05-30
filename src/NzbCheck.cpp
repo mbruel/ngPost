@@ -107,7 +107,11 @@ void NzbCheck::onDisconnected(NntpCheckCon *con)
                             .arg(_nntpServers.size()),
                     true);
         }
+#ifdef __test_ngPost__
+        emit checkFinished(_nbArticlesMissing);
+#else
         qApp->quit(); // end of game :)
+#endif
     }
 }
 

@@ -141,6 +141,7 @@ public:
 #ifdef __test_ngPost__
     //    SharedParams &postingParams() { return _postingParams; }
     QStringList loadConfig(QString const &config);
+    NzbCheck   *getNzbCheck() const { return _nzbCheck; }
 #endif
     SharedParams const &postingParams() { return _postingParams; }
 
@@ -150,7 +151,7 @@ public:
     inline char const *appName() override { return NgConf::kAppName; }
 
     QNetworkReply *checkForNewVersion() override;
-    bool checkSupportSSL();
+    bool           checkSupportSSL();
 #ifdef __USE_HMI__
     int startHMI() override;
 #endif
@@ -215,7 +216,7 @@ public:
     inline bool groupPolicyPerFile() const;
 
     inline bool nzbCheck() const;
-    int         nbMissingArticles() const; //!< output of the program when doing nzbCheck
+    uint        nbMissingArticles() const; //!< output of the program when doing nzbCheck
 
     inline QString const &postHistoryFile() const;
     inline QString const &historyFieldSeparator() const;

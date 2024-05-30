@@ -11,9 +11,6 @@
 
 using namespace NgConf;
 
-void TestNgTools::initTestCase() { NgLogger::createInstance(); }
-void TestNgTools::cleanupTestCase() { NgLogger::destroy(); }
-
 TestNgTools::TestNgTools(QString const &testName, int argc, char *argv[]) : MacroTest(testName)
 {
     qDebug() << "Construction TestNgTools => _ngPost...";
@@ -133,6 +130,6 @@ void TestNgTools::onCheckForNewVersionReply()
         }
     }
     disconnect(reply, &QNetworkReply::finished, _ngPost, &NgPost::onCheckForNewVersion);
-    delete reply;
+    reply->deleteLater();
     qApp->quit();
 }

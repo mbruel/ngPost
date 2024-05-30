@@ -39,6 +39,9 @@ class NzbCheck : public QObject
     friend NgPost;       // to use progressUpdateInfo via NgLogger::createProgressBar
     friend NntpCheckCon; // only class allowed to use getNextArticle and update _nbArticles*
 
+signals:
+    void checkFinished(uint nbArticlesMissing);
+
 private:
     inline static const QString       kXMLTagSubject   = "subject";
     inline static const QLatin1String kXMLTokenFile    = QLatin1String("file");
@@ -90,7 +93,7 @@ public:
     void startCheckingNzb();
 
     //! result of the check (output of the program)
-    int nbMissingArticles() const { return _nbArticlesMissing; }
+    uint nbMissingArticles() const { return _nbArticlesMissing; }
 
 private slots:
     void onDisconnected(NntpCheckCon *con);

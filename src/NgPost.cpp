@@ -216,7 +216,7 @@ QStringList NgPost::loadConfig(QString const &config)
 }
 #endif
 
-int NgPost::nbMissingArticles() const { return _nzbCheck->nbMissingArticles(); }
+uint NgPost::nbMissingArticles() const { return _nzbCheck->nbMissingArticles(); }
 
 bool NgPost::initHistoryDatabase()
 {

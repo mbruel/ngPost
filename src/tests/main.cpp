@@ -6,6 +6,7 @@
 #include "LoadConfig/TestVesions.h"
 #include "MacroTest.h"
 #include "testNgTools.h"
+#include "testnzbcheck.h"
 
 inline void launchTest(MacroTest *test, QList<QString> &failedTests)
 {
@@ -30,6 +31,13 @@ int main(int argc, char *argv[])
 #ifdef __Launch_TestVesions__
     {
         TestVesions test("TestVesions", argc, argv);
+        launchTest(&test, failedTests);
+    }
+#endif
+
+#ifdef __Launch_TestNzbCheck__
+    {
+        TestNzbGet test("TestVesions", argc, argv);
         launchTest(&test, failedTests);
     }
 #endif

@@ -6,10 +6,8 @@ class NgPost;
 class TestVesions : public MacroTest
 {
     Q_OBJECT
-    NgPost *_ngPost;
-
 public:
-    TestVesions(QString const &testName, int argc, char *argv[]) : MacroTest(testName) { }
+    TestVesions(QString const &testName, int argc, char *argv[]);
 
 private slots:
 
