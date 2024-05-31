@@ -37,7 +37,7 @@
 #  include <QTimer>
 #endif
 
-NntpConnection::NntpConnection(NgPost const &ngPost, int id, NntpServerParams const &srvParams)
+NntpConnection::NntpConnection(NgPost const &ngPost, int id, NNTP::ServerParams const &srvParams)
     : QObject()
     , _id(id)
     , _srvParams(srvParams)

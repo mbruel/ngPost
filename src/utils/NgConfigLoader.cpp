@@ -40,9 +40,9 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
     if (!file.open(QIODevice::ReadOnly))
         return { tr("The config file '%1' could not be opened...").arg(configPath) };
 
-    QStringList       errors;
-    NntpServerParams *serverParams = nullptr;                     // hold servers found (one by one)
-    auto             &_nntpServers = postingParams->_nntpServers; // to fill the SharedParams servers
+    QStringList         errors;
+    NNTP::ServerParams *serverParams = nullptr;                     // hold servers found (one by one)
+    auto               &_nntpServers = postingParams->_nntpServers; // to fill the SharedParams servers
 
     QTextStream stream(&file);
     int         lineNumber = 0;
@@ -56,7 +56,7 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
 
         else if (line == "[server]")
         { // only section. all other lines formed as KEY = VALUE
-            serverParams = new NntpServerParams();
+            serverParams = new NNTP::ServerParams();
             _nntpServers << serverParams;
             continue; // next line!
         }
@@ -77,8 +77,8 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
                 else if (opt == kOptionNames[Opt::SSL])
                 {
                     setBoolean(serverParams->useSSL, val);
-                    if (serverParams->useSSL && serverParams->port == NntpServerParams::kDefaultPort)
-                        serverParams->port = NntpServerParams::kDefaultSslPort;
+                    if (serverParams->useSSL && serverParams->port == NNTP::ServerParams::kDefaultPort)
+                        serverParams->port = NNTP::ServerParams::kDefaultSslPort;
                 }
                 else if (opt == kOptionNames[Opt::ENABLED])
                     setBoolean(serverParams->enabled, val);

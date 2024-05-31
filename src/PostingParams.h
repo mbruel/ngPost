@@ -29,7 +29,10 @@
 #ifdef __USE_TMP_RAM__
 class QStorageInfo;
 #endif
-struct NntpServerParams;
+namespace NNTP
+{
+struct ServerParams;
+}
 class PostingParams;
 class MainParams;
 class PostingWidget;
@@ -61,7 +64,7 @@ private:
     bool _dispProgressBar;
     bool _dispFilesPosting;
 
-    QList<NntpServerParams *> _nntpServers; //!< the parameters of the available servers
+    QList<NNTP::ServerParams *> _nntpServers; //!< the parameters of the available servers
 
 #ifdef __USE_TMP_RAM__
     QStorageInfo *_storage;
@@ -215,8 +218,8 @@ public:
     inline bool useParPar() const { return _par2Path.toLower().contains("parpar"); }
     inline bool useMultiPar() const { return _par2Path.toLower().contains("par2j"); }
 
-    QList<NntpServerParams *> const &nntpServers() const { return _nntpServers; }
-    QString                          groups() const { return _grpList.join(","); }
+    QList<NNTP::ServerParams *> const &nntpServers() const { return _nntpServers; }
+    QString                            groups() const { return _grpList.join(","); }
 
     QStringList getPostingGroups() const
     {
@@ -250,7 +253,7 @@ public:
     void dumpParams() const;
 
 private:
-    inline bool removeNntpServer(NntpServerParams *server)
+    inline bool removeNntpServer(NNTP::ServerParams *server)
     {
         // deletion of the server will be done by the caller
         return _nntpServers.removeOne(server);
@@ -266,7 +269,7 @@ private:
 
     void setEmptyCompressionArguments();
 
-    //    QList<NntpServerParams *> &nntpServers() { return _nntpServers; }
+    //    QList<NNTP::ServerParams *> &nntpServers() { return _nntpServers; }
 
 #ifdef __USE_TMP_RAM__
     QString setRamPathAndTestStorage(QString const &ramPath);
@@ -319,7 +322,7 @@ public:
     bool dispProgressBar() const;
     bool dispFilesPosting() const;
 
-    QList<NntpServerParams *> const &nntpServers() const;
+    QList<NNTP::ServerParams *> const &nntpServers() const;
 
     QMap<QString, QString> const &meta();
 

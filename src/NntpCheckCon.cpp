@@ -24,7 +24,7 @@
 #include "NzbCheck.h"
 #include "utils/NgLogger.h"
 
-NntpCheckCon::NntpCheckCon(NzbCheck *nzbCheck, int id, NntpServerParams const &srvParams)
+NntpCheckCon::NntpCheckCon(NzbCheck *nzbCheck, int id, NNTP::ServerParams const &srvParams)
     : QObject()
     , _nzbCheck(nzbCheck)
     , _id(id)

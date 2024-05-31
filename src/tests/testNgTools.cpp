@@ -1,4 +1,5 @@
 #include "testNgTools.h"
+#include "Macros.h"
 
 #include <filesystem> // std::filesystem::create_directory (faster that QDir!)
 

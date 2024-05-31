@@ -13,6 +13,7 @@ private slots:
 
     void onTestLoadDefautConfig();
     void onTestLoadOldConfig();
+    void onTestLoadXSNewsPartnerConfig();
 };
 
 #endif // TestVesions_H

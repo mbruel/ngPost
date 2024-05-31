@@ -1,7 +1,10 @@
 #include "testnzbcheck.h"
+#include "Macros.h"
 
 #include <QDebug>
 #include <QtTest/QtTest>
+
+#include "TestTools.h"
 
 #include "NgPost.h"
 #include "NzbCheck.h"
@@ -23,6 +26,12 @@ void TestNzbGet::cleanup()
 
 void TestNzbGet::onTestNzbCheckOK()
 {
+    if (!TestTools::loadXSNewsPartnerConfAndCheckConnection(_ngPost))
+    {
+
+        return;
+    }
+
     auto errors = _ngPost->parseDefaultConfig();
     MB_VERIFY(errors.isEmpty(), this); // Mo errors
 

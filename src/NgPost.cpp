@@ -212,7 +212,10 @@ NgPost::~NgPost()
 #ifdef __test_ngPost__
 QStringList NgPost::loadConfig(QString const &config)
 {
-    return NgConfigLoader::loadConfig(*this, config, _postingParams);
+    auto errors = NgConfigLoader::loadConfig(*this, config, _postingParams);
+    if (errors.isEmpty())
+        _configFile = config;
+    return errors;
 }
 #endif
 
@@ -1204,4 +1207,4 @@ bool NgPost::doNzbCheck(QString const &nzbPath)
     return true; // when the job it's finished the event loop will be stopped
 }
 
-bool NgPost::removeNntpServer(NntpServerParams *server) { return _postingParams->removeNntpServer(server); }
+bool NgPost::removeNntpServer(NNTP::ServerParams *server) { return _postingParams->removeNntpServer(server); }

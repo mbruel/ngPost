@@ -1,4 +1,6 @@
 #include "TestVesions.h"
+#include "../Macros.h"
+#include "../TestTools.h"
 
 #include <QDebug>
 #include <QtTest/QtTest>
@@ -26,4 +28,10 @@ void TestVesions::onTestLoadOldConfig()
     QString oldConfig = ":/config/ngPost_noConfVersion.conf";
     auto    errors    = _ngPost->loadConfig(oldConfig);
     MB_VERIFY(errors.isEmpty(), this); // Example test, always passes
+}
+
+void TestVesions::onTestLoadXSNewsPartnerConfig()
+{
+    TestTools::loadXSNewsPartnerConf(_ngPost);
+    MB_VERIFY(_ngPost->configFile() == TestTools::partnerConfig(), this);
 }

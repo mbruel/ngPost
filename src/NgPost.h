@@ -36,7 +36,10 @@
 
 class QTranslator;
 class NntpConnection;
-struct NntpServerParams;
+namespace NNTP
+{
+struct ServerParams;
+}
 class NntpFile;
 class NntpArticle;
 class QCoreApplication;
@@ -147,6 +150,8 @@ public:
         NgLogger::sQuietMode = true;
         _postingParams->beQuiet();
     }
+    QString        _configFile;
+    QString const &configFile() const { return _configFile; }
 #endif
     SharedParams const &postingParams() { return _postingParams; }
 
@@ -188,7 +193,7 @@ public:
     QString getNzbName(QFileInfo const &fileInfo) const;
     QString getNzbPath(QString const &monitorFolder);
 
-    inline bool removeNntpServer(NntpServerParams *server);
+    inline bool removeNntpServer(NNTP::ServerParams *server);
 
     inline QList<QString> languages() const;
 

@@ -23,8 +23,10 @@
 #include <QTcpSocket>
 
 #include "utils/NgLogger.h"
-
-struct NntpServerParams;
+namespace NNTP
+{
+struct ServerParams;
+}
 class NntpArticle;
 class NgPost;
 class Poster;
@@ -67,8 +69,8 @@ private:
         NO_MORE_FILES
     };
 
-    int const               _id;        //!< connection id
-    NntpServerParams const &_srvParams; //!< server parameters
+    int const                 _id;        //!< connection id
+    NNTP::ServerParams const &_srvParams; //!< server parameters
 
     QTcpSocket *_socket;      //!< Real TCP socket
     bool        _isConnected; //!< to avoid to rely on iSocket && iSocket->isOpen()
@@ -91,7 +93,7 @@ public:
      * \param id          : connection id
      * \param ssl         : should the connection be encrypted?
      */
-    explicit NntpConnection(NgPost const &ngPost, int id, NntpServerParams const &srvParams);
+    explicit NntpConnection(NgPost const &ngPost, int id, NNTP::ServerParams const &srvParams);
 
     NntpConnection(NntpConnection const &)             = delete;
     NntpConnection(NntpConnection const &&)            = delete;

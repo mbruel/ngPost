@@ -10,5 +10,6 @@
         <file>nzb/qt-unified-linux-x64-4.4.2-online.nzb</file>
         <file>nzb/ngPost_v4.16_libssl3-x86_64.nzb</file>
         <file>nzb/ngPost_v4.16_libssl1.1-x86_64.nzb</file>
+        <file>config/ngPost.xsnews.partner</file>
     </qresource>
 </RCC>

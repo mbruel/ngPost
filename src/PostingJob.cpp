@@ -898,7 +898,7 @@ int PostingJob::_createNntpConnections()
     _nbConnections = _params->nbNntpConnections();
     _nntpConnections.reserve(_nbConnections);
     int conIdx = 0;
-    for (NntpServerParams *srvParams : _params->nntpServers())
+    for (NNTP::ServerParams *srvParams : _params->nntpServers())
     {
         if (srvParams->enabled)
         {

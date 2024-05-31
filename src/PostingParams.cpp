@@ -189,7 +189,7 @@ bool PostingParams::dispProgressBar() const { return _params->dispProgressBar();
 
 bool PostingParams::dispFilesPosting() const { return _params->dispFilesPosting(); }
 
-QList<NntpServerParams *> const &PostingParams::nntpServers() const { return _params->nntpServers(); }
+QList<NNTP::ServerParams *> const &PostingParams::nntpServers() const { return _params->nntpServers(); }
 
 QMap<QString, QString> const &PostingParams::meta() { return _meta; }
 
@@ -204,7 +204,7 @@ void PostingParams::removeMeta(QString const &metaKey) { _meta.remove(metaKey); 
 int PostingParams::nbNntpConnections() const
 {
     int nbConnections = 0;
-    for (NntpServerParams *srvParams : _params->nntpServers())
+    for (NNTP::ServerParams *srvParams : _params->nntpServers())
     {
         if (srvParams->enabled)
             nbConnections += srvParams->nbCons;
@@ -819,7 +819,7 @@ bool MainParams::saveConfig(QString const &configFilePath, NgPost const &ngPost)
            << "##############################################################\n"
            << "\n";
 
-    for (NntpServerParams *param : _nntpServers)
+    for (NNTP::ServerParams *param : _nntpServers)
     {
         stream << "[server]\n"
                << "host = " << param->host << "\n"
@@ -852,7 +852,7 @@ bool MainParams::saveConfig(QString const &configFilePath, NgPost const &ngPost)
 void MainParams::dumpParams() const
 {
     QString servers;
-    for (NntpServerParams *srv : nntpServers())
+    for (NNTP::ServerParams *srv : nntpServers())
         servers += srv->str() + " ";
     qDebug() << "[MainParams::_dumpParams]>>>>>>>>>>>>>>>>>>\n"
              << "nb Servers: " << nntpServers().size() << ": " << servers << "\n\nnbThreads: " << nbThreads()

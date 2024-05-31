@@ -668,7 +668,7 @@ bool NgCmdLineLoader::loadServersParameters(QCommandLineParser const &parser, Sh
                 qDebug() << "NNTP Server: " << user << ":" << pass << "@" << host << ":" << port << ":" << nbCon
                          << ":" << ssl;
 #endif
-                nntpServers << new NntpServerParams(
+                nntpServers << new NNTP::ServerParams(
                         host, port, auth, user.toStdString(), pass.toStdString(), nbCon, ssl);
             }
             else
@@ -694,12 +694,12 @@ bool NgCmdLineLoader::loadServersParameters(QCommandLineParser const &parser, Sh
             nntpServers.clear(); // we clear only those from config (i.e: if not one from 1.)
 
         // Add the server and check if we can fill it more
-        NntpServerParams *server = new NntpServerParams(host);
+        NNTP::ServerParams *server = new NNTP::ServerParams(host);
         nntpServers << server;
         if (parser.isSet(kOptionNames[Opt::SSL]))
         {
             server->useSSL = true;
-            server->port   = NntpServerParams::kDefaultSslPort;
+            server->port   = NNTP::ServerParams::kDefaultSslPort;
         }
         if (parser.isSet(kOptionNames[Opt::PORT]))
         {

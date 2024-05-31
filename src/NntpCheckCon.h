@@ -51,9 +51,9 @@ private:
         CHECKING_ARTICLE
     };
 
-    NzbCheck *const         _nzbCheck;
-    int const               _id;        //!< connection id
-    NntpServerParams const &_srvParams; //!< server parameters
+    NzbCheck *const           _nzbCheck;
+    int const                 _id;        //!< connection id
+    NNTP::ServerParams const &_srvParams; //!< server parameters
 
     QTcpSocket *_socket;      //!< Real TCP socket
     bool        _isConnected; //!< to avoid to rely on iSocket && iSocket->isOpen()
@@ -62,7 +62,7 @@ private:
     QString      _currentArticle;
 
 public:
-    NntpCheckCon(NzbCheck *nzbCheck, int id, NntpServerParams const &srvParams);
+    NntpCheckCon(NzbCheck *nzbCheck, int id, NNTP::ServerParams const &srvParams);
     ~NntpCheckCon();
 
 public slots:

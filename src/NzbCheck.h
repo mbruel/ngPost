@@ -61,7 +61,7 @@ private:
 
     //! the servers parameters that are allowed for checking headers
     //! we don't own them, we just kept the list from _postingParams during hasCheckingConnections
-    QList<NntpServerParams *> _nntpServers;
+    QList<NNTP::ServerParams *> _nntpServers;
 
     QSet<NntpCheckCon *> _connections; //!< they will deleteLater
     uint                 _nbCons;

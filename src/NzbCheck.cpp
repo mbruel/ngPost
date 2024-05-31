@@ -58,7 +58,7 @@ void NzbCheck::startCheckingNzb()
     _nbCons = std::min(_nbArticlesTotal, _nbCons);
 
     uint nb = 0;
-    for (NntpServerParams *srvParam : _nntpServers)
+    for (NNTP::ServerParams *srvParam : _nntpServers)
     {
         if (srvParam->nzbCheck)
         {
@@ -134,7 +134,7 @@ void NzbCheck::onDisconnected(NntpCheckCon *con)
 int NzbCheck::hasCheckingConnections()
 {
     auto const &allNntpSrvs = _postingParams->nntpServers();
-    for (NntpServerParams *srvParam : allNntpSrvs)
+    for (NNTP::ServerParams *srvParam : allNntpSrvs)
     {
         if (srvParam->nzbCheck)
         {

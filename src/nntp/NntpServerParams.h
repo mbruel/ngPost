@@ -20,8 +20,10 @@
 #define NNTPSERVERPARAMS_H
 
 #include <QString>
+namespace NNTP
+{
 
-struct NntpServerParams
+struct ServerParams
 {
     QString     host;
     ushort      port;
@@ -36,7 +38,7 @@ struct NntpServerParams
     static constexpr ushort kDefaultPort    = 119;
     static constexpr ushort kDefaultSslPort = 563;
 
-    NntpServerParams()
+    ServerParams()
         : host("")
         , port(kDefaultPort)
         , auth(false)
@@ -49,14 +51,14 @@ struct NntpServerParams
     {
     }
 
-    NntpServerParams(QString const     &aHost,
-                     ushort             aPort     = kDefaultPort,
-                     bool               aAuth     = false,
-                     std::string const &aUser     = "",
-                     std::string const &aPass     = "",
-                     ushort             aNbCons   = 1,
-                     bool               aUseSSL   = false,
-                     bool               aNzbCheck = false)
+    ServerParams(QString const     &aHost,
+                 ushort             aPort     = kDefaultPort,
+                 bool               aAuth     = false,
+                 std::string const &aUser     = "",
+                 std::string const &aPass     = "",
+                 ushort             aNbCons   = 1,
+                 bool               aUseSSL   = false,
+                 bool               aNzbCheck = false)
         : host(aHost)
         , port(aPort)
         , auth(aAuth)
@@ -69,15 +71,15 @@ struct NntpServerParams
     {
     }
 
-    ~NntpServerParams() = default;
+    ~ServerParams() = default;
 
-    NntpServerParams(NntpServerParams const &o)  = default;
-    NntpServerParams(NntpServerParams &&aParams) = default;
+    ServerParams(ServerParams const &o)  = default;
+    ServerParams(ServerParams &&aParams) = default;
 
     inline QString str() const;
 };
 
-QString NntpServerParams::str() const
+QString ServerParams::str() const
 {
     if (auth)
         return QString("[%5con%6 on %1:%2@%3:%4 enabled:%7, nzbCheck:%8]")
@@ -99,4 +101,5 @@ QString NntpServerParams::str() const
                 .arg(nzbCheck);
 }
 
+} // namespace NNTP
 #endif // NNTPSERVERPARAMS_H
