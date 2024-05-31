@@ -601,7 +601,7 @@ bool NgCmdLineLoader::loadPostingParameters(QCommandLineParser const &parser, Sh
         bool   ok;
         ushort nbRetry = parser.value(kOptionNames[Opt::NB_RETRY]).toUShort(&ok);
         if (ok)
-            NntpArticle::setNbMaxRetry(nbRetry);
+            NNTP::Article::setNbMaxRetry(nbRetry);
         else
         {
             NgLogger::criticalError(

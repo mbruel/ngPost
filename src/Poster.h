@@ -25,9 +25,13 @@
 #include <QThread>
 #include <QVector>
 
+namespace NNTP
+{
+class Article;
+} // namespace NNTP
+
 class ArticleBuilder;
 class NntpConnection;
-class NntpArticle;
 class PostingJob;
 
 #include "utils/NgLogger.h"
@@ -63,8 +67,8 @@ private:
     ArticleBuilder           *_articleBuilder;  //!< build NntpArticles. deleteLater when stopThreads()
     QVector<NntpConnection *> _nntpConnections; //!< post NntpArticles. deleteLater when stopThreads()
 
-    QQueue<NntpArticle *> _articles; //!< NntpArticle produced by _articleBuilder posted on _nntpConnections
-    QMutex                _secureArticles; //!< secure _articles as different producer and consumer threads
+    QQueue<NNTP::Article *> _articles; //!< NNTP::Article produced by _articleBuilder posted on _nntpConnections
+    QMutex                  _secureArticles; //!< secure _articles as different producer and consumer threads
 
     AtomicBool _hasBeenStopped; //!< know if the the posting has been stopped before normal end
 
@@ -74,10 +78,10 @@ public:
 
     void addConnection(NntpConnection *connection);
 
-    NntpArticle *getNextArticle(QString const &conPrefix);
+    NNTP::Article *getNextArticle(QString const &conPrefix);
 
 #ifdef __RELEASE_ARTICLES_WHEN_CON_FAILS__
-    void releaseArticle(QString const &conPrefix, NntpArticle *article);
+    void releaseArticle(QString const &conPrefix, NNTP::Article *article);
     uint nbActiveConnections() const;
 #endif
 
@@ -96,7 +100,7 @@ public:
     bool isPosting() const;
 
 private:
-    NntpArticle *_prepareNextArticle(QString const &threadName, bool fillQueue = true);
+    NNTP::Article *_prepareNextArticle(QString const &threadName, bool fillQueue = true);
 
     void _log(QString const       &aMsg,
               NgLogger::DebugLevel debugLvl,

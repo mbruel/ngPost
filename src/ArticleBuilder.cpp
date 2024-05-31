@@ -51,10 +51,10 @@ ArticleBuilder::~ArticleBuilder()
     delete[] _buffer;
 }
 
-NntpArticle *ArticleBuilder::getNextArticle(QString const &threadName)
+NNTP::Article *ArticleBuilder::getNextArticle(QString const &threadName)
 {
     _job->_secureDiskAccess.lock();
-    NntpArticle *article = _job->_readNextArticleIntoBufferPtr(threadName, &_buffer);
+    NNTP::Article *article = _job->_readNextArticleIntoBufferPtr(threadName, &_buffer);
     _job->_secureDiskAccess.unlock();
     if (article)
     {
@@ -70,7 +70,7 @@ void ArticleBuilder::onPrepareNextArticle()
 {
     _poster->lockQueue(); // thread safety (coming from _builderThread)
 
-    NntpArticle *article = getNextArticle(_poster->_builderThread.objectName());
+    NNTP::Article *article = getNextArticle(_poster->_builderThread.objectName());
     if (article)
         _poster->_articles.enqueue(article);
 

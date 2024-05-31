@@ -22,7 +22,10 @@
 #include <QObject>
 class Poster;
 class PostingJob;
-class NntpArticle;
+namespace NNTP
+{
+class Article;
+} // namespace NNTP
 
 /*!
  * \brief The ArticleBuilder is a worker that will be moved to the Poster::_builderThread
@@ -52,7 +55,7 @@ public:
     ArticleBuilder(Poster *poster, QObject *parent = nullptr);
     ~ArticleBuilder();
 
-    NntpArticle *getNextArticle(QString const &threadName);
+    NNTP::Article *getNextArticle(QString const &threadName);
 };
 
 #endif // ARTICLEBUILDER_H

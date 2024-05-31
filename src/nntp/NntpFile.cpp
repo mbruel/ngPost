@@ -29,12 +29,15 @@
 #include "utils/Macros.h" // MB_FLUSH
 #include "utils/NgTools.h"
 
-NntpFile::NntpFile(PostingJob           *postingJob,
-                   QFileInfo const      &file,
-                   uint                  num,
-                   uint                  nbFiles,
-                   int                   padding,
-                   QList<QString> const &grpList)
+namespace NNTP
+{
+
+File::File(PostingJob           *postingJob,
+           QFileInfo const      &file,
+           uint                  num,
+           uint                  nbFiles,
+           int                   padding,
+           QList<QString> const &grpList)
     : QObject()
     , _postingJob(postingJob)
     , _file(file)
@@ -49,32 +52,32 @@ NntpFile::NntpFile(PostingJob           *postingJob,
     , _failed()
 {
 #if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
-    qDebug() << "Creation NntpFile: " << file.absoluteFilePath() << " size: " << file.size()
+    qDebug() << "Creation NNTP::File: " << file.absoluteFilePath() << " size: " << file.size()
              << " article size: " << NgConf::kArticleSize << " => nbArticles: " << _nbAticles;
 #endif
     _articles.reserve(static_cast<int>(_nbAticles));
-    connect(this, &NntpFile::scheduleDeletion, this, &QObject::deleteLater, Qt::QueuedConnection);
+    connect(this, &File::scheduleDeletion, this, &QObject::deleteLater, Qt::QueuedConnection);
 }
 
-NntpFile::~NntpFile()
+File::~File()
 {
 #if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
-    qDebug() << "Destruction NntpFile #" << _num << " : " << _file.fileName() << " (" << _nbAticles
+    qDebug() << "Destruction NNTP::File #" << _num << " : " << _file.fileName() << " (" << _nbAticles
              << " articles)";
 #endif
     qDeleteAll(_articles);
 }
 
-void NntpFile::onArticlePosted(quint64 size)
+void File::onArticlePosted(quint64 size)
 {
     _postingJob->articlePosted(size);
-    NntpArticle *article = static_cast<NntpArticle *>(sender());
+    NNTP::Article *article = static_cast<NNTP::Article *>(sender());
     uint         part    = article->_part;
 #ifdef __DEBUG__
     if (_posted.contains(part) || _failed.contains(part))
-        qCritical() << "[NntpFile::onArticlePosted] DUPLICATE article #" << part << " for file: " << name();
+        qCritical() << "[NNTP::File::onArticlePosted] DUPLICATE article #" << part << " for file: " << name();
 
-    qDebug() << "[NntpFile::onArticlePosted] " << name() << ": posted: " << _posted.size() << " / " << _nbAticles
+    qDebug() << "[NNTP::File::onArticlePosted] " << name() << ": posted: " << _posted.size() << " / " << _nbAticles
              << " (nb FAILED: " << _failed.size() << ")"
              << " article part " << part << ", id: " << article->id();
 #endif
@@ -85,16 +88,16 @@ void NntpFile::onArticlePosted(quint64 size)
         emit allArticlesArePosted();
 }
 
-void NntpFile::onArticleFailed(quint64 size)
+void File::onArticleFailed(quint64 size)
 {
     _postingJob->articleFailed(size);
-    NntpArticle *article = static_cast<NntpArticle *>(sender());
+    NNTP::Article *article = static_cast<NNTP::Article *>(sender());
     uint         part    = article->_part;
 #ifdef __DEBUG__
     if (_posted.contains(part) || _failed.contains(part))
-        qCritical() << "[NntpFile::onArticleFailed] DUPLICATE article #" << part << " for file: " << name();
+        qCritical() << "[NNTP::File::onArticleFailed] DUPLICATE article #" << part << " for file: " << name();
 
-    qDebug() << "[NntpFile::onArticleFailed] " << name() << ": posted: " << _posted.size() << " / " << _nbAticles
+    qDebug() << "[NNTP::File::onArticleFailed] " << name() << ": posted: " << _posted.size() << " / " << _nbAticles
              << " (nb FAILED: " << _failed.size() << ")"
              << " article part " << part << ", id: " << article->id();
 #endif
@@ -107,7 +110,7 @@ void NntpFile::onArticleFailed(quint64 size)
 
 #include <QDateTime>
 #include <string>
-void NntpFile::writeToNZB(QTextStream &stream, QString const &from)
+void File::writeToNZB(QTextStream &stream, QString const &from)
 {
     //    <file poster="NewsUP &lt;NewsUP@somewhere.cbr&gt;" date="1565026184" subject="[1/846] -
     //    &quot;1w7NbOvYC2E8D5oYeXROyp4FZAaxEOmK&quot; ">
@@ -151,7 +154,7 @@ void NntpFile::writeToNZB(QTextStream &stream, QString const &from)
         stream << tab << tab << "</groups>\n";
 
         stream << tab << tab << "<segments>\n";
-        for (NntpArticle *article : _articles)
+        for (NNTP::Article *article : _articles)
         {
             stream << tab << tab << tab << "<segment"
                    << " bytes=\"" << article->_fileBytes << "\""
@@ -163,7 +166,7 @@ void NntpFile::writeToNZB(QTextStream &stream, QString const &from)
     }
 }
 
-QString NntpFile::missingArticles() const
+QString File::missingArticles() const
 {
     QSet<uint> allArticles;
     allArticles.reserve(static_cast<int>(_nbAticles));
@@ -183,3 +186,5 @@ QString NntpFile::missingArticles() const
         return str;
     }
 }
+
+} // namespace NNTP

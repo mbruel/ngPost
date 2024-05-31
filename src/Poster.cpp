@@ -64,7 +64,7 @@ Poster::~Poster()
 
     // we down own anything:
     //   - _nntpConnections will be deleteLater when _connectionsThread.quit()
-    //   - _articles are owned by their NntpFile
+    //   - _articles are owned by their NNTP::File
 }
 
 void Poster::addConnection(NntpConnection *connection)
@@ -90,7 +90,7 @@ void Poster::addConnection(NntpConnection *connection)
 #endif
 }
 
-NntpArticle *Poster::getNextArticle(QString const &conPrefix)
+NNTP::Article *Poster::getNextArticle(QString const &conPrefix)
 {
 
     QMutexLocker lock(&_secureArticles); // thread safety (coming from a posting thread)
@@ -101,7 +101,7 @@ NntpArticle *Poster::getNextArticle(QString const &conPrefix)
     _log(QString("[%1] getNextArticle _articles.size() = %2").arg(conPrefix).arg(_articles.size()),
          NgLogger::DebugLevel::FullDebug);
 
-    NntpArticle *article = nullptr;
+    NNTP::Article *article = nullptr;
     if (_articles.size())
         article = _articles.dequeue();
     else
@@ -134,7 +134,7 @@ uint Poster::nbActiveConnections() const
     return nbActives;
 }
 
-void Poster::releaseArticle(QString const &conPrefix, NntpArticle *article)
+void Poster::releaseArticle(QString const &conPrefix, NNTP::Article *article)
 {
     QMutexLocker lock(&_secureArticles); // thread safety (coming from a posting thread)
     _log(QString("[%1] try to release Article: %2").arg(conPrefix).arg(article->str()),
@@ -185,9 +185,9 @@ bool Poster::prepareArticlesInAdvance()
     return canProduceAll;
 }
 
-NntpArticle *Poster::_prepareNextArticle(QString const &threadName, bool fillQueue)
+NNTP::Article *Poster::_prepareNextArticle(QString const &threadName, bool fillQueue)
 {
-    NntpArticle *article = _articleBuilder->getNextArticle(threadName);
+    NNTP::Article *article = _articleBuilder->getNextArticle(threadName);
     if (article && fillQueue)
         _articles.enqueue(article);
     return article;

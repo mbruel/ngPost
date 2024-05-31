@@ -823,7 +823,7 @@ void PostingJob::onDisconnectedConnection(NntpConnection *con)
 
 void PostingJob::onNntpFileStartPosting()
 {
-    NntpFile *nntpFile = static_cast<NntpFile *>(sender());
+    NNTP::File *nntpFile = static_cast<NNTP::File *>(sender());
     if (!_ngPost.useHMI())
         _log(QString("[%1][%2: %3] >>>>> %4")
                      .arg(timestamp())
@@ -835,7 +835,7 @@ void PostingJob::onNntpFileStartPosting()
 
 void PostingJob::onNntpFilePosted()
 {
-    NntpFile *nntpFile = static_cast<NntpFile *>(sender());
+    NNTP::File *nntpFile = static_cast<NNTP::File *>(sender());
     _totalSize += static_cast<quint64>(nntpFile->fileSize());
     ++_nbPosted;
     if (_postWidget)
@@ -869,7 +869,7 @@ void PostingJob::onNntpFilePosted()
 
 void PostingJob::onNntpErrorReading()
 {
-    NntpFile *nntpFile = static_cast<NntpFile *>(sender());
+    NNTP::File *nntpFile = static_cast<NNTP::File *>(sender());
     ++_nbPosted;
     if (_postWidget)
         emit filePosted(nntpFile->path(), nntpFile->nbArticles(), nntpFile->nbArticles());
@@ -960,7 +960,7 @@ void PostingJob::_delOriginalFiles()
     }
 }
 
-NntpArticle *PostingJob::_readNextArticleIntoBufferPtr(QString const &threadName, char **bufferPtr)
+NNTP::Article *PostingJob::_readNextArticleIntoBufferPtr(QString const &threadName, char **bufferPtr)
 {
     // qDebug() << "[PostingJob::readNextArticleIntoBufferPtr] " << threadName;
     if (!_nntpFile)
@@ -1013,13 +1013,13 @@ NntpArticle *PostingJob::_readNextArticleIntoBufferPtr(QString const &threadName
                          .arg(_file->pos()),
                  NgLogger::DebugLevel::FullDebug);
             ++_part;
-            NntpArticle *article =
-                    new NntpArticle(_nntpFile,
-                                    _part,
-                                    pos,
-                                    bytesRead,
-                                    _params->obfuscateArticles() ? nullptr : _params->fromStdPtr(),
-                                    _params->obfuscateArticles());
+            NNTP::Article *article =
+                    new NNTP::Article(_nntpFile,
+                                      _part,
+                                      pos,
+                                      bytesRead,
+                                      _params->obfuscateArticles() ? nullptr : _params->fromStdPtr(),
+                                      _params->obfuscateArticles());
             return article;
         }
         else
@@ -1063,21 +1063,21 @@ void PostingJob::_initPosting()
     uint fileNum = 0;
     for (QFileInfo const &file : _files)
     {
-        NntpFile *nntpFile =
-                new NntpFile(this, file, ++fileNum, _nbFiles, numPadding, _params->groupsAccordingToPolicy());
+        NNTP::File *nntpFile =
+                new NNTP::File(this, file, ++fileNum, _nbFiles, numPadding, _params->groupsAccordingToPolicy());
         connect(nntpFile,
-                &NntpFile::allArticlesArePosted,
+                &NNTP::File::allArticlesArePosted,
                 this,
                 &PostingJob::onNntpFilePosted,
                 Qt::QueuedConnection);
         connect(nntpFile,
-                &NntpFile::errorReadingFile,
+                &NNTP::File::errorReadingFile,
                 this,
                 &PostingJob::onNntpErrorReading,
                 Qt::QueuedConnection);
         if (_params->dispFilesPosting()) //&& NgLogger::isDebugMode())
             connect(nntpFile,
-                    &NntpFile::startPosting,
+                    &NNTP::File::startPosting,
                     this,
                     &PostingJob::onNntpFileStartPosting,
                     Qt::QueuedConnection);
@@ -1143,21 +1143,21 @@ void PostingJob::_finishPosting()
         NgLogger::error(
                 tr("ERROR: there were %1 on %2 that havn't been posted:").arg(nbPendingFiles).arg(_nbFiles));
         bool isDebugMode = NgLogger::isDebugMode();
-        for (NntpFile *file : _filesInProgress)
+        for (NNTP::File *file : _filesInProgress)
         {
             QString msg = QString("  - %1").arg(file->stats());
             if (isDebugMode)
                 msg += QString(" (fInProgress%1)").arg(file->missingArticles());
             NgLogger::error(msg);
         }
-        for (NntpFile *file : _filesToUpload)
+        for (NNTP::File *file : _filesToUpload)
         {
             QString msg = QString("  - %1").arg(file->stats());
             if (isDebugMode)
                 msg += QString(" (fToUpload%1)").arg(file->missingArticles());
             NgLogger::error(msg);
         }
-        for (NntpFile *file : _filesFailed)
+        for (NNTP::File *file : _filesFailed)
         {
             QString msg = QString("  - %1").arg(file->stats());
             if (isDebugMode)
@@ -1209,7 +1209,7 @@ void PostingJob::_printStats() const
         msgEnd += tr("%1 / %2 articles FAILED to be uploaded (even with %3 retries)...\n")
                           .arg(_nbArticlesFailed)
                           .arg(_nbArticlesTotal)
-                          .arg(NntpArticle::nbMaxTrySending());
+                          .arg(NNTP::Article::nbMaxTrySending());
 
     if (_nzb)
     {

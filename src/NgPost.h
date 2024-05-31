@@ -34,14 +34,15 @@
 #include <QTime>
 #include <QVector>
 
-class QTranslator;
-class NntpConnection;
 namespace NNTP
 {
+class Article;
+class File;
 struct ServerParams;
-}
-class NntpFile;
-class NntpArticle;
+} // namespace NNTP
+
+class QTranslator;
+class NntpConnection;
 class QCoreApplication;
 class MainWindow;
 class PostingJob;
@@ -61,12 +62,12 @@ class Database;
  * nzb
  *
  * 1.: it parses the command line and /or the config file
- * 2.: it creates an NntpFile for each files to post
+ * 2.: it creates an NNTP::File for each files to post
  * 3.: it creates the upload Threads (at least one)
  * 4.: it creates the NntpConnections and spreads them amongst the upload Threads
  * 5.: it prepares 2 Articles for each NntpConnections (yEnc encoding done)
  * 6.: it updates the progressbar bar when Articles are posted
- * 7.: it writes NntpFile to the nzb file when they are fully posted
+ * 7.: it writes NNTP::File to the nzb file when they are fully posted
  * 8.: it handles properly the shutdown
  *
  */

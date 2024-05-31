@@ -20,9 +20,9 @@
 #include "NntpConnection.h"
 #include "NgConf.h"
 #include "NgPost.h"
-#include "nntp/rfc.h"
 #include "nntp/NntpArticle.h"
 #include "nntp/NntpFile.h"
+#include "nntp/rfc.h"
 #include "nntp/ServerParams.h"
 #include "Poster.h"
 
@@ -238,7 +238,7 @@ void NntpConnection::onDisconnected()
         deleteSocket();
     }
     if (_poster->isPosting() && _postingState != PostingState::NO_MORE_FILES
-        && _nbDisconnected++ < NntpArticle::nbMaxTrySending())
+        && _nbDisconnected++ < NNTP::Article::nbMaxTrySending())
     {
         // Let's try to reconnect
         _error(tr("Connection lost, trying to reconnect! (nb disconnected: %1)").arg(_nbDisconnected));
@@ -354,7 +354,7 @@ void NntpConnection::onReadyRead()
             }
             else
             {
-                //                if (++_nbErrors < NntpArticle::nbMaxTrySending())
+                //                if (++_nbErrors < NNTP::Article::nbMaxTrySending())
                 //                {
                 //                    _socket->write(NNTP::Rfc::POST);
                 //                    if (NgLogger::isDebugMode())

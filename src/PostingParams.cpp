@@ -652,7 +652,7 @@ bool MainParams::saveConfig(QString const &configFilePath, NgPost const &ngPost)
            << tr("## number of retry to post an Article in case of failure (probably due to an already existing "
                  "msg-id)")
            << "\n"
-           << "retry = " << NntpArticle::nbMaxTrySending() << "\n"
+           << "retry = " << NNTP::Article::nbMaxTrySending() << "\n"
            << "\n"
            << "\n"
            << tr("## uncomment the following line to obfuscate the subjects of each Article") << "\n"

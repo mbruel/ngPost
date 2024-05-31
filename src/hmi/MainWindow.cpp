@@ -455,7 +455,7 @@ void MainWindow::_initPostingBox()
     _ui->articleSizeEdit->setValidator(new QIntValidator(100000, 10000000, _ui->articleSizeEdit));
 
     _ui->nbRetrySB->setRange(0, 15);
-    _ui->nbRetrySB->setValue(NntpArticle::nbMaxTrySending());
+    _ui->nbRetrySB->setValue(NNTP::Article::nbMaxTrySending());
 
     _ui->threadSB->setRange(0, 50);
     _ui->threadSB->setValue(_ngPost->_nbThreads);
@@ -535,7 +535,7 @@ void MainWindow::updateParams()
     if (ok)
         NgPost::sArticleSize = articleSize;
 
-    NntpArticle::setNbMaxRetry(static_cast<ushort>(_ui->nbRetrySB->value()));
+    NNTP::Article::setNbMaxRetry(static_cast<ushort>(_ui->nbRetrySB->value()));
 
     _ngPost->_nbThreads = _ui->threadSB->value();
     if (_ngPost->_nbThreads < 1)

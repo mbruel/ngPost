@@ -23,16 +23,19 @@
 #include <QObject>
 #include <QSet>
 #include <QVector>
-class NntpArticle;
 class QTextStream;
 class PostingJob;
 
+namespace NNTP
+{
+class Article;
+
 /*!
- * \brief The NntpFile class represent a File uploaded on Usenet thus it will holds all its Articles
+ * \brief The NNTP::File class represent a File uploaded on Usenet thus it will holds all its Articles
  * All NntpFiles will live (active objects) in the Main Thread so they can write into the nzb without concurrency
  * when all its articles are posted (slot onArticlePosted) it emits allArticlesArePosted
  */
-class NntpFile : public QObject
+class File : public QObject
 {
     Q_OBJECT
 signals:
@@ -50,21 +53,21 @@ private:
     QList<QString> const   _grpList; //!< groups where the file is posted
     const std::string      _groups;
     const uint             _nbAticles; //!< total number of articles
-    QVector<NntpArticle *> _articles;  //!< all articles (that are yEnc encoded)
+    QVector<NNTP::Article *> _articles;  //!< all articles (that are yEnc encoded)
 
     QSet<uint> _posted; //!< part number of the Articles that have been posted (uploaded on the socket)
     QSet<uint> _failed; //!< part number of the Articles that FAILED to be posted (uploaded on the socket)
 
 public:
-    NntpFile(PostingJob           *postingJob,
-             QFileInfo const      &file,
-             uint                  num,
-             uint                  nbFiles,
-             int                   padding,
-             QList<QString> const &grpList);
-    ~NntpFile();
+    File(PostingJob           *postingJob,
+         QFileInfo const      &file,
+         uint                  num,
+         uint                  nbFiles,
+         int                   padding,
+         QList<QString> const &grpList);
+    ~File();
 
-    inline void addArticle(NntpArticle *article);
+    inline void addArticle(NNTP::Article *article);
 
     void writeToNZB(QTextStream &stream, QString const &from);
 
@@ -86,27 +89,28 @@ public slots:
     void onArticleFailed(quint64 size);
 };
 
-void NntpFile::addArticle(NntpArticle *article) { _articles.push_back(article); }
+void File::addArticle(NNTP::Article *article) { _articles.push_back(article); }
 
-QString NntpFile::stats() const
+QString File::stats() const
 {
     return QString("[%1 ok / %2] %3").arg(_posted.size()).arg(_nbAticles).arg(_file.absoluteFilePath());
 }
-QString NntpFile::path() const { return _file.absoluteFilePath(); }
-QString NntpFile::name() const
+QString File::path() const { return _file.absoluteFilePath(); }
+QString File::name() const
 {
     return QString("[%1/%2] %3").arg(_num, _padding, 10, QChar('0')).arg(_nbFiles).arg(_file.fileName());
 }
-QString NntpFile::nameWithQuotes() const
+QString File::nameWithQuotes() const
 {
     return QString("[%1/%2] \"%3\"").arg(_num, _padding, 10, QChar('0')).arg(_nbFiles).arg(_file.fileName());
 }
 
-std::string        NntpFile::fileName() const { return _file.fileName().toStdString(); }
-qint64             NntpFile::fileSize() const { return _file.size(); }
-uint               NntpFile::nbArticles() const { return _nbAticles; }
-uint               NntpFile::nbFailedArticles() const { return static_cast<uint>(_failed.size()); }
-bool               NntpFile::hasFailedArticles() const { return _failed.size() != 0; }
-std::string const &NntpFile::groups() const { return _groups; }
+std::string        File::fileName() const { return _file.fileName().toStdString(); }
+qint64             File::fileSize() const { return _file.size(); }
+uint               File::nbArticles() const { return _nbAticles; }
+uint               File::nbFailedArticles() const { return static_cast<uint>(_failed.size()); }
+bool               File::hasFailedArticles() const { return _failed.size() != 0; }
+std::string const &File::groups() const { return _groups; }
 
+} // namespace NNTP
 #endif // NntpFile_H

@@ -30,19 +30,22 @@
 #include <QVector>
 class QProcess;
 
+#include "PostingParams.h"
 #include "utils/Macros.h"
 #include "utils/NgLogger.h"
+
+namespace NNTP
+{
+class Article;
+class File;
+} // namespace NNTP
+
 class NgPost;
 class NntpConnection;
-class NntpFile;
-class NntpArticle;
 class PostingWidget;
 class Poster;
-#include "PostingParams.h"
 
 using AtomicBool = QAtomicInteger<unsigned short>; // 16 bit only (faster than using 8 bit variable...)
-
-#include "PostingParams.h"
 
 /*!
  * \brief PostingJob is an active object that will do a posting job
@@ -103,18 +106,18 @@ private:
     QVector<NntpConnection *> _closedConnections; //!< the NNTP connections (owning the TCP sockets)
 
     //    QString            _nzbName;         //!< name of nzb that we'll write (without the extension)
-    QQueue<NntpFile *> _filesToUpload;   //!< list of files to upload (that we didn't start)
-    QSet<NntpFile *>   _filesInProgress; //!< files in queue to be uploaded (Articles have been produced)
-    QSet<NntpFile *>   _filesFailed;     //!< files that couldn't be read
-    uint               _nbFiles;         //!< number of files to post in this iteration
-    uint               _nbPosted;        //!< number of files posted
+    QQueue<NNTP::File *> _filesToUpload;   //!< list of files to upload (that we didn't start)
+    QSet<NNTP::File *>   _filesInProgress; //!< files in queue to be uploaded (Articles have been produced)
+    QSet<NNTP::File *>   _filesFailed;     //!< files that couldn't be read
+    uint                 _nbFiles;         //!< number of files to post in this iteration
+    uint                 _nbPosted;        //!< number of files posted
 
     QFile      *_nzb;       //!< nzb file that will be filled on the fly when a file is fully posted
     QTextStream _nzbStream; //!< txt stream for the nzb file
 
-    NntpFile *_nntpFile; //!< current file that is getting processed
-    QFile    *_file;     //!< file handler on the file getting processed
-    uint      _part;     //!< part number (Article) on the current file
+    NNTP::File *_nntpFile; //!< current file that is getting processed
+    QFile      *_file;     //!< file handler on the file getting processed
+    uint        _part;     //!< part number (Article) on the current file
 
     QElapsedTimer _timeStart;     //!< to get some stats (upload time and avg speed)
     quint64       _totalSize;     //!< total size (in Bytes) to be uploaded
@@ -302,11 +305,11 @@ private:
     int  _createNntpConnections();
     void _preparePostersArticles();
 
-    NntpArticle *_readNextArticleIntoBufferPtr(QString const &threadName, char **bufferPtr);
+    NNTP::Article *_readNextArticleIntoBufferPtr(QString const &threadName, char **bufferPtr);
 
     void _delOriginalFiles();
 
-    inline NntpFile *_getNextFile();
+    inline NNTP::File *_getNextFile();
 
     void _closeNzb();
     void _printStats() const;
@@ -355,11 +358,11 @@ QString PostingJob::avgSpeed() const
     return QString("%1 %2B/s").arg(bandwidth, 6, 'f', 2).arg(power);
 }
 
-NntpFile *PostingJob::_getNextFile()
+NNTP::File *PostingJob::_getNextFile()
 {
     if (_filesToUpload.size())
     {
-        NntpFile *file = _filesToUpload.dequeue();
+        NNTP::File *file = _filesToUpload.dequeue();
         _filesInProgress.insert(file);
         return file;
     }

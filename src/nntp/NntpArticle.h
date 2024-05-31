@@ -22,26 +22,29 @@
 #include <QObject>
 #include <QtGlobal>
 #include <QUuid>
-class NntpFile;
 class NntpConnection;
 
+namespace NNTP
+{
+class File;
+
 /*!
- * \brief The NntpArticle is an Active Object so it can emit the posted signal when it has been uploaded
+ * \brief The NNTP::Article is an Active Object so it can emit the posted signal when it has been uploaded
  * the NntpConnection will emit this signal from an upload thread
- * it will be received on the main thread by the NntpFile
+ * it will be received on the main thread by the File
  */
-class NntpArticle : public QObject
+class Article : public QObject
 {
     Q_OBJECT
 
-    friend class NntpFile; //!< to access all members
+    friend class File; //!< to access all members
 
 signals:
     void posted(quint64 size); //!< to warn the main thread (async upload)
     void failed(quint64 size); //!< to warn the main thread (async upload)
 
 private:
-    NntpFile  *_nntpFile; //!< original file
+    File      *_nntpFile; //!< original file
     const uint _part;     //!< part of the original file
     QUuid      _id;       //!< to generate a unique Message-ID for the Header
 
@@ -62,14 +65,14 @@ private:
     static ushort sNbMaxTrySending;
 
 public:
-    NntpArticle(NntpFile *file, uint part, qint64 pos, qint64 bytes, std::string const *from, bool obfuscation);
+    Article(File *file, uint part, qint64 pos, qint64 bytes, std::string const *from, bool obfuscation);
 
     void yEncBody(char const data[]);
 
-    //    NntpArticle(const std::string &from, const std::string &groups, const std::string &subject,
+    //    Article(const std::string &from, const std::string &groups, const std::string &subject,
     //                const std::string &body);
 
-    ~NntpArticle();
+    ~Article();
 
     QString str() const;
 
@@ -87,7 +90,7 @@ public:
     inline std::string body() const;
     inline QString     id() const;
     inline uint        part() const;
-    inline NntpFile   *nntpFile() const;
+    inline File       *nntpFile() const;
 
     inline bool isFirstArticle() const;
 
@@ -102,10 +105,10 @@ public:
 };
 
 #ifdef __RELEASE_ARTICLES_WHEN_CON_FAILS__
-void NntpArticle::resetNbTrySending() { _nbTrySending = 0; }
+void Article::resetNbTrySending() { _nbTrySending = 0; }
 #endif
 
-void NntpArticle::freeMemory()
+void Article::freeMemory()
 {
     if (_subject)
     {
@@ -119,20 +122,21 @@ void NntpArticle::freeMemory()
     }
 }
 
-std::string NntpArticle::body() const { return _body; }
+std::string Article::body() const { return _body; }
 
-QString   NntpArticle::id() const { return _msgId; }
-uint      NntpArticle::part() const { return _part; }
-NntpFile *NntpArticle::nntpFile() const { return _nntpFile; }
+QString Article::id() const { return _msgId; }
+uint    Article::part() const { return _part; }
+File   *Article::nntpFile() const { return _nntpFile; }
 
-bool NntpArticle::isFirstArticle() const { return _part == 1; }
+bool Article::isFirstArticle() const { return _part == 1; }
 
-quint64 NntpArticle::size() const { return static_cast<quint64>(_fileBytes); }
-void    NntpArticle::genNewId() { _id = QUuid::createUuid(); }
+quint64 Article::size() const { return static_cast<quint64>(_fileBytes); }
+void    Article::genNewId() { _id = QUuid::createUuid(); }
 
-void NntpArticle::overwriteMsgId(QString const &serverMsgID) { _msgId = serverMsgID; }
+void Article::overwriteMsgId(QString const &serverMsgID) { _msgId = serverMsgID; }
 
-ushort NntpArticle::nbMaxTrySending() { return sNbMaxTrySending; }
-void   NntpArticle::setNbMaxRetry(ushort nbMax) { sNbMaxTrySending = nbMax; }
+ushort Article::nbMaxTrySending() { return sNbMaxTrySending; }
+void   Article::setNbMaxRetry(ushort nbMax) { sNbMaxTrySending = nbMax; }
 
+} // namespace NNTP
 #endif // NntpArticle_H

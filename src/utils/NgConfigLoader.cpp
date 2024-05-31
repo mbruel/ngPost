@@ -25,7 +25,7 @@
 #include "NgConf.h"
 #include "NgPost.h"
 #include "NgTools.h"
-#include "nntp/NntpArticle.h" // for NntpArticle::setNbMaxRetry
+#include "nntp/NntpArticle.h" // for NNTP::Article::setNbMaxRetry
 #include "nntp/ServerParams.h"
 
 using namespace NgConf;
@@ -244,7 +244,7 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
                 {
                     ushort nb = val.toUShort(&ok);
                     if (ok)
-                        NntpArticle::setNbMaxRetry(nb);
+                        NNTP::Article::setNbMaxRetry(nb);
                 }
                 else if (opt == kOptionNames[Opt::FROM])
                 {

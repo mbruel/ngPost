@@ -24,7 +24,7 @@
 #include <QFileInfoList>
 class NgPost;
 struct NntpServerParams;
-class NntpFile;
+class NNTP::File;
 class PostingWidget;
 class AutoPostWidget;
 

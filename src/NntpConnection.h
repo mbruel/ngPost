@@ -25,9 +25,9 @@
 #include "utils/NgLogger.h"
 namespace NNTP
 {
+class Article;
 struct ServerParams;
-}
-class NntpArticle;
+} // namespace NNTP
 class NgPost;
 class Poster;
 
@@ -77,9 +77,9 @@ private:
 
     QString _logPrefix; //!< log prefix: NntpConnection[<iSocketDescriptor>]
 
-    PostingState _postingState;
-    NntpArticle *_currentArticle;
-    ushort       _nbDisconnected;
+    PostingState   _postingState;
+    NNTP::Article *_currentArticle;
+    ushort         _nbDisconnected;
 
     NgPost const &_ngPost; //!< MB_TODO try to avoid it and just use NgLogger directly
     Poster       *_poster; //!< as to pointer cause created with nullptr

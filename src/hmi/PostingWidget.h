@@ -22,7 +22,7 @@
 
 #include <QWidget>
 class NgPost;
-class NntpFile;
+class NNTP::File;
 class MainWindow;
 class PostingJob;
 #include <QFileInfoList>
