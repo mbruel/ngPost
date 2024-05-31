@@ -31,7 +31,7 @@
 #include "NgPost.h"
 #include "nntp/NntpArticle.h"
 #include "nntp/NntpFile.h"
-#include "nntp/NntpServerParams.h"
+#include "nntp/ServerParams.h"
 #include "NntpConnection.h"
 #include "Poster.h"
 #include "utils/Macros.h" // MB_FLUSH

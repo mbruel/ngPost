@@ -94,7 +94,6 @@ SOURCES += \
         NzbCheck.cpp \
         Poster.cpp \
         PostingJob.cpp \
-        nntp/Nntp.cpp \
         nntp/NntpArticle.cpp \
         nntp/NntpFile.cpp \
         utils/CmdOrGuiApp.cpp \
@@ -112,6 +111,8 @@ HEADERS += \
     $$PWD/NgError.h \
     $$PWD/PostingParams.h \
     $$PWD/ResumeJobQueue.h \
+    $$PWD/nntp/ServerParams.h \
+    $$PWD/nntp/rfc.h \
     $$PWD/utils/Database.h \
     $$PWD/utils/NgCmdLineLoader.h \
     $$PWD/utils/NgConfigLoader.h \
@@ -128,10 +129,8 @@ HEADERS += \
     NzbCheck.h \
     Poster.h \
     PostingJob.h \
-    nntp/Nntp.h \
     nntp/NntpArticle.h \
     nntp/NntpFile.h \
-    nntp/NntpServerParams.h \
     utils/CmdOrGuiApp.h \
     utils/Macros.h \
     utils/NgMigration.h \

@@ -10,7 +10,7 @@
 
 #include "NgPost.h" // for MainParams::saveConfig
 #include "nntp/NntpArticle.h"
-#include "nntp/NntpServerParams.h"
+#include "nntp/ServerParams.h"
 #include "utils/NgTools.h"
 
 using namespace NgConf;

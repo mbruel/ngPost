@@ -22,7 +22,7 @@
 #include "CircularImageButton.h"
 #include "NgPost.h"
 #include "nntp/NntpArticle.h"
-#include "nntp/NntpServerParams.h"
+#include "nntp/ServerParams.h"
 #include "PostingWidget.h"
 #include "ui_MainWindow.h"
 

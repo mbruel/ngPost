@@ -20,7 +20,7 @@
 #include "NntpCheckCon.h"
 #include <QSslSocket>
 
-#include "nntp/Nntp.h"
+#include "nntp/rfc.h"
 #include "NzbCheck.h"
 #include "utils/NgLogger.h"
 
@@ -137,7 +137,7 @@ void NntpCheckCon::onReadyRead()
         QByteArray line = _socket->readLine();
         if (_postingState == PostingState::CHECKING_ARTICLE)
         {
-            if (strncmp(line.constData(), Nntp::getResponse(430), 3) == 0)
+            if (strncmp(line.constData(), NNTP::Rfc::getResponse(430), 3) == 0)
                 _nzbCheck->missingArticle(_currentArticle);
 
             _nzbCheck->articleChecked();
@@ -147,7 +147,7 @@ void NntpCheckCon::onReadyRead()
         else if (_postingState == PostingState::CONNECTED)
         {
             // Check welcome message
-            if (strncmp(line.constData(), Nntp::getResponse(200), 3) != 0)
+            if (strncmp(line.constData(), NNTP::Rfc::getResponse(200), 3) != 0)
             {
                 emit errorConnecting(tr("[Connection #%1] Error connecting to server %2:%3")
                                              .arg(_id)
@@ -167,9 +167,9 @@ void NntpCheckCon::onReadyRead()
                 {
                     _postingState = PostingState::AUTH_USER;
 
-                    std::string cmd(Nntp::AUTHINFO_USER);
+                    std::string cmd(NNTP::Rfc::AUTHINFO_USER);
                     cmd += _srvParams.user;
-                    cmd += Nntp::ENDLINE;
+                    cmd += NNTP::Rfc::ENDLINE;
                     _socket->write(cmd.c_str());
                 }
             }
@@ -177,7 +177,7 @@ void NntpCheckCon::onReadyRead()
         else if (_postingState == PostingState::AUTH_USER)
         {
             // validate the reply
-            if (strncmp(line.constData(), Nntp::getResponse(381), 2) != 0)
+            if (strncmp(line.constData(), NNTP::Rfc::getResponse(381), 2) != 0)
             {
                 emit errorConnecting(tr("[Connection #%1] Error sending user '%4' to server %2:%3")
                                              .arg(_id)
@@ -191,15 +191,15 @@ void NntpCheckCon::onReadyRead()
                 // Continue authentication : send pass info
                 _postingState = PostingState::AUTH_PASS;
 
-                std::string cmd(Nntp::AUTHINFO_PASS);
+                std::string cmd(NNTP::Rfc::AUTHINFO_PASS);
                 cmd += _srvParams.pass;
-                cmd += Nntp::ENDLINE;
+                cmd += NNTP::Rfc::ENDLINE;
                 _socket->write(cmd.c_str());
             }
         }
         else if (_postingState == PostingState::AUTH_PASS)
         {
-            if (strncmp(line.constData(), Nntp::getResponse(281), 2) != 0)
+            if (strncmp(line.constData(), NNTP::Rfc::getResponse(281), 2) != 0)
             {
                 emit errorConnecting(
                         tr("[Connection #%1] Error authentication to server %2:%3 with user '%4' and pass '%5'")
@@ -261,7 +261,7 @@ void NntpCheckCon::_checkNextArticle()
                       true,
                       NgLogger::DebugLevel::FullDebug);
         _postingState = PostingState::CHECKING_ARTICLE;
-        _socket->write(QString("%1 %2\r\n").arg(Nntp::STAT).arg(_currentArticle).toLocal8Bit());
+        _socket->write(QString("%1 %2\r\n").arg(NNTP::Rfc::STAT).arg(_currentArticle).toLocal8Bit());
     }
     else
     {

@@ -19,7 +19,7 @@
 #ifndef NNTPCHECKCON_H
 #define NNTPCHECKCON_H
 
-#include "nntp/NntpServerParams.h"
+#include "nntp/ServerParams.h"
 class NzbCheck;
 
 #include <QObject>

@@ -10,7 +10,7 @@ using namespace NgConf;
 // #include "FoldersMonitorForNewFiles.h"
 #include "NgPost.h"
 #include "nntp/NntpArticle.h"
-#include "nntp/NntpServerParams.h"
+#include "nntp/ServerParams.h"
 #include "PostingParams.h"
 #include "utils/Macros.h"
 #include "utils/NgConfigLoader.h"

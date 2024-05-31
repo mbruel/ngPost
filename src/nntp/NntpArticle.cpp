@@ -18,7 +18,7 @@
 //========================================================================
 
 #include "NntpArticle.h"
-#include "nntp/Nntp.h"
+#include "nntp/rfc.h"
 #include "nntp/NntpFile.h"
 #include "NntpConnection.h"
 #include "utils/NgTools.h"
@@ -75,10 +75,10 @@ void NntpArticle::yEncBody(char const data[])
     // format the body
     std::stringstream ss;
     ss << "=ybegin part=" << _part << " total=" << _nntpFile->nbArticles() << " line=128"
-       << " size=" << _nntpFile->fileSize() << " name=" << _nntpFile->fileName() << Nntp::ENDLINE
-       << "=ypart begin=" << _filePos + 1 << " end=" << _filePos + _fileBytes << Nntp::ENDLINE << yencBody
-       << Nntp::ENDLINE << "=yend size=" << _fileBytes << " pcrc32=" << std::hex << crc32 << Nntp::ENDLINE << "."
-       << Nntp::ENDLINE;
+       << " size=" << _nntpFile->fileSize() << " name=" << _nntpFile->fileName() << NNTP::Rfc::ENDLINE
+       << "=ypart begin=" << _filePos + 1 << " end=" << _filePos + _fileBytes << NNTP::Rfc::ENDLINE << yencBody
+       << NNTP::Rfc::ENDLINE << "=yend size=" << _fileBytes << " pcrc32=" << std::hex << crc32 << NNTP::Rfc::ENDLINE << "."
+       << NNTP::Rfc::ENDLINE;
 
     delete[] yencBody;
 
@@ -101,9 +101,9 @@ void NntpArticle::yEncBody(char const data[])
 //     _nbTrySending(0)
 //{
 
-//    _body->operator+=(Nntp::ENDLINE);
+//    _body->operator+=(NNTP::Rfc::ENDLINE);
 //    _body->operator+=(".");
-//    _body->operator+=(Nntp::ENDLINE);
+//    _body->operator+=(NNTP::Rfc::ENDLINE);
 //}
 
 QString NntpArticle::str() const
@@ -149,10 +149,10 @@ std::string NntpArticle::header(std::string const &idSignature) const
     QByteArray msgId = _id.toByteArray();
 #endif
     std::stringstream ss;
-    ss << "From: " << (_from == nullptr ? NgTools::randomStdFrom() : *_from) << Nntp::ENDLINE
-       << "Newsgroups: " << _nntpFile->groups() << Nntp::ENDLINE
-       << "Subject: " << (_subject == nullptr ? msgId.constData() : _subject) << Nntp::ENDLINE << "Message-ID: <"
-       << msgId.constData() << "@" << idSignature << ">" << Nntp::ENDLINE << Nntp::ENDLINE;
+    ss << "From: " << (_from == nullptr ? NgTools::randomStdFrom() : *_from) << NNTP::Rfc::ENDLINE
+       << "Newsgroups: " << _nntpFile->groups() << NNTP::Rfc::ENDLINE
+       << "Subject: " << (_subject == nullptr ? msgId.constData() : _subject) << NNTP::Rfc::ENDLINE << "Message-ID: <"
+       << msgId.constData() << "@" << idSignature << ">" << NNTP::Rfc::ENDLINE << NNTP::Rfc::ENDLINE;
     _msgId = QString("%1@%2").arg(msgId.constData()).arg(idSignature.c_str());
     return ss.str();
 }

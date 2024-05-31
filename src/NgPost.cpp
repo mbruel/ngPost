@@ -40,7 +40,7 @@
 #include "FileUploader.h"
 #include "FoldersMonitorForNewFiles.h"
 #include "nntp/NntpArticle.h"
-#include "nntp/NntpServerParams.h"
+#include "nntp/ServerParams.h"
 #include "NzbCheck.h"
 #include "PostingJob.h"
 #include "utils/Database.h"

@@ -28,7 +28,7 @@
 #include <QXmlStreamReader>
 
 #include "NgConf.h"
-#include "nntp/NntpServerParams.h"
+#include "nntp/ServerParams.h"
 #include "NntpCheckCon.h"
 #include "utils/NgLogger.h"
 

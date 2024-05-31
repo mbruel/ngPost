@@ -26,7 +26,7 @@
 #include "NgPost.h"
 #include "NgTools.h"
 #include "nntp/NntpArticle.h" // for NntpArticle::setNbMaxRetry
-#include "nntp/NntpServerParams.h"
+#include "nntp/ServerParams.h"
 
 using namespace NgConf;
 

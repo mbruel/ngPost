@@ -1,6 +1,6 @@
 //========================================================================
 //
-// Copyright (C) 2020 Matthieu Bruel <Matthieu.Bruel@gmail.com>
+// Copyright (C) 2020-2024 Matthieu Bruel <Matthieu.Bruel@gmail.com>
 // This file is a part of ngPost : https://github.com/mbruel/ngPost
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,8 +16,8 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>
 //
 //========================================================================
-#ifndef NNTPSERVERPARAMS_H
-#define NNTPSERVERPARAMS_H
+#ifndef SERVERPARAMS_H
+#define SERVERPARAMS_H
 
 #include <QString>
 namespace NNTP
@@ -102,4 +102,4 @@ QString ServerParams::str() const
 }
 
 } // namespace NNTP
-#endif // NNTPSERVERPARAMS_H
+#endif // SERVERPARAMS_H

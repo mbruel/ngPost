@@ -4,7 +4,7 @@
 #include <QtTest/QtTest>
 
 #include "NgPost.h"
-#include "nntp/NntpServerParams.h"
+#include "nntp/ServerParams.h"
 #include "NntpConnection.h"
 
 void TestTools::loadXSNewsPartnerConf(NgPost *ngPost)

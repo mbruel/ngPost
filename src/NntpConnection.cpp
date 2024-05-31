@@ -20,10 +20,10 @@
 #include "NntpConnection.h"
 #include "NgConf.h"
 #include "NgPost.h"
-#include "nntp/Nntp.h"
+#include "nntp/rfc.h"
 #include "nntp/NntpArticle.h"
 #include "nntp/NntpFile.h"
-#include "nntp/NntpServerParams.h"
+#include "nntp/ServerParams.h"
 #include "Poster.h"
 
 #include <QAbstractSocket>
@@ -345,7 +345,7 @@ void NntpConnection::onReadyRead()
             _log(QString("post response: %1").arg(line.constData()));
 #endif
 
-            if (strncmp(line.constData(), Nntp::getResponse(340), 3) == 0)
+            if (strncmp(line.constData(), NNTP::Rfc::getResponse(340), 3) == 0)
             {
                 _postingState = PostingState::WAITING_ANSWER;
                 _currentArticle->write(this, NgConf::kArticleIdSignature); // This will be done async
@@ -356,7 +356,7 @@ void NntpConnection::onReadyRead()
             {
                 //                if (++_nbErrors < NntpArticle::nbMaxTrySending())
                 //                {
-                //                    _socket->write(Nntp::POST);
+                //                    _socket->write(NNTP::Rfc::POST);
                 //                    if (NgLogger::isDebugMode())
                 //                        _error(tr("ERROR on post command: %1").arg(line.constData()));
                 //                }
@@ -373,7 +373,7 @@ void NntpConnection::onReadyRead()
         }
         else if (_postingState == PostingState::WAITING_ANSWER)
         {
-            if (strncmp(line.constData(), Nntp::getResponse(240), 3) == 0)
+            if (strncmp(line.constData(), NNTP::Rfc::getResponse(240), 3) == 0)
             {
                 // Check if the server overwrite the Message-ID
                 // 240 <5ed10f42$0$7342$f56682d5@speedium.nl> Article posted
@@ -413,7 +413,7 @@ void NntpConnection::onReadyRead()
                 if (_currentArticle->tryResend())
                 {
                     _postingState = PostingState::SENDING_ARTICLE;
-                    _socket->write(Nntp::POST);
+                    _socket->write(NNTP::Rfc::POST);
                     _log(tr("ReTry %1 (Error: '%2')").arg(_currentArticle->str()).arg(line.constData()),
                          NgLogger::DebugLevel::Debug);
                 }
@@ -447,7 +447,7 @@ void NntpConnection::onReadyRead()
         else if (_postingState == PostingState::CONNECTED)
         {
             // Check welcome message
-            if (strncmp(line.constData(), Nntp::getResponse(200), 3) != 0)
+            if (strncmp(line.constData(), NNTP::Rfc::getResponse(200), 3) != 0)
             {
                 QString err("Reading welcome message. Should start with 200... Server message: ");
                 err += line.constData();
@@ -478,9 +478,9 @@ void NntpConnection::onReadyRead()
                 {
                     _postingState = PostingState::AUTH_USER;
 
-                    std::string cmd(Nntp::AUTHINFO_USER);
+                    std::string cmd(NNTP::Rfc::AUTHINFO_USER);
                     cmd += _srvParams.user;
-                    cmd += Nntp::ENDLINE;
+                    cmd += NNTP::Rfc::ENDLINE;
                     _socket->write(cmd.c_str());
                 }
             }
@@ -488,10 +488,10 @@ void NntpConnection::onReadyRead()
         else if (_postingState == PostingState::AUTH_USER)
         {
             // validate the reply
-            if (strncmp(line.constData(), Nntp::getResponse(381), 2) != 0)
+            if (strncmp(line.constData(), NNTP::Rfc::getResponse(381), 2) != 0)
             {
                 QString err("Wrong Authentication: response from '");
-                err += Nntp::AUTHINFO_USER;
+                err += NNTP::Rfc::AUTHINFO_USER;
                 err += "' should start with 38... resp: ";
                 err += line.constData();
                 if (NgLogger::isDebugMode())
@@ -515,18 +515,18 @@ void NntpConnection::onReadyRead()
                 // Continue authentication : send pass info
                 _postingState = PostingState::AUTH_PASS;
 
-                std::string cmd(Nntp::AUTHINFO_PASS);
+                std::string cmd(NNTP::Rfc::AUTHINFO_PASS);
                 cmd += _srvParams.pass;
-                cmd += Nntp::ENDLINE;
+                cmd += NNTP::Rfc::ENDLINE;
                 _socket->write(cmd.c_str());
             }
         }
         else if (_postingState == PostingState::AUTH_PASS)
         {
-            if (strncmp(line.constData(), Nntp::getResponse(281), 2) != 0)
+            if (strncmp(line.constData(), NNTP::Rfc::getResponse(281), 2) != 0)
             {
                 QString err("Wrong Authentication: response from '");
-                err += Nntp::AUTHINFO_PASS;
+                err += NNTP::Rfc::AUTHINFO_PASS;
                 err += "' should start with 28... resp: ";
                 err += line.constData();
                 if (NgLogger::isDebugMode())
@@ -565,7 +565,7 @@ void NntpConnection::_sendNextArticle()
         _postingState = PostingState::SENDING_ARTICLE;
         if (NgLogger::isFullDebug())
             _log(tr("start sending article: %1").arg(_currentArticle->str()));
-        _socket->write(Nntp::POST);
+        _socket->write(NNTP::Rfc::POST);
     }
     else
     {
