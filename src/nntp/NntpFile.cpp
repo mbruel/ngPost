@@ -1,6 +1,6 @@
 //========================================================================
 //
-// Copyright (C) 2020 Matthieu Bruel <Matthieu.Bruel@gmail.com>
+// Copyright (C) 2020-2024 Matthieu Bruel <Matthieu.Bruel@gmail.com>
 // This file is a part of ngPost : https://github.com/mbruel/ngPost
 //
 // This program is free software: you can redistribute it and/or modify
@@ -72,13 +72,13 @@ void File::onArticlePosted(quint64 size)
 {
     _postingJob->articlePosted(size);
     NNTP::Article *article = static_cast<NNTP::Article *>(sender());
-    uint         part    = article->_part;
+    uint           part    = article->_part;
 #ifdef __DEBUG__
     if (_posted.contains(part) || _failed.contains(part))
         qCritical() << "[NNTP::File::onArticlePosted] DUPLICATE article #" << part << " for file: " << name();
 
-    qDebug() << "[NNTP::File::onArticlePosted] " << name() << ": posted: " << _posted.size() << " / " << _nbAticles
-             << " (nb FAILED: " << _failed.size() << ")"
+    qDebug() << "[NNTP::File::onArticlePosted] " << name() << ": posted: " << _posted.size() << " / "
+             << _nbAticles << " (nb FAILED: " << _failed.size() << ")"
              << " article part " << part << ", id: " << article->id();
 #endif
     _posted.insert(part);
@@ -92,13 +92,13 @@ void File::onArticleFailed(quint64 size)
 {
     _postingJob->articleFailed(size);
     NNTP::Article *article = static_cast<NNTP::Article *>(sender());
-    uint         part    = article->_part;
+    uint           part    = article->_part;
 #ifdef __DEBUG__
     if (_posted.contains(part) || _failed.contains(part))
         qCritical() << "[NNTP::File::onArticleFailed] DUPLICATE article #" << part << " for file: " << name();
 
-    qDebug() << "[NNTP::File::onArticleFailed] " << name() << ": posted: " << _posted.size() << " / " << _nbAticles
-             << " (nb FAILED: " << _failed.size() << ")"
+    qDebug() << "[NNTP::File::onArticleFailed] " << name() << ": posted: " << _posted.size() << " / "
+             << _nbAticles << " (nb FAILED: " << _failed.size() << ")"
              << " article part " << part << ", id: " << article->id();
 #endif
     _failed.insert(part);

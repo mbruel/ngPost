@@ -37,7 +37,16 @@
 #  include <QTimer>
 #endif
 
-NntpConnection::NntpConnection(NgPost const &ngPost, int id, NNTP::ServerParams const &srvParams)
+NntpConnection *NntpConnection::createNntpConnection(NgPost const &ngPost, const ushort id)
+{
+    if (ngPost.postingParams()->nntpServers().isEmpty())
+        return nullptr;
+
+    NNTP::ServerParams *srvParams = ngPost.postingParams()->nntpServers().front();
+    return new NntpConnection(ngPost, id, *srvParams);
+}
+
+NntpConnection::NntpConnection(NgPost const &ngPost, ushort id, NNTP::ServerParams const &srvParams)
     : QObject()
     , _id(id)
     , _srvParams(srvParams)

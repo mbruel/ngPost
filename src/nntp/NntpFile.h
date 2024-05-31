@@ -45,14 +45,14 @@ signals:
     void errorReadingFile();
 
 private:
-    PostingJob *const      _postingJob;
-    const QFileInfo        _file;    //!< original file
-    const uint             _num;     //!< file number
-    const uint             _nbFiles; //!< total number of file
-    int const              _padding;
-    QList<QString> const   _grpList; //!< groups where the file is posted
-    const std::string      _groups;
-    const uint             _nbAticles; //!< total number of articles
+    PostingJob *const        _postingJob;
+    const QFileInfo          _file;    //!< original file
+    const uint               _num;     //!< file number
+    const uint               _nbFiles; //!< total number of file
+    int const                _padding;
+    QList<QString> const     _grpList; //!< groups where the file is posted
+    const std::string        _groups;
+    const uint               _nbAticles; //!< total number of articles
     QVector<NNTP::Article *> _articles;  //!< all articles (that are yEnc encoded)
 
     QSet<uint> _posted; //!< part number of the Articles that have been posted (uploaded on the socket)

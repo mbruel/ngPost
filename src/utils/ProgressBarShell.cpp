@@ -10,7 +10,7 @@
 namespace ProgressBar
 {
 
-ShellBar::ShellBar(ProgressCallback const &progressCallback, ushort barWidth, int refreshRateMs, QObject *parent)
+ShellBar::ShellBar(ProgressCallback const &progressCallback, uint barWidth, int refreshRateMs, QObject *parent)
     : QObject(parent)
     , _progressCallback(progressCallback)
     , _cout(stdout)
@@ -52,13 +52,13 @@ void ShellBar::start()
     _progressTimer.start(_refreshRateMs);
 }
 
+void ShellBar::clear() { setProgressCallback(nullptr); }
+
 void ShellBar::stop(bool lastRefresh)
 {
+    disconnect(&_progressTimer, &QTimer::timeout, this, &ShellBar::onRefresh);
     if (_progressTimer.isActive())
-    {
         _progressTimer.stop();
-        disconnect(&_progressTimer, &QTimer::timeout, this, &ShellBar::onRefresh);
-    }
     if (lastRefresh)
     {
         onRefresh();
@@ -85,8 +85,8 @@ void ShellBar::onRefresh()
     progress /= _currentPos.end;
 
     _cout << kColorBar << "\r[";
-    ushort positionInBar = static_cast<ushort>(std::floor(progress * kProgressBarWidth));
-    for (ushort i = 0; i < kProgressBarWidth; ++i)
+    uint positionInBar = static_cast<uint>(std::floor(progress * kProgressBarWidth));
+    for (uint i = 0; i < kProgressBarWidth; ++i)
     {
         if (i < positionInBar)
             _cout << "=";

@@ -154,7 +154,7 @@ public:
     QString        _configFile;
     QString const &configFile() const { return _configFile; }
 #endif
-    SharedParams const &postingParams() { return _postingParams; }
+    SharedParams const &postingParams() const { return _postingParams; }
 
     // pure virtual from CmdOrGuiApp
     bool parseCommandLine(int argc, char *argv[]) override;

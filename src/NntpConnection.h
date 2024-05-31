@@ -69,7 +69,7 @@ private:
         NO_MORE_FILES
     };
 
-    int const                 _id;        //!< connection id
+    ushort const              _id;        //!< connection id
     NNTP::ServerParams const &_srvParams; //!< server parameters
 
     QTcpSocket *_socket;      //!< Real TCP socket
@@ -88,12 +88,14 @@ private:
 #endif
 
 public:
+    static NntpConnection *createNntpConnection(NgPost const &ngPost, ushort const id);
+
     /*!
      * \brief NntpConnection constructor
      * \param id          : connection id
      * \param ssl         : should the connection be encrypted?
      */
-    explicit NntpConnection(NgPost const &ngPost, int id, NNTP::ServerParams const &srvParams);
+    explicit NntpConnection(NgPost const &ngPost, ushort id, NNTP::ServerParams const &srvParams);
 
     NntpConnection(NntpConnection const &)             = delete;
     NntpConnection(NntpConnection const &&)            = delete;

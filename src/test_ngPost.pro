@@ -36,7 +36,7 @@ DEFINES -= __MB_TRACE_UndoStack__
 DEFINES -= __MB_TRACE_CACHE__
 
 SOURCES += \
-    tests/TestTools.cpp \
+    tests/TestUtils.cpp \
     tests/main.cpp \
     tests/LoadConfig/TestVesions.cpp \
     tests/testNgTools.cpp \
@@ -46,7 +46,7 @@ HEADERS += \
     tests/MacroTest.h \
     tests/LoadConfig/TestVesions.h \
     tests/Macros.h \
-    tests/TestTools.h \
+    tests/TestUtils.h \
     tests/testNgTools.h \
     tests/testnzbcheck.h
 

@@ -1,6 +1,6 @@
 #include "TestVesions.h"
 #include "../Macros.h"
-#include "../TestTools.h"
+#include "../TestUtils.h"
 
 #include <QDebug>
 #include <QtTest/QtTest>
@@ -32,6 +32,6 @@ void TestVesions::onTestLoadOldConfig()
 
 void TestVesions::onTestLoadXSNewsPartnerConfig()
 {
-    TestTools::loadXSNewsPartnerConf(_ngPost);
-    MB_VERIFY(_ngPost->configFile() == TestTools::partnerConfig(), this);
+    TestUtils::loadXSNewsPartnerConf(*_ngPost);
+    MB_VERIFY(_ngPost->configFile() == TestUtils::partnerConfig(), this);
 }

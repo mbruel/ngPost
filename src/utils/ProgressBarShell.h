@@ -25,12 +25,12 @@ struct UpdateBarInfo
         msg = m;
     }
 
-    ushort nbDigitsEndBar() const
+    uint nbDigitsEndBar() const
     { // The loop method should be the fastest than the 2 others in comment
         //  return  static_cast<int>(std::log10(end)) + 1.0;
         //  return QString::number(end).length();
-        uint   num      = end;
-        ushort nbDigits = 0;
+        uint num      = end;
+        uint nbDigits = 0;
         while (num != 0)
         {
             num /= 10;
@@ -46,8 +46,8 @@ class ShellBar : public QObject
 {
     Q_OBJECT
 
-    static constexpr ushort kProgressBarWidth   = 50;
-    static constexpr int    kDefaultRefreshRate = 500; //!< how often shall we refresh the progressbar?
+    static constexpr uint kProgressBarWidth   = 50;
+    static constexpr int  kDefaultRefreshRate = 500; //!< how often shall we refresh the progressbar?
 
     inline static const QString kColorBar      = "\x1B[1;30;46m"; //!< bold black with magenta background
     inline static const QString kColorText     = "\x1B[1;30";     //!< bold black
@@ -63,8 +63,8 @@ private:
 
     QTextStream _cout; //!< stream for stdout
 
-    ushort _barWidth;
-    int    _refreshRateMs;
+    uint _barWidth;
+    int  _refreshRateMs;
 
     QTimer _progressTimer; //!< timer to refresh the refresh bar
 
@@ -74,7 +74,7 @@ private:
 
 public:
     ShellBar(ProgressCallback const &progressCallback,
-             ushort                  barWidth      = kProgressBarWidth,
+             uint                    barWidth      = kProgressBarWidth,
              int                     refreshRateMs = kDefaultRefreshRate,
              QObject                *parent        = nullptr);
     ~ShellBar();
@@ -87,7 +87,7 @@ public:
     void start();
 #endif
 
-    void clear() { setProgressCallback(nullptr); }
+    void clear();
     void stop(bool lastRefresh);
 };
 

@@ -44,6 +44,7 @@ NgLogger::NgLogger()
 #if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
     qDebug() << "Creation of the singleton NgLogger";
 #endif
+    qRegisterMetaType<NgLogger::DebugLevel>("DebugLevel");
 }
 
 void NgLogger::connectSignalSlots()
@@ -94,12 +95,15 @@ void NgLogger::createProgressBar(ProgressBar::ProgressCallback const &callback, 
         return;
 
     if (sInstance->_progressBar)
+    {
         sInstance->_progressBar->clear();
-    else
-        sInstance->_progressBar = new ::ProgressBar::ShellBar([](ProgressBar::UpdateBarInfo &currentPos)
-                                                              { sInstance->_doProgressBarUpdate(currentPos); },
-                                                              NgConf::kProgressBarWidth,
-                                                              NgConf::kDefaultRefreshRate);
+        sInstance->_progressBar->deleteLater();
+    }
+
+    sInstance->_progressBar      = new ::ProgressBar::ShellBar([](ProgressBar::UpdateBarInfo &currentPos)
+                                                          { sInstance->_doProgressBarUpdate(currentPos); },
+                                                          NgConf::kProgressBarWidth,
+                                                          NgConf::kDefaultRefreshRate);
     sInstance->_progressCallback = callback;
     if (startIt)
         startProgressBar(true);
