@@ -30,40 +30,48 @@ void TestUtils::loadXSNewsPartnerConf(NgPost &ngPost)
     QVERIFY2(servers.front()->nbCons >= 7, "Not XSNews partner useSSL... :(");
 }
 
-bool TestUtils::loadXSNewsPartnerConfAndCheckConnection(NgPost &ngPost)
+ConnectionHandler *TestUtils::loadXSNewsPartnerConfAndCheckConnection(NgPost &ngPost)
 {
     TestUtils::loadXSNewsPartnerConf(ngPost);
     bool ok = ngPost.postingParams()->nntpServers().front()->host == "reader.xsnews.nl";
     if (!ok)
     {
         qCritical() << "error connection xsnews partner...";
-        return false;
+        return nullptr;
     }
 
     if (sConnectionHandler)
     {
         qCritical() << "sConnectionHandler already exists (should not happen...)";
-        return false;
+        return nullptr;
     }
     sConnectionHandler = new ConnectionHandler(ngPost); // Leaking handler...
 
-    let's wait the thread!!!! return ok;
+    return sConnectionHandler;
 }
 
 ConnectionHandler::ConnectionHandler(NgPost const &ngPost, QObject *parent)
-    : QObject(parent), _nntpCon(NntpConnection::createNntpConnection(ngPost, 666))
+    : QObject(parent), _nntpCon(NntpConnection::createNntpConnection(ngPost, 666)), _testDone(false)
 {
     if (_nntpCon)
     {
-        QObject::connect(_nntpCon,
-                         &NntpConnection::disconnected,
-                         this,
-                         &ConnectionHandler::onDisconnected,
-                         Qt::QueuedConnection);
+        // starting _thread (using ConnectionHandler::start) starts the _nntpCon
+        connect(&_thread, &QThread::started, _nntpCon, &NntpConnection::startConnection, Qt::QueuedConnection);
+
+        connect(_nntpCon, &NntpConnection::connected, this, &ConnectionHandler::onNntpConnected);
+        connect(_nntpCon, &NntpConnection::helloReceived, this, &ConnectionHandler::onNntpHelloReceived);
+        connect(_nntpCon, &NntpConnection::authenticated, this, &ConnectionHandler::onNntpAuthenticated);
+
+        // when the nntp con is disconnected we stop the test
+        connect(_nntpCon, &NntpConnection::disconnected, this, &ConnectionHandler::onNntpConDisconnected);
+        connect(_nntpCon, &NntpConnection::stopTest, this, &ConnectionHandler::onStopTest);
+
         _nntpCon->moveToThread(&_thread);
     }
     else
         qCritical() << "ConnectionHandler couldn't create a connection...";
+
+    this->moveToThread(&_thread);
 }
 
 ConnectionHandler::~ConnectionHandler()
@@ -72,10 +80,28 @@ ConnectionHandler::~ConnectionHandler()
         _thread.quit();
 }
 
-void ConnectionHandler::startConnection() { emit _nntpCon->startConnection(); }
-
-void ConnectionHandler::onDisconnected()
+void ConnectionHandler::start()
 {
-    qDebug() << "[ConnectionHandler::onDisconnected] connection disconnected...";
+    // no need cause  to _nntpCon->startConnection() as it's connected to &QThread::started
+    _thread.start();
+}
+
+void ConnectionHandler::onNntpConDisconnected() { NgLogger::log("Nntp connection  disconnected...", true); }
+void ConnectionHandler::onNntpConnected() { NgLogger::log("Nntp connection successfully connected!", true); }
+void ConnectionHandler::onNntpHelloReceived()
+{
+    NgLogger::log("Nntp connection recieved Hello Message :)", true);
+}
+void ConnectionHandler::onNntpAuthenticated()
+{
+    NgLogger::log("Nntp connection is Authenticated! Let's stop here, we're good :)", true);
+    emit _nntpCon->killConnection(); // let's stop the connection here
+}
+
+void ConnectionHandler::onStopTest()
+{
+    qDebug() << "[ConnectionHandler::onStopTest] Stopping the Test!!!...";
     _nntpCon->deleteLater();
+    _thread.quit();
+    _testDone = true;
 }

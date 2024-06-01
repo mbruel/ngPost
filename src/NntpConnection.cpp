@@ -187,6 +187,10 @@ void NntpConnection::onKillConnection()
         if (_currentArticle)
             _currentArticle->genNewId();
     }
+
+#ifdef __test_ngPost__
+    emit stopTest();
+#endif
 }
 
 void NntpConnection::_closeConnection()
@@ -299,6 +303,10 @@ void NntpConnection::onConnected()
     {
         _postingState = PostingState::CONNECTED;
         // We should receive the Hello Message
+
+#ifdef __test_ngPost__
+        emit connected();
+#endif
     }
 }
 
@@ -310,6 +318,10 @@ void NntpConnection::onEncrypted()
 
     _postingState = PostingState::CONNECTED;
     // We should receive the Hello Message
+
+#ifdef __test_ngPost__
+    emit connected();
+#endif
 }
 
 void NntpConnection::onSslErrors(QList<QSslError> const &errors)
@@ -476,12 +488,17 @@ void NntpConnection::onReadyRead()
 #if defined(__DEBUG__) && defined(LOG_CONNECTION_STEPS)
                 _log("> received Hello Message");
 #endif
-
+#ifdef __test_ngPost__
+                emit helloReceived();
+#endif
                 // Start authentication : send user info
                 if (_srvParams.user.empty())
                 {
                     _postingState = PostingState::IDLE;
+
+#ifndef __test_ngPost__
                     _sendNextArticle();
+#endif
                 }
                 else
                 {
@@ -558,7 +575,12 @@ void NntpConnection::onReadyRead()
                 _log("> AUTHINFO_PASS succeed => ready to POST \\o/");
 #endif
                 _postingState = PostingState::IDLE;
+
+#ifdef __test_ngPost__
+                emit authenticated();
+#else
                 _sendNextArticle();
+#endif
             }
         }
     }
@@ -566,6 +588,14 @@ void NntpConnection::onReadyRead()
 
 void NntpConnection::_sendNextArticle()
 {
+#ifdef __test_ngPost__
+    if (!_poster)
+    {
+        _postingState = PostingState::NO_MORE_FILES;
+        _log("No Poster => no articles");
+        _closeConnection();
+    }
+#endif
     if (!_currentArticle) // in case of error and reconnection, we repost the _currentArticle
         _currentArticle = _poster->getNextArticle(_logPrefix);
 

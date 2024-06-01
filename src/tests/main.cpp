@@ -8,6 +8,9 @@
 #include "testNgTools.h"
 #include "testnzbcheck.h"
 
+#include "NgPost.h"
+#include "TestUtils.h"
+
 inline void launchTest(MacroTest *test, QList<QString> &failedTests)
 {
     int res = QTest::qExec(test);
@@ -19,6 +22,8 @@ inline void launchTest(MacroTest *test, QList<QString> &failedTests)
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
+
+    qputenv("QTEST_FUNCTION_TIMEOUT", "900000"); // 5 min
 
     QList<QString> failedTests;
 #ifdef __Launch_TestNgTools__

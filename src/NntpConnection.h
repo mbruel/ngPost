@@ -46,6 +46,13 @@ class NntpConnection : public QObject
 {
     Q_OBJECT
 signals:
+#ifdef __test_ngPost__
+    void connected();
+    void helloReceived();
+    void authenticated();
+    void stopTest();
+#endif
+
     void startConnection();
     void killConnection();
 

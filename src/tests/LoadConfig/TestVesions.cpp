@@ -1,6 +1,7 @@
 #include "TestVesions.h"
 #include "../Macros.h"
 #include "../TestUtils.h"
+#include <QTest>
 
 #include <QDebug>
 #include <QtTest/QtTest>
@@ -34,4 +35,11 @@ void TestVesions::onTestLoadXSNewsPartnerConfig()
 {
     TestUtils::loadXSNewsPartnerConf(*_ngPost);
     MB_VERIFY(_ngPost->configFile() == TestUtils::partnerConfig(), this);
+}
+
+void TestVesions::onTestLoadXSNewsPartnerConfAndCheckConnection()
+{
+    ConnectionHandler *conHandler = TestUtils::loadXSNewsPartnerConfAndCheckConnection(*_ngPost);
+    conHandler->start();
+    MB_VERIFY(QTest::qWaitFor([&conHandler]() { return conHandler->isTestDone(); }, 5000), this);
 }

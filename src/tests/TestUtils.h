@@ -14,15 +14,21 @@ class ConnectionHandler : public QObject
 private:
     QThread         _thread;
     NntpConnection *_nntpCon;
+    bool            _testDone;
 
 public:
     ConnectionHandler(NgPost const &ngPost, QObject *parent = nullptr);
     ~ConnectionHandler();
 
-    void startConnection();
+    void start();                           //!< start the thread and thus the nntp connection
+    bool isTestDone() { return _testDone; } //!< functor for QTest::qWaitFor to stop the test
 
 public slots:
-    void onDisconnected();
+    void onNntpConDisconnected(); //!< we stop the test
+    void onNntpConnected();       //!< some happy log
+    void onNntpHelloReceived();   //!< some happy log
+    void onNntpAuthenticated();   //!< some happy log
+    void onStopTest();
 };
 
 class TestUtils : public PureStaticClass
@@ -37,8 +43,8 @@ class TestUtils : public PureStaticClass
 public:
     static QString const &partnerConfig() { return xsnewsConfig; }
 
-    static void loadXSNewsPartnerConf(NgPost &ngPost);
-    static bool loadXSNewsPartnerConfAndCheckConnection(NgPost &ngPost);
+    static void               loadXSNewsPartnerConf(NgPost &ngPost);
+    static ConnectionHandler *loadXSNewsPartnerConfAndCheckConnection(NgPost &ngPost);
 };
 
 #endif // TESTUTILS_H
