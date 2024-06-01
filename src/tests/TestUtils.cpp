@@ -9,6 +9,13 @@
 
 ConnectionHandler *TestUtils::sConnectionHandler = nullptr;
 
+void TestUtils::clearConnectionHandler()
+{
+    if (sConnectionHandler)
+        sConnectionHandler->deleteLater();
+    sConnectionHandler = nullptr;
+}
+
 void TestUtils::loadXSNewsPartnerConf(NgPost &ngPost)
 {
     QStringList errors = ngPost.loadConfig(xsnewsConfig);

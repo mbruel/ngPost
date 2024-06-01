@@ -20,8 +20,8 @@ public:
     ConnectionHandler(NgPost const &ngPost, QObject *parent = nullptr);
     ~ConnectionHandler();
 
-    void start();                           //!< start the thread and thus the nntp connection
-    bool isTestDone() { return _testDone; } //!< functor for QTest::qWaitFor to stop the test
+    void start();                                 //!< start the thread and thus the nntp connection
+    bool isTestDone() const { return _testDone; } //!< functor for QTest::qWaitFor to stop the test
 
 public slots:
     void onNntpConDisconnected(); //!< we stop the test
@@ -41,6 +41,7 @@ class TestUtils : public PureStaticClass
     static ConnectionHandler *sConnectionHandler;
 
 public:
+    static void           clearConnectionHandler();
     static QString const &partnerConfig() { return xsnewsConfig; }
 
     static void               loadXSNewsPartnerConf(NgPost &ngPost);

@@ -41,13 +41,7 @@ class NzbCheck : public QObject
     friend NgPost;       // to use progressUpdateInfo via NgLogger::createProgressBar
     friend NntpCheckCon; // only class allowed to use getNextArticle and update _nbArticles*
 
-signals:
-    void checkFinished(uint nbArticlesMissing);
-
 private:
-#ifdef __test_ngPost__
-    QThread _threadChecks;
-#endif
     inline static const QString       kXMLTagSubject   = "subject";
     inline static const QLatin1String kXMLTokenFile    = QLatin1String("file");
     inline static const QLatin1String kXMLTokenSegment = QLatin1String("segment");
@@ -71,15 +65,13 @@ private:
     uint _nbArticlesChecked;
 
     QElapsedTimer _timeStart;
+    bool          _testDone;
 
-public:
 #ifdef __test_ngPost__
-    bool _isDone = false;
-    void waitThreadChecks() { _threadChecks.wait(); }
-    bool isDone() const { return _isDone; }
-    void setIsDone() { _isDone = true; }
+    QThread _thread;
 #endif
 
+public:
     NzbCheck(SharedParams const &postingParams, QString const &nzbPath);
     ~NzbCheck() = default; //!< we don't own anything on the heap
 
@@ -108,6 +100,8 @@ public:
 
     //! result of the check (output of the program)
     uint nbMissingArticles() const { return _nbArticlesMissing; }
+
+    bool isTestDone() const { return _testDone; }
 
 private slots:
     void onDisconnected(NntpCheckCon *con);

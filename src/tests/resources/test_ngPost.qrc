@@ -5,11 +5,9 @@
         <file>testNgTools/filename_1.nzb</file>
         <file>testNgTools/filename_2.nzb</file>
         <file>testNgTools/filename_3.nzb</file>
-        <file>nzb/tumer_fue-40pa4-cahier-2022_ko.nzb</file>
-        <file>nzb/tumer_fue-40pa4-cahier-2022.nzb</file>
         <file>nzb/qt-unified-linux-x64-4.4.2-online.nzb</file>
         <file>nzb/ngPost_v4.16_libssl3-x86_64.nzb</file>
-        <file>nzb/ngPost_v4.16_libssl1.1-x86_64.nzb</file>
         <file>config/ngPost.xsnews.partner</file>
+        <file>nzb/ngPost_v4.16_libssl3-x86_64_10missing.nzb</file>
     </qresource>
 </RCC>

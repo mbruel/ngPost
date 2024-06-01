@@ -43,17 +43,15 @@ NzbCheck::NzbCheck(SharedParams const &postingParams, QString const &nzbPath)
     , _nbArticlesTotal(0)
     , _nbArticlesMissing(0)
     , _nbArticlesChecked(0)
+    , _testDone(false)
 {
 #ifdef __test_ngPost__
-    this->moveToThread(&_threadChecks);
+    this->moveToThread(&_thread);
 #endif
 }
 
 void NzbCheck::startCheckingNzb()
 {
-#ifdef __test_ngPost__
-    connect(this, &NzbCheck::checkFinished, &_threadChecks, &QThread::exit);
-#endif
     _timeStart.start();
     _nbCons = std::min(_nbArticlesTotal, _nbCons);
 
@@ -66,8 +64,7 @@ void NzbCheck::startCheckingNzb()
             {
                 NntpCheckCon *con = new NntpCheckCon(this, i, *srvParam);
 #ifdef __test_ngPost__
-                con->moveToThread(&_threadChecks);
-                connect(&_threadChecks, &QThread::finished, con, &QObject::deleteLater);
+                con->moveToThread(&_thread);
 #endif
                 connect(con, &NntpCheckCon::disconnected, this, &NzbCheck::onDisconnected, Qt::QueuedConnection);
                 emit con->startConnection();
@@ -82,7 +79,7 @@ void NzbCheck::startCheckingNzb()
         }
     }
 #ifdef __test_ngPost__
-    _threadChecks.start();
+    _thread.start();
 #endif
 
     if (!_postingParams->quietMode())
@@ -122,9 +119,9 @@ void NzbCheck::onDisconnected(NntpCheckCon *con)
                             .arg(_nntpServers.size()),
                     true);
         }
+        _testDone = true;
 #ifdef __test_ngPost__
-        emit checkFinished(_nbArticlesMissing);
-        _isDone = true;
+        _thread.quit();
 #else
         qApp->quit(); // end of game :)
 #endif

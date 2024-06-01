@@ -42,4 +42,5 @@ void TestVesions::onTestLoadXSNewsPartnerConfAndCheckConnection()
     ConnectionHandler *conHandler = TestUtils::loadXSNewsPartnerConfAndCheckConnection(*_ngPost);
     conHandler->start();
     MB_VERIFY(QTest::qWaitFor([&conHandler]() { return conHandler->isTestDone(); }, 5000), this);
+    TestUtils::clearConnectionHandler();
 }
