@@ -72,10 +72,17 @@ void Poster::addConnection(NntpConnection *connection)
     _nntpConnections.append(connection);
     connection->setPoster(this); // to release Articles, set their _prefix...
 
+    // Not on same thread. For now Poster is still in MainThread
+    connect(connection,
+            &NntpConnection::postingNotAllowed,
+            this,
+            &Poster::onPostingNotAllowed,
+            Qt::QueuedConnection);
+
     // as the connection is moved, it has no more "owner" (no parent of course)
     // it should be destoyed in the thread where it is living
     // cf https://doc.qt.io/qt-6/qthread.html#finished
-    QObject::connect(&_connectionsThread, &QThread::finished, connection, &QObject::deleteLater);
+    connect(&_connectionsThread, &QThread::finished, connection, &QObject::deleteLater);
 
     connection->moveToThread(&_connectionsThread);
 
@@ -204,6 +211,16 @@ void Poster::_error(QString const &error) const
 }
 
 bool Poster::isPosting() const { return _job->isPosting(); }
+
+void Poster::onPostingNotAllowed(NntpConnection *nntpCon)
+{
+    _error(tr("Removing NntpConnection #%2 due to Posting not allowed...").arg(nntpCon->id()));
+    _nntpConnections.removeOne(nntpCon);
+    _job->removeNonPosintingConnection(nntpCon);    // same thread
+    emit nntpCon->scheduleDeleteLaterInOwnThread(); // it will be deleted in its own thread
+    if (_nntpConnections.isEmpty())
+        emit noMorePostingConnection(this);
+}
 
 void Poster::stopThreads()
 {

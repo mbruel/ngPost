@@ -7,7 +7,7 @@ class TestNzbGet : public MacroTest
 {
     Q_OBJECT
 public:
-    TestNzbGet(QString const &testName, int argc, char *argv[]);
+    TestNzbGet(QString const &testName, int argc = 0, char *argv[] = nullptr);
 
 private slots:
     void onTestNzbCheckOK();

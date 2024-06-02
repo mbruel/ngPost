@@ -53,8 +53,11 @@ signals:
     void stopTest();
 #endif
 
-    void startConnection();
-    void killConnection();
+    void startConnection();                //!< start connection from main thread
+    void killConnection();                 //!< start connection from main thread (or not..)
+    void scheduleDeleteLaterInOwnThread(); //!< to avoid delete from another thread
+
+    void postingNotAllowed(NntpConnection *me); //!< warn we're not allowed to post!
 
     //    void error(QTcpSocket::SocketError socketerror); //!< Socket Error
     void socketError(QString aError); //!< Error during socket creation (ssl or not)
@@ -90,11 +93,14 @@ private:
 
     NgPost const &_ngPost; //!< MB_TODO try to avoid it and just use NgLogger directly
     Poster       *_poster; //!< as to pointer cause created with nullptr
+    bool          _postingNotAllowed;
+
 #ifdef __USE_CONNECTION_TIMEOUT__
     QTimer *_timeout;
 #endif
 
 public:
+    //! mainly for testing purpose (ConnectionHandler for TestUtils)
     static NntpConnection *createNntpConnection(NgPost const &ngPost, ushort const id);
 
     /*!
@@ -111,17 +117,20 @@ public:
 
     ~NntpConnection(); //!< destructor: delete the QTcpSocket
 
-    inline int getId() const; //!< NntpConnection id: iSocketDescriptor
+    inline bool isPostingNotAllowed() const { return _postingNotAllowed; }
 
-    inline void write(QByteArray const &aBuffer); //!< write on the socket
-    inline void write(char const *aBuffer);       //!< write on the socket
+    inline int id() const { return _id; }    //!< NntpConnection id: iSocketDescriptor
+    inline int getId() const { return _id; } //!< NntpConnection id: iSocketDescriptor // MB_TODO TODEL
 
-    inline void resetErrorCount();
-    inline bool isConnected() const;
+    inline void write(QByteArray const &aBuffer) { _socket->write(aBuffer); } //!< write on the socket
+    inline void write(char const *aBuffer) { _socket->write(aBuffer); }       //!< write on the socket
+
+    inline void resetErrorCount() { _nbDisconnected = 0; }
+    inline bool isConnected() const { return _isConnected; }
 
     void setPoster(Poster *poster);
 
-    inline bool hasNoMoreFiles() const;
+    inline bool hasNoMoreFiles() const { return _postingState == PostingState::NO_MORE_FILES; }
 
     static QString sslSupportInfo();
     static bool    supportsSsl();
@@ -182,16 +191,6 @@ private:
 
     inline void deleteSocket();
 };
-
-int NntpConnection::getId() const { return _id; }
-
-void NntpConnection::write(QByteArray const &aBuffer) { _socket->write(aBuffer); }
-void NntpConnection::write(char const *aBuffer) { _socket->write(aBuffer); }
-
-void NntpConnection::resetErrorCount() { _nbDisconnected = 0; }
-bool NntpConnection::isConnected() const { return _isConnected; }
-
-bool NntpConnection::hasNoMoreFiles() const { return _postingState == PostingState::NO_MORE_FILES; }
 
 void NntpConnection::deleteSocket()
 {

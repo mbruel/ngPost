@@ -29,6 +29,7 @@ public:
     enum class ERR_CODE : char
     {
         NONE = 0,
+        NO_POSTING_CONS,
         COMPLETED_WITH_ERRORS,
         ERR_CONF_FILE,
         ERR_WRONG_ARG,

@@ -14,8 +14,10 @@
 inline void launchTest(MacroTest *test, QList<QString> &failedTests)
 {
     int res = QTest::qExec(test);
-    qDebug() << "[" << test->metaObject()->className() << "] QTest::qExec return: " << res;
-    if (res != 0)
+    qDebug() << "[" << test->metaObject()->className() << "] QTest::qExec return: " << res
+             << ", nbFailure: " << test->nbFailure() << " on " << test->nbVerifications() <<
+        " verifs on a total of " << test->nbUseCases() << " usecases.";
+    if (test->nbFailure() != 0)
         failedTests << test->metaObject()->className();
 }
 
@@ -28,21 +30,21 @@ int main(int argc, char *argv[])
     QList<QString> failedTests;
 #ifdef __Launch_TestNgTools__
     {
-        TestNgTools test("TestNgTools", argc, argv);
+        TestNgTools test("TestNgTools");
         launchTest(&test, failedTests);
     }
 #endif
 
 #ifdef __Launch_TestVesions__
     {
-        TestVesions test("TestVesions", argc, argv);
+        TestVesions test("TestVesions");
         launchTest(&test, failedTests);
     }
 #endif
 
 #ifdef __Launch_TestNzbCheck__
     {
-        TestNzbGet test("TestVesions", argc, argv);
+        TestNzbGet test("TestNzbGet");
         launchTest(&test, failedTests);
     }
 #endif

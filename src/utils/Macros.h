@@ -21,6 +21,10 @@
 
 #include <QtGlobal>
 
+// Helper macros to convert __cplusplus to a string
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+
 #if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
 #  define MB_FLUSH flush
 #else

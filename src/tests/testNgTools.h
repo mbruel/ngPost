@@ -7,7 +7,7 @@ class TestNgTools : public MacroTest
 {
     Q_OBJECT
 public:
-    TestNgTools(QString const &testName, int argc, char *argv[]);
+    TestNgTools(QString const &testName, int argc = 0, char *argv[] = nullptr);
 
 private slots:
     //    void init();    // called before each test case

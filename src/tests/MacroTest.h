@@ -80,6 +80,10 @@ public:
     void newVerifications() { ++_nbVerifications; }
     void newFailure() { ++_nbFailure; }
 
+    ushort nbUseCases() const {return _nbUseCases;}
+    ushort nbVerifications() const {return _nbVerifications;}
+    ushort nbFailure() const {return _nbFailure;}
+
     QString name() const { return _testName; }
 
     static void incrementNumerOfUnitTestRun() { ++sNbUnitTestsRun; }

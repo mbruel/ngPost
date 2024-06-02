@@ -5,7 +5,7 @@ INCLUDEPATH += $$PWD
 TRANSLATIONS = lang/ngPost_en.ts  lang/ngPost_fr.ts
 TARGET = test_ngPost
 TEMPLATE = app
-CONFIG += c++17 console
+CONFIG += c++20 console
 #CONFIG -= use_hmi  # Remove the hmi
 
 #CONFIG(release, debug|release): DEFINES += QT_NO_DEBUG_OUTPU

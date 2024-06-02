@@ -49,11 +49,14 @@ using AtomicBool = QAtomicInteger<unsigned short>; // 16 bit only (faster than u
  * It owns the _articleBuilder
  * but it doesn't own the NntpConnection (the PostingJob does)
  */
-class Poster
+class Poster : public QObject
 {
-    Q_DECLARE_TR_FUNCTIONS(Poster); // tr() without QObject using QCoreApplication::translate
+    Q_OBJECT
 
     friend class ArticleBuilder; // MB_TODO: check if we can avoid! we could?
+
+signals:
+    void noMorePostingConnection(Poster *poster);
 
 private:
     const ushort      _id;  //!< poster id (a PostingJob, its owner, has several)
@@ -98,6 +101,9 @@ public:
     bool prepareArticlesInAdvance();
 
     bool isPosting() const;
+
+public slots:
+    void onPostingNotAllowed(NntpConnection *nntpCon);
 
 private:
     NNTP::Article *_prepareNextArticle(QString const &threadName, bool fillQueue = true);

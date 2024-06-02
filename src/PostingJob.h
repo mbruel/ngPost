@@ -248,6 +248,8 @@ public:
     static QString sslSupportInfo();
     static bool    supportsSsl();
 
+    void removeNonPosintingConnection(NntpConnection *nntpCon); //!< useless connection, we delete it
+
 public slots:
     void onStopPosting(); //!< for HMI
 
@@ -285,6 +287,8 @@ private slots:
 #ifdef __COMPUTE_IMMEDIATE_SPEED__
     void onImmediateSpeedComputation();
 #endif
+
+    void onPosterWithNoMorePostingConnection(Poster *poster);
 
 private:
     void _log(QString const       &aMsg,

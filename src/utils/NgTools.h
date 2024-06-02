@@ -71,6 +71,65 @@ public:
 
     static QString currentDateTime();
 
+// MB_TODO: be ready for C++20 and the usage of concepts
+#ifdef __cplusplus
+#  if __cplusplus >= 202002L
+
+#    include <concepts>
+#    include <iterator>
+#    include <type_traits>
+//MB_TODO: learn and use c++20 concepts!
+
+    // // Concept to check if a type is a container with begin and end
+    // template <typename T>
+    // concept HasBeginEnd = requires(T t)
+    // {
+    //     {
+    //         t.begin()
+    //     } -> std::input_iterator;
+    //     {
+    //         t.end()
+    //     } -> std::input_iterator;
+    // };
+
+    // // Concept to check if a type is a container of pointers to QObject derived types
+    // template <typename T>
+    // concept QObjectPointerContainer = HasBeginEnd<T> && std::is_pointer_v<typename T::value_type>
+    //         && std::is_base_of_v<QObject, std::remove_pointer_t<typename T::value_type>>;
+
+    // template <QObjectPointerContainer Container>
+    // void scheduleDeleteLater(Container &container)
+    // {
+    //     for (auto &item : container)
+    //     {
+    //         item->deleteLater();
+    //     }
+    // }
+
+#  else
+
+#    include <type_traits>
+
+    // Fallback implementation for pre-C++20 without concepts
+    template <typename Container>
+    static void scheduleDeleteLater(Container &container, bool doClear = true)
+    {
+        using ValueType = typename Container::value_type;
+
+        static_assert(std::is_pointer<ValueType>::value, "Container value type must be a pointer.");
+        static_assert(std::is_base_of<QObject, std::remove_pointer_t<ValueType>>::value,
+                      "Container value type must be a pointer to a QObject derived type.");
+
+        for (auto *item : container)
+            item->deleteLater();
+
+        if (doClear)
+            container.clear();
+    }
+
+#  endif
+#endif
+
     static void removeAccentsFromString(QString &str);
 
     static qint64 recursivePathSize(QFileInfo const &fi);

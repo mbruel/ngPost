@@ -171,7 +171,7 @@ PostingJob::PostingJob(NgPost                       &ngPost,
 
 PostingJob::~PostingJob()
 {
-#ifdef __DEBUG__
+#if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
     _log(QString("Destructing PostingJob %1").arg(NgTools::ptrAddrInHex(this)), NgLogger::DebugLevel::Debug);
     qDebug() << "[PostingJob] <<<< Destruction " << NgTools::ptrAddrInHex(this)
              << " in thread : " << QThread::currentThread()->objectName();
@@ -318,6 +318,8 @@ void PostingJob::onStartPosting(bool isActiveJob)
     _files  = _params->files();
     _postFiles();
 }
+
+void PostingJob::removeNonPosintingConnection(NntpConnection *nntpCon) { _nntpConnections.removeOne(nntpCon); }
 
 bool PostingJob::startCompressFiles()
 {
@@ -681,6 +683,8 @@ void PostingJob::_postFiles()
     {
         NgLogger::error(tr("Error: there are no NntpConnection..."));
         _finishPosting(); // MB_TODO shall we?
+        if (!_ngPost.useHMI())
+            qApp->quit();
         return;
     }
 
@@ -739,6 +743,11 @@ void PostingJob::_postFiles()
     for (ushort posterIdx = 0; posterIdx < nbPosters; ++posterIdx)
     {
         Poster *poster = new Poster(this, posterIdx);
+        connect(poster,
+                &Poster::noMorePostingConnection,
+                this,
+                &PostingJob::onPosterWithNoMorePostingConnection,
+                Qt::QueuedConnection);
         _posters.append(poster);
         poster->lockQueue(); // lock queue so the connection will wait before starting building Articles
 
@@ -763,6 +772,18 @@ void PostingJob::_postFiles()
         poster->unlockQueue();
 
     emit postingStarted();
+}
+
+void PostingJob::onPosterWithNoMorePostingConnection(Poster *poster)
+{
+    _posters.removeOne(poster);
+    poster->deleteLater();
+    if (_posters.isEmpty())
+    {
+        NgLogger::criticalError(tr("No poster has any connection allowing posting..."),
+                                NgError::ERR_CODE::NO_POSTING_CONS);
+        _finishPosting();
+    }
 }
 
 void PostingJob::onStopPosting()
@@ -1367,6 +1388,7 @@ void PostingJob::onImmediateSpeedComputation()
         _immediateSpeedTimer.start(kImmediateSpeedDurationMs);
     }
 }
+
 #endif
 
 #ifdef __USE_TMP_RAM__

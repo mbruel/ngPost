@@ -37,6 +37,8 @@
 #  include <QTimer>
 #endif
 
+using namespace NNTP;
+
 NntpConnection *NntpConnection::createNntpConnection(NgPost const &ngPost, const ushort id)
 {
     if (ngPost.postingParams()->nntpServers().isEmpty())
@@ -58,6 +60,7 @@ NntpConnection::NntpConnection(NgPost const &ngPost, ushort id, NNTP::ServerPara
     , _nbDisconnected(0)
     , _ngPost(ngPost)
     , _poster(nullptr)
+    , _postingNotAllowed(false)
 #ifdef __USE_CONNECTION_TIMEOUT__
     , _timeout(nullptr)
 #endif
@@ -75,6 +78,12 @@ NntpConnection::NntpConnection(NgPost const &ngPost, ushort id, NNTP::ServerPara
             &NntpConnection::killConnection,
             this,
             &NntpConnection::onKillConnection,
+            Qt::QueuedConnection);
+
+    connect(this,
+            &NntpConnection::scheduleDeleteLaterInOwnThread,
+            this,
+            &QObject::deleteLater,
             Qt::QueuedConnection);
 
     connect(this,
@@ -366,7 +375,7 @@ void NntpConnection::onReadyRead()
             _log(QString("post response: %1").arg(line.constData()));
 #endif
 
-            if (strncmp(line.constData(), NNTP::Rfc::getResponse(340), 3) == 0)
+            if (strncmp(line.constData(), RFC::getResponse(RFC::RespCode::SEND_ARTICLE), 3) == 0)
             {
                 _postingState = PostingState::WAITING_ANSWER;
                 _currentArticle->write(this, NgConf::kArticleIdSignature); // This will be done async
@@ -377,13 +386,18 @@ void NntpConnection::onReadyRead()
             {
                 //                if (++_nbErrors < NNTP::Article::nbMaxTrySending())
                 //                {
-                //                    _socket->write(NNTP::Rfc::POST);
+                //                    _socket->write(RFC::POST);
                 //                    if (NgLogger::isDebugMode())
                 //                        _error(tr("ERROR on post command: %1").arg(line.constData()));
                 //                }
                 //                else
                 //                {
                 _postingState = PostingState::NOT_CONNECTED;
+                if (strncmp(line.constData(), RFC::getResponse(RFC::RespCode::POST_NOT_ALLOWED), 3) == 0)
+                {
+                    _postingNotAllowed = true;
+                    emit postingNotAllowed(this);
+                }
                 _error(tr("Closing Connection due to ERROR on post command: '%2' (%1 skipped)\n")
                                .arg(_currentArticle->str())
                                .arg(line.constData()));
@@ -394,7 +408,7 @@ void NntpConnection::onReadyRead()
         }
         else if (_postingState == PostingState::WAITING_ANSWER)
         {
-            if (strncmp(line.constData(), NNTP::Rfc::getResponse(240), 3) == 0)
+            if (strncmp(line.constData(), RFC::getResponse(RFC::RespCode::POST_OK), 3) == 0)
             {
                 // Check if the server overwrite the Message-ID
                 // 240 <5ed10f42$0$7342$f56682d5@speedium.nl> Article posted
@@ -434,7 +448,7 @@ void NntpConnection::onReadyRead()
                 if (_currentArticle->tryResend())
                 {
                     _postingState = PostingState::SENDING_ARTICLE;
-                    _socket->write(NNTP::Rfc::POST);
+                    _socket->write(RFC::POST);
                     _log(tr("ReTry %1 (Error: '%2')").arg(_currentArticle->str()).arg(line.constData()),
                          NgLogger::DebugLevel::Debug);
                 }
@@ -468,7 +482,7 @@ void NntpConnection::onReadyRead()
         else if (_postingState == PostingState::CONNECTED)
         {
             // Check welcome message
-            if (strncmp(line.constData(), NNTP::Rfc::getResponse(200), 3) != 0)
+            if (strncmp(line.constData(), RFC::getResponse(RFC::RespCode::SERV_READY), 3) != 0)
             {
                 QString err("Reading welcome message. Should start with 200... Server message: ");
                 err += line.constData();
@@ -504,9 +518,9 @@ void NntpConnection::onReadyRead()
                 {
                     _postingState = PostingState::AUTH_USER;
 
-                    std::string cmd(NNTP::Rfc::AUTHINFO_USER);
+                    std::string cmd(RFC::AUTHINFO_USER);
                     cmd += _srvParams.user;
-                    cmd += NNTP::Rfc::ENDLINE;
+                    cmd += RFC::ENDLINE;
                     _socket->write(cmd.c_str());
                 }
             }
@@ -514,10 +528,10 @@ void NntpConnection::onReadyRead()
         else if (_postingState == PostingState::AUTH_USER)
         {
             // validate the reply
-            if (strncmp(line.constData(), NNTP::Rfc::getResponse(381), 2) != 0)
+            if (strncmp(line.constData(), RFC::getResponse(RFC::RespCode::PASS_NEEDED), 2) != 0)
             {
                 QString err("Wrong Authentication: response from '");
-                err += NNTP::Rfc::AUTHINFO_USER;
+                err += RFC::AUTHINFO_USER;
                 err += "' should start with 38... resp: ";
                 err += line.constData();
                 if (NgLogger::isDebugMode())
@@ -541,18 +555,18 @@ void NntpConnection::onReadyRead()
                 // Continue authentication : send pass info
                 _postingState = PostingState::AUTH_PASS;
 
-                std::string cmd(NNTP::Rfc::AUTHINFO_PASS);
+                std::string cmd(RFC::AUTHINFO_PASS);
                 cmd += _srvParams.pass;
-                cmd += NNTP::Rfc::ENDLINE;
+                cmd += RFC::ENDLINE;
                 _socket->write(cmd.c_str());
             }
         }
         else if (_postingState == PostingState::AUTH_PASS)
         {
-            if (strncmp(line.constData(), NNTP::Rfc::getResponse(281), 2) != 0)
+            if (strncmp(line.constData(), RFC::getResponse(RFC::RespCode::AUTH_OK), 2) != 0)
             {
                 QString err("Wrong Authentication: response from '");
-                err += NNTP::Rfc::AUTHINFO_PASS;
+                err += RFC::AUTHINFO_PASS;
                 err += "' should start with 28... resp: ";
                 err += line.constData();
                 if (NgLogger::isDebugMode())
@@ -604,7 +618,7 @@ void NntpConnection::_sendNextArticle()
         _postingState = PostingState::SENDING_ARTICLE;
         if (NgLogger::isFullDebug())
             _log(tr("start sending article: %1").arg(_currentArticle->str()));
-        _socket->write(NNTP::Rfc::POST);
+        _socket->write(RFC::POST);
     }
     else
     {

@@ -46,8 +46,11 @@ void dispFolderSize(QFileInfo const &folderPath)
 }
 #endif
 
+#include "utils/Macros.h"
 int main(int argc, char *argv[])
 {
+    std::cout << "C++ compiler version: " << TOSTRING(__cplusplus) << std::endl;
+
     // disable SSL warnings
     QLoggingCategory::setFilterRules("qt.network.ssl.warning=false");
 

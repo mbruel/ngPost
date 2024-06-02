@@ -5,7 +5,7 @@ DEFINES += "APP_VERSION=\"4.0\""
 INCLUDEPATH += $$PWD
 TARGET = ngPost
 TEMPLATE = app
-CONFIG += c++17
+CONFIG += c++17   # Should switch to 20 soon to use concepts cf (scheduleDeleteLater)
 CONFIG -= app_bundle
 
 # To integrate the progress bar in the logger

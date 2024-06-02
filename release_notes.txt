@@ -20,6 +20,11 @@ TODO: switch using c++17 std::filesystem in PostingJob...
 ###       Release: ngPost v5.0                   ###
 ###       date:    2024/05/??                    ###
 ####################################################
+- Test Framework \o/ Macro and unit!
+
+- Usage of namespace, especially for NNTP, NNTP::RFC
+- auto shutdown if no connection is allowed to post (test added)
+
 [OK] - for gimly26: TODO for Linux and Mac, 
 check if the default config file (~/.ngPost) exists
 if it is not the case, create it with all default values

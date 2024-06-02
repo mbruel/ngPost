@@ -7,7 +7,7 @@ class TestVesions : public MacroTest
 {
     Q_OBJECT
 public:
-    TestVesions(QString const &testName, int argc, char *argv[]);
+    TestVesions(QString const &testName, int argc = 0, char *argv[] = nullptr);
 
 private slots:
 

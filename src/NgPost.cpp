@@ -206,7 +206,6 @@ NgPost::~NgPost()
 
     if (_activeJob)
         delete _activeJob;
-    qDeleteAll(_pendingJobs);
 }
 
 #ifdef __test_ngPost__
@@ -949,7 +948,13 @@ void NgPost::onNetworkAccessibleChanged(QNetworkAccessManager::NetworkAccessibil
 
 void NgPost::closeAllPostingJobs()
 {
+#if defined(__DEBUG__)
+    for (int i = 0; i < _pendingJobs.size(); ++i)
+        qDebug() << "[NgPost::closeAllPostingJobs] _pendingJobs[" << i
+                 << "] addr: " << NgTools::ptrAddrInHex(_pendingJobs.at(i));
+#endif
     qDeleteAll(_pendingJobs);
+    //    NgTools::scheduleDeleteLater(_pendingJobs);
     if (_activeJob)
         _activeJob->onStopPosting();
 }
@@ -1111,7 +1116,8 @@ bool NgPost::startPostingJob(QString const                &rarName,
 bool NgPost::startPostingJob(PostingJob *job)
 {
 #ifdef __DEBUG__
-    qDebug() << "[MB_TRACE][Issue#82][NgPost::startPostingJob] job: " << job << ", file: " << job->nzbName();
+    qDebug() << "[MB_TRACE][Issue#82][NgPost::startPostingJob] job: " << NgTools::ptrAddrInHex(job)
+             << ", file: " << job->nzbName();
     job->dumpParams();
     qDebug() << "[MB_TRACE]filesToUpload: " << job->paramFiles();
 

@@ -19,8 +19,6 @@
 
 #ifndef NNTP_H
 #define NNTP_H
-
-#include "utils/PureStaticClass.h"
 #include <map>
 #include <regex>
 namespace NNTP
@@ -29,62 +27,97 @@ namespace NNTP
 /*!
  * \brief Pure Static class (no instance) to hold Nntp Protocol actions/responses...
  */
-class Rfc : public PureStaticClass
+namespace RFC
 {
-public:
-    static constexpr char const *QUIT{ "quit\r\n" };
-    static constexpr char const *AUTHINFO_USER{ "authinfo user " };
-    static constexpr char const *AUTHINFO_PASS{ "authinfo pass " };
-    static constexpr char const *POST{ "post\r\n" };
-    static constexpr char const *ENDLINE{ "\r\n" };
-    static constexpr char const *STAT{ "stat" };
 
-    //! return the response associated to a certain code
-    inline static char const *getResponse(unsigned short aCode);
+constexpr char const *QUIT{ "quit\r\n" };
+constexpr char const *AUTHINFO_USER{ "authinfo user " };
+constexpr char const *AUTHINFO_PASS{ "authinfo pass " };
+constexpr char const *POST{ "post\r\n" };
+constexpr char const *ENDLINE{ "\r\n" };
+constexpr char const *STAT{ "stat" };
 
-private:
-    //! Responses map
-    inline static const std::map<unsigned short, char const *> kResponses = {
-        {0,    "000 UNKNOWN NNTP RESPONSE..."                                       },
+enum class RespCode : ushort
+{
+    UNKNOWN = 0,
 
- //  rfc977: 2.4.3  General Responses
-        { 200, "200 server ready - posting allowed"                                 },
-        { 201, "201 server ready - no posting allowed"                              },
+    //  rfc977: 2.4.3  General Responses
+    SERV_READY  = 200,
+    SERV_READY1 = 201,
 
-        { 400, "400 service discontinued"                                           },
-        { 500, "500 command not recognized"                                         },
-        { 501, "501 command syntax error"                                           },
-        { 502, "502 access restriction or permission denied"                        },
-        { 503, "503 program fault - command couldn't perform"                       },
+    SERV_DISCON      = 400,
+    CMD_NOT_KNOWN    = 500,
+    CMD_SYNTAX_ERROR = 501,
+    ACCESS_DENIED    = 502,
+    SRV_FAULT        = 503,
 
- //  rfc977: 3.2.2  The GROUP command
-        { 211, "211 <number of articles> <first one> <last one> <name of the group>"},
-        { 411, "411 no such news group"                                             },
+    //  rfc977: 3.2.2  The GROUP command
+    GRP_OK   = 211,
+    GRP_NONE = 411,
 
- //  rfc977: 3.10.2  The POST command
-        { 240, "240 article posted ok"                                              },
-        { 340, "340 send article to be posted. End with <CR-LF>.<CR-LF>"            },
-        { 440, "440 posting not allowed"                                            },
-        { 441, "441 posting failed"                                                 },
+    //  rfc977: 3.10.2  The POST command
+    POST_OK          = 240,
+    SEND_ARTICLE     = 340,
+    POST_NOT_ALLOWED = 440,
+    POST_FAIL        = 441,
 
- //  rfc977: 6.2.4.  STAT
-        { 223, "223 0|n message-id    Article exists"                               },
-        { 430, "430 No article with that message-id"                                },
+    //  rfc977: 6.2.4.  STAT
+    ARTICLE_OK   = 223,
+    ARTICLE_NONE = 430,
 
- //  rfc977: 3.11.2  The QUIT command
-        { 205, "205 closing connection - goodbye!"                                  },
+    //  rfc977: 3.11.2  The QUIT command
+    CLOSED_CON = 205,
 
- //  rfc4643: 2.3.1
-        { 281, "281 Authentication accepted"                                        },
-        { 380, "380 More Authentication Required"                                   },
-        { 381, "381 Password required"                                              },
-        { 480, "480 Authentication Required"                                        },
-        { 481, "481 Authentication failed/rejected"                                 },
-        { 482, "482 Authentication commands issued out of sequence"                 },
-    };
+    //  rfc4643: 2.3.1
+    AUTH_OK       = 281,
+    AUTH_MORE     = 380,
+    PASS_NEEDED   = 381,
+    AUTH_REQUIRED = 480,
+    AUTH_FAIL     = 481,
+    AUTH_ISSUE    = 482
 };
 
-char const *Rfc::getResponse(unsigned short aCode)
+inline const std::map<RespCode, char const *> kResponses = {
+    {RespCode::UNKNOWN,           "000 UNKNOWN NNTP RESPONSE..."                                       },
+
+ //  rfc977: 2.4.3  General Responses
+    { RespCode::SERV_READY,       "200 server ready - posting allowed"                                 },
+    { RespCode::SERV_READY1,      "201 server ready - no posting allowed"                              },
+
+    { RespCode::SERV_DISCON,      "400 service discontinued"                                           },
+    { RespCode::CMD_NOT_KNOWN,    "500 command not recognized"                                         },
+    { RespCode::CMD_SYNTAX_ERROR, "501 command syntax error"                                           },
+    { RespCode::ACCESS_DENIED,    "502 access restriction or permission denied"                        },
+    { RespCode::SRV_FAULT,        "503 program fault - command couldn't perform"                       },
+
+ //  rfc977: 3.2.2  The GROUP command
+    { RespCode::GRP_OK,           "211 <number of articles> <first one> <last one> <name of the group>"},
+    { RespCode::GRP_NONE,         "411 no such news group"                                             },
+
+ //  rfc977: 3.10.2  The POST command
+    { RespCode::POST_OK,          "240 article posted ok"                                              },
+    { RespCode::SEND_ARTICLE,     "340 send article to be posted. End with <CR-LF>.<CR-LF>"            },
+    { RespCode::POST_NOT_ALLOWED, "440 posting not allowed"                                            },
+    { RespCode::POST_FAIL,        "441 posting failed"                                                 },
+
+ //  rfc977: 6.2.4.  STAT
+    { RespCode::ARTICLE_OK,       "223 0|n message-id    Article exists"                               },
+    { RespCode::ARTICLE_NONE,     "430 No article with that message-id"                                },
+
+ //  rfc977: 3.11.2  The QUIT command
+    { RespCode::CLOSED_CON,       "205 closing connection - goodbye!"                                  },
+
+ //  rfc4643: 2.3.1
+    { RespCode::AUTH_OK,          "281 Authentication accepted"                                        },
+    { RespCode::AUTH_MORE,        "380 More Authentication Required"                                   },
+    { RespCode::PASS_NEEDED,      "381 Password required"                                              },
+    { RespCode::AUTH_REQUIRED,    "480 Authentication Required"                                        },
+    { RespCode::AUTH_FAIL,        "481 Authentication failed/rejected"                                 },
+    { RespCode::AUTH_ISSUE,       "482 Authentication commands issued out of sequence"                 },
+};
+
+//! return the response associated to a certain code
+inline char const *getResponse(RespCode aCode)
 {
     try
     {
@@ -92,8 +125,10 @@ char const *Rfc::getResponse(unsigned short aCode)
     }
     catch (std::out_of_range const &)
     {
-        return kResponses.at(0);
+        return kResponses.at(RespCode::UNKNOWN);
     }
 }
+
+} // namespace RFC
 } // namespace NNTP
 #endif // NNTP_H
