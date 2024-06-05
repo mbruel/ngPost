@@ -37,7 +37,7 @@ ArticleBuilder::ArticleBuilder(Poster *poster, QObject *parent)
     qDebug() << "Construction " << objectName() << " in thread: " << QThread::currentThread()->objectName();
 #endif
     connect(this,
-            &ArticleBuilder::scheduleNextArticle,
+            &ArticleBuilder::sigScheduleNextArticle,
             this,
             &ArticleBuilder::onPrepareNextArticle,
             Qt::QueuedConnection);

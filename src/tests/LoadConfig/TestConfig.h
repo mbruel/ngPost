@@ -1,13 +1,13 @@
-#ifndef TestVesions_H
-#define TestVesions_H
+#ifndef TestConfig_H
+#define TestConfig_H
 #include "tests/MacroTest.h"
 class NgPost;
 
-class TestVesions : public MacroTest
+class TestConfig : public MacroTest
 {
     Q_OBJECT
 public:
-    TestVesions(QString const &testName, int argc = 0, char *argv[] = nullptr);
+    TestConfig(QString const &testName, int argc = 0, char *argv[] = nullptr);
 
 private slots:
 
@@ -15,6 +15,7 @@ private slots:
     void onTestLoadOldConfig();
     void onTestLoadXSNewsPartnerConfig();
     void onTestLoadXSNewsPartnerConfAndCheckConnection();
+    void onTestPostingNotAllowed();
 };
 
-#endif // TestVesions_H
+#endif // TestConfig_H

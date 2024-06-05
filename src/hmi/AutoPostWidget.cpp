@@ -273,7 +273,7 @@ void AutoPostWidget::onMonitoringClicked()
         _ui->filesList->setSelectionMode(QAbstractItemView::ExtendedSelection);
 }
 
-void AutoPostWidget::newFileToProcess(QFileInfo const &fileInfo)
+void AutoPostWidget::sigNewFileToProcess(QFileInfo const &fileInfo)
 {
     QListWidgetItem *newItem =
             new QListWidgetItem(QIcon(fileInfo.isDir() ? ":/icons/folder.png" : ":/icons/file.png"),

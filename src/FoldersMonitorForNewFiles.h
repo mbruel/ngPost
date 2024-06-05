@@ -49,7 +49,7 @@ class FoldersMonitorForNewFiles : public QObject
     friend class NgConfigLoader; // to update sMSleep
 
 signals:
-    void newFileToProcess(QFileInfo const &fileInfo);
+    void sigNewFileToProcess(QFileInfo const &fileInfo);
 
 private:
     QFileSystemWatcher          _monitor; //!< monitor

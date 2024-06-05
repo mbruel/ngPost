@@ -33,21 +33,23 @@ class Article;
 /*!
  * \brief The NNTP::File class represent a File uploaded on Usenet thus it will holds all its Articles
  * All NntpFiles will live (active objects) in the Main Thread so they can write into the nzb without concurrency
- * when all its articles are posted (slot onArticlePosted) it emits allArticlesArePosted
+ * when all its articles are posted (slot onArticlePosted) it emits sigAllArticlesArePosted
  */
 class File : public QObject
 {
     Q_OBJECT
 signals:
-    void allArticlesArePosted();
-    void startPosting();
-    void scheduleDeletion();
-    void errorReadingFile();
+    void sigStartPosting();
+    void sigAllArticlesArePosted();
+    void sigErrorReadingFile();
+    void sigScheduleDeletion();
+
 
 private:
+    const uint               _num;     //!< file number (kind of id)
+
     PostingJob *const        _postingJob;
     const QFileInfo          _file;    //!< original file
-    const uint               _num;     //!< file number
     const uint               _nbFiles; //!< total number of file
     int const                _padding;
     QList<QString> const     _grpList; //!< groups where the file is posted

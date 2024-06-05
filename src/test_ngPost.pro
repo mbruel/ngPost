@@ -24,10 +24,9 @@ CONFIG(debug, debug|release): DEFINES += __TEST_DEBUG__
 #-------------------------------------------------
 
 DEFINES += __Launch_TestNgTools__
-
-DEFINES += __Launch_TestVesions__
-
+DEFINES += __Launch_TestConfig__
 DEFINES += __Launch_TestNzbCheck__
+DEFINES += __Launch_NoPostingConnection__
 
 #-------------------------------------------------
 # MACROS for TRACES
@@ -36,15 +35,15 @@ DEFINES -= __MB_TRACE_UndoStack__
 DEFINES -= __MB_TRACE_CACHE__
 
 SOURCES += \
+    tests/LoadConfig/TestConfig.cpp \
     tests/TestUtils.cpp \
     tests/main.cpp \
-    tests/LoadConfig/TestVesions.cpp \
     tests/testNgTools.cpp \
     tests/testnzbcheck.cpp
 
 HEADERS += \
+    tests/LoadConfig/TestConfig.h \
     tests/MacroTest.h \
-    tests/LoadConfig/TestVesions.h \
     tests/Macros.h \
     tests/TestUtils.h \
     tests/testNgTools.h \

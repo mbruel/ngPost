@@ -29,7 +29,7 @@ namespace NNTP
 class File;
 
 /*!
- * \brief The NNTP::Article is an Active Object so it can emit the posted signal when it has been uploaded
+ * \brief The NNTP::Article is an Active Object so it can emit the sigPosted signal when it has been uploaded
  * the NntpConnection will emit this signal from an upload thread
  * it will be received on the main thread by the File
  */
@@ -40,13 +40,13 @@ class Article : public QObject
     friend class File; //!< to access all members
 
 signals:
-    void posted(quint64 size); //!< to warn the main thread (async upload)
-    void failed(quint64 size); //!< to warn the main thread (async upload)
+    void sigPosted(quint64 size); //!< to warn the main thread (async upload)
+    void sigFailed(quint64 size); //!< to warn the main thread (async upload)
 
 private:
+    QUuid      _id;       //!< to generate a unique Message-ID for the Header
     File      *_nntpFile; //!< original file
     const uint _part;     //!< part of the original file
-    QUuid      _id;       //!< to generate a unique Message-ID for the Header
 
     std::string const *_from;    //!< NNTP header From (owned by PostingJob)
     char              *_subject; //!< NNTP header Subject (if defined it won't be obfuscated)
@@ -73,6 +73,10 @@ public:
     //                const std::string &body);
 
     ~Article();
+
+#ifdef __test_ngPost__
+    static std::string testPostingStdString(char const *msg = "NgPost testing POST allowance");
+#endif
 
     QString str() const;
 

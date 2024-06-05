@@ -41,7 +41,7 @@ public:
      * \param SharedParams that will be overwritten (previous unset parameters are kept)
      * \return list of errors (empty if all ok)
      */
-    static bool loadCmdLine(char *appName, NgPost &ngPost, SharedParams &postingParams);
+    static bool loadCmdLine(char *appName, NgPost &ngPost, SharedParams &mainParams);
 
 private:
     static void syntax(NgPost const &ngPost, char *appName);

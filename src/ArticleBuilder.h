@@ -31,7 +31,7 @@ class Article;
  * \brief The ArticleBuilder is a worker that will be moved to the Poster::_builderThread
  *
  * it is supposed to fill the Poster::_articles queue in its event loop
- *  using scheduleNextArticle / onPrepareNextArticle
+ *  using sigScheduleNextArticle / onPrepareNextArticle
  *
  * if an NntpConnection is in advance, it might use directly getNextArticle via the Poster
  * this scenario should not happen as there a one to one Builder / Poster Thread.
@@ -40,7 +40,7 @@ class ArticleBuilder : public QObject
 {
     Q_OBJECT
 signals:
-    void scheduleNextArticle();
+    void sigScheduleNextArticle();
 
 private:
     Poster *const     _poster;

@@ -131,7 +131,7 @@ QList<QCommandLineOption> const NgCmdLineLoader::kCmdOptions = {
     { { "n", kOptionNames[Opt::CONNECTION] }, tr("number of NNTP connections"), kOptionNames[Opt::CONNECTION] },
 };
 
-bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost &ngPost, SharedParams &postingParams)
+bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost &ngPost, SharedParams &mainParams)
 {
     QString            appVersion = QString("%1_v%2").arg(kAppName, kVersion);
     QCommandLineParser parser;
@@ -156,9 +156,9 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost &ngPost, SharedParams &p
     if (parser.isSet(kOptionNames[Opt::QUIET]))
     {
         NgLogger::setDebug(NgLogger::DebugLevel::None);
-        postingParams->_quiet            = true;
-        postingParams->_dispProgressBar  = false;
-        postingParams->_dispFilesPosting = false;
+        mainParams->_quiet            = true;
+        mainParams->_dispProgressBar  = false;
+        mainParams->_dispFilesPosting = false;
     }
 
     // 1.: show version ?
@@ -191,7 +191,7 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost &ngPost, SharedParams &p
     if (parser.isSet(kOptionNames[Opt::CONF]))
     {
         QStringList errors =
-                NgConfigLoader::loadConfig(ngPost, parser.value(kOptionNames[Opt::CONF]), postingParams);
+                NgConfigLoader::loadConfig(ngPost, parser.value(kOptionNames[Opt::CONF]), mainParams);
         if (!errors.isEmpty())
         {
             NgLogger::criticalError(errors.join("\n"), NgError::ERR_CODE::ERR_CONF_FILE);
@@ -224,11 +224,11 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost &ngPost, SharedParams &p
     if (parser.isSet(kOptionNames[Opt::DISP_PROGRESS]))
     {
         QString val = parser.value(kOptionNames[Opt::DISP_PROGRESS]);
-        postingParams->setDisplayProgress(val.trimmed());
+        mainParams->setDisplayProgress(val.trimmed());
     }
 
     // 7.: Load server(s) if given (so we can do a nzbCheck if required)
-    if (!loadServersParameters(parser, postingParams))
+    if (!loadServersParameters(parser, mainParams))
         return false; // end of game :( (error has been sent)
 
     // 8.: is it an nzbCheck demand ? (no posting)
@@ -251,8 +251,8 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost &ngPost, SharedParams &p
                 NgLogger::error(tr("Destination directory %1 doesn't exist...").arg(nzbPath));
                 return false; // end of Game :(
             }
-            if (!postingParams->overwriteNzb())
-                postingParams->_nzbPath = NgTools::substituteExistingFile(
+            if (!mainParams->overwriteNzb())
+                mainParams->_nzbPath = NgTools::substituteExistingFile(
                         QFileInfo(QDir(nzbPath), QString("%1.nzb").arg(fi.baseName())).absoluteFilePath());
         }
         return ngPost.doNzbCheck(parser.value(kOptionNames[Opt::CHECK]).trimmed());
@@ -280,14 +280,14 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost &ngPost, SharedParams &p
             return false; // end of game :(
         }
         else
-            postingParams->_delAuto = true;
+            mainParams->_delAuto = true;
     }
 
-    if (!loadPostingParameters(parser, postingParams))
+    if (!loadPostingParameters(parser, mainParams))
         return false; // end of game :( (error has been sent)
 
     // 11.: packing compression obfuscation settings
-    if (!loadPackingParameters(parser, postingParams))
+    if (!loadPackingParameters(parser, mainParams))
         return false; // end of game :( (error has been sent)
 
     // 12.1: single post using -i can provide the rar name
@@ -299,7 +299,7 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost &ngPost, SharedParams &p
     if (parser.isSet(kOptionNames[Opt::RAR_PASS]))
     {
         rarPass                      = parser.value(kOptionNames[Opt::RAR_PASS]);
-        postingParams->_rarPassFixed = rarPass;
+        mainParams->_rarPassFixed = rarPass;
     }
     // 12.3: we could also get a fixed poster email (from)
     std::string from;
@@ -314,8 +314,8 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost &ngPost, SharedParams &p
     // or why may generate a new one for each post(s)
     else if (parser.isSet(kOptionNames[Opt::GEN_FROM]))
     {
-        postingParams->_genFrom = true;
-        if (!postingParams->quietMode())
+        mainParams->_genFrom = true;
+        if (!mainParams->quietMode())
             NgLogger::log(tr("Generate new random poster for each post"), true);
         from = NgTools::randomStdFrom();
     }
@@ -324,37 +324,37 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost &ngPost, SharedParams &p
 
     // 13.: do we have some auto directory to process? fill the list!
     QList<QDir> autoDirs;
-    if (!getAutoDirectories(autoDirs, parser, postingParams))
+    if (!getAutoDirectories(autoDirs, parser, mainParams))
         return false; // end of game :( (error has been sent)
 
     // 14.: do we have folders to monitor?
     bool isMonitoring = false;
-    if (!startFoldersMonitoring(isMonitoring, parser, ngPost, postingParams))
+    if (!startFoldersMonitoring(isMonitoring, parser, ngPost, mainParams))
         return false; // end of game :( (error has been sent)
 
     // 15.: get single files to post (-i option), the nzbName and nzbPath
     QList<QFileInfo> filesToUpload;
-    if (!getInputFilesToGroupPost(filesToUpload, parser, postingParams))
+    if (!getInputFilesToGroupPost(filesToUpload, parser, mainParams))
         return false; // end of game :( (error has been sent)
 
 #ifdef __DEBUG__
-    postingParams->dumpParams();
+    mainParams->dumpParams();
     qDebug() << "[MB_TRACE]filesToUpload: " << filesToUpload;
 #endif
 
     // 16.: start posting the filesToUpload (if we have some)
     if (!filesToUpload.isEmpty())
-        prepareAndStartPostingSingleFiles(rarName, rarPass, from, filesToUpload, parser, ngPost, postingParams);
+        prepareAndStartPostingSingleFiles(rarName, rarPass, from, filesToUpload, parser, ngPost, mainParams);
 
     // 17.: do auto directories
     for (QDir const &dir : autoDirs)
     {
-        if (!postingParams->quietMode())
+        if (!mainParams->quietMode())
             NgLogger::log(QString("===> Auto dir: %1").arg(dir.absolutePath()), true);
         for (QFileInfo const &fileInfo :
              dir.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name))
             ngPost.post(fileInfo,
-                        postingParams->_monitorNzbFolders ? QDir(fileInfo.absolutePath()).dirName() : QString());
+                        mainParams->_monitorNzbFolders ? QDir(fileInfo.absolutePath()).dirName() : QString());
     }
 
     if (filesToUpload.isEmpty() && autoDirs.isEmpty() && !isMonitoring)
@@ -372,13 +372,13 @@ void NgCmdLineLoader::prepareAndStartPostingSingleFiles(QString                 
                                                         QList<QFileInfo>         &filesToUpload,
                                                         QCommandLineParser const &parser,
                                                         NgPost                   &ngPost,
-                                                        SharedParams             &postingParams)
+                                                        SharedParams             &mainParams)
 {
     // The nzbName will be the one of the first input file
     QString nzbName = ngPost.getNzbName(filesToUpload.front());
 
     // 16.: is the nzb output path clearly given?
-    QString nzbPath = postingParams->nzbPath();
+    QString nzbPath = mainParams->nzbPath();
     if (parser.isSet("o"))
     {
         QFileInfo nzb(parser.value(kOptionNames[Opt::OUTPUT]));
@@ -388,12 +388,12 @@ void NgCmdLineLoader::prepareAndStartPostingSingleFiles(QString                 
     if (rarName.isEmpty())
         rarName = filesToUpload.front().baseName();
 
-    if (postingParams->doCompress())
+    if (mainParams->doCompress())
     {
-        if (postingParams->genName())
-            rarName = NgTools::randomFileName(postingParams->lengthName());
-        if (postingParams->genPass())
-            rarPass = NgTools::randomPass(postingParams->lengthPass());
+        if (mainParams->genName())
+            rarName = NgTools::randomFileName(mainParams->lengthName());
+        if (mainParams->genPass())
+            rarPass = NgTools::randomPass(mainParams->lengthPass());
     }
 
     // generic meta (keyword, value) data for the nzb headers
@@ -425,7 +425,7 @@ void NgCmdLineLoader::prepareAndStartPostingSingleFiles(QString                 
 
 bool NgCmdLineLoader::getInputFilesToGroupPost(QList<QFileInfo>         &filesToUpload,
                                                QCommandLineParser const &parser,
-                                               SharedParams             &postingParams)
+                                               SharedParams             &mainParams)
 {
     for (QString const &filePath : parser.values(kOptionNames[Opt::INPUT]))
     {
@@ -443,7 +443,7 @@ bool NgCmdLineLoader::getInputFilesToGroupPost(QList<QFileInfo>         &filesTo
             {
                 filesToUpload << fileInfo;
                 NgLogger::log(tr("+ File to %1: %2 (%3)")
-                                      .arg(postingParams->_doCompress ? tr("compress") : tr("post"))
+                                      .arg(mainParams->_doCompress ? tr("compress") : tr("post"))
                                       .arg(fileInfo.fileName())
                                       .arg(NgTools::humanSize(fileInfo.size())),
                               true,
@@ -451,7 +451,7 @@ bool NgCmdLineLoader::getInputFilesToGroupPost(QList<QFileInfo>         &filesTo
             }
             else
             { // it's a directory
-                if (postingParams->_doCompress)
+                if (mainParams->_doCompress)
                 { // with compression
                     NgLogger::log(tr("+ Adding folder to Compress: %1").arg(fileInfo.absoluteFilePath()),
                                   true,
@@ -498,11 +498,11 @@ bool NgCmdLineLoader::getInputFilesToGroupPost(QList<QFileInfo>         &filesTo
 bool NgCmdLineLoader::startFoldersMonitoring(bool                     &isMonitoring,
                                              QCommandLineParser const &parser,
                                              NgPost                   &ngPost,
-                                             SharedParams             &postingParams)
+                                             SharedParams             &mainParams)
 {
     if (parser.isSet(kOptionNames[Opt::MONITOR_DIR]))
     {
-        if (!postingParams->_doCompress && (!postingParams->_doPar2 || !postingParams->_monitorIgnoreDir))
+        if (!mainParams->_doCompress && (!mainParams->_doPar2 || !mainParams->_monitorIgnoreDir))
         {
             NgLogger::criticalError(
                     tr("Error syntax: --monitor only works with --compress or with --gen_par2 ONLY IF "
@@ -531,11 +531,11 @@ bool NgCmdLineLoader::startFoldersMonitoring(bool                     &isMonitor
 
 bool NgCmdLineLoader::getAutoDirectories(QList<QDir>              &autoDirs,
                                          QCommandLineParser const &parser,
-                                         SharedParams             &postingParams)
+                                         SharedParams             &mainParams)
 {
     if (parser.isSet(kOptionNames[Opt::AUTO_DIR]))
     {
-        if (!postingParams->_doCompress && !postingParams->_doPar2)
+        if (!mainParams->_doCompress && !mainParams->_doPar2)
         { // MB_TODO: not sure why? why ok with par2 but no compression?
             NgLogger::criticalError(
                     tr("Error syntax: --auto only works with --compress or --gen_par2 or --pack with at least "
@@ -555,7 +555,7 @@ bool NgCmdLineLoader::getAutoDirectories(QList<QDir>              &autoDirs,
             else
             {
                 autoDirs << QDir(fi.absoluteFilePath());
-                if (!postingParams->_doCompress)
+                if (!mainParams->_doCompress)
                 {
                     // only genPar2 => only accept files
                     // cause no recursivity on subfolders! Eurêka!
@@ -577,21 +577,21 @@ bool NgCmdLineLoader::getAutoDirectories(QList<QDir>              &autoDirs,
     return true; // continue the game ;)
 }
 
-bool NgCmdLineLoader::loadPostingParameters(QCommandLineParser const &parser, SharedParams &postingParams)
+bool NgCmdLineLoader::loadPostingParameters(QCommandLineParser const &parser, SharedParams &mainParams)
 {
     // number of threads
     if (parser.isSet(kOptionNames[Opt::THREAD]))
     {
         bool ok;
-        postingParams->_nbThreads = parser.value(kOptionNames[Opt::THREAD]).toUShort(&ok);
+        mainParams->_nbThreads = parser.value(kOptionNames[Opt::THREAD]).toUShort(&ok);
         if (!ok)
         {
             NgLogger::criticalError(tr("You should give an integer for the number of threads (option -t)"),
                                     NgError::ERR_CODE::ERR_NB_THREAD);
             return false; // end of game :'(
         }
-        if (postingParams->_nbThreads < 1)
-            postingParams->_nbThreads = 1;
+        if (mainParams->_nbThreads < 1)
+            mainParams->_nbThreads = 1;
         // the case _nbThreads > QThread::idealThreadCount() is handled in PostingJob::_postFiles
     }
 
@@ -632,24 +632,24 @@ bool NgCmdLineLoader::loadPostingParameters(QCommandLineParser const &parser, Sh
 
     // groups
     if (parser.isSet(kOptionNames[Opt::GROUPS]))
-        postingParams->updateGroups(parser.value(kOptionNames[Opt::GROUPS]));
+        mainParams->updateGroups(parser.value(kOptionNames[Opt::GROUPS]));
 
     // obfuscation
     if (parser.isSet(kOptionNames[Opt::OBFUSCATE]))
     {
-        postingParams->_obfuscateArticles = true;
-        if (!postingParams->quietMode())
+        mainParams->_obfuscateArticles = true;
+        if (!mainParams->quietMode())
             NgLogger::log(tr("Do article obfuscation (the subject of each Article will be a UUID)\n"), true);
     }
     return true; // continue the game ;)
 }
 
-bool NgCmdLineLoader::loadServersParameters(QCommandLineParser const &parser, SharedParams &postingParams)
+bool NgCmdLineLoader::loadServersParameters(QCommandLineParser const &parser, SharedParams &mainParams)
 {
     // 1.: NNTP server following the format (<user>:<pass>@@@)?<host>:<port>:<nbCons>:(no)?ssl
     if (parser.isSet(kOptionNames[Opt::SERVER]))
     {
-        auto &nntpServers = postingParams->_nntpServers;
+        auto &nntpServers = mainParams->_nntpServers;
         nntpServers.clear(); // we provide them command line so we don't want to use those from config!
         QRegularExpression regExp(kNntpServerStrRegExp, QRegularExpression::CaseInsensitiveOption);
         for (QString const &serverParam : parser.values(kOptionNames[Opt::SERVER]))
@@ -688,7 +688,7 @@ bool NgCmdLineLoader::loadServersParameters(QCommandLineParser const &parser, Sh
         // first get the host
         QString host = parser.value(kOptionNames[Opt::HOST]);
 
-        auto &nntpServers = postingParams->_nntpServers;
+        auto &nntpServers = mainParams->_nntpServers;
         nntpServers.clear();
         if (!parser.isSet(kOptionNames[Opt::SERVER]))
             nntpServers.clear(); // we clear only those from config (i.e: if not one from 1.)
@@ -742,33 +742,33 @@ bool NgCmdLineLoader::loadServersParameters(QCommandLineParser const &parser, Sh
     return true; // continue the game ;)
 }
 
-bool NgCmdLineLoader::loadPackingParameters(QCommandLineParser const &parser, SharedParams &postingParams)
+bool NgCmdLineLoader::loadPackingParameters(QCommandLineParser const &parser, SharedParams &mainParams)
 {
     // General packing attributes:
     if (parser.isSet(kOptionNames[Opt::PACK]))
-        postingParams->enableAutoPacking();
+        mainParams->enableAutoPacking();
     if (parser.isSet(kOptionNames[Opt::COMPRESS]))
-        postingParams->_doCompress = true;
+        mainParams->_doCompress = true;
     if (parser.isSet(kOptionNames[Opt::GEN_PAR2]))
-        postingParams->_doPar2 = true;
+        mainParams->_doPar2 = true;
     if (parser.isSet(kOptionNames[Opt::GEN_NAME]))
-        postingParams->_genName = true;
+        mainParams->_genName = true;
     if (parser.isSet(kOptionNames[Opt::GEN_PASS]))
-        postingParams->_genPass = true;
+        mainParams->_genPass = true;
     if (parser.isSet(kOptionNames[Opt::RAR_NO_ROOT_FOLDER]))
-        postingParams->_rarNoRootFolder = true;
+        mainParams->_rarNoRootFolder = true;
 
     // compression settings
     if (parser.isSet(kOptionNames[Opt::TMP_DIR]))
-        postingParams->_tmpPath = parser.value(kOptionNames[Opt::TMP_DIR]);
+        mainParams->_tmpPath = parser.value(kOptionNames[Opt::TMP_DIR]);
     if (parser.isSet(kOptionNames[Opt::RAR_PATH]))
-        postingParams->_rarPath = parser.value(kOptionNames[Opt::RAR_PATH]);
+        mainParams->_rarPath = parser.value(kOptionNames[Opt::RAR_PATH]);
     if (parser.isSet(kOptionNames[Opt::RAR_SIZE]))
     {
         bool ok;
         uint nb = parser.value(kOptionNames[Opt::RAR_SIZE]).toUInt(&ok);
         if (ok)
-            postingParams->_rarSize = nb;
+            mainParams->_rarSize = nb;
     }
     if (parser.isSet(kOptionNames[Opt::RAR_MAX]))
     {
@@ -776,8 +776,8 @@ bool NgCmdLineLoader::loadPackingParameters(QCommandLineParser const &parser, Sh
         uint nb = parser.value(kOptionNames[Opt::RAR_MAX]).toUInt(&ok);
         if (ok)
         {
-            postingParams->_rarMax    = nb;
-            postingParams->_useRarMax = true;
+            mainParams->_rarMax    = nb;
+            mainParams->_useRarMax = true;
         }
     }
     if (parser.isSet(kOptionNames[Opt::LENGTH_NAME]))
@@ -785,14 +785,14 @@ bool NgCmdLineLoader::loadPackingParameters(QCommandLineParser const &parser, Sh
         bool ok;
         uint nb = parser.value(kOptionNames[Opt::LENGTH_NAME]).toUInt(&ok);
         if (ok)
-            postingParams->_lengthName = nb;
+            mainParams->_lengthName = nb;
     }
     if (parser.isSet(kOptionNames[Opt::LENGTH_PASS]))
     {
         bool ok;
         uint nb = parser.value(kOptionNames[Opt::LENGTH_PASS]).toUInt(&ok);
         if (ok)
-            postingParams->_lengthPass = nb;
+            mainParams->_lengthPass = nb;
     }
 
     // par2 redundancy section
@@ -802,9 +802,9 @@ bool NgCmdLineLoader::loadPackingParameters(QCommandLineParser const &parser, Sh
         uint nb = parser.value(kOptionNames[Opt::PAR2_PCT]).toUInt(&ok);
         if (ok)
         {
-            postingParams->_par2Pct = nb;
+            mainParams->_par2Pct = nb;
             if (nb > 0)
-                postingParams->_doPar2 = true;
+                mainParams->_doPar2 = true;
         }
     }
     if (parser.isSet(kOptionNames[Opt::PAR2_PATH]))
@@ -814,7 +814,7 @@ bool NgCmdLineLoader::loadPackingParameters(QCommandLineParser const &parser, Sh
         {
             QFileInfo fi(val);
             if (fi.exists() && fi.isFile() && fi.isExecutable())
-                postingParams->_par2Path = val;
+                mainParams->_par2Path = val;
             else
             {
                 NgLogger::criticalError(tr("The given par2 path is not executable: %1").arg(val),
@@ -823,7 +823,7 @@ bool NgCmdLineLoader::loadPackingParameters(QCommandLineParser const &parser, Sh
             }
         }
     }
-    if (postingParams->_doPar2 && postingParams->_par2Pct == 0 && postingParams->_par2Args.isEmpty())
+    if (mainParams->_doPar2 && mainParams->_par2Pct == 0 && mainParams->_par2Args.isEmpty())
     {
         NgLogger::criticalError(
                 tr("Error: can't generate par2 if the redundancy percentage is null or PAR2_ARGS is not "

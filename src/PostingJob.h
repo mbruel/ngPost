@@ -64,21 +64,23 @@ class PostingJob : public QObject
 
 signals:
     //! connected to onStartPosting (to be able to run on a different Thread)
-    void startPosting(bool isActiveJob);
-    void stopPosting(); //!< stop posting (pause by user (from GUI))
+    void sigStartPosting(bool isActiveJob);
+    void sigStopPosting(); //!< stop posting (pause by user (from GUI))
 
-    void postingStarted();  //!< emitted at the end of onStartPosting
-    void postingFinished(); //!< posting is finished
+    void sigPostingStarted();  //!< emitted at the end of onStartPosting
+    void sigPostingFinished(); //!< posting is finished
 
     //! to update the PostingWidget with the names of the archives that will be posted
     //! const ref even if it goes to main thread cause it won't be destroyed anytime soon
-    void archiveFileNames(QStringList const &paths);
-    void articlesNumber(uint nbArticles); //!< total number of articles for the progress bar
+    void sigArchiveFileNames(QStringList const &paths);
+    void sigArticlesNumber(uint nbArticles); //!< total number of articles for the progress bar
 
     //! to warn that a file is fully posted
-    void filePosted(QString filePath, uint nbArticles, uint nbFailed);
+    void sigFilePosted(QString filePath, uint nbArticles, uint nbFailed);
 
-    void packingDone(); //!< end of packing (compression and or par2)
+    void sigPackingDone(); //!< end of packing (compression and or par2)
+
+    void sigNoMorePostingConnection(PostingJob *job); //!< if we've other jobs, no need to do them!
 
 private:
     NgPost &_ngPost; //!< handle on the application to access global configs
@@ -92,13 +94,13 @@ private:
     /*!
      * \brief _files that will be posted by _postFiles()
      * they can be directly _params->files() if no packing (compression and/or par2)
-     * most likely they will be replaced by the created archives located in _compressDir
+     * most likely they will be replaced by the created archives located in _packingTmpDir
      */
     QFileInfoList _files;
     AtomicBool    _delFilesAfterPost; //!< we're talking about the original files _params->files()
 
     QProcess *_extProc;          //!< process to launch compression and/or par2 asynchronously
-    QDir     *_compressDir;      //!< directory containing the archives
+    QDir     *_packingTmpDir;    //!< directory containing the archives
     bool      _limitProcDisplay; //!< limit external process output
     ushort    _nbProcDisp;       //!< hacky way to limit external process output
 
@@ -256,8 +258,8 @@ public slots:
 private slots:
     /*!
      * \brief stating point of the Job. it might:
-     *    - launch a compression process using _extProc with files stored in _compressDir
-     *    - launch a par2 process using _extProc with files stored in _compressDir
+     *    - launch a compression process using _extProc with files stored in _packingTmpDir
+     *    - launch a par2 process using _extProc with files stored in _packingTmpDir
      *    - post directly the files using _postFiles()
      *  Bare in mind that's asynchronous: the end of _extProc will trigger the next step
      *  cf startCompressFiles and startGenPar2 to know the receiving slots ;)
@@ -326,7 +328,7 @@ private:
 
     /*!
      * \brief if we do some packing, the _files to be posted needs to be update
-     * by thoses created in _compressDir
+     * by thoses created in _packingTmpDir
      * return the list of the archiveNames
      * can be used twice if we both compress and generate the par2
      */

@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="ngPost" nsURI="http://www.example.org/ngPost" nsPrefix="ngPost">
+  <eClassifiers xsi:type="ecore:EClass" name="NgPost" eSuperTypes="#//QT/QObject #//utils/CmdOrGuiApp">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_mainParams" lowerBound="1"
+        eType="#//MainParams"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_nzbCheck" eType="#//NzbCheck"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_activeJob" eType="#//PostingJob"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_packingJob" eType="#//PostingJob"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_pendingJobs" upperBound="-1"
+        eType="#//PostingJob"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_folderMonitor" lowerBound="1"
+        eType="#//FoldersMonitorForNewFiles"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_translators" lowerBound="1"
+        upperBound="-1"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_netMgr" lowerBound="1"
+        eType="#//QT/QNetworkAccessManager"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_shutdownProc"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="__dbHistoryFile" lowerBound="1"
+        eType="#//Database"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_proxySocks5" eType="#//QT/QNetworkProxy"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="qprocess" eType="#//QT/QProcess"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="qthread" eType="#//QT/QThread"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="qnetworkreply" eType="#//QT/QNetworkReply"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="qtranslator" eType="#//QT/QTranslator"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="NzbCheck" eSuperTypes="#//QT/QObject"/>
+  <eClassifiers xsi:type="ecore:EClass" name="FoldersMonitorForNewFiles" eSuperTypes="#//QT/QObject"/>
+  <eClassifiers xsi:type="ecore:EClass" name="Database"/>
+  <eClassifiers xsi:type="ecore:EClass" name="PostingJob" eSuperTypes="#//QT/QObject">
+    <eOperations name="sigStartPosting" upperBound="-1"/>
+    <eOperations name="sigStopPosting" upperBound="-1"/>
+    <eOperations name="sigPostingStarted" upperBound="-1"/>
+    <eOperations name="sigPostingFinished" upperBound="-1"/>
+    <eOperations name="sigArchiveFileNames" upperBound="-1"/>
+    <eOperations name="sigArticlesNumber" upperBound="-1"/>
+    <eOperations name="sigFilePosted" upperBound="-1"/>
+    <eOperations name="sigPackingDone" upperBound="-1"/>
+    <eOperations name="sigNoMorePostingConnection" upperBound="-1"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_ngPost" lowerBound="1"
+        eType="#//NgPost"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_nntpConnections" lowerBound="1"
+        eType="#//NntpConnection"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_closedConnections" eType="#//NntpConnection"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_params" lowerBound="1"
+        eType="#//PostingParams"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_files" lowerBound="1"
+        upperBound="-1" eType="#//QT/QFile"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="_totalSize" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_extProc" eType="#//QT/QProcess"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_packingTmpDir" eType="#//QT/QDir"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_filesToUpload" upperBound="-1"
+        eType="#//nntp/NntpFile"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_filesInProgress" upperBound="-1"
+        eType="#//nntp/NntpFile"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_filesToUpload" upperBound="-1"
+        eType="#//nntp/NntpFile"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_nzbStream" lowerBound="1"
+        eType="#//QT/QTextStream"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_nntpFile" eType="#//nntp/NntpFile"
+        eOpposite="#//nntp/NntpFile/_postingJob"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"
+        defaultValueLiteral="0"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_stopPosting" lowerBound="1"
+        eType="#//QT/AtomicBool"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_posters" lowerBound="1"
+        upperBound="-1" eType="#//Poster" eOpposite="#//Poster/_job"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="_obfuscatedFileNames" lowerBound="1">
+      <eGenericType eClassifier="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EMap">
+        <eTypeArguments/>
+        <eTypeArguments/>
+      </eGenericType>
+    </eStructuralFeatures>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="NntpConnection">
+    <eOperations name="sigStartConnection" upperBound="-1"/>
+    <eOperations name="sigKillConnection" upperBound="-1"/>
+    <eOperations name="sigScheduleDeleteLaterInOwnThread" upperBound="-1"/>
+    <eOperations name="sigPostingNotAllowed" upperBound="-1"/>
+    <eOperations name="sigSocketError" upperBound="-1"/>
+    <eOperations name="sigErrorConnecting" upperBound="-1"/>
+    <eOperations name="sigDisconnected" upperBound="-1"/>
+    <eOperations name="sigError" upperBound="-1"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="_id" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"
+        iD="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_srvParams" lowerBound="1"
+        eType="#//nntp/NntpServerParams"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_ngPost" lowerBound="1"
+        eType="#//NgPost"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_poster" eType="#//Poster"
+        eOpposite="#//Poster/_nntpConnections"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="_postingState" lowerBound="1"
+        eType="#//PostingState"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_socket" eType="#//QT/QTcpSocket"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="_postingNotAllowed" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_currentArticle" eType="#//nntp/NntpArticle"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ArticleBuilder" eSuperTypes="#//QT/QObject"/>
+  <eClassifiers xsi:type="ecore:EClass" name="Poster" eSuperTypes="#//QT/QObject">
+    <eOperations name="sigScheduleNextArticle" upperBound="-1"/>
+    <eOperations name="onPrepareNextArticle" lowerBound="1"/>
+    <eOperations name="getNextArticle"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="_id" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"
+        iD="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_job" lowerBound="1" eType="#//PostingJob"
+        eOpposite="#//PostingJob/_posters"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_builderThread" lowerBound="1"
+        eType="#//QT/QThread"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_connectionsThread" lowerBound="1"
+        eType="#//QT/QThread"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_articleBuilder" eType="#//ArticleBuilder"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_nntpConnections" lowerBound="1"
+        upperBound="-1" eType="#//NntpConnection" eOpposite="#//NntpConnection/_poster"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_articles" upperBound="-1"
+        eType="#//nntp/NntpArticle" resolveProxies="false"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_hasBeenStopped" lowerBound="1"
+        eType="#//QT/AtomicBool"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="MainParams" eSuperTypes="#//QT/QSharedData">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="_quiet" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="_dispProgressBar" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="_dispFilesPosting" lowerBound="1"
+        eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_ngPost" lowerBound="1"
+        eType="#//NgPost"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_nntpServers" lowerBound="1"
+        upperBound="-1" eType="#//nntp/NntpServerParams" resolveProxies="false"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="PostingParams" abstract="true">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_params" lowerBound="1"
+        eType="#//MainParams"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="_files" lowerBound="1"
+        upperBound="-1" eType="#//QT/QFileInfo"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="_grpList" lowerBound="1"
+        upperBound="-1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="_from" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="PostingState">
+    <eLiterals name="NOT_CONNECTED"/>
+    <eLiterals name="CONNECTED" value="1"/>
+    <eLiterals name="AUTH_USER" value="2" literal="AUTH_USER"/>
+    <eLiterals name="AUTH_PASS" value="3"/>
+    <eLiterals name="IDLE" value="4"/>
+    <eLiterals name="SENDING_ARTICLE" value="5"/>
+    <eLiterals name="WAITING_ANSWER" value="6"/>
+    <eLiterals name="NO_MORE_FILES" value="7"/>
+  </eClassifiers>
+  <eSubpackages name="QT">
+    <eClassifiers xsi:type="ecore:EClass" name="QObject"/>
+    <eClassifiers xsi:type="ecore:EClass" name="QCoreApplication"/>
+    <eClassifiers xsi:type="ecore:EClass" name="QApplication" eSuperTypes="#//QT/QCoreApplication"/>
+    <eClassifiers xsi:type="ecore:EClass" name="QProcess"/>
+    <eClassifiers xsi:type="ecore:EClass" name="QThread"/>
+    <eClassifiers xsi:type="ecore:EClass" name="QMutex"/>
+    <eClassifiers xsi:type="ecore:EClass" name="QTextStream"/>
+    <eClassifiers xsi:type="ecore:EClass" name="QNetworkAccessManager"/>
+    <eClassifiers xsi:type="ecore:EClass" name="QTranslator"/>
+    <eClassifiers xsi:type="ecore:EClass" name="QMainWindow"/>
+    <eClassifiers xsi:type="ecore:EClass" name="QSharedData"/>
+    <eClassifiers xsi:type="ecore:EClass" name="QFile"/>
+    <eClassifiers xsi:type="ecore:EClass" name="QFileInfo"/>
+    <eClassifiers xsi:type="ecore:EClass" name="QDir"/>
+    <eClassifiers xsi:type="ecore:EClass" name="QNetworkProxy"/>
+    <eClassifiers xsi:type="ecore:EClass" name="QNetworkReply"/>
+    <eClassifiers xsi:type="ecore:EClass" name="AtomicBool"/>
+    <eClassifiers xsi:type="ecore:EClass" name="QTcpSocket"/>
+  </eSubpackages>
+  <eSubpackages name="utils">
+    <eClassifiers xsi:type="ecore:EClass" name="CmdOrGuiApp" abstract="true">
+      <eOperations name="checkForNewVersion" lowerBound="1" eType="#//QT/QNetworkReply"/>
+      <eOperations name="parseCommandLine" lowerBound="1"/>
+      <eOperations name="appName" lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eOperations name="startEventLoop" lowerBound="1"/>
+      <eOperations name="useHMI" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+      <eOperations name="hideOrShowGUI"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="_app" lowerBound="1"
+          eType="#//QT/QCoreApplication"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="_hmi" eType="#//hmi/MainWindow"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="_mode" lowerBound="1"
+          eType="#//utils/AppMode"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EEnum" name="AppMode">
+      <eLiterals name="CMD"/>
+      <eLiterals name="HMI" value="1"/>
+    </eClassifiers>
+  </eSubpackages>
+  <eSubpackages name="hmi">
+    <eClassifiers xsi:type="ecore:EClass" name="MainWindow" eSuperTypes="#//QT/QMainWindow"/>
+  </eSubpackages>
+  <eSubpackages name="nntp">
+    <eClassifiers xsi:type="ecore:EClass" name="NntpArticle" eSuperTypes="#//QT/QObject">
+      <eOperations name="sigPosted"/>
+      <eOperations name="sigFailed"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="__id" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt" iD="true"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="_nntpFile" eType="#//nntp/NntpFile"
+          eOpposite="#//nntp/NntpFile/_articles"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="__part" lowerBound="1"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="_from" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="__subject" ordered="false"
+          lowerBound="1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="_body" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="_nbTrySending" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="NntpFile" eSuperTypes="#//QT/QObject">
+      <eOperations name="sigStartPosting" lowerBound="1" upperBound="-1"/>
+      <eOperations name="sigAllArticlesArePosted" lowerBound="1" upperBound="-1"/>
+      <eOperations name="sigErrorReadingFile" lowerBound="1" upperBound="-1"/>
+      <eOperations name="sigScheduleDeletion" lowerBound="1" upperBound="-1"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="__num" lowerBound="1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt" iD="true"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="_grpList" lowerBound="1"
+          upperBound="-1" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="_postingJob" eType="#//PostingJob"
+          eOpposite="#//PostingJob/_nntpFile"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="_file" lowerBound="1"
+          eType="#//QT/QFileInfo"/>
+      <eStructuralFeatures xsi:type="ecore:EReference" name="_articles" eType="#//nntp/NntpArticle"
+          eOpposite="#//nntp/NntpArticle/_nntpFile"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="_posted" upperBound="-1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+      <eStructuralFeatures xsi:type="ecore:EAttribute" name="_failed" upperBound="-1"
+          eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    </eClassifiers>
+    <eClassifiers xsi:type="ecore:EClass" name="NntpServerParams"/>
+    <eSubpackages name="RFC">
+      <eClassifiers xsi:type="ecore:EEnum" name="RespCode">
+        <eLiterals name="UNKNOWN"/>
+        <eLiterals name="SERV_READY" value="200"/>
+        <eLiterals name="SERV_DISCON" value="400"/>
+        <eLiterals name="CMD_NOT_KNOWN" value="500"/>
+        <eLiterals name="CMD_SYNTAX_ERROR" value="501"/>
+        <eLiterals name="ACCESS_DENIED" value="502"/>
+        <eLiterals name="SRV_FAULT" value="503"/>
+        <eLiterals name="GRP_OK" value="211"/>
+        <eLiterals name="GRP_NONE" value="411"/>
+        <eLiterals name="POST_OK" value="240"/>
+        <eLiterals name="SEND_ARTICLE" value="340"/>
+        <eLiterals name="POST_NOT_ALLOWED" value="440"/>
+        <eLiterals name="POST_FAIL" value="441"/>
+        <eLiterals name="ARTICLE_OK" value="223"/>
+        <eLiterals name="ARTICLE_NONE" value="430"/>
+        <eLiterals name="CLOSED_CON" value="205"/>
+        <eLiterals name="AUTH_OK" value="281"/>
+        <eLiterals name="AUTH_MORE" value="380"/>
+        <eLiterals name="PASS_NEEDED" value="381"/>
+        <eLiterals name="AUTH_REQUIRED" value="480"/>
+        <eLiterals name="AUTH_FAIL" value="481"/>
+        <eLiterals name="AUTH_ISSUE" value="482"/>
+      </eClassifiers>
+    </eSubpackages>
+  </eSubpackages>
+</ecore:EPackage>

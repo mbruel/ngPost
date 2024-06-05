@@ -117,7 +117,7 @@ void FoldersMonitorForNewFiles::onDirectoryChanged(const QString &folderPath)
                      << ", size: " << size << ", lastModif: " << fi.lastModified();
 
             if (!MB_LoadAtomic(_stopListening))
-                emit newFileToProcess(fi);
+                emit sigNewFileToProcess(fi);
 #ifdef __DEBUG__
             if (fi.isDir())
             {

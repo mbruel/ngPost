@@ -56,7 +56,7 @@ class Poster : public QObject
     friend class ArticleBuilder; // MB_TODO: check if we can avoid! we could?
 
 signals:
-    void noMorePostingConnection(Poster *poster);
+    void sigNoMorePostingConnection(Poster *poster);
 
 private:
     const ushort      _id;  //!< poster id (a PostingJob, its owner, has several)

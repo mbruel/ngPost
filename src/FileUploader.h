@@ -29,8 +29,8 @@ class FileUploader : public QObject
 {
     Q_OBJECT
 signals:
-    void error(QString const &msg);
-    void log(QString const &msg, bool newline = true);
+    void sigError(QString const &msg);
+    void sigLog(QString const &msg, bool newline = true);
 
 private:
     QNetworkAccessManager &_netMgr;

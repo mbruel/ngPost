@@ -36,8 +36,12 @@ NntpCheckCon::NntpCheckCon(NzbCheck *nzbCheck, int id, ServerParams const &srvPa
     , _postingState(PostingState::NOT_CONNECTED)
     , _currentArticle()
 {
-    connect(this, &NntpCheckCon::startConnection, this, &NntpCheckCon::onStartConnection, Qt::QueuedConnection);
-    connect(this, &NntpCheckCon::killConnection, this, &NntpCheckCon::onKillConnection, Qt::QueuedConnection);
+    connect(this,
+            &NntpCheckCon::sigStartConnection,
+            this,
+            &NntpCheckCon::onStartConnection,
+            Qt::QueuedConnection);
+    connect(this, &NntpCheckCon::sigKillConnection, this, &NntpCheckCon::onKillConnection, Qt::QueuedConnection);
 }
 
 NntpCheckCon::~NntpCheckCon()

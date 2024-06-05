@@ -66,32 +66,34 @@ NntpConnection::NntpConnection(NgPost const &ngPost, ushort id, NNTP::ServerPara
 #endif
 {
 #if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
-    qDebug() << QString("Creation %1 %2 ssl").arg(_logPrefix).arg(_srvParams.useSSL ? "with" : "no");
+    NgLogger::log(tr("Creation %1 %2 ssl").arg(_logPrefix).arg(_srvParams.useSSL ? "with" : "no"),
+                  true,
+                  NgLogger::DebugLevel::DebugBold);
 #endif
 
     connect(this,
-            &NntpConnection::startConnection,
+            &NntpConnection::sigStartConnection,
             this,
             &NntpConnection::onStartConnection,
             Qt::QueuedConnection);
     connect(this,
-            &NntpConnection::killConnection,
+            &NntpConnection::sigKillConnection,
             this,
             &NntpConnection::onKillConnection,
             Qt::QueuedConnection);
 
     connect(this,
-            &NntpConnection::scheduleDeleteLaterInOwnThread,
+            &NntpConnection::sigScheduleDeleteLaterInOwnThread,
             this,
             &QObject::deleteLater,
             Qt::QueuedConnection);
 
     connect(this,
-            &NntpConnection::log,
+            &NntpConnection::sigLog,
             [](QString const &msg, bool newline, NgLogger::DebugLevel debugLvl)
             { NgLogger::log(msg, newline, debugLvl); });
-    connect(this, &NntpConnection::error, qOverload<QString>(&NgLogger::error));
-    connect(this, &NntpConnection::errorConnecting, qOverload<QString>(&NgLogger::error));
+    connect(this, &NntpConnection::sigError, qOverload<QString>(&NgLogger::error));
+    connect(this, &NntpConnection::sigErrorConnecting, qOverload<QString>(&NgLogger::error));
 }
 
 NntpConnection::~NntpConnection()
@@ -198,7 +200,7 @@ void NntpConnection::onKillConnection()
     }
 
 #ifdef __test_ngPost__
-    emit stopTest();
+    emit sigStopTest();
 #endif
 }
 
@@ -243,7 +245,7 @@ void NntpConnection::_closeConnection()
 #endif
             _currentArticle = nullptr;
         }
-        emit disconnected(this);
+        emit sigDisconnected(this);
     }
 }
 
@@ -253,7 +255,7 @@ void NntpConnection::onDisconnected()
     {
 #if defined(__DEBUG__) && defined(LOG_CONNECTION_STEPS)
         if (!hasNoMoreFiles())
-            _error("> disconnected");
+            _error("> onDisconnected");
 #endif
         _isConnected = false;
 
@@ -267,7 +269,7 @@ void NntpConnection::onDisconnected()
         if (_currentArticle)
             _currentArticle->genNewId();
 
-        emit startConnection();
+        emit sigStartConnection();
     }
     else
     {
@@ -286,7 +288,7 @@ void NntpConnection::onDisconnected()
                 _error(tr("Closing connection, Failed Article: %1").arg(_currentArticle->str()));
             _currentArticle = nullptr;
         }
-        emit disconnected(this);
+        emit sigDisconnected(this);
     }
 }
 
@@ -314,7 +316,7 @@ void NntpConnection::onConnected()
         // We should receive the Hello Message
 
 #ifdef __test_ngPost__
-        emit connected();
+        emit sigConnected();
 #endif
     }
 }
@@ -329,7 +331,7 @@ void NntpConnection::onEncrypted()
     // We should receive the Hello Message
 
 #ifdef __test_ngPost__
-    emit connected();
+    emit sigConnected();
 #endif
 }
 
@@ -380,7 +382,7 @@ void NntpConnection::onReadyRead()
                 _postingState = PostingState::WAITING_ANSWER;
                 _currentArticle->write(this, NgConf::kArticleIdSignature); // This will be done async
                 if (_ngPost.dispPostingFile() && _currentArticle->isFirstArticle())
-                    emit _currentArticle->nntpFile()->startPosting();
+                    emit _currentArticle->nntpFile()->sigStartPosting();
             }
             else
             {
@@ -396,7 +398,7 @@ void NntpConnection::onReadyRead()
                 if (strncmp(line.constData(), RFC::getResponse(RFC::RespCode::POST_NOT_ALLOWED), 3) == 0)
                 {
                     _postingNotAllowed = true;
-                    emit postingNotAllowed(this);
+                    emit sigPostingNotAllowed(this);
                 }
                 _error(tr("Closing Connection due to ERROR on post command: '%2' (%1 skipped)\n")
                                .arg(_currentArticle->str())
@@ -438,7 +440,7 @@ void NntpConnection::onReadyRead()
                              .arg(line.constData()),
                      NgLogger::DebugLevel::Debug);
 #endif
-                emit _currentArticle->posted(_currentArticle->size());
+                emit _currentArticle->sigPosted(_currentArticle->size());
             }
             else
             {
@@ -491,10 +493,10 @@ void NntpConnection::onReadyRead()
                 // #if defined(__DEBUG__) && defined(LOG_CONNECTION_ERRORS_BEFORE_EMIT_SIGNALS)
                 //                 _error(err);
                 // #endif
-                emit errorConnecting(tr("[Connection #%1] Error connecting to server %2:%3")
-                                             .arg(_id)
-                                             .arg(_srvParams.host)
-                                             .arg(_srvParams.port));
+                emit sigErrorConnecting(tr("[Connection #%1] Error connecting to server %2:%3")
+                                                .arg(_id)
+                                                .arg(_srvParams.host)
+                                                .arg(_srvParams.port));
                 _closeConnection();
             }
             else
@@ -503,7 +505,7 @@ void NntpConnection::onReadyRead()
                 _log("> received Hello Message");
 #endif
 #ifdef __test_ngPost__
-                emit helloReceived();
+                emit sigHelloReceived();
 #endif
                 // Start authentication : send user info
                 if (_srvParams.user.empty())
@@ -539,11 +541,11 @@ void NntpConnection::onReadyRead()
                 // #if defined(__DEBUG__) && defined(LOG_CONNECTION_ERRORS_BEFORE_EMIT_SIGNALS)
                 //                 _error(err);
                 // #endif
-                emit errorConnecting(tr("[Connection #%1] Error sending user '%4' to server %2:%3")
-                                             .arg(_id)
-                                             .arg(_srvParams.host)
-                                             .arg(_srvParams.port)
-                                             .arg(_srvParams.user.c_str()));
+                emit sigErrorConnecting(tr("[Connection #%1] Error sending user '%4' to server %2:%3")
+                                                .arg(_id)
+                                                .arg(_srvParams.host)
+                                                .arg(_srvParams.port)
+                                                .arg(_srvParams.user.c_str()));
                 _closeConnection();
             }
             else
@@ -574,7 +576,7 @@ void NntpConnection::onReadyRead()
                 // #if defined(__DEBUG__) && defined(LOG_CONNECTION_ERRORS_BEFORE_EMIT_SIGNALS)
                 //                 _error(err);
                 // #endif
-                emit errorConnecting(
+                emit sigErrorConnecting(
                         tr("[Connection #%1] Error authentication to server %2:%3 with user '%4' and pass '%5'")
                                 .arg(_id)
                                 .arg(_srvParams.host)
@@ -591,7 +593,7 @@ void NntpConnection::onReadyRead()
                 _postingState = PostingState::IDLE;
 
 #ifdef __test_ngPost__
-                emit authenticated();
+                emit sigAuthenticated();
 #else
                 _sendNextArticle();
 #endif
@@ -599,7 +601,10 @@ void NntpConnection::onReadyRead()
         }
     }
 }
+// void NntpConnection::testSenddArticle(Article const &article);
+#ifdef __test_ngPost__
 
+#endif
 void NntpConnection::_sendNextArticle()
 {
 #ifdef __test_ngPost__

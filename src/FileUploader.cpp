@@ -89,13 +89,13 @@ void FileUploader::startUpload(QUrl const &serverUrl)
         }
         else
         {
-            emit error(tr("Error uploading nzb to %1: Protocol not supported").arg(url()));
+            emit sigError(tr("Error uploading nzb to %1: Protocol not supported").arg(url()));
             emit deleteLater();
         }
     }
     else
     {
-        emit error(tr("Error uploading file: can't open file ").arg(_nzbFile.fileName()));
+        emit sigError(tr("Error uploading file: can't open file ").arg(_nzbFile.fileName()));
         emit deleteLater();
     }
 }
@@ -104,9 +104,9 @@ void FileUploader::onUploadFinished()
 {
     qDebug() << "FileUploader reply: " << _reply->readAll();
     if (_reply->error())
-        emit error(tr("Error uploading nzb to %1: %2").arg(url()).arg(_reply->errorString()));
+        emit sigError(tr("Error uploading nzb to %1: %2").arg(url()).arg(_reply->errorString()));
     else
-        emit log(tr("nzb %1 uploaded to %2\n").arg(_nzbFilePath.fileName()).arg(url()));
+        emit sigLog(tr("nzb %1 uploaded to %2\n").arg(_nzbFilePath.fileName()).arg(url()));
 
     emit deleteLater();
 }

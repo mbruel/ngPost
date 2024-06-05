@@ -39,9 +39,9 @@ File::File(PostingJob           *postingJob,
            int                   padding,
            QList<QString> const &grpList)
     : QObject()
+    , _num(num)
     , _postingJob(postingJob)
     , _file(file)
-    , _num(num)
     , _nbFiles(nbFiles)
     , _padding(padding)
     , _grpList(grpList)
@@ -56,7 +56,7 @@ File::File(PostingJob           *postingJob,
              << " article size: " << NgConf::kArticleSize << " => nbArticles: " << _nbAticles;
 #endif
     _articles.reserve(static_cast<int>(_nbAticles));
-    connect(this, &File::scheduleDeletion, this, &QObject::deleteLater, Qt::QueuedConnection);
+    connect(this, &File::sigScheduleDeletion, this, &QObject::deleteLater, Qt::QueuedConnection);
 }
 
 File::~File()
@@ -85,7 +85,7 @@ void File::onArticlePosted(quint64 size)
     article->freeMemory(); // free resources
 
     if (_posted.size() + _failed.size() == static_cast<int>(_nbAticles))
-        emit allArticlesArePosted();
+        emit sigAllArticlesArePosted();
 }
 
 void File::onArticleFailed(quint64 size)
@@ -105,7 +105,7 @@ void File::onArticleFailed(quint64 size)
     article->freeMemory(); // free resources
 
     if (_posted.size() + _failed.size() == static_cast<int>(_nbAticles))
-        emit allArticlesArePosted();
+        emit sigAllArticlesArePosted();
 }
 
 #include <QDateTime>

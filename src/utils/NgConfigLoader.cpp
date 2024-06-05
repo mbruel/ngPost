@@ -30,7 +30,7 @@
 
 using namespace NgConf;
 
-QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath, SharedParams &postingParams)
+QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath, SharedParams &mainParams)
 {
     QFileInfo fileInfo(configPath);
     if (!fileInfo.exists() || !fileInfo.isFile() || !fileInfo.isReadable())
@@ -42,7 +42,7 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
 
     QStringList         errors;
     NNTP::ServerParams *serverParams = nullptr;                     // hold servers found (one by one)
-    auto               &_nntpServers = postingParams->_nntpServers; // to fill the SharedParams servers
+    auto               &_nntpServers = mainParams->_nntpServers; // to fill the SharedParams servers
 
     QTextStream stream(&file);
     int         lineNumber = 0;
@@ -105,9 +105,9 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
                     if (ok)
                     {
                         if (nb <= 1)
-                            postingParams->_nbThreads = 1;
-                        else if (nb < postingParams->_nbThreads)
-                            postingParams->_nbThreads = nb;
+                            mainParams->_nbThreads = 1;
+                        else if (nb < mainParams->_nbThreads)
+                            mainParams->_nbThreads = nb;
                     }
                 }
                 else if (opt == kOptionNames[Opt::SOCK_TIMEOUT])
@@ -117,7 +117,7 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
                     {
                         int timeout = nb * 1000; // value is in seconds in Config
                         if (timeout > kMinSocketTimeOut)
-                            postingParams->_socketTimeOut = timeout;
+                            mainParams->_socketTimeOut = timeout;
                     }
                 }
 
@@ -137,8 +137,8 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
                     QFileInfo nzbFI(val);
                     if (nzbFI.exists() && nzbFI.isDir() && nzbFI.isWritable())
                     {
-                        postingParams->_nzbPath     = val;
-                        postingParams->_nzbPathConf = val;
+                        mainParams->_nzbPath     = val;
+                        mainParams->_nzbPathConf = val;
                     }
                     else
                         addError(errors, lineNumber, tr("the nzbPath '%1' is not writable...").arg(val));
@@ -154,8 +154,8 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
                     QStringList allowedProtocols = { "ftp", "http", "https" };
                     if (allowedProtocols.contains(urlNzbUpload->scheme()))
                     {
-                        postingParams->_urlNzbUpload    = urlNzbUpload;
-                        postingParams->_urlNzbUploadStr = urlNzbUploadStr;
+                        mainParams->_urlNzbUpload    = urlNzbUpload;
+                        mainParams->_urlNzbUploadStr = urlNzbUploadStr;
                     }
                     else
                     {
@@ -171,29 +171,29 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
                 {
                     ushort nb = val.toUShort(&ok);
                     if (ok && nb > kDefaultResumeWaitInSec)
-                        postingParams->_waitDurationBeforeAutoResume = nb;
+                        mainParams->_waitDurationBeforeAutoResume = nb;
                 }
                 else if (opt == kOptionNames[Opt::NO_RESUME_AUTO])
-                    setBoolean(postingParams->_tryResumePostWhenConnectionLost, val, true);
+                    setBoolean(mainParams->_tryResumePostWhenConnectionLost, val, true);
                 else if (opt == kOptionNames[Opt::PREPARE_PACKING])
-                    setBoolean(postingParams->_preparePacking, val);
+                    setBoolean(mainParams->_preparePacking, val);
                 else if (opt == kOptionNames[Opt::MONITOR_FOLDERS])
-                    setBoolean(postingParams->_monitorNzbFolders, val);
+                    setBoolean(mainParams->_monitorNzbFolders, val);
                 else if (opt == kOptionNames[Opt::MONITOR_IGNORE_DIR])
-                    setBoolean(postingParams->_monitorIgnoreDir, val);
+                    setBoolean(mainParams->_monitorIgnoreDir, val);
                 else if (opt == kOptionNames[Opt::MONITOR_SEC_DELAY_SCAN])
                 {
                     ushort nb = val.toUShort(&ok);
                     if (ok && nb > 1 && nb <= 120)
                     {
-                        postingParams->_monitorSecDelayScan = nb;
+                        mainParams->_monitorSecDelayScan = nb;
                         FoldersMonitorForNewFiles::sMSleep  = nb * 1000;
                     }
                 }
                 else if (opt == kOptionNames[Opt::NZB_RM_ACCENTS])
-                    setBoolean(postingParams->_removeAccentsOnNzbFileName, val);
+                    setBoolean(mainParams->_removeAccentsOnNzbFileName, val);
                 else if (opt == kOptionNames[Opt::AUTO_CLOSE_TABS])
-                    setBoolean(postingParams->_autoCloseTabs, val);
+                    setBoolean(mainParams->_autoCloseTabs, val);
 
                 else if (opt == kOptionNames[Opt::LOG_IN_FILE] && isBooleanTrue(val))
                     ngPost.startLogInFile();
@@ -201,13 +201,13 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
                 else if (opt == kOptionNames[Opt::MONITOR_EXT])
                 {
                     for (QString const &extension : val.split(","))
-                        postingParams->_monitorExtensions << extension.trimmed().toLower();
+                        mainParams->_monitorExtensions << extension.trimmed().toLower();
                 }
                 else if (opt == kOptionNames[Opt::OBFUSCATE])
                 {
                     if (val.toLower().startsWith("article"))
                     {
-                        postingParams->_obfuscateArticles = true;
+                        mainParams->_obfuscateArticles = true;
                         NgLogger::log(
                                 tr("Doing article obfuscation (the subject of each Article will be a UUID)"),
                                 true);
@@ -218,13 +218,13 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
                     QString valLower = val.toLower();
                     if (valLower == kGroupPolicies[GROUP_POLICY::EACH_POST])
                     {
-                        postingParams->_groupPolicy = GROUP_POLICY::EACH_POST;
+                        mainParams->_groupPolicy = GROUP_POLICY::EACH_POST;
                         if (!ngPost.quietMode())
                             NgLogger::log(tr("Group Policy EACH_POST: each post on a different group"), true);
                     }
                     else if (val == kGroupPolicies[GROUP_POLICY::EACH_FILE])
                     {
-                        postingParams->_groupPolicy = GROUP_POLICY::EACH_FILE;
+                        mainParams->_groupPolicy = GROUP_POLICY::EACH_FILE;
                         if (!ngPost.quietMode())
                             NgLogger::log(tr("Group Policy EACH_FILE: each file on a different group"), true);
                     }
@@ -232,7 +232,7 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
                         NgLogger::log(tr("Group Policy ALL: posting everything on all newsgroup"), true);
                 }
                 else if (opt == kOptionNames[Opt::DISP_PROGRESS])
-                    postingParams->setDisplayProgress(val);
+                    mainParams->setDisplayProgress(val);
                 else if (opt == kOptionNames[Opt::MSG_ID])
                 {
                     kArticleIdSignature = val.toStdString();
@@ -254,17 +254,17 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
                         email += "@ngPost.com";
 
                     email                    = NgTools::escapeXML(email);
-                    postingParams->_from     = email.toStdString();
-                    postingParams->_saveFrom = true;
+                    mainParams->_from     = email.toStdString();
+                    mainParams->_saveFrom = true;
                 }
                 else if (opt == kOptionNames[Opt::GEN_FROM])
                 {
-                    setBoolean(postingParams->_genFrom, val);
+                    setBoolean(mainParams->_genFrom, val);
                     if (!ngPost.quietMode())
                         NgLogger::log(tr("Generate new random poster for each post"), true);
                 }
                 else if (opt == kOptionNames[Opt::GROUPS])
-                    postingParams->updateGroups(val);
+                    mainParams->updateGroups(val);
 
                 else if (opt == kOptionNames[Opt::LANG])
                     ngPost.changeLanguage(val.toLower());
@@ -277,15 +277,15 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
 
                 else if (opt == kOptionNames[Opt::NZB_POST_CMD])
                 {
-                    postingParams->_nzbPostCmd << args.join("=").trimmed();
-                    qDebug() << "[MB_TODO] why pushing args.join(\"=\") ?? " << postingParams->_nzbPostCmd;
+                    mainParams->_nzbPostCmd << args.join("=").trimmed();
+                    qDebug() << "[MB_TODO] why pushing args.join(\"=\") ?? " << mainParams->_nzbPostCmd;
                 }
 
                 else if (opt == kOptionNames[Opt::INPUT_DIR])
                 {
                     QFileInfo fi(val);
                     if (fi.exists() && fi.isDir())
-                        postingParams->_inputDir = val;
+                        mainParams->_inputDir = val;
                     else
                         addError(errors, lineNumber, tr("Error %1 should be a directory").arg(opt.toUpper()));
                 }
@@ -320,7 +320,7 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
 #ifdef __USE_TMP_RAM__
                 else if (opt == kOptionNames[Opt::TMP_RAM])
                 {
-                    QString err = postingParams->setRamPathAndTestStorage(val);
+                    QString err = mainParams->setRamPathAndTestStorage(val);
                     if (!err.isEmpty())
                         addError(errors, lineNumber, tr("Error with %1: %2").arg(line, err));
                 }
@@ -334,31 +334,31 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
                                                        .arg(kRamRatioMin)
                                                        .arg(kRamRatioMax));
                     else
-                        postingParams->_ramRatio = ratio;
+                        mainParams->_ramRatio = ratio;
                 }
 #endif
                 else if (opt == kOptionNames[Opt::TMP_DIR])
-                    postingParams->_tmpPath = val;
+                    mainParams->_tmpPath = val;
                 else if (opt == kOptionNames[Opt::RAR_PATH])
-                    postingParams->_rarPath = val;
+                    mainParams->_rarPath = val;
                 else if (opt == kOptionNames[Opt::RAR_PASS])
                 {
-                    postingParams->_rarPassFixed = val;
-                    //                    postingParams->rarPass      = val;
+                    mainParams->_rarPassFixed = val;
+                    //                    mainParams->rarPass      = val;
                 }
                 else if (opt == kOptionNames[Opt::RAR_EXTRA])
-                    postingParams->_rarArgs = val.split(kCmdArgsSeparator);
+                    mainParams->_rarArgs = val.split(kCmdArgsSeparator);
                 else if (opt == kOptionNames[Opt::RAR_SIZE])
 
-                    setUShort(postingParams->_rarSize, val, errors, lineNumber, opt.toUpper());
+                    setUShort(mainParams->_rarSize, val, errors, lineNumber, opt.toUpper());
 
                 else if (opt == kOptionNames[Opt::RAR_MAX])
                 {
-                    if (setUShort(postingParams->_rarMax, val, errors, lineNumber, opt.toUpper()))
-                        postingParams->_useRarMax = true;
+                    if (setUShort(mainParams->_rarMax, val, errors, lineNumber, opt.toUpper()))
+                        mainParams->_useRarMax = true;
                 }
                 else if (opt == kOptionNames[Opt::KEEP_RAR])
-                    setBoolean(postingParams->_keepRar, val);
+                    setBoolean(mainParams->_keepRar, val);
                 else if (opt == kOptionNames[Opt::AUTO_COMPRESS])
                 {
                     if (ngPost.useHMI())
@@ -388,7 +388,7 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
                     {
                         QString keyWord = (*it).trimmed();
                         if (allowedKeywords.contains(keyWord))
-                            postingParams->_packAutoKeywords << keyWord;
+                            mainParams->_packAutoKeywords << keyWord;
                         else
                             wrongKeywords << keyWord.toUpper();
                     }
@@ -399,16 +399,16 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
                                  tr("Wrong keywords for PACK: %1. It should be a subset of (%2)")
                                          .arg(wrongKeywords.join(", "), allowedKeywords.join(", ").toUpper()));
                     else if (ngPost.useHMI())
-                        postingParams->enableAutoPacking();
+                        mainParams->enableAutoPacking();
                 }
                 else if (opt == kOptionNames[Opt::RAR_NO_ROOT_FOLDER])
-                    setBoolean(postingParams->_rarNoRootFolder, val);
+                    setBoolean(mainParams->_rarNoRootFolder, val);
 
                 else if (opt == kOptionNames[Opt::PAR2_PCT])
                 {
                     uint nb = val.toUInt(&ok);
                     if (ok)
-                        postingParams->_par2Pct = nb;
+                        mainParams->_par2Pct = nb;
                 }
                 else if (opt == kOptionNames[Opt::PAR2_PATH])
                 {
@@ -417,8 +417,8 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
                         QFileInfo fi(val);
                         if (fi.exists() && fi.isFile() && fi.isExecutable())
                         {
-                            postingParams->_par2Path       = val;
-                            postingParams->_par2PathConfig = val;
+                            mainParams->_par2Path       = val;
+                            mainParams->_par2PathConfig = val;
                         }
                         else
                             addError(errors,
@@ -427,18 +427,18 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
                     }
                 }
                 else if (opt == kOptionNames[Opt::PAR2_ARGS])
-                    postingParams->_par2Args = val;
+                    mainParams->_par2Args = val;
                 else if (opt == kOptionNames[Opt::LENGTH_NAME])
-                    setUShort(postingParams->_lengthName, val, errors, lineNumber, opt.toUpper());
+                    setUShort(mainParams->_lengthName, val, errors, lineNumber, opt.toUpper());
                 else if (opt == kOptionNames[Opt::LENGTH_PASS])
-                    setUShort(postingParams->_lengthPass, val, errors, lineNumber, opt.toUpper());
+                    setUShort(mainParams->_lengthPass, val, errors, lineNumber, opt.toUpper());
             }
         }
     }
     file.close();
 
     // MB_TODO: question shall we?
-    postingParams->setEmptyCompressionArguments(); // just in case nothing in config file and to set use7z!
+    mainParams->setEmptyCompressionArguments(); // just in case nothing in config file and to set use7z!
 
     //    if (err.isEmpty() && !_postHistoryFile.isEmpty())
     //    {

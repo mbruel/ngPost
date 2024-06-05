@@ -74,7 +74,7 @@ void Poster::addConnection(NntpConnection *connection)
 
     // Not on same thread. For now Poster is still in MainThread
     connect(connection,
-            &NntpConnection::postingNotAllowed,
+            &NntpConnection::sigPostingNotAllowed,
             this,
             &Poster::onPostingNotAllowed,
             Qt::QueuedConnection);
@@ -87,7 +87,7 @@ void Poster::addConnection(NntpConnection *connection)
     connection->moveToThread(&_connectionsThread);
 
     // start the connection (in _connectionsThread)
-    emit connection->startConnection();
+    emit connection->sigStartConnection();
 
 #ifdef __MOVETOTHREAD_TRACKING__
     qDebug() << QString("[THREAD] NntpCon #%1 has been started, affected to Poster #%2, moved to its thread %3")
@@ -124,7 +124,7 @@ NNTP::Article *Poster::getNextArticle(QString const &conPrefix)
 
     if (article)
         emit _articleBuilder
-                ->scheduleNextArticle(); // schedule the preparation of another Article in the _builderThread
+                ->sigScheduleNextArticle(); // schedule the preparation of another Article in the _builderThread
 
     return article;
 }
@@ -157,7 +157,7 @@ void Poster::releaseArticle(QString const &conPrefix, NNTP::Article *article)
     else
     {
         _error(tr("[%1] giving up on Article: %1").arg(conPrefix).arg(article->str()));
-        emit article->failed(article->size());
+        emit article->sigFailed(article->size());
     }
 }
 #endif
@@ -216,10 +216,10 @@ void Poster::onPostingNotAllowed(NntpConnection *nntpCon)
 {
     _error(tr("Removing NntpConnection #%2 due to Posting not allowed...").arg(nntpCon->id()));
     _nntpConnections.removeOne(nntpCon);
-    _job->removeNonPosintingConnection(nntpCon);    // same thread
-    emit nntpCon->scheduleDeleteLaterInOwnThread(); // it will be deleted in its own thread
+    _job->removeNonPosintingConnection(nntpCon);       // same thread
+    emit nntpCon->sigScheduleDeleteLaterInOwnThread(); // it will be deleted in its own thread
     if (_nntpConnections.isEmpty())
-        emit noMorePostingConnection(this);
+        emit sigNoMorePostingConnection(this);
 }
 
 void Poster::stopThreads()

@@ -36,7 +36,7 @@ public:
      * \param SharedParams that will be overwritten (previous unset parameters are kept)
      * \return list of errors (empty if all ok)
      */
-    static QStringList loadConfig(NgPost &ngPost, QString const &configPath, SharedParams &postingParams);
+    static QStringList loadConfig(NgPost &ngPost, QString const &configPath, SharedParams &mainParams);
 
 private:
     inline static bool isBooleanTrue(QString const &val)

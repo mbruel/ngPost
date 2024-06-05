@@ -54,6 +54,7 @@ class NgLogger : public QObject, private Singleton<NgLogger>
     inline static const QString kColorReset     = "\x1B[0m";    //!< reset all text attributes
     inline static const QString kColorInfo      = "\x1B[1;30m"; //!< bold black
     inline static const QString kColorDebug     = "\x1B[2;34m"; //!< dim green
+    inline static const QString kColorDebugBold = "\x1B[1;34m"; //!< bold green
     inline static const QString kColorFullDebug = "\x1B[2;33m"; //!< dim yellow
     inline static const QString kColorError     = "\x1B[1;31m"; //!< bold red
 
@@ -64,6 +65,7 @@ public:
     {
         None = 0,
         Debug,
+        DebugBold,
         FullDebug,
     };
 
@@ -155,7 +157,7 @@ public:
 
     static void destroy() { reset(); }
 
-public slots:
+private slots:
     void onLog(QString msg, bool newline, DebugLevel debugLvl);
     void onError(QString error);
 
@@ -173,6 +175,8 @@ private:
             return kColorInfo;
         case DebugLevel::Debug:
             return kColorDebug;
+        case DebugLevel::DebugBold:
+            return kColorDebugBold;
         case DebugLevel::FullDebug:
             return kColorFullDebug;
         }

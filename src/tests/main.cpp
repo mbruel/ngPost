@@ -3,7 +3,7 @@
 #include <QTest>
 #include <QtTest/QtTest>
 
-#include "LoadConfig/TestVesions.h"
+#include "LoadConfig/TestConfig.h"
 #include "MacroTest.h"
 #include "testNgTools.h"
 #include "testnzbcheck.h"
@@ -15,8 +15,8 @@ inline void launchTest(MacroTest *test, QList<QString> &failedTests)
 {
     int res = QTest::qExec(test);
     qDebug() << "[" << test->metaObject()->className() << "] QTest::qExec return: " << res
-             << ", nbFailure: " << test->nbFailure() << " on " << test->nbVerifications() <<
-        " verifs on a total of " << test->nbUseCases() << " usecases.";
+             << ", nbFailure: " << test->nbFailure() << " on " << test->nbVerifications()
+             << " verifs on a total of " << test->nbUseCases() << " usecases.";
     if (test->nbFailure() != 0)
         failedTests << test->metaObject()->className();
 }
@@ -35,9 +35,9 @@ int main(int argc, char *argv[])
     }
 #endif
 
-#ifdef __Launch_TestVesions__
+#ifdef __Launch_TestConfig__
     {
-        TestVesions test("TestVesions");
+        TestConfig test("TestConfig");
         launchTest(&test, failedTests);
     }
 #endif
@@ -49,6 +49,13 @@ int main(int argc, char *argv[])
     }
 #endif
 
+#ifdef __Launch_NoPostingConnection__
+    {
+        // TODO!!!
+        // TestNoPostingConnection test("TestNoPostingConnection");
+        // launchTest(&test, failedTests);
+    }
+#endif
     // Add more test cases here as needed
     // ...
 

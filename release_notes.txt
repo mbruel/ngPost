@@ -21,9 +21,13 @@ TODO: switch using c++17 std::filesystem in PostingJob...
 ###       date:    2024/05/??                    ###
 ####################################################
 - Test Framework \o/ Macro and unit!
+- Ecore Model => UML diagrams to explain the App (and myself remember...)
+- Architecture document minimal... same to not forget and for others ;)
+
+TO BE CONTINUED!!!
 
 - Usage of namespace, especially for NNTP, NNTP::RFC
-- auto shutdown if no connection is allowed to post (test added)
+- stop the app and all jobs if no connection is allowing posting (test added)
 
 [OK] - for gimly26: TODO for Linux and Mac, 
 check if the default config file (~/.ngPost) exists

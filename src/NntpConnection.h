@@ -45,26 +45,28 @@ class QTimer;
 class NntpConnection : public QObject
 {
     Q_OBJECT
+
 signals:
 #ifdef __test_ngPost__
-    void connected();
-    void helloReceived();
-    void authenticated();
-    void stopTest();
+    void sigConnected();
+    void sigHelloReceived();
+    void sigAuthenticated();
+    void sigStopTest();
 #endif
 
-    void startConnection();                //!< start connection from main thread
-    void killConnection();                 //!< start connection from main thread (or not..)
-    void scheduleDeleteLaterInOwnThread(); //!< to avoid delete from another thread
+    void sigStartConnection();                //!< start connection from main thread
+    void sigKillConnection();                 //!< start connection from main thread (or not..)
+    void sigScheduleDeleteLaterInOwnThread(); //!< to avoid delete from another thread
 
-    void postingNotAllowed(NntpConnection *me); //!< warn we're not allowed to post!
+    void sigPostingNotAllowed(NntpConnection *me); //!< warn we're not allowed to post!
 
     //    void error(QTcpSocket::SocketError socketerror); //!< Socket Error
-    void socketError(QString aError); //!< Error during socket creation (ssl or not)
-    void errorConnecting(QString aError);
-    void disconnected(NntpConnection *con);
-    void log(QString const &msg, bool newline, NgLogger::DebugLevel debugLvl) const;
-    void error(QString const &msg) const;
+    void sigSocketError(QString aError); //!< Error during socket creation (ssl or not)
+    void sigErrorConnecting(QString aError);
+
+    void sigDisconnected(NntpConnection *con);
+    void sigLog(QString const &msg, bool newline, NgLogger::DebugLevel debugLvl) const;
+    void sigError(QString const &msg) const;
 
 private:
     enum class PostingState
@@ -156,34 +158,37 @@ private:
     //! log function for QString
     inline void _log(QString const &aMsg, NgLogger::DebugLevel debugLvl = NgLogger::DebugLevel::None) const
     {
-        emit log(QString("[%1] %2").arg(_logPrefix).arg(aMsg), true, debugLvl);
+        emit sigLog(QString("[%1] %2").arg(_logPrefix).arg(aMsg), true, debugLvl);
     }
 
     //! overload for log function for char *
     inline void _log(char const *aMsg, NgLogger::DebugLevel debugLvl = NgLogger::DebugLevel::None) const
     {
-        emit log(QString("[%1] %2").arg(_logPrefix).arg(aMsg), true, debugLvl);
+        emit sigLog(QString("[%1] %2").arg(_logPrefix).arg(aMsg), true, debugLvl);
     }
 
     //! overload log function for std::string
     inline void _log(std::string const &aMsg, NgLogger::DebugLevel debugLvl = NgLogger::DebugLevel::None) const
     {
-        emit log(QString("[%1] %2").arg(_logPrefix).arg(QString::fromStdString(aMsg)), true, debugLvl);
+        emit sigLog(QString("[%1] %2").arg(_logPrefix).arg(QString::fromStdString(aMsg)), true, debugLvl);
     }
 
     //! error function for QString
-    inline void _error(QString const &aMsg) const { emit error(QString("[%1] %2").arg(_logPrefix).arg(aMsg)); }
+    inline void _error(QString const &aMsg) const
+    {
+        emit sigError(QString("[%1] %2").arg(_logPrefix).arg(aMsg));
+    }
 
     //! overload error function for std::string
     inline void _error(std::string const &aMsg) const
     {
-        emit error(QString("[%1] %2").arg(_logPrefix).arg(QString::fromStdString(aMsg)));
+        emit sigError(QString("[%1] %2").arg(_logPrefix).arg(QString::fromStdString(aMsg)));
     }
 
     //! overload error function for char *
     inline void _error(char const *aMsg) const
     {
-        emit error(QString("[%1] %2").arg(_logPrefix).arg(aMsg));
+        emit sigError(QString("[%1] %2").arg(_logPrefix).arg(aMsg));
     } //!< log function for char *
 
     void _sendNextArticle();

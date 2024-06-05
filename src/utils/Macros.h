@@ -37,4 +37,15 @@
 #  define MB_LoadAtomic(atom) atom.loadRelaxed()
 #endif
 
+// TO think about macro for _id, _logPrefix
+// #define DEC_UINT_ID_PREFIX(className) , uint _id(id)
+// ,
+//         QString const        _prefixLog(tr("[className %2]") id) setObjctName(##className)
+// #if defined(withGetSet) then uint##name() const { return name; }
+//                 uint set##name(const uint value) const
+// {
+//     name = value;
+// }
+// #endif
+
 #endif // MACROS_H

@@ -75,26 +75,23 @@ class NgPost : public QObject, public CmdOrGuiApp
 {
     Q_OBJECT
 
+    friend class PostingJob;
+
+#ifdef __USE_HMI__
     friend class MainWindow; //!< so it can access all parameters
     friend class PostingWidget;
     friend class AutoPostWidget;
-    friend class PostingJob;
     friend class AboutNgPost;
+#endif
 
 private:
-    enum class AppMode
-    {
-        CMD = 0,
-        HMI = 1
-    }; //!< supposed to be CMD but a simple HMI has been added
-
     /*!
      * \brief all posting parameters loaded from conf / command line / or GUI
      * QSharedData => copy on write only for the PostingJobs that would need ;)
      * (in practice, would happen with nice QML GUI where each PostingJobs could edit its parameters
      *  this will probably never implemented... Who knows!?!
      */
-    SharedParams _postingParams;
+    SharedParams _mainParams;
 
     /*!
      * \brief instantiate and use in command line only (kOptionNames[Opt::CHECK])
@@ -104,7 +101,7 @@ private:
      */
     NzbCheck *_nzbCheck;
 
-    // Thread safe, only main thread is using this (NgPost or HMI)
+    // PostingJob manager (could use one...MB_TOD?)
     PostingJob          *_activeJob;
     QQueue<PostingJob *> _pendingJobs;
     PostingJob          *_packingJob;
@@ -143,18 +140,18 @@ public:
     ~NgPost() override;
 
 #ifdef __test_ngPost__
-    //    SharedParams &postingParams() { return _postingParams; }
+    //    SharedParams &postingParams() { return _mainParams; }
     QStringList loadConfig(QString const &config);
     NzbCheck   *getNzbCheck() const { return _nzbCheck; }
     void        beQuiet()
     {
         NgLogger::sQuietMode = true;
-        _postingParams->beQuiet();
+        _mainParams->beQuiet();
     }
     QString        _configFile;
     QString const &configFile() const { return _configFile; }
 #endif
-    SharedParams const &postingParams() const { return _postingParams; }
+    SharedParams const &postingParams() const { return _mainParams; }
 
     // pure virtual from CmdOrGuiApp
     bool parseCommandLine(int argc, char *argv[]) override;
@@ -168,7 +165,7 @@ public:
 #endif
     void checkForMigration();
 
-    bool quietMode() const { return _postingParams->quietMode(); }
+    bool quietMode() const { return _mainParams->quietMode(); }
 
     //!< to update cmd ProgressBar
     void progressUpdateInfo(ProgressBar::UpdateBarInfo &currentPos);
@@ -188,8 +185,8 @@ public:
     QString const &proxyUrl() const { return _proxyUrl; }
     QString const &lang() const { return _lang; }
 
-    inline int nbThreads() const { return _postingParams->nbThreads(); }
-    inline int getSocketTimeout() const { return _postingParams->getSocketTimeout(); }
+    inline int nbThreads() const { return _mainParams->nbThreads(); }
+    inline int getSocketTimeout() const { return _mainParams->getSocketTimeout(); }
     //    inline QString nzbPath() const;
     QString getNzbName(QFileInfo const &fileInfo) const;
     QString getNzbPath(QString const &monitorFolder);
@@ -205,7 +202,9 @@ public:
     bool hasMonitoringPostingJobs() const;
     void closeAllMonitoringJobs();
 
-    inline bool dispPostingFile() const { return _postingParams->dispFilesPosting(); }
+    void cancelAllPendingJobsForCMD();
+
+    inline bool dispPostingFile() const { return _mainParams->dispFilesPosting(); }
 
     void saveConfig() const;
 
@@ -272,6 +271,8 @@ public slots:
 #if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
     void onNetworkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility accessible);
 #endif
+
+    void onNoMorePostingConnection(PostingJob *job);
 
 private slots:
 

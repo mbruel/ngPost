@@ -32,9 +32,9 @@ namespace NNTP
 ushort Article::sNbMaxTrySending = 5;
 
 Article::Article(File *file, uint part, qint64 pos, qint64 bytes, std::string const *from, bool obfuscation)
-    : _nntpFile(file)
+    : _id(QUuid::createUuid())
+    , _nntpFile(file)
     , _part(part)
-    , _id(QUuid::createUuid())
     , _from(from)
     , _subject(nullptr)
     , _body(nullptr)
@@ -44,8 +44,8 @@ Article::Article(File *file, uint part, qint64 pos, qint64 bytes, std::string co
     , _msgId()
 {
     file->addArticle(this);
-    connect(this, &Article::posted, _nntpFile, &File::onArticlePosted, Qt::QueuedConnection);
-    connect(this, &Article::failed, _nntpFile, &File::onArticleFailed, Qt::QueuedConnection);
+    connect(this, &Article::sigPosted, _nntpFile, &File::onArticlePosted, Qt::QueuedConnection);
+    connect(this, &Article::sigFailed, _nntpFile, &File::onArticleFailed, Qt::QueuedConnection);
 
     if (!obfuscation)
     {
@@ -173,5 +173,24 @@ void Article::dumpToFile(QString const &path, std::string const &articleIdSignat
     file.write(_body);
     file.close();
 }
+
+#ifdef __test_ngPost__
+std::string Article::testPostingStdString(char const *msg)
+{
+    QUuid id = QUuid::createUuid();
+#  if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
+    QByteArray msgId = id.toByteArray(kMsgIdFormat);
+#  else
+    QByteArray msgId = id.toByteArray();
+#  endif
+    std::stringstream ss;
+    ss << "From: " << NgTools::randomStdFrom() << RFC::ENDLINE;
+    ss << "Newsgroups: alt.binaries.test" << RFC::ENDLINE;
+    ss << "Subject: NgPost test if posting is allowed" << RFC::ENDLINE;
+    ss << "Message-ID: <" << msgId.constData() << "@ngPost.com>" << RFC::ENDLINE << RFC::ENDLINE;
+    ss << msg << RFC::ENDLINE << "." << RFC::ENDLINE;
+    return ss.str();
+}
+#endif
 
 } // namespace NNTP

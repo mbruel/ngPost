@@ -18,52 +18,47 @@
 //========================================================================
 
 #include "PostingWidget.h"
-#include "ui_PostingWidget.h"
-#include "MainWindow.h"
 #include "AboutNgPost.h"
+#include "MainWindow.h"
 #include "NgPost.h"
-#include "PostingJob.h"
 #include "nntp/NntpFile.h"
+#include "PostingJob.h"
+#include "ui_PostingWidget.h"
 
-#include <QDebug>
-#include <QMessageBox>
-#include <QFileDialog>
-#include <QDir>
-#include <QKeyEvent>
 #include <QClipboard>
+#include <QDebug>
+#include <QDir>
+#include <QFileDialog>
+#include <QKeyEvent>
+#include <QMessageBox>
 #include <QMimeData>
 
-
-
-PostingWidget::PostingWidget(NgPost *ngPost, MainWindow *hmi, uint jobNumber) :
-    QWidget(hmi),
-    _ui(new Ui::PostingWidget),
-    _hmi(hmi),
-    _ngPost(ngPost),
-    _jobNumber(jobNumber),
-    _postingJob(nullptr),
-    _state(STATE::IDLE),
-    _postingFinished(false)
+PostingWidget::PostingWidget(NgPost *ngPost, MainWindow *hmi, uint jobNumber)
+    : QWidget(hmi)
+    , _ui(new Ui::PostingWidget)
+    , _hmi(hmi)
+    , _ngPost(ngPost)
+    , _jobNumber(jobNumber)
+    , _postingJob(nullptr)
+    , _state(STATE::IDLE)
+    , _postingFinished(false)
 {
     _ui->setupUi(this);
 
     connect(_ui->postButton, &QAbstractButton::clicked, this, &PostingWidget::onPostFiles);
-    connect(_ui->nzbPassCB,  &QAbstractButton::toggled, this, &PostingWidget::onNzbPassToggled);
-    connect(_ui->genPass,    &QAbstractButton::clicked, this, &PostingWidget::onGenNzbPassword);
+    connect(_ui->nzbPassCB, &QAbstractButton::toggled, this, &PostingWidget::onNzbPassToggled);
+    connect(_ui->genPass, &QAbstractButton::clicked, this, &PostingWidget::onGenNzbPassword);
 
     _ui->filesList->setSignature(QString("<pre>%1</pre>").arg(_ngPost->escapeXML(_ngPost->asciiArt())));
     connect(_ui->filesList, &SignedListWidget::rightClick, this, &PostingWidget::onSelectFilesClicked);
 }
 
-PostingWidget::~PostingWidget()
-{
-    delete _ui;
-}
+PostingWidget::~PostingWidget() { delete _ui; }
 
 void PostingWidget::onFilePosted(QString filePath, uint nbArticles, uint nbFailed)
 {
     int nbFiles = _ui->filesList->count();
-    for (int i = 0 ; i < nbFiles ; ++i)
+    for (int i = 0; i < nbFiles; ++i)
     {
         QListWidgetItem *item = _ui->filesList->item(i);
         if (item->text() == filePath)
@@ -88,7 +83,7 @@ void PostingWidget::onFilePosted(QString filePath, uint nbArticles, uint nbFaile
 void PostingWidget::onArchiveFileNames(QStringList paths)
 {
     _ui->filesList->clear();
-    for (const QString & path : paths)
+    for (QString const &path : paths)
         _ui->filesList->addPath(path);
 }
 
@@ -100,7 +95,7 @@ void PostingWidget::onArticlesNumber(int nbArticles)
 
 void PostingWidget::onPostingJobDone()
 {
-    // we could arrive here twice: from PostingJob::postingFinished or PostingJob::noMoreConnection
+    // we could arrive here twice: from PostingJob::sigPostingFinished or PostingJob::noMoreConnection
     // This could happen especially when we exceed the number of connections allowed by a provider
     if (!_postingJob)
         return;
@@ -116,15 +111,12 @@ void PostingWidget::onPostingJobDone()
         _hmi->clearJobTab(this);
 
     disconnect(_postingJob);
-    _postingJob = nullptr; //!< we don't own it, NgPost will delete it
+    _postingJob      = nullptr; //!< we don't own it, NgPost will delete it
     _postingFinished = true;
     setIDLE();
 }
 
-void PostingWidget::onPostFiles()
-{
-    postFiles(true);
-}
+void PostingWidget::onPostFiles() { postFiles(true); }
 
 void PostingWidget::postFiles(bool updateMainParams)
 {
@@ -137,7 +129,7 @@ void PostingWidget::postFiles(bool updateMainParams)
         }
 
         QFileInfoList files;
-        bool hasFolder = false;
+        bool          hasFolder = false;
         _buildFilesList(files, hasFolder);
         if (files.isEmpty())
         {
@@ -150,7 +142,6 @@ void PostingWidget::postFiles(bool updateMainParams)
             _hmi->logError(tr("You can't post folders without using compression..."));
             return;
         }
-
 
         if (updateMainParams)
         {
@@ -166,25 +157,36 @@ void PostingWidget::postFiles(bool updateMainParams)
         QFileInfo fiNzb(nzbPath);
         if (fiNzb.exists())
         {
-            int overwrite = QMessageBox::question(nullptr,
-                                                  tr("Overwrite existing nzb file?"),
-                                                  tr("The nzb file '%1' already exists.\nWould you like to overwrite it ?").arg(nzbPath),
-                                                  QMessageBox::Yes,
-                                                  QMessageBox::No);
+            int overwrite = QMessageBox::question(
+                    nullptr,
+                    tr("Overwrite existing nzb file?"),
+                    tr("The nzb file '%1' already exists.\nWould you like to overwrite it ?").arg(nzbPath),
+                    QMessageBox::Yes,
+                    QMessageBox::No);
             if (overwrite == QMessageBox::No)
                 return;
         }
 
         _postingFinished = false;
-        _state = STATE::POSTING;
-        _postingJob = new PostingJob(_ngPost, nzbPath, files, this,
+        _state           = STATE::POSTING;
+        _postingJob      = new PostingJob(_ngPost,
+                                     nzbPath,
+                                     files,
+                                     this,
                                      _ngPost->getPostingGroups(),
                                      _ngPost->from(),
-                                     _ngPost->_obfuscateArticles, _ngPost->_obfuscateFileName,
-                                     _ngPost->_tmpPath, _ngPost->_rarPath, _ngPost->_rarArgs,
-                                     _ngPost->_rarSize, _ngPost->_useRarMax, _ngPost->_par2Pct,
-                                     _ngPost->_doCompress, _ngPost->_doPar2,
-                                     _ngPost->_rarName, _ngPost->_rarPass,
+                                     _ngPost->_obfuscateArticles,
+                                     _ngPost->_obfuscateFileName,
+                                     _ngPost->_tmpPath,
+                                     _ngPost->_rarPath,
+                                     _ngPost->_rarArgs,
+                                     _ngPost->_rarSize,
+                                     _ngPost->_useRarMax,
+                                     _ngPost->_par2Pct,
+                                     _ngPost->_doCompress,
+                                     _ngPost->_doPar2,
+                                     _ngPost->_rarName,
+                                     _ngPost->_rarPass,
                                      _ngPost->_keepRar);
 
         bool hasStarted = _ngPost->startPostingJob(_postingJob);
@@ -207,13 +209,12 @@ void PostingWidget::postFiles(bool updateMainParams)
         _ui->postButton->setText(buttonTxt);
         _hmi->updateJobTab(this, tabColor, QIcon(tabIcon), _postingJob->nzbName());
     }
-    else  if (_state == STATE::POSTING)
+    else if (_state == STATE::POSTING)
     {
         _state = STATE::STOPPING;
-        emit _postingJob->stopPosting();
+        emit _postingJob->sigStopPosting();
     }
 }
-
 
 void PostingWidget::onNzbPassToggled(bool checked)
 {
@@ -229,23 +230,18 @@ void PostingWidget::onGenNzbPassword()
 
 void PostingWidget::onSelectFilesClicked()
 {
-    QStringList files = QFileDialog::getOpenFileNames(
-                this,
-                tr("Select one or more files to Post"),
-                _ngPost->_inputDir);
+    QStringList files =
+            QFileDialog::getOpenFileNames(this, tr("Select one or more files to Post"), _ngPost->_inputDir);
 
     int currentNbFiles = _ui->filesList->count();
-    for (const QString &file : files)
+    for (QString const &file : files)
         addPath(file, currentNbFiles);
 }
 
 void PostingWidget::onSelectFolderClicked()
 {
     QString folder = QFileDialog::getExistingDirectory(
-                this,
-                tr("Select a Folder"),
-                _ngPost->_inputDir,
-                QFileDialog::ShowDirsOnly);
+            this, tr("Select a Folder"), _ngPost->_inputDir, QFileDialog::ShowDirsOnly);
 
     if (!folder.isEmpty())
         addPath(folder, _ui->filesList->count(), true);
@@ -283,10 +279,7 @@ void PostingWidget::onGenCompressName()
 void PostingWidget::onCompressPathClicked()
 {
     QString path = QFileDialog::getExistingDirectory(
-                this,
-                tr("Select a Folder"),
-                _ui->compressPathEdit->text(),
-                QFileDialog::ShowDirsOnly);
+            this, tr("Select a Folder"), _ui->compressPathEdit->text(), QFileDialog::ShowDirsOnly);
 
     if (!path.isEmpty())
         _ui->compressPathEdit->setText(path);
@@ -294,12 +287,7 @@ void PostingWidget::onCompressPathClicked()
 
 void PostingWidget::onNzbFileClicked()
 {
-    QString path = QFileDialog::getSaveFileName(
-                this,
-                tr("Create nzb file"),
-                _ngPost->_nzbPath,
-                "*.nzb"
-                );
+    QString path = QFileDialog::getSaveFileName(this, tr("Create nzb file"), _ngPost->_nzbPath, "*.nzb");
 
     if (!path.isEmpty())
         _ui->nzbFileEdit->setText(path);
@@ -308,10 +296,7 @@ void PostingWidget::onNzbFileClicked()
 void PostingWidget::onRarPathClicked()
 {
     QString path = QFileDialog::getOpenFileName(
-                this,
-                tr("Select rar executable"),
-                QFileInfo(_ngPost->_rarPath).absolutePath()
-                );
+            this, tr("Select rar executable"), QFileInfo(_ngPost->_rarPath).absolutePath());
 
     if (!path.isEmpty())
     {
@@ -327,7 +312,7 @@ void PostingWidget::handleKeyEvent(QKeyEvent *keyEvent)
 {
     qDebug() << "[PostingWidget::handleKeyEvent] key event: " << keyEvent->key();
 
-    if(keyEvent->key() == Qt::Key_Delete || keyEvent->key() == Qt::Key_Backspace)
+    if (keyEvent->key() == Qt::Key_Delete || keyEvent->key() == Qt::Key_Backspace)
     {
         for (QListWidgetItem *item : _ui->filesList->selectedItems())
         {
@@ -338,49 +323,55 @@ void PostingWidget::handleKeyEvent(QKeyEvent *keyEvent)
     }
     else if (keyEvent->matches(QKeySequence::Paste))
     {
-        const QClipboard *clipboard = QApplication::clipboard();
-        const QMimeData *mimeData = clipboard->mimeData();
-        if (mimeData->hasImage()) {
+        QClipboard const *clipboard = QApplication::clipboard();
+        QMimeData const  *mimeData  = clipboard->mimeData();
+        if (mimeData->hasImage())
+        {
             qDebug() << "[PostingWidget::handleKeyEvent] try to paste image...";
-        } else if (mimeData->hasHtml()) {
+        }
+        else if (mimeData->hasHtml())
+        {
             qDebug() << "[PostingWidget::handleKeyEvent] try to paste html: ";
-        } else if (mimeData->hasText()) {
+        }
+        else if (mimeData->hasText())
+        {
             QString txt = mimeData->text();
             qDebug() << "[PostingWidget::handleKeyEvent] paste text: " << txt;
             int currentNbFiles = _ui->filesList->count();
-            for (const QString &path : txt.split(QRegularExpression("\n|\r|\r\n")))
+            for (QString const &path : txt.split(QRegularExpression("\n|\r|\r\n")))
             {
                 QFileInfo fileInfo(path);
                 if (!fileInfo.exists())
                     qDebug() << "[PostingWidget::handleKeyEvent] NOT A FILE: " << path;
                 else
                     addPath(path, currentNbFiles, fileInfo.isDir());
-//                        else if (fileInfo.isDir())
-//                        {
-//                            QDir dir(fileInfo.absoluteFilePath());
-//                            for (const QFileInfo &subFile : dir.entryInfoList(QDir::Files, QDir::Name))
-//                            {
-//                                if (subFile.isReadable())
-//                                    _addFile(subFile.absoluteFilePath(), currentNbFiles);
-//                            }
-//                        }
+                //                        else if (fileInfo.isDir())
+                //                        {
+                //                            QDir dir(fileInfo.absoluteFilePath());
+                //                            for (const QFileInfo &subFile : dir.entryInfoList(QDir::Files,
+                //                            QDir::Name))
+                //                            {
+                //                                if (subFile.isReadable())
+                //                                    _addFile(subFile.absoluteFilePath(), currentNbFiles);
+                //                            }
+                //                        }
             }
-
-        } else if (mimeData->hasUrls()) {
+        }
+        else if (mimeData->hasUrls())
+        {
             qDebug() << "[PostingWidget::handleKeyEvent] paste urls...";
-
-        } else {
+        }
+        else
+        {
             qDebug() << "[PostingWidget::handleKeyEvent] unknown type...";
         }
     }
-
 }
-
 
 void PostingWidget::handleDropEvent(QDropEvent *e)
 {
     int currentNbFiles = _ui->filesList->count();
-    for (const QUrl &url : e->mimeData()->urls())
+    for (QUrl const &url : e->mimeData()->urls())
     {
         QString fileName = url.toLocalFile();
         addPath(fileName, currentNbFiles, QFileInfo(fileName).isDir());
@@ -389,7 +380,7 @@ void PostingWidget::handleDropEvent(QDropEvent *e)
 
 void PostingWidget::_buildFilesList(QFileInfoList &files, bool &hasFolder)
 {
-    for (int i = 0 ; i < _ui->filesList->count() ; ++i)
+    for (int i = 0; i < _ui->filesList->count(); ++i)
     {
         QFileInfo fileInfo(_ui->filesList->item(i)->text());
         if (fileInfo.exists())
@@ -434,23 +425,25 @@ void PostingWidget::init()
     _ui->filesList->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
     connect(_ui->selectFilesButton, &QAbstractButton::clicked, this, &PostingWidget::onSelectFilesClicked);
-    connect(_ui->selectFolderButton,&QAbstractButton::clicked, this, &PostingWidget::onSelectFolderClicked);
-    connect(_ui->clearFilesButton,  &QAbstractButton::clicked, this, &PostingWidget::onClearFilesClicked);
-    connect(_ui->filesList,         &SignedListWidget::empty,  this, &PostingWidget::onClearFilesClicked, Qt::QueuedConnection);
+    connect(_ui->selectFolderButton, &QAbstractButton::clicked, this, &PostingWidget::onSelectFolderClicked);
+    connect(_ui->clearFilesButton, &QAbstractButton::clicked, this, &PostingWidget::onClearFilesClicked);
+    connect(_ui->filesList,
+            &SignedListWidget::empty,
+            this,
+            &PostingWidget::onClearFilesClicked,
+            Qt::QueuedConnection);
 
-    connect(_ui->compressCB,        &QAbstractButton::toggled, this, &PostingWidget::onCompressCB);
-    connect(_ui->genCompressName,   &QAbstractButton::clicked, this, &PostingWidget::onGenCompressName);
+    connect(_ui->compressCB, &QAbstractButton::toggled, this, &PostingWidget::onCompressCB);
+    connect(_ui->genCompressName, &QAbstractButton::clicked, this, &PostingWidget::onGenCompressName);
 
+    connect(_ui->compressPathButton, &QAbstractButton::clicked, this, &PostingWidget::onCompressPathClicked);
+    connect(_ui->rarPathButton, &QAbstractButton::clicked, this, &PostingWidget::onRarPathClicked);
 
-    connect(_ui->compressPathButton,&QAbstractButton::clicked, this, &PostingWidget::onCompressPathClicked);
-    connect(_ui->rarPathButton,     &QAbstractButton::clicked, this, &PostingWidget::onRarPathClicked);
+    connect(_ui->nzbFileButton, &QAbstractButton::clicked, this, &PostingWidget::onNzbFileClicked);
 
-    connect(_ui->nzbFileButton,     &QAbstractButton::clicked, this, &PostingWidget::onNzbFileClicked);
-
-    connect(_ui->aboutButton,       &QAbstractButton::clicked, _ngPost, &NgPost::onAboutClicked);
-    connect(_ui->donateButton,      &QAbstractButton::clicked, _ngPost, &NgPost::onDonation);
-    connect(_ui->btcDonate,    &QAbstractButton::clicked, _ngPost, &NgPost::onDonationBTC);
-
+    connect(_ui->aboutButton, &QAbstractButton::clicked, _ngPost, &NgPost::onAboutClicked);
+    connect(_ui->donateButton, &QAbstractButton::clicked, _ngPost, &NgPost::onDonation);
+    connect(_ui->btcDonate, &QAbstractButton::clicked, _ngPost, &NgPost::onDonationBTC);
 
     onCompressCB(_ngPost->_doCompress);
     if (_ngPost->_doCompress)
@@ -479,7 +472,7 @@ void PostingWidget::genNameAndPassword(bool genName, bool genPass, bool doPar2, 
         onGenCompressName();
     if (genPass && _ngPost->_rarPassFixed.isEmpty())
     {
-        _ui->nzbPassCB->setChecked(true);        
+        _ui->nzbPassCB->setChecked(true);
         onGenNzbPassword();
     }
     _ui->rarMaxCB->setChecked(useRarMax);
@@ -489,8 +482,6 @@ void PostingWidget::genNameAndPassword(bool genName, bool genPass, bool doPar2, 
 
     _ui->keepRarCB->setChecked(_ngPost->_keepRar);
 }
-
-
 
 void PostingWidget::udatePostingParams()
 {
@@ -513,9 +504,9 @@ void PostingWidget::udatePostingParams()
         _ngPost->_rarPass = QString();
     _ngPost->_lengthName = static_cast<uint>(_ui->nameLengthSB->value());
     _ngPost->_lengthPass = static_cast<uint>(_ui->passLengthSB->value());
-    uint val = 0;
-    bool ok  = true;
-    _ngPost->_rarSize = 0;
+    uint val             = 0;
+    bool ok              = true;
+    _ngPost->_rarSize    = 0;
     if (!_ui->rarSizeEdit->text().isEmpty())
     {
         val = _ui->rarSizeEdit->text().toUInt(&ok);
@@ -525,7 +516,7 @@ void PostingWidget::udatePostingParams()
     _ngPost->_useRarMax = _ui->rarMaxCB->isChecked();
 
     // fetch par2 settings
-    _ngPost->_doPar2  = _ui->par2CB->isChecked();
+    _ngPost->_doPar2 = _ui->par2CB->isChecked();
     if (_ngPost->_par2Args.isEmpty())
         _ngPost->_par2Pct = static_cast<uint>(_ui->redundancySB->value());
 
@@ -535,25 +526,27 @@ void PostingWidget::udatePostingParams()
 void PostingWidget::retranslate()
 {
     _ui->retranslateUi(this);
-    _ui->rarMaxCB->setToolTip(tr("limit the number of archive volume to %1 (cf config RAR_MAX)").arg(_ngPost->_rarMax));
+    _ui->rarMaxCB->setToolTip(
+            tr("limit the number of archive volume to %1 (cf config RAR_MAX)").arg(_ngPost->_rarMax));
     _ui->redundancySB->setToolTip(tr("Using PAR2_ARGS from config file: %1").arg(_ngPost->_par2Args));
     _ui->donateButton->setToolTip(_ngPost->donationTooltip());
     _ui->btcDonate->setToolTip(_ngPost->donationBtcTooltip());
-    _ui->filesList->setToolTip(QString("%1<ul><li>%2</li><li>%3</li><li>%4</li></ul>%5").arg(
-                                   tr("You can add files or folder by:")).arg(
-                                   tr("Drag & Drop files/folders")).arg(
-                                   tr("Right Click to add Files")).arg(
-                                   tr("Click on Select Files/Folder buttons")).arg(
-                                   tr("Bare in mind you can select items in the list and press DEL to remove them")));
+    _ui->filesList->setToolTip(
+            QString("%1<ul><li>%2</li><li>%3</li><li>%4</li></ul>%5")
+                    .arg(tr("You can add files or folder by:"))
+                    .arg(tr("Drag & Drop files/folders"))
+                    .arg(tr("Right Click to add Files"))
+                    .arg(tr("Click on Select Files/Folder buttons"))
+                    .arg(tr("Bare in mind you can select items in the list and press DEL to remove them")));
 }
 
-void PostingWidget::setNzbPassword(const QString &pass)
+void PostingWidget::setNzbPassword(QString const &pass)
 {
     _ui->nzbPassCB->setChecked(true);
     _ui->nzbPassEdit->setText(pass);
 }
 
-void PostingWidget::setPackingAuto(bool enabled, const QStringList &keys)
+void PostingWidget::setPackingAuto(bool enabled, QStringList const &keys)
 {
     bool compress = false, genName = false, genPass = false, doPar2 = false;
     if (enabled)
@@ -575,7 +568,6 @@ void PostingWidget::setPackingAuto(bool enabled, const QStringList &keys)
     _ui->compressCB->setChecked(compress);
     _ui->par2CB->setChecked(doPar2);
 
-
     if (compress)
     {
         if (_ui->nzbPassEdit->text().isEmpty())
@@ -590,7 +582,7 @@ void PostingWidget::setPackingAuto(bool enabled, const QStringList &keys)
     }
 }
 
-void PostingWidget::addPath(const QString &path, int currentNbFiles, int isDir)
+void PostingWidget::addPath(QString const &path, int currentNbFiles, int isDir)
 {
     if (_ui->filesList->addPathIfNotInList(path, currentNbFiles, isDir))
     {
@@ -605,9 +597,9 @@ void PostingWidget::addPath(const QString &path, int currentNbFiles, int isDir)
     }
 }
 
-bool PostingWidget::_fileAlreadyInList(const QString &fileName, int currentNbFiles) const
+bool PostingWidget::_fileAlreadyInList(QString const &fileName, int currentNbFiles) const
 {
-    for (int i = 0 ; i < currentNbFiles ; ++i)
+    for (int i = 0; i < currentNbFiles; ++i)
     {
         if (_ui->filesList->item(i)->text() == fileName)
             return true;

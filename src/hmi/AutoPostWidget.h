@@ -52,7 +52,7 @@ public:
 
     void udatePostingParams();
 
-    void newFileToProcess(const QFileInfo &fileInfo);
+    void sigNewFileToProcess(const QFileInfo &fileInfo);
     void updateFinishedJob(const QString &path, uint nbArticles, uint nbUploaded, uint nbFailed);
 
     bool deleteFilesOncePosted() const;

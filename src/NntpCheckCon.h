@@ -32,8 +32,8 @@ class NntpCheckCon : public QObject
 {
     Q_OBJECT
 signals:
-    void startConnection();
-    void killConnection();
+    void sigStartConnection();
+    void sigKillConnection();
 
     //    void error(QTcpSocket::SocketError socketerror); //!< Socket Error
     void socketError(QString aError); //!< Error during socket creation (ssl or not)

@@ -56,7 +56,7 @@ CONFIG(debug, debug|release) :{
     DEFINES -= LOG_NEWS_DATA
     DEFINES += LOG_CONSTRUCTORS
 
-    DEFINES -= __SAVE_ARTICLES__
+    DEFINES += __SAVE_ARTICLES__
 }
 else {
     # In release mode, remove all qDebugs !

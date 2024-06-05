@@ -67,7 +67,7 @@ void NzbCheck::startCheckingNzb()
                 con->moveToThread(&_thread);
 #endif
                 connect(con, &NntpCheckCon::disconnected, this, &NzbCheck::onDisconnected, Qt::QueuedConnection);
-                emit con->startConnection();
+                emit con->sigStartConnection();
 
                 _connections.insert(con);
 
