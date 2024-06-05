@@ -1,0 +1,87 @@
+<html>
+    <head>
+        <META HTTP-EQUIV="Pragma" CONTENT="no-cache">
+        <title>NgPost architecture and few dev details</title>
+		<style>
+.hiddenElement {
+	display:none;
+}
+		</style>
+		<script type="text/javascript">
+function show_hide_topic(divName){
+    var div = document.getElementById(divName);
+
+    if (div.className.indexOf('hiddenElement') >= 0 ) {
+        div.className=div.className.replace('hiddenElement', '');
+    } else{
+        div.className+=' hiddenElement';
+    }
+}
+
+function show_hide_all(show){
+	var divs = document.getElementsByTagName("div");
+	for(var i = 0; i < divs.length; i++){
+		if (show){
+			if (divs[i].className.indexOf('hiddenElement') >= 0){
+				divs[i].className=divs[i].className.replace('hiddenElement', '');
+			}
+		} else{
+			if (divs[i].className.indexOf('hiddenElement') < 1){
+				divs[i].className+=' hiddenElement';
+			}
+		}
+	}
+}
+		</script>
+    </head>
+    <body onload="show_hide_all(true)">
+<pre>
+                   __________               __
+       ____    ____\\______   \\____  _______/  |_
+      /    \\  / ___\\|     ___/  _ \\/  ___/\\   __\\
+     |   |  \\/ /_/  >    |  (  <_> )___ \\  |  |
+     |___|  /\\___  /|____|   \\____/____  > |__|
+          \\//_____/                    \\/
+                          v 5.0
+</pre>
+<br />
+
+
+<p>
+NgPost started back in 2000 as a command line poster written in C++/Qt. <br/>
+Its primary idea was to be fast, so it was written in C++ rather than interpreted languages. <br/>
+Then, I made the assumption that encoding the articles could be time-consuming. <br/>
+Using a pool of NNTP connections, the aim was thus to always have  prepared articles ready for them, so they could post them straight to Usenet (without any computations).<br/>
+Obviously, everything asynchronous (communications, disk access, external processes..  later the graphical interface...).<br/>
+</p>
+<br />
+<h3><a href="javascript:show_hide_topic('MAIN_ARCHI');">Main architecture</a></h3>
+<div id="MAIN_ARCHI" class="hiddenElement">
+MB_TODO...<br />
+some explanation of the diagram...<br />
+<br />
+<img src="./ecore/archi_NgPost_Main.Architecture.svg" />
+<br />
+some more explanation of the diagram?<br />
+	<br />
+	<hr />
+	<br />
+</div>
+
+
+<h3><a href="javascript:show_hide_topic('NNTP_POSTING');">NntpConnections and PostingJobs</a></h3>
+<div id="NNTP_POSTING" class="hiddenElement">
+MB_TODO...<br />
+some explanation of the diagram...<br />
+<br />
+<img src="./ecore/archi_NNTP_and_PostingJob.svg" />
+<br />
+some more explanation of the diagram?<br />
+	<br />
+	<hr />
+	<br />
+</div>
+
+
+    </body>
+</html>
