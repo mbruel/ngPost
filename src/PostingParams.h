@@ -149,6 +149,8 @@ public:
     MainParams &operator=(MainParams const &) = delete;
     MainParams &operator=(MainParams &&)      = delete;
 
+    static MainParams *resumeParams();
+
     inline int         nbThreads() const { return _nbThreads; }
     inline int         getSocketTimeout() const { return _socketTimeOut; }
     QString const     &nzbPath() const { return _nzbPath; }
@@ -251,6 +253,7 @@ public:
     bool removeAccentsOnNzbFileName() const { return _removeAccentsOnNzbFileName; }
 
     void dumpParams() const;
+    void setParamForResume();
 
 private:
     inline bool removeNntpServer(NNTP::ServerParams *server)
@@ -317,6 +320,8 @@ public:
     PostingParams &operator=(PostingParams const &) = delete;
     PostingParams(PostingParams &&)                 = default;
     PostingParams &operator=(PostingParams &&)      = delete;
+
+    void setParamForResume(); // detach!
 
     bool quietMode() const;
     bool dispProgressBar() const;

@@ -27,10 +27,75 @@
 #include <QSqlQuery>
 #include <QXmlStreamReader>
 
+#include "NgDBConf.h"
+#include "NgHistoryDatabase.h"
+#include "NgPost.h"
+#include "PostingJob.h"
 #include "utils/NgLogger.h"
 #include "utils/NgTools.h"
 
-QStringList ResumeJobQueue::postedFilesFromNzb(QString const &nzbPath)
+#ifdef __test_ngPost__
+PostingJob *ResumeJobQueue::getPostingJobFirstUnfinishedJob(NgPost &ngPost, QString const &nzbWritableFilePath)
+{
+    NgHistoryDatabase *db                  = ngPost.historyDatabase();
+    UnfinishedJobs     jobsToPost          = db->unfinishedJobs();
+    auto               missingFilesPerJobs = db->missingFiles(); // all in once (1 sql req)
+
+    // Test we do only the first one!
+    auto &unfinishedJob       = jobsToPost.front();
+    unfinishedJob.nzbFilePath = nzbWritableFilePath; // modify the nzb path!
+
+    if (!unfinishedJob.couldBeResumed())
+    {
+        NgLogger::error(tr("couldn't resume unfinished job: %1").arg(unfinishedJob.nzbName));
+        return nullptr;
+    }
+    QStringList   missingFilesInDB  = missingFilesPerJobs.values(unfinishedJob.jobIdDB);
+    QStringList   postedFiles       = _postedFilesFromNzb(unfinishedJob.nzbFilePath);
+    QFileInfoList filesInPackingDir = _filesInPackingPath(unfinishedJob._packingPath.absoluteFilePath());
+    int           nbTotalFiles      = filesInPackingDir.size();
+
+    if (!_doFilesChecks(unfinishedJob, missingFilesInDB, postedFiles, filesInPackingDir))
+        return nullptr;
+
+    PostingJob *pendingJob = _jobsToResume(ngPost, unfinishedJob, filesInPackingDir, nbTotalFiles);
+
+    NgLogger::log(tr("Job to resume job: %1").arg(unfinishedJob.nzbName), true);
+    return pendingJob;
+}
+#endif
+
+uint ResumeJobQueue::resumeUnfinihedJobs(NgPost &ngPost)
+{
+    NgHistoryDatabase *db                  = ngPost.historyDatabase();
+    UnfinishedJobs     jobsToPost          = db->unfinishedJobs();
+    auto               missingFilesPerJobs = db->missingFiles(); // all in once (1 sql req)
+    for (auto const &unfinishedJob : jobsToPost)
+    {
+        // 1.: can it be resumed ?
+        if (!unfinishedJob.couldBeResumed())
+        {
+            NgLogger::error(tr("couldn't resume unfinished job: %1").arg(unfinishedJob.nzbName));
+            continue;
+        }
+        QStringList   missingFilesInDB  = missingFilesPerJobs.values(unfinishedJob.jobIdDB);
+        QStringList   postedFiles       = _postedFilesFromNzb(unfinishedJob.nzbFilePath);
+        QFileInfoList filesInPackingDir = _filesInPackingPath(unfinishedJob._packingPath.absoluteFilePath());
+        int           nbTotalFiles      = filesInPackingDir.size();
+
+        if (!_doFilesChecks(unfinishedJob, missingFilesInDB, postedFiles, filesInPackingDir))
+            continue;
+
+        PostingJob *pendingJob = _jobsToResume(ngPost, unfinishedJob, filesInPackingDir, nbTotalFiles);
+        // MB_TODO ask if we want to resume...
+
+        NgLogger::log(tr("Resuming job: %1").arg(unfinishedJob.nzbName), true);
+        ngPost.startPostingJob(pendingJob);
+    }
+    return jobsToPost.size();
+}
+
+QStringList ResumeJobQueue::_postedFilesFromNzb(QString const &nzbPath)
 {
     QFile xmlFile(nzbPath);
     if (!xmlFile.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -77,14 +142,68 @@ QStringList ResumeJobQueue::postedFilesFromNzb(QString const &nzbPath)
     return postedFileNames;
 }
 
-PostingJob *ResumeJobQueue::jobsToResume(UnfinishedJob const &job, QFileInfoList const &missingFiles)
+PostingJob *ResumeJobQueue::_jobsToResume(NgPost              &ngPost,
+                                          UnfinishedJob const &unfinshedJob,
+                                          QFileInfoList const &missingFiles,
+                                          int                  nbTotalFiles)
 {
-    if (!job.couldBeResumed())
+    if (!unfinshedJob.couldBeResumed())
+        return nullptr; // tested before normally...
+
+    PostingJob *job = new PostingJob(ngPost, unfinshedJob, missingFiles);
+    job->setParamForResume(nbTotalFiles, missingFiles.size());
+    return job;
+}
+
+QFileInfoList ResumeJobQueue::_filesInPackingPath(QString const &packingDirPath)
+{
+    QFileInfoList listFiles;
+    qDebug() << "[MB_TRACE][ResumeJobQueue::filesInPackingPath] " << packingDirPath;
+    QDir dir(packingDirPath);
+    return dir.entryInfoList(QDir::Files | QDir::NoDotAndDotDot);
+}
+
+bool ResumeJobQueue::_doFilesChecks(UnfinishedJob const &unfinishedJob,
+                                    QStringList const   &missingFilesInDB,
+                                    QStringList const   &postedFiles,
+                                    QFileInfoList       &filesInPackingDir)
+{
+    // 1.: check the good numbers of missing files
+    if (filesInPackingDir.size() != postedFiles.size() + missingFilesInDB.size())
     {
-        return nullptr;
+        NgLogger::error(tr("couldn't resume unfinished job: %1 (issue with numbers of files to post)")
+                                .arg(unfinishedJob.nzbName));
+        return false;
     }
 
-    return nullptr;
+    // 2.: iterate the files in packing pack and remove the posted once
+    // (also checked it is in DB (robustness))
+    auto itFiles = filesInPackingDir.begin();
+    while (itFiles != filesInPackingDir.end())
+    {
+        QString name = itFiles->fileName();
+        if (postedFiles.contains(name))
+        {
+            itFiles = filesInPackingDir.erase(itFiles); // increment itFiles
+            continue;
+        }
+        if (!missingFilesInDB.contains(name))
+        {
+            NgLogger::error(tr("couldn't resume unfinished job: %1 (unexpected file : %2)")
+                                    .arg(unfinishedJob.nzbName)
+                                    .arg(name));
+        }
+        ++itFiles;
+    }
+
+    // 3.: are all the missingFilesInDB present in filesInPackingDir  ?
+    if (filesInPackingDir.size() != missingFilesInDB.size())
+    {
+        NgLogger::error(tr("couldn't resume unfinished job: %1 (unexpected number of missing files)")
+                                .arg(unfinishedJob.nzbName));
+        return false;
+    }
+    return true;
 }
 
 bool UnfinishedJob::couldBeResumed() const
@@ -93,20 +212,20 @@ bool UnfinishedJob::couldBeResumed() const
     QFileInfo fiNzb(nzbFilePath);
     if (!fiNzb.exists() || !fiNzb.isFile() || !fiNzb.isReadable() || !fiNzb.isWritable())
     {
-        qDebug() << QString("[MB_TRACE][canBeResumed] can't use nzb file: %1").arg(nzbFilePath);
+        NgLogger::error(tr("can't use nzb file: %1").arg(nzbFilePath));
         return false;
     }
 
     // MB_TODO this test can be done only once not for all files of a same job!
     if (!_packingPath.exists() || !_packingPath.isDir())
     {
-        qDebug() << QString("[MB_TRACE][canBeResumed#2] can't use nzb file: %1").arg(nzbFilePath);
+        NgLogger::error(tr("packing Path not available: %1").arg(_packingPath.absoluteFilePath()));
         return false;
     }
 
     if (QDir(_packingPath.absoluteFilePath()).isEmpty())
     {
-        qDebug() << QString("[MB_TRACE][canBeResumed#3] can't use nzb file: %1").arg(nzbFilePath);
+        NgLogger::error(tr("packing Path is empty: %1").arg(_packingPath.absoluteFilePath()));
         return false;
     }
     return true;

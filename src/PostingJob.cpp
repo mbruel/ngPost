@@ -28,6 +28,7 @@
 #include <QRegularExpression>
 #include <QThread>
 
+#include "NgDBConf.h"
 #include "NgPost.h"
 #include "nntp/NntpArticle.h"
 #include "nntp/NntpFile.h"
@@ -127,6 +128,75 @@ PostingJob::PostingJob(NgPost                       &ngPost,
     , _postWidget(nullptr)
     , _tmpPath(sharedParams->tmpPath())
     , _files(files)
+    , _delFilesAfterPost(_params->delFilesAfterPost() ? 0x1 : 0x0)
+
+    , _extProc(nullptr)
+    , _packingTmpDir(nullptr)
+    , _limitProcDisplay(false)
+    , _nbProcDisp(42)
+
+    , _nntpConnections()
+    , _closedConnections()
+
+    , _filesToUpload()
+    , _filesInProgress()
+    , _filesFailed()
+    , _nbFiles(0)
+    , _nbPosted(0)
+
+    , _nzb(nullptr)
+    , _nzbStream()
+    , _nntpFile(nullptr)
+    , _file(nullptr)
+    , _part(0)
+    , _timeStart()
+    , _totalSize(0)
+    , _pauseTimer()
+    , _pauseDuration(0)
+
+    , _nbConnections(0)
+    , _nbArticlesUploaded(0)
+    , _nbArticlesFailed(0)
+    , _uploadedSize(0)
+    , _nbArticlesTotal(0)
+    , _stopPosting(0x0)
+    , _noMoreFiles(0x0)
+    , _postStarted(false)
+    , _packed(false)
+    , _postFinished(false)
+    , _secureDiskAccess()
+    , _posters()
+    , _isPaused(false)
+    , _resumeTimer()
+    , _isActiveJob(false)
+#ifdef __COMPUTE_IMMEDIATE_SPEED__
+    , _immediateSize(0)
+    , _immediateSpeedTimer()
+    , _immediateSpeed("0 B/s")
+    , _useHMI(_ngPost.useHMI())
+#endif
+{
+    _init();
+}
+
+PostingJob::PostingJob(NgPost              &ngPost,
+                       UnfinishedJob const &unfinshedJob,
+                       QFileInfoList const &missingFiles,
+                       QObject             *parent)
+    : QObject(parent)
+    , _ngPost(ngPost)
+    , _params(new PostingParams(ngPost,
+                                "", // rarName
+                                "", // rarPass
+                                unfinshedJob.nzbFilePath,
+                                missingFiles,
+                                nullptr,
+                                { unfinshedJob.groups },
+                                std::string("resumeJob@ngPost.com"), // from
+                                ngPost.postingParams()))
+    , _postWidget(nullptr)
+    , _tmpPath(ngPost.postingParams()->tmpPath())
+    , _files(missingFiles)
     , _delFilesAfterPost(_params->delFilesAfterPost() ? 0x1 : 0x0)
 
     , _extProc(nullptr)
@@ -707,7 +777,7 @@ void PostingJob::_postFiles()
         return;
     }
 
-    if (!_nzb->open(QIODevice::WriteOnly | QIODevice::Text))
+    if (!_nzb->open((_isResumeJob ? QIODevice::ReadWrite : QIODevice::WriteOnly) | QIODevice::Text))
     {
         NgLogger::error(tr("Error: Can't create nzb output file: %1").arg(_params->nzbFilePath()));
         _finishPosting(); // MB_TODO shall we?
@@ -715,31 +785,41 @@ void PostingJob::_postFiles()
     }
     else
     {
-        _nzbStream.setDevice(_nzb);
-        _nzbStream << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                   << "<!DOCTYPE nzb PUBLIC \"-//newzBin//DTD NZB 1.1//EN\" "
-                      "\"http://www.newzbin.com/DTD/nzb/nzb-1.1.dtd\">\n"
-                   << "<nzb xmlns=\"http://www.newzbin.com/DTD/2003/nzb\">\n"
-                   << kSpace << "<head>\n";
-        // add the title in the header (first file name)
-        _nzbStream << kSpace << kSpace << "<meta type=\"title\">" << _params->files().front().fileName()
-                   << "</meta>\n";
-        if (!_params->rarPass().isEmpty()) // lets add the password
-            _nzbStream << kSpace << kSpace << "<meta type=\"password\">" << _params->rarPass() << "</meta>\n";
-
-        // add the other meta like the category or whatever...
-        if (!_params->meta().isEmpty())
+        if (_isResumeJob)
         {
-#if QT_VERSION < QT_VERSION_CHECK(6, 4, 0)
-            for (auto itMeta = _params->meta().cbegin(); itMeta != _params->meta().cend(); ++itMeta)
-                _nzbStream << kSpace << kSpace << "<meta type=\"" << itMeta.key() << "\">" << itMeta.value()
-                           << "</meta>\n";
-#else
-            for (auto const &[key, val] : _params->meta().asKeyValueRange())
-                _nzbStream << kSpace << kSpace << "<meta type=\"" << key << "\">" << val << "</meta>\n";
-#endif
+            // go to the end of file minus last line "</nzb>"
+            _nzb->seek(_nzb->size() - QString("</nzb>").size());
+            _nzbStream.setDevice(_nzb);
         }
-        _nzbStream << kSpace << "</head>\n\n" << MB_FLUSH;
+        else
+        {
+            _nzbStream.setDevice(_nzb);
+            _nzbStream << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                       << "<!DOCTYPE nzb PUBLIC \"-//newzBin//DTD NZB 1.1//EN\" "
+                          "\"http://www.newzbin.com/DTD/nzb/nzb-1.1.dtd\">\n"
+                       << "<nzb xmlns=\"http://www.newzbin.com/DTD/2003/nzb\">\n"
+                       << kSpace << "<head>\n";
+            // add the title in the header (first file name)
+            _nzbStream << kSpace << kSpace << "<meta type=\"title\">" << _params->files().front().fileName()
+                       << "</meta>\n";
+            if (!_params->rarPass().isEmpty()) // lets add the password
+                _nzbStream << kSpace << kSpace << "<meta type=\"password\">" << _params->rarPass()
+                           << "</meta>\n";
+
+            // add the other meta like the category or whatever...
+            if (!_params->meta().isEmpty())
+            {
+#if QT_VERSION < QT_VERSION_CHECK(6, 4, 0)
+                for (auto itMeta = _params->meta().cbegin(); itMeta != _params->meta().cend(); ++itMeta)
+                    _nzbStream << kSpace << kSpace << "<meta type=\"" << itMeta.key() << "\">" << itMeta.value()
+                               << "</meta>\n";
+#else
+                for (auto const &[key, val] : _params->meta().asKeyValueRange())
+                    _nzbStream << kSpace << kSpace << "<meta type=\"" << key << "\">" << val << "</meta>\n";
+#endif
+            }
+            _nzbStream << kSpace << "</head>\n\n" << MB_FLUSH;
+        }
     }
 
     _timeStart.start();
@@ -1084,11 +1164,12 @@ void PostingJob::_initPosting()
              << ", overwriteNzb: " << _params->overwriteNzb();
 
     // initialize buffer and nzb file
-    if (!_params->overwriteNzb()) // MB_TODO: for now never overwrite!
+    if (!_isResumeJob || !_params->overwriteNzb()) // MB_TODO: for now never overwrite!
         _params->setNzbFilePath(NgTools::substituteExistingFile(_params->nzbFilePath()));
     _nzb = new QFile(_params->nzbFilePath());
     qDebug() << tr("[MB_TRACE ]Creating QFile(%1)").arg(_params->nzbFilePath());
-    _nbFiles = static_cast<uint>(_files.size());
+    if (!_isResumeJob)
+        _nbFiles = static_cast<uint>(_files.size());
     _params->dumpParams();
 
     int    numPadding = 1;
@@ -1101,7 +1182,7 @@ void PostingJob::_initPosting()
 
     // initialize the NntpFiles (active objects)
     _filesToUpload.reserve(static_cast<int>(_nbFiles));
-    uint fileNum = 0;
+    uint fileNum = _isResumeJob ? _nbPosted : 0;
     for (QFileInfo const &file : _files)
     {
         NNTP::File *nntpFile =
@@ -1374,6 +1455,14 @@ QString PostingJob::getFilesPaths() const { return _params->getFilesPaths(); }
 QString PostingJob::sslSupportInfo() { return NntpConnection::sslSupportInfo(); }
 
 bool PostingJob::supportsSsl() { return NntpConnection::supportsSsl(); }
+
+void PostingJob::setParamForResume(int nbTotalFiles, int nbMissing)
+{
+    _nbFiles     = nbTotalFiles;
+    _nbPosted    = nbTotalFiles - nbMissing + 1;
+    _isResumeJob = true;
+    _params->setParamForResume(); // will detach
+}
 
 void PostingJob::onResumeTriggered()
 {

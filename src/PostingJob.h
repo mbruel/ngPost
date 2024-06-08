@@ -45,6 +45,7 @@ class NntpConnection;
 class PostingWidget;
 class Poster;
 class Database;
+class UnfinishedJob;
 
 using AtomicBool = QAtomicInteger<unsigned short>; // 16 bit only (faster than using 8 bit variable...)
 
@@ -170,7 +171,8 @@ private:
         PACKING_DONE,
         POSTED
     };
-    JOB_STATE _state = NOT_STARTED;
+    JOB_STATE _state       = NOT_STARTED;
+    bool      _isResumeJob = false;
 
     bool hasPosted() const { return _state == JOB_STATE::POSTED; }
 
@@ -209,6 +211,12 @@ public:
                SharedParams const           &sharedParams,
                QMap<QString, QString> const &meta   = QMap<QString, QString>(),
                QObject                      *parent = nullptr);
+
+    PostingJob(NgPost              &ngPost,
+               UnfinishedJob const &unfinshedJob,
+               QFileInfoList const &missingFiles,
+               QObject             *parent = nullptr);
+
     ~PostingJob();
 
     void pause();
@@ -277,6 +285,7 @@ public:
     } //!< useless connection, we delete it
 
     void storeInDatabase(Database &db);
+    void setParamForResume(int nbTotalFiles, int nbMissing);
 
 public slots:
     void onStopPosting(); //!< for HMI

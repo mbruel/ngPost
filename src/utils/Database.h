@@ -70,6 +70,7 @@ public:
     bool initSQLite(QString const &dbPath, QStringList const &pragmas);
     bool isOpen() const { return _db.isOpen(); }
     void closeDB();
+    uint dumpTablesNamesAndRows(); //!< return the number of tables
 
     QSqlDatabase const &qSqlDatabase() { return _db; }
 

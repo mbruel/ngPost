@@ -1,6 +1,6 @@
 #ifndef TESTNZBCHECK_H
 #define TESTNZBCHECK_H
-#include "tests/MacroTest.h"
+#include "tests/utils/MacroTest.h"
 class NgPost;
 
 class TestNzbGet : public MacroTest

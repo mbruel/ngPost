@@ -8,8 +8,11 @@ class PostingJob;
 class NgHistoryDatabase : public Database
 {
     friend class NgMigration;
+    friend class ResumeJobQueue;
 #ifdef __test_ngPost__
+    friend class MacroTest;
     friend class TestNgHistoryDatabase;
+    friend class TestResumeJobs;
 #endif
     static const QRegularExpression kByteSizeRegExp;
 

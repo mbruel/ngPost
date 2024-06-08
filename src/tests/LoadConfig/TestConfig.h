@@ -1,6 +1,6 @@
 #ifndef TestConfig_H
 #define TestConfig_H
-#include "tests/MacroTest.h"
+#include "../utils/MacroTest.h"
 class NgPost;
 
 class TestConfig : public MacroTest

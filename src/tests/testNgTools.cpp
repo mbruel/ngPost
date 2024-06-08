@@ -1,5 +1,5 @@
 #include "testNgTools.h"
-#include "Macros.h"
+#include "utils/Macros.h"
 
 #include <filesystem> // std::filesystem::create_directory (faster that QDir!)
 
@@ -7,9 +7,9 @@
 #include <QNetworkReply>
 #include <QtTest/QtTest>
 
-#include "MacroTest.h"
 #include "NgConf.h"
 #include "NgPost.h"
+#include "utils/MacroTest.h"
 #include "utils/NgTools.h"
 
 using namespace NgConf;

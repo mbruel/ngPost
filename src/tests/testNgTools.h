@@ -1,6 +1,6 @@
 #ifndef TESTNGTOOLS_H
 #define TESTNGTOOLS_H
-#include "tests/MacroTest.h"
+#include "tests/utils/MacroTest.h"
 class NgPost;
 
 class TestNgTools : public MacroTest

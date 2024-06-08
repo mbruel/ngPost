@@ -97,6 +97,31 @@ void Database::closeDB()
     _db.close();
 }
 
+// Get the number of tables
+uint Database::dumpTablesNamesAndRows()
+{
+    // MB_TODO (this is only for Sqlite...)
+    QSqlQuery queryTbl;
+    queryTbl.exec("SELECT name FROM sqlite_master WHERE type='table';");
+    uint nbTables = 0;
+    while (queryTbl.next())
+    {
+        QString tableName = queryTbl.value(0).toString();
+
+        // Get the number of rows in the table
+        int       rowCount = 0;
+        QSqlQuery queryRows;
+        queryRows.prepare(QString("SELECT COUNT(*) FROM %1;").arg(tableName));
+        queryRows.exec();
+        if (queryRows.next())
+            rowCount += queryRows.value(0).toUInt();
+
+        NgLogger::log(tr("\t- Table: %1 has %2 rows").arg(tableName).arg(rowCount), true);
+        ++nbTables;
+    }
+    return nbTables;
+}
+
 bool Database::clearTable(QString const &tableName)
 {
     if (!_isDbInitialized)

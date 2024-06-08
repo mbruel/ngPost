@@ -16,7 +16,9 @@ class MacroTest : public QObject
 {
     Q_OBJECT
 protected:
-    NgPost *_ngPost;
+    NgPost                     *_ngPost;
+    NgHistoryDatabase          *_db;
+    inline static const QString kDBTestFilePath = "/tmp/ngPost_tstDB.sqlite";
 
 public slots:
 
@@ -37,6 +39,11 @@ public slots:
     // called after each test case
     virtual void init() { }
     virtual void cleanup();
+
+protected:
+    bool _doInsertsIfProvided(QString const &sqlScript);
+    void _deletekDBTestFile();
+    bool _copyResourceFile(QString const &resoucePath, QString const &dstWritable);
 
 private:
     inline static uint sNbMacroTestsRun  = 0;

@@ -24,11 +24,12 @@ CONFIG(debug, debug|release): DEFINES += __TEST_DEBUG__
 # Macro Tests to activate/desactivate
 #-------------------------------------------------
 
-DEFINES += __Launch_TestNgTools__
-DEFINES += __Launch_TestConfig__
-DEFINES -= __Launch_TestLocalConfig__
-DEFINES += __Launch_TestNzbCheck__
-DEFINES += __Launch_TestDatabase__
+# DEFINES += __Launch_TestNgTools__
+# DEFINES += __Launch_TestConfig__
+# DEFINES -= __Launch_TestLocalConfig__
+# DEFINES += __Launch_TestNzbCheck__
+# DEFINES += __Launch_TestDatabase__
+DEFINES += __Launch_TestResumeJobs__
 
 #-------------------------------------------------
 # MACROS for TRACES
@@ -37,22 +38,26 @@ DEFINES -= __MB_TRACE_UndoStack__
 DEFINES -= __MB_TRACE_CACHE__
 
 SOURCES += \
-    tests/MacroTest.cpp \
+    tests/utils/MacroTest.cpp \
     tests/LoadConfig/TestConfig.cpp \
-    tests/TestUtils.cpp \
+    tests/utils/TestUtils.cpp \
+    tests/utils/ConnectionHandler.cpp \
     tests/main.cpp \
     tests/testNgTools.cpp \
     tests/testdatabase.cpp \
-    tests/testnzbcheck.cpp
+    tests/testnzbcheck.cpp \
+    tests/testresumejobs.cpp
 
 HEADERS += \
     tests/LoadConfig/TestConfig.h \
-    tests/MacroTest.h \
-    tests/Macros.h \
-    tests/TestUtils.h \
+    tests/utils/MacroTest.h \
+    tests/utils/Macros.h \
+    tests/utils/TestUtils.h \
+    tests/utils/ConnectionHandler.h \
     tests/testNgTools.h \
     tests/testdatabase.h \
-    tests/testnzbcheck.h
+    tests/testnzbcheck.h \
+    tests/testresumejobs.h
 
 RESOURCES += \
     tests/resources/test_ngPost.qrc

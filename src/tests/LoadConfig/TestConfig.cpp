@@ -1,6 +1,8 @@
 #include "TestConfig.h"
-#include "../Macros.h"
-#include "../TestUtils.h"
+#include "../utils/ConnectionHandler.h"
+#include "../utils/Macros.h"
+#include "../utils/TestUtils.h"
+
 #include <QTest>
 
 #include <QDebug>

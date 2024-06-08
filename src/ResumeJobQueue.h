@@ -21,12 +21,14 @@
 
 #include "utils/PureStaticClass.h"
 #include <QCoreApplication>
-#include <QFileInfo>
+#include <QDir>
+#include <QFileInfoList>
 #include <QStringList>
 #include <QtGlobal>
 
-#include "NgDBConf.h"
+class NgPost;
 class PostingJob;
+class UnfinishedJob;
 
 class ResumeJobQueue : public PureStaticClass
 {
@@ -34,11 +36,24 @@ class ResumeJobQueue : public PureStaticClass
     Q_DECLARE_TR_FUNCTIONS(ResumeJobQueue); // tr() without QObject using QCoreApplication::translate
 
 public:
-    static uint resumeUnfinihedJobs();
+    static uint resumeUnfinihedJobs(NgPost &ngPost);
+
+#ifdef __test_ngPost__
+    static PostingJob *getPostingJobFirstUnfinishedJob(NgPost &ngPost, QString const &nzbWritableFilePath);
+#endif
 
 private:
-    static QStringList postedFilesFromNzb(QString const &nzbFile);
-    static PostingJob *jobsToResume(UnfinishedJob const &job, QFileInfoList const &missingFiles);
+    static QStringList   _postedFilesFromNzb(QString const &nzbFile);
+    static PostingJob   *_jobsToResume(NgPost              &ngPost,
+                                       UnfinishedJob const &unfinshedJob,
+                                       QFileInfoList const &missingFiles,
+                                       int                  nbTotalFiles);
+    static QFileInfoList _filesInPackingPath(QString const &packingDirPath);
+
+    static bool _doFilesChecks(UnfinishedJob const &unfinishedJob,
+                               QStringList const   &missingFilesInDB,
+                               QStringList const   &postedFiles,
+                               QFileInfoList       &filesInPackingDir);
 };
 
 #endif // RESUMEJOBQUEUE_H

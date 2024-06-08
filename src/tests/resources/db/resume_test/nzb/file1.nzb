@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nzb PUBLIC "-//newzBin//DTD NZB 1.1//EN" "http://www.newzbin.com/DTD/nzb/nzb-1.1.dtd">
+<nzb xmlns="http://www.newzbin.com/DTD/2003/nzb">
+  <head>
+    <meta type="title">file1.bin</meta>
+    <meta type="password">=AmQsO,1kHg0uBcOgl`q6EE1s</meta>
+  </head>
+
+  <file poster="egPOsagJSIHvk@ngPost.com" date="1717858467" subject="[1/6] - &quot;file1.par2&quot; yEnc (1/1) 948">
+    <groups>
+      <group>alt.binaries.paxer</group>
+    </groups>
+    <segments>
+      <segment bytes="948" number="1">70850dbd7bc94999b96f42ac40a1acf4@ngPost</segment>
+    </segments>
+  </file>
+  <file poster="egPOsagJSIHvk@ngPost.com" date="1717858474" subject="[2/6] - &quot;file1.part1.rar&quot; yEnc (1/2) 1048576">
+    <groups>
+      <group>alt.binaries.paxer</group>
+    </groups>
+    <segments>
+      <segment bytes="716800" number="1">1d90e8d97dc54508a76302f2f906deb9@ngPost</segment>
+      <segment bytes="331776" number="2">f79d0c9ac9e44ca6ab2f3f50370c519f@ngPost</segment>
+    </segments>
+  </file>
+  <file poster="egPOsagJSIHvk@ngPost.com" date="1717858476" subject="[3/6] - &quot;file1.part2.rar&quot; yEnc (1/2) 1048576">
+    <groups>
+      <group>alt.binaries.paxer</group>
+    </groups>
+    <segments>
+      <segment bytes="716800" number="1">c5f2f4489b3a44bca9cf4f532e58a69b@ngPost</segment>
+      <segment bytes="331776" number="2">7a9fac7fcf4045e99d45ad5645e42b03@ngPost</segment>
+    </segments>
+  </file>
+</nzb>

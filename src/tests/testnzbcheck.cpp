@@ -1,10 +1,11 @@
 #include "testnzbcheck.h"
-#include "Macros.h"
+#include "utils/Macros.h"
 
 #include <QDebug>
 #include <QtTest/QtTest>
 
-#include "TestUtils.h"
+#include "utils/ConnectionHandler.h"
+#include "utils/TestUtils.h"
 
 #include "NgPost.h"
 #include "NzbCheck.h"

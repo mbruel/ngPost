@@ -6,13 +6,13 @@
 #include <QtTest/QtTest>
 
 #include "LoadConfig/TestConfig.h"
-#include "MacroTest.h"
+#include "NgPost.h"
 #include "testdatabase.h"
 #include "testNgTools.h"
 #include "testnzbcheck.h"
-
-#include "NgPost.h"
-#include "TestUtils.h"
+#include "testresumejobs.h"
+#include "utils/MacroTest.h"
+#include "utils/TestUtils.h"
 
 static QList<QString> sFailedTests;
 
@@ -84,6 +84,14 @@ int main(int argc, char *argv[])
         launchTest(&test);
     }
 #endif
+
+#ifdef __Launch_TestResumeJobs__
+    {
+        TestResumeJobs test("TestResumeJobs");
+        launchTest(&test);
+    }
+#endif
+
     // Add more test cases here as needed
     // ...
 

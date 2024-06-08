@@ -27,6 +27,7 @@
 #endif
 
 #include "NgPost.h"
+#include "ResumeJobQueue.h"
 #include "utils/NgLogger.h"
 #include "utils/NgTools.h"
 
@@ -85,13 +86,21 @@ int main(int argc, char *argv[])
         //        app->checkForMigration();
         if (app->checkSupportSSL())
         {
-            app->initHistoryDatabase();
-            exitCode = app->startEventLoop();
-
-            if (app->nzbCheck())
+            if (app->initHistoryDatabase())
             {
-                exitCode = app->nbMissingArticles();
-                qApp->processEvents(); // to see the last summary log (in queue...)
+                ResumeJobQueue::resumeUnfinihedJobs(*app);
+                exitCode = app->startEventLoop();
+                if (app->nzbCheck())
+                {
+                    exitCode = app->nbMissingArticles();
+                    qApp->processEvents(); // to see the last summary log (in queue...)
+                }
+            }
+            else
+            {
+                std::cerr << "Error initializing history database...";
+                // Process events without starting the event loop to print the logs/errors
+                qApp->processEvents();
             }
         }
 #ifdef __DEBUG__

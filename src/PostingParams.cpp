@@ -183,6 +183,12 @@ PostingParams::PostingParams(NgPost                       &ngPost,
 {
 }
 
+void PostingParams::setParamForResume()
+{
+    _params.detach();
+    _params->setParamForResume();
+}
+
 bool PostingParams::quietMode() const { return _params->quietMode(); }
 
 bool PostingParams::dispProgressBar() const { return _params->dispProgressBar(); }
@@ -882,6 +888,16 @@ void MainParams::dumpParams() const
              << " _urlNzbUpload :" << (urlNzbUpload() ? "yes" : "no") << ", _nzbPostCmd: " << nzbPostCmd()
              << "\n_preparePacking: " << preparePacking();
     qDebug() << "\n[MainParams::_dumpParams]<<<<<<<<<<<<<<<<<<\n";
+}
+
+void MainParams::setParamForResume()
+{
+    _doCompress = false;
+    _doPar2     = false;
+    _genName    = false;
+    _genPass    = false;
+    _keepRar    = false;
+    _packAuto   = false;
 }
 
 QString PostingParams::getFilesPaths() const

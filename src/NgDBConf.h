@@ -1,11 +1,14 @@
 #ifndef NGDBCONF_H
 #define NGDBCONF_H
+#include <QCoreApplication>
 #include <QDateTime>
 #include <QFile>
 #include <QFileInfo>
-
-struct UnfinishedJob
+class UnfinishedJob // seems struct can't use Q_DECLARE_TR_FUNCTIONS...
 {
+    Q_DECLARE_TR_FUNCTIONS(UnfinishedJob); // tr() without QObject using QCoreApplication::translate
+
+public:
     qint64    jobIdDB;
     QDateTime date;
     QString   tmpPath;
