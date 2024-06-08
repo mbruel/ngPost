@@ -1,4 +1,6 @@
-QT += testlib core gui xml concurrent network
+include(ngPost.pri)
+
+QT += testlib
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 INCLUDEPATH += $$PWD
 
@@ -12,7 +14,6 @@ CONFIG += c++20 console
 
 DEFINES += __test_ngPost__
 
-include(ngPost.pri)
 
 CONFIG(release, debug|release): DEFINES -= __TEST_DEBUG__
 CONFIG(debug, debug|release): DEFINES += __TEST_DEBUG__
@@ -25,8 +26,9 @@ CONFIG(debug, debug|release): DEFINES += __TEST_DEBUG__
 
 DEFINES += __Launch_TestNgTools__
 DEFINES += __Launch_TestConfig__
+DEFINES -= __Launch_TestLocalConfig__
 DEFINES += __Launch_TestNzbCheck__
-DEFINES += __Launch_NoPostingConnection__
+DEFINES += __Launch_TestDatabase__
 
 #-------------------------------------------------
 # MACROS for TRACES
@@ -35,10 +37,12 @@ DEFINES -= __MB_TRACE_UndoStack__
 DEFINES -= __MB_TRACE_CACHE__
 
 SOURCES += \
+    tests/MacroTest.cpp \
     tests/LoadConfig/TestConfig.cpp \
     tests/TestUtils.cpp \
     tests/main.cpp \
     tests/testNgTools.cpp \
+    tests/testdatabase.cpp \
     tests/testnzbcheck.cpp
 
 HEADERS += \
@@ -47,6 +51,7 @@ HEADERS += \
     tests/Macros.h \
     tests/TestUtils.h \
     tests/testNgTools.h \
+    tests/testdatabase.h \
     tests/testnzbcheck.h
 
 RESOURCES += \

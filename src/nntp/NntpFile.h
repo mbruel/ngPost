@@ -44,9 +44,8 @@ signals:
     void sigErrorReadingFile();
     void sigScheduleDeletion();
 
-
 private:
-    const uint               _num;     //!< file number (kind of id)
+    const uint _num; //!< file number (kind of id)
 
     PostingJob *const        _postingJob;
     const QFileInfo          _file;    //!< original file
@@ -68,6 +67,8 @@ public:
          int                   padding,
          QList<QString> const &grpList);
     ~File();
+
+    QFileInfo const &fileInfo() const { return _file; }
 
     inline void addArticle(NNTP::Article *article);
 

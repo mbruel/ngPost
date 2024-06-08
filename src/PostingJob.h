@@ -44,6 +44,7 @@ class NgPost;
 class NntpConnection;
 class PostingWidget;
 class Poster;
+class Database;
 
 using AtomicBool = QAtomicInteger<unsigned short>; // 16 bit only (faster than using 8 bit variable...)
 
@@ -159,6 +160,25 @@ private:
     bool const _useHMI;
 #endif
 
+#ifdef __test_ngPost__ // MB_TODO : start
+#endif
+    // For Resuming a Job
+    enum JOB_STATE
+    {
+        NOT_STARTED = 0,
+        COMPRESSION_DONE,
+        PACKING_DONE,
+        POSTED
+    };
+    JOB_STATE _state = NOT_STARTED;
+
+    bool hasPosted() const { return _state == JOB_STATE::POSTED; }
+
+public:
+    QSet<NNTP::File *> nntpFilesNotPosted() const;
+#ifdef __test_ngPost__ // MB_TODO : move down
+#endif
+
 public:
     /*!
      * \brief constructor from the GUI (postWidget)
@@ -201,6 +221,7 @@ public:
 
     bool tryResumePostWhenConnectionLost() const { return _params->tryResumePostWhenConnectionLost(); }
 
+    inline uint    nbFiles() const { return _nbFiles; }
     inline QString avgSpeed() const;
 
     inline void articlePosted(quint64 size);
@@ -250,7 +271,12 @@ public:
     static QString sslSupportInfo();
     static bool    supportsSsl();
 
-    void removeNonPosintingConnection(NntpConnection *nntpCon); //!< useless connection, we delete it
+    void removeNonPosintingConnection(NntpConnection *nntpCon)
+    {
+        _nntpConnections.removeOne(nntpCon);
+    } //!< useless connection, we delete it
+
+    void storeInDatabase(Database &db);
 
 public slots:
     void onStopPosting(); //!< for HMI

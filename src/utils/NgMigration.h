@@ -34,7 +34,7 @@ public:
 private:
     void _doNgMigration(unsigned short const confBuild = 1);
 
-    void _migrateTo500();
+    bool _migrateTo500();
 };
 
 #endif // NgMigration_H

@@ -37,18 +37,19 @@
 #include <QTextStream>
 #include <QThread>
 
-#include "FileUploader.h"
-#include "FoldersMonitorForNewFiles.h"
 #include "nntp/NntpArticle.h"
 #include "nntp/ServerParams.h"
-#include "NzbCheck.h"
-#include "PostingJob.h"
-#include "utils/Database.h"
 #include "utils/Macros.h" // MB_FLUSH
 #include "utils/NgCmdLineLoader.h"
 #include "utils/NgConfigLoader.h"
 #include "utils/NgMigration.h"
 #include "utils/NgTools.h"
+
+#include "FileUploader.h"
+#include "FoldersMonitorForNewFiles.h"
+#include "NgHistoryDatabase.h"
+#include "NzbCheck.h"
+#include "PostingJob.h"
 
 #ifdef __USE_HMI__
 #  include "hmi/AutoPostWidget.h"
@@ -61,6 +62,18 @@
 #endif
 
 using namespace NgConf;
+#ifdef __test_ngPost__
+void NgPost::resetConfig()
+{
+#  if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    auto *param = _mainParams.take();
+    delete param;
+    _mainParams = new MainParams;
+#  else
+    _mainParams.reset(new MainParams);
+#  endif
+}
+#endif
 
 NgPost::NgPost(int &argc, char *argv[])
     : QObject()
@@ -98,7 +111,7 @@ NgPost::NgPost(int &argc, char *argv[])
 
     , _proxySocks5(QNetworkProxy::NoProxy)
     , _proxyUrl()
-    , _dbHistory(new Database)
+    , _dbHistory(new NgHistoryDatabase)
 {
     QThread::currentThread()->setObjectName(kThreadNameMain);
 
@@ -734,19 +747,6 @@ void NgPost::onPostingJobFinished()
                                                   job->nbArticlesFailed());
 #endif
         qDebug() << "[MB_TRACE][onPostingJobFinished]getFilesPaths: " << _activeJob->getFilesPaths();
-        // MB_TODO
-        //        _dbHistory->insertPost(NgTools::currentDateTime(),
-        //                               _activeJob->nzbName(),
-        //                               _activeJob->postSize(),
-        //                               _activeJob->avgSpeed(),
-        //                               _activeJob->getFilesPaths(),
-        //                               _activeJob->hasCompressed() ? _activeJob->rarName() : QString(),
-        //                               _activeJob->hasCompressed() ? _activeJob->rarPass() : QString(),
-        //                               _activeJob->groups(),
-        //                               _activeJob->from(false),
-        //                               _activeJob->tmpPath(),
-        //                               _activeJob->nzbFilePath(),
-        //                               _activeJob->hasPostFinished());
 
         if (_activeJob->hasPostFinished() && !_postHistoryFile.isEmpty())
         {
@@ -1236,3 +1236,5 @@ bool NgPost::doNzbCheck(QString const &nzbPath)
 }
 
 bool NgPost::removeNntpServer(NNTP::ServerParams *server) { return _mainParams->removeNntpServer(server); }
+
+int NgPost::storeJobInDB(PostingJob const &job) { return _dbHistory->insertPostingJob(job); }

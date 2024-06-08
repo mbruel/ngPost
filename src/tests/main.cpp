@@ -1,3 +1,5 @@
+#include <csignal>
+
 #include <QCoreApplication>
 #include <QDebug>
 #include <QTest>
@@ -5,60 +7,34 @@
 
 #include "LoadConfig/TestConfig.h"
 #include "MacroTest.h"
+#include "testdatabase.h"
 #include "testNgTools.h"
 #include "testnzbcheck.h"
 
 #include "NgPost.h"
 #include "TestUtils.h"
 
-inline void launchTest(MacroTest *test, QList<QString> &failedTests)
+static QList<QString> sFailedTests;
+
+inline void launchTest(MacroTest *test)
 {
     int res = QTest::qExec(test);
     qDebug() << "[" << test->metaObject()->className() << "] QTest::qExec return: " << res
              << ", nbFailure: " << test->nbFailure() << " on " << test->nbVerifications()
              << " verifs on a total of " << test->nbUseCases() << " usecases.";
     if (test->nbFailure() != 0)
-        failedTests << test->metaObject()->className();
+        sFailedTests << test->metaObject()->className();
 }
 
-int main(int argc, char *argv[])
+void handleShutdown(int signal)
 {
-    QCoreApplication app(argc, argv);
+    Q_UNUSED(signal)
+    qCritical() << "Signal caught, closing the application...\n";
+    qApp->quit();
+}
 
-    qputenv("QTEST_FUNCTION_TIMEOUT", "900000"); // 5 min
-
-    QList<QString> failedTests;
-#ifdef __Launch_TestNgTools__
-    {
-        TestNgTools test("TestNgTools");
-        launchTest(&test, failedTests);
-    }
-#endif
-
-#ifdef __Launch_TestConfig__
-    {
-        TestConfig test("TestConfig");
-        launchTest(&test, failedTests);
-    }
-#endif
-
-#ifdef __Launch_TestNzbCheck__
-    {
-        TestNzbGet test("TestNzbGet");
-        launchTest(&test, failedTests);
-    }
-#endif
-
-#ifdef __Launch_NoPostingConnection__
-    {
-        // TODO!!!
-        // TestNoPostingConnection test("TestNoPostingConnection");
-        // launchTest(&test, failedTests);
-    }
-#endif
-    // Add more test cases here as needed
-    // ...
-
+void printSumUp()
+{
     qDebug() << "\n\n\n\n";
     qDebug() << "###############################################";
     qDebug() << "# Overall Tests Results:";
@@ -67,9 +43,51 @@ int main(int argc, char *argv[])
     qDebug() << "#\n";
     qDebug() << "#     - number of Unit Tests: " << MacroTest::numberOfUnitTestsRun();
     qDebug() << "#     - number of Unit Tests FAILED: " << MacroTest::numberOfUnitTestsFAIL();
-    if (!failedTests.isEmpty())
-        qDebug() << "# List of FAILED macro Tests: " << failedTests.join(", ");
+    if (!sFailedTests.isEmpty())
+        qDebug() << "# List of FAILED macro Tests: " << sFailedTests.join(", ");
     qDebug() << "###############################################";
+}
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication app(argc, argv);
+
+    qputenv("QTEST_FUNCTION_TIMEOUT", "42000"); // 42 sec
+
+    signal(SIGINT, &handleShutdown);  // shut down on ctrl-c
+    signal(SIGTERM, &handleShutdown); // shut down on killall
+
+#ifdef __Launch_TestNgTools__
+    {
+        TestNgTools test("TestNgTools");
+        launchTest(&test);
+    }
+#endif
+
+#ifdef __Launch_TestConfig__
+    {
+        TestConfig test("TestConfig");
+        launchTest(&test);
+    }
+#endif
+
+#ifdef __Launch_TestNzbCheck__
+    {
+        TestNzbGet test("TestNzbGet");
+        launchTest(&test);
+    }
+#endif
+
+#ifdef __Launch_TestDatabase__
+    {
+        TestNgHistoryDatabase test("TestNgHistoryDatabase");
+        launchTest(&test);
+    }
+#endif
+    // Add more test cases here as needed
+    // ...
+
+    printSumUp();
 
     return (int)MacroTest::numberOfUnitTestsFAIL();
 }

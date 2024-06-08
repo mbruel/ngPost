@@ -20,13 +20,25 @@
 #define RESUMEJOBQUEUE_H
 
 #include "utils/PureStaticClass.h"
+#include <QCoreApplication>
+#include <QFileInfo>
 #include <QStringList>
 #include <QtGlobal>
 
+#include "NgDBConf.h"
+class PostingJob;
+
 class ResumeJobQueue : public PureStaticClass
 {
+
+    Q_DECLARE_TR_FUNCTIONS(ResumeJobQueue); // tr() without QObject using QCoreApplication::translate
+
 public:
-    static QStringList postedFilesFromNzb(QString const &nzbPath);
+    static uint resumeUnfinihedJobs();
+
+private:
+    static QStringList postedFilesFromNzb(QString const &nzbFile);
+    static PostingJob *jobsToResume(UnfinishedJob const &job, QFileInfoList const &missingFiles);
 };
 
 #endif // RESUMEJOBQUEUE_H

@@ -21,10 +21,9 @@
 #include <QStringList>
 
 #include "NgPost.h"
-#include "utils/Database.h"
 #include "utils/NgTools.h"
 
-#include "ResumeJobQueue.h"
+#include "NgHistoryDatabase.h"
 
 NgMigration::NgMigration(NgPost &ngPost) : _ngPost(ngPost) { }
 
@@ -41,35 +40,37 @@ bool NgMigration::migrate()
 
 void NgMigration::_doNgMigration(unsigned short const confBuild)
 {
+    bool migrationDone = false;
 #ifdef _MSC_VER // MSVC compiler...
     // Fallback for other compilers
     if (confBuild < 500)
-        _migrateTo500();
+        migrationDone = _migrateTo500();
 #else
     switch (confBuild)
     {
     case 1 ... 416:
-        _migrateTo500();
+        migrationDone = _migrateTo500();
+
         // no break so all new updates will be done!
     }
 #endif // <-- Add this line
-
-    ResumeJobQueue::postedFilesFromNzb("/home/mb/Downloads/nzb/newshosting_installer.nzb");
-    //    _ngPost.saveConfig(); // Update conf
+       //
+    if (migrationDone)
+        _ngPost.saveConfig(); // Update conf
 }
 
-void NgMigration::_migrateTo500()
+bool NgMigration::_migrateTo500()
 {
     qDebug() << "Migrate config to build 417";
     QString const &postHistoryFile = _ngPost.postHistoryFile();
     if (postHistoryFile.isEmpty())
-        return;
+        return false;
     QFile hist(postHistoryFile);
     if (hist.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        Database      *db            = _ngPost.historyDatabase();
-        QString const &histSeparator = _ngPost.historyFieldSeparator();
-        QTextStream    stream(&hist);
+        NgHistoryDatabase *db            = _ngPost.historyDatabase();
+        QString const     &histSeparator = _ngPost.historyFieldSeparator();
+        QTextStream        stream(&hist);
         stream.readLine(); // skip header
         while (!stream.atEnd())
         {
@@ -82,19 +83,19 @@ void NgMigration::_migrateTo500()
             }
             else
             {
-                QString dateStr = v.at(0);                // sizeStr = v.at(2), speedStr = v.at(3);
-                db->insertPost(dateStr.replace("/", "-"), // date
-                               v.at(1),                   // nzbName
-                               v.at(2),                   // size (human readable string)
-                               v.at(3),                   // avgSpeed (human readable)
-                               "",                        // files (if unpcaked (not present in csv)
-                               v.at(4),                   // archiveName
-                               v.at(5),                   // archivePass
-                               v.at(6),                   // groups
-                               v.at(7),                   // poster
-                               "",                        // tmpPath not saved in csv
-                               "",                        // nzbFilePath not saved in csv
-                               1);                        // upload finished (done)
+                QString dateStr = v.at(0);                 // sizeStr = v.at(2), speedStr = v.at(3);
+                db->_insertPost(dateStr.replace("/", "-"), // date
+                                v.at(1),                   // nzbName
+                                v.at(2),                   // size (human readable string)
+                                v.at(3),                   // avgSpeed (human readable)
+                                v.at(4),                   // archiveName
+                                v.at(5),                   // archivePass
+                                v.at(6),                   // groups
+                                v.at(7),                   // poster
+                                "",                        // tmpPath not saved in csv
+                                "",                        // nzbFilePath not saved in csv
+                                0,                         // nbFiles (we don't know?)
+                                1);                        // upload finished (done)
             }
         }
         qDebug() << postHistoryFile << " has been migrated to Sqlite DB!\n"
@@ -102,4 +103,5 @@ void NgMigration::_migrateTo500()
                  << " (this year: " << db->postedSize(Database::DATE_CONDITION::YEAR)
                  << ", this month: " << db->postedSize(Database::DATE_CONDITION::MONTH) << ")";
     }
+    return true;
 }

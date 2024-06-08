@@ -20,13 +20,7 @@ TestNgTools::TestNgTools(QString const &testName, int argc, char *argv[]) : Macr
     _ngPost = new NgPost(argc, argv);
 }
 
-void TestNgTools::cleanup()
-{
-    qDebug() << "Deleting ngPost...";
-    //    delete _ngPost;
-    // Code to run after each test
-}
-
+#ifdef __Launch_TestLocalConfig__
 void TestNgTools::onTestLoadDefautConfig()
 {
     ushort nbVerifs = 0, nbFailed = 0;
@@ -73,6 +67,7 @@ void TestNgTools::onTestLoadDefautConfig()
     MB_LOG("params->groups(): ", params->groups());
     MB_VERIFY(params->groups() == "alt.binaries.xylo,alt.binaries.superman,alt.binaries.paxer", this);
 }
+#endif
 
 void TestNgTools::onTestLoadOldConfig()
 {

@@ -21,22 +21,22 @@ protected:
 public slots:
 
     //!< Called once before the test cases
-    //! => Create the ngPost instance
     virtual void initTestCase() { NgLogger::createInstance(); }
 
+    //!< Called once at the end of all test cases
     virtual void cleanupTestCase() // Called once after all test cases
     {
+        if (_ngPost)
+        {
+            delete _ngPost;
+            _ngPost = nullptr;
+        }
         NgLogger::destroy();
     }
-    //! called before each test case
-    //! (ngPost needs argc, argv for its creation => done in child constructor)
-    inline virtual void init() { }
-    inline virtual void cleanup()
-    {
-        qDebug() << "Leaking ngPost...";
-        //_ngPost->deleteLater();
-    }
+
     // called after each test case
+    virtual void init() { }
+    virtual void cleanup();
 
 private:
     inline static uint sNbMacroTestsRun  = 0;
@@ -80,9 +80,9 @@ public:
     void newVerifications() { ++_nbVerifications; }
     void newFailure() { ++_nbFailure; }
 
-    ushort nbUseCases() const {return _nbUseCases;}
-    ushort nbVerifications() const {return _nbVerifications;}
-    ushort nbFailure() const {return _nbFailure;}
+    ushort nbUseCases() const { return _nbUseCases; }
+    ushort nbVerifications() const { return _nbVerifications; }
+    ushort nbFailure() const { return _nbFailure; }
 
     QString name() const { return _testName; }
 

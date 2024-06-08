@@ -50,13 +50,16 @@ macx: {
 CONFIG(debug, debug|release) :{
     DEFINES += __DEBUG__
 
-    DEFINES += LOG_CONNECTION_STEPS
-    DEFINES -= LOG_CONNECTION_ERRORS_BEFORE_EMIT_SIGNALS
-    DEFINES += LOG_NEWS_AUTH
-    DEFINES -= LOG_NEWS_DATA
     DEFINES += LOG_CONSTRUCTORS
 
-    DEFINES += __SAVE_ARTICLES__
+
+    # NNTP
+    DEFINES -= LOG_CONNECTION_STEPS
+    DEFINES -= LOG_CONNECTION_ERRORS_BEFORE_EMIT_SIGNALS
+    DEFINES -= LOG_NEWS_AUTH
+    DEFINES -= LOG_NEWS_DATA
+
+    DEFINES -= __SAVE_ARTICLES__
 }
 else {
     # In release mode, remove all qDebugs !
@@ -77,6 +80,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+        $$PWD/NgHistoryDatabase.cpp \
         $$PWD/PostingParams.cpp \
         $$PWD/ResumeJobQueue.cpp \
         $$PWD/utils/Database.cpp \
@@ -108,7 +112,9 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     $$PWD/NgConf.h \
+    $$PWD/NgDBConf.h \
     $$PWD/NgError.h \
+    $$PWD/NgHistoryDatabase.h \
     $$PWD/PostingParams.h \
     $$PWD/ResumeJobQueue.h \
     $$PWD/nntp/ServerParams.h \

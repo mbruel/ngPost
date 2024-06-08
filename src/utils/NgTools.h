@@ -78,7 +78,7 @@ public:
 #    include <concepts>
 #    include <iterator>
 #    include <type_traits>
-//MB_TODO: learn and use c++20 concepts!
+    // MB_TODO: learn and use c++20 concepts!
 
     // // Concept to check if a type is a container with begin and end
     // template <typename T>

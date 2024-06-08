@@ -18,7 +18,7 @@ TODO: switch using c++17 std::filesystem in PostingJob...
 
 ####################################################
 ###       Release: ngPost v5.0                   ###
-###       date:    2024/05/??                    ###
+###       date:    2024/06/??                    ###
 ####################################################
 - Test Framework \o/ Macro and unit!
 - Ecore Model => UML diagrams to explain the App (and myself remember...)

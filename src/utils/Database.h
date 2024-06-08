@@ -20,7 +20,19 @@
 #define DATABASE_H
 
 #include <QCoreApplication>
+#include <QDateTime>
+#include <QFileInfo>
 #include <QSqlDatabase>
+
+namespace CONF
+{
+namespace DB
+{
+inline const QString  kCreateTables = ":/db/tables.sql";
+constexpr char const *kDriver       = "QSQLITE";
+
+} // namespace DB
+} // namespace CONF
 
 class Database
 {
@@ -43,53 +55,27 @@ public:
 private:
     TYPE         _type;
     QSqlDatabase _db;
+    QString      _dbFilePath;
     bool         _isDbInitialized;
-
-    static constexpr char const *kDriverSqlite = "QSQLITE";
-
-    static const QString kInsertStatement;
-
-    static const QString kSizeSelect;
-
-    static const QString kYearCondition;
-    static const QString kMonthCondition;
-    static const QString kWeekCondition;
-    static const QString kDayCondition;
-
-    static const QRegularExpression kByteSizeRegExp;
 
 public:
     Database(); //!< for SQLITE
-    ~Database();
+    virtual ~Database();
 
     bool isDbInitialized() const
     {
         return _isDbInitialized; // MB_TODO: could be _db.isOpen() ?
     }
 
-    bool initSQLite(QString const &dbPath);
+    bool initSQLite(QString const &dbPath, QStringList const &pragmas);
+    bool isOpen() const { return _db.isOpen(); }
+    void closeDB();
 
-    int insertPost(QString const &date,
-                   QString const &nzbName,
-                   QString const &size,
-                   QString const &avgSpeed,
-                   const QString files,
-                   QString const &archiveName,
-                   QString const &archivePass,
-                   QString const &groups,
-                   QString const &from,
-                   QString const &tmpPath,
-                   QString const &nzbFilePath,
-                   int            done);
+    QSqlDatabase const &qSqlDatabase() { return _db; }
 
-    qint64  postedSizeInMB(DATE_CONDITION since) const;
-    QString postedSize(DATE_CONDITION since) const;
-
-    static qint64 byteSize(QString const &humanSize);
-    static qint64 megaSize(QString const &humanSize);
-
-private:
-    int _execSqlFile(QString const &fileName, QString const &separator = ";");
+protected:
+    int  _execSqlFile(QString const &fileName, QString const &separator = ";");
+    bool clearTable(QString const &tableName);
 };
 
 #endif // DATABASE_H

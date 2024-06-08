@@ -51,18 +51,20 @@ function show_hide_all(show){
 NgPost started back in 2000 as a command line poster written in C++/Qt. <br/>
 Its primary idea was to be fast, so it was written in C++ rather than interpreted languages. <br/>
 Then, I made the assumption that encoding the articles could be time-consuming. <br/>
-Using a pool of NNTP connections, the aim was thus to always have  prepared articles ready for them, so they could post them straight to Usenet (without any computations).<br/>
-Obviously, everything asynchronous (communications, disk access, external processes..  later the graphical interface...).<br/>
+Using a pool of NNTP connections, the aim was thus to always have prepared articles ready for them, 
+so they could post them straight away to Usenet (without no interuption, no computation).<br/>
+NgPost is multi-thread and completely non blocking. (i.e: asynchronous with Qt event loop)<br />
+NgPost is fully opensource, <a href="https://github.com/mbruel/ngPost">available here on github</a>.
 </p>
+
+
 <br />
 <h3><a href="javascript:show_hide_topic('MAIN_ARCHI');">Main architecture</a></h3>
 <div id="MAIN_ARCHI" class="hiddenElement">
-MB_TODO...<br />
-some explanation of the diagram...<br />
+some explanation of the diagram will arrive asap...
 <br />
-<img src="./ecore/archi_NgPost_Main.Architecture.svg" />
+<img src="./archi_NgPost_Main.Architecture.svg" />
 <br />
-some more explanation of the diagram?<br />
 	<br />
 	<hr />
 	<br />
@@ -71,12 +73,12 @@ some more explanation of the diagram?<br />
 
 <h3><a href="javascript:show_hide_topic('NNTP_POSTING');">NntpConnections and PostingJobs</a></h3>
 <div id="NNTP_POSTING" class="hiddenElement">
-MB_TODO...<br />
-some explanation of the diagram...<br />
+<p>
+some explanation of the diagram will arrive asap...
+</p>
 <br />
-<img src="./ecore/archi_NNTP_and_PostingJob.svg" />
+<img src="./archi_NNTP_and_PostingJob.svg" />
 <br />
-some more explanation of the diagram?<br />
 	<br />
 	<hr />
 	<br />

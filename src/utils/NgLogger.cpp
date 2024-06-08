@@ -32,11 +32,12 @@ NgLogger::NgLogger()
     , _cerr(stderr)
     , _logFile(nullptr)
     , _logStream(nullptr)
-#ifdef __DEBUG__
-    , _debugLevel(DebugLevel::FullDebug)
-#else
-    , _debugLevel(DebugLevel::None)
-#endif
+    , _debugLevel(DebugLevel::Debug)
+    // #ifdef __DEBUG__
+    //     , _debugLevel(DebugLevel::FullDebug)
+    // #else
+    //     , _debugLevel(DebugLevel::None)
+    // #endif
     , _progressBar(nullptr)
     , _progressCallback(nullptr)
     , _lastLogByProgressBar(false)

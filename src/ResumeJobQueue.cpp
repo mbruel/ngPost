@@ -19,10 +19,13 @@
 
 #include "ResumeJobQueue.h"
 #include <QCoreApplication>
+#include <QDebug> //MB_TODO: use NgLogger instead!
+#include <QDir>
 #include <QFile>
 #include <QRegularExpression>
+#include <QSqlError>
+#include <QSqlQuery>
 #include <QXmlStreamReader>
-#include <QDebug> //MB_TODO: use NgLogger instead!
 
 #include "utils/NgLogger.h"
 #include "utils/NgTools.h"
@@ -72,4 +75,68 @@ QStringList ResumeJobQueue::postedFilesFromNzb(QString const &nzbPath)
     xmlFile.close();
 
     return postedFileNames;
+}
+
+PostingJob *ResumeJobQueue::jobsToResume(UnfinishedJob const &job, QFileInfoList const &missingFiles)
+{
+    if (!job.couldBeResumed())
+    {
+        return nullptr;
+    }
+
+    return nullptr;
+}
+
+bool UnfinishedJob::couldBeResumed() const
+{
+    // first check if we can read/write the nzb
+    QFileInfo fiNzb(nzbFilePath);
+    if (!fiNzb.exists() || !fiNzb.isFile() || !fiNzb.isReadable() || !fiNzb.isWritable())
+    {
+        qDebug() << QString("[MB_TRACE][canBeResumed] can't use nzb file: %1").arg(nzbFilePath);
+        return false;
+    }
+
+    // MB_TODO this test can be done only once not for all files of a same job!
+    if (!_packingPath.exists() || !_packingPath.isDir())
+    {
+        qDebug() << QString("[MB_TRACE][canBeResumed#2] can't use nzb file: %1").arg(nzbFilePath);
+        return false;
+    }
+
+    if (QDir(_packingPath.absoluteFilePath()).isEmpty())
+    {
+        qDebug() << QString("[MB_TRACE][canBeResumed#3] can't use nzb file: %1").arg(nzbFilePath);
+        return false;
+    }
+    return true;
+}
+
+UnfinishedJob::UnfinishedJob(qint64           jobId,
+                             QDateTime const &dt,
+                             QString const   &tmp,
+                             QString const   &nzbFile,
+                             QString const   &nzbName,
+                             qint64           s,
+                             QString const   &grps)
+    : jobIdDB(jobId)
+    , date(dt)
+    , tmpPath(tmp)
+    , nzbFilePath(nzbFile)
+    , nzbName(nzbName)
+    , size(s)
+    , groups(grps)
+    , _packingPath(QDir(tmp).filePath(nzbName))
+{
+}
+
+bool UnfinishedJob::hasEmptyPackingPath() const
+{
+    if (!_packingPath.exists())
+        return false;
+    if (!_packingPath.isDir())
+        return false;
+    if (QDir(_packingPath.absoluteFilePath()).isEmpty())
+        return false;
+    return true;
 }

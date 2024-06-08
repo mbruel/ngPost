@@ -22,20 +22,26 @@ void TestUtils::clearConnectionHandler()
 
 void TestUtils::loadXSNewsPartnerConf(NgPost &ngPost, bool dispFirstSrv)
 {
-    QStringList errors = ngPost.loadConfig(xsnewsConfig);
+    QStringList errors = ngPost.loadConfig(kXSNewsConfig);
+    // QVERIFY2(errors.size() != 0, "Wrong number of servers... ");
     if (errors.size())
+    {
+        qDebug() << "[MB_TRACE][TestUtils::loadXSNewsPartnerConf] error loading conf... " << kXSNewsConfig;
+        qApp->processEvents();
         return; // we got issues...
+    }
 
     SharedParams const &postingParams = ngPost.postingParams();
     auto const         &servers       = postingParams->nntpServers();
 
+    postingParams->dumpParams();
     // Verify parameters (conf well loaded)
-    QVERIFY(servers.size() == 1);
-    QVERIFY2(servers.size() == 1, "Wrong number of servers...");
+    // QVERIFY(servers.size() == 1);
+    QVERIFY2(servers.size() == 1, "Wrong number of servers... ");
     NNTP::ServerParams *srv = servers.front();
-    QVERIFY2(srv->host == xsnewsAddr, "Not XSNews partner host... :(");
-    QVERIFY2(srv->port == xsnewsPort, "Not XSNews partner port... :(");
-    QVERIFY2(srv->user == xsnewsUser, "Not XSNews partner user... :(");
+    QVERIFY2(srv->host == kXSNewsAddr, "Not XSNews partner host... :(");
+    QVERIFY2(srv->port == kXSNewsPort, "Not XSNews partner port... :(");
+    QVERIFY2(srv->user == kXSNewsUser, "Not XSNews partner user... :(");
     QVERIFY2(srv->useSSL == true, "Not XSNews partner useSSL... :(");
     QVERIFY2(srv->enabled == true, "Not XSNews partner enabled... :(");
     QVERIFY2(srv->nzbCheck == true, "Not XSNews partner nzbCheck... :(");

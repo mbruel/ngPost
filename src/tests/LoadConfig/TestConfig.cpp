@@ -17,6 +17,7 @@ TestConfig::TestConfig(QString const &testName, int argc, char *argv[]) : MacroT
     _ngPost = new NgPost(argc, argv);
 }
 
+#ifdef __Launch_TestLocalConfig__
 void TestConfig::onTestLoadDefautConfig()
 {
     qDebug() << "onTestLoadDefautConfig...";
@@ -24,6 +25,7 @@ void TestConfig::onTestLoadDefautConfig()
     auto errors = _ngPost->parseDefaultConfig();
     MB_VERIFY(errors.isEmpty(), this); // Example test, always passes
 }
+#endif
 
 void TestConfig::onTestLoadOldConfig()
 {

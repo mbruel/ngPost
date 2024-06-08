@@ -40,6 +40,15 @@
 #  include "hmi/PostingWidget.h"
 #endif
 
+QSet<NNTP::File *> PostingJob::nntpFilesNotPosted() const
+{
+    QSet<NNTP::File *> missingFiles(_filesInProgress);
+    for (auto *nntpFile : _filesToUpload)
+        missingFiles << nntpFile;
+    missingFiles += _filesFailed;
+    return missingFiles;
+}
+
 PostingJob::PostingJob(NgPost                 &ngPost,
                        PostingWidget          *postWidget,
                        PostingParamsPtr const &params,
@@ -178,6 +187,9 @@ PostingJob::~PostingJob()
 #endif
 
     _log("Deleting PostingJob", NgLogger::DebugLevel::Debug);
+
+    _ngPost.storeJobInDB(*this);
+    qApp->processEvents(); //!< makeing sure we display the logs
 
     // stopThreads so it quits and waits _builderThread and _connectionsThread
     // threads will emit void QThread::finished()
@@ -328,15 +340,13 @@ void PostingJob::onStartPosting(bool isActiveJob)
     _postFiles();
 }
 
-void PostingJob::removeNonPosintingConnection(NntpConnection *nntpCon) { _nntpConnections.removeOne(nntpCon); }
-
 bool PostingJob::startCompressFiles()
 {
     if (!_params->canCompress())
         return false;
 
     // 1.: create archive temporary folder
-    _archiveTmpFolder = _createArchiveFolder(_tmpPath, _params->rarName());
+    _archiveTmpFolder = _createArchiveFolder(_tmpPath, nzbName());
     if (_archiveTmpFolder.isEmpty())
         return false;
 
@@ -452,7 +462,7 @@ bool PostingJob::startCompressFiles()
 void PostingJob::onCompressionFinished(int exitCode)
 {
     if (NgLogger::isDebugMode())
-        _log(tr("=> rar exit code: %1\n").arg(exitCode), NgLogger::DebugLevel::Debug);
+        _log(tr(" Done with exit code: %1\n").arg(exitCode), NgLogger::DebugLevel::Debug);
     else
         _log("", NgLogger::DebugLevel::None);
 
@@ -642,7 +652,7 @@ bool PostingJob::startGenPar2()
 void PostingJob::onGenPar2Finished(int exitCode)
 {
     if (NgLogger::isDebugMode())
-        _log(tr("=> par2 exit code: %1\n").arg(exitCode), NgLogger::DebugLevel::Debug);
+        _log(tr("Done with exit code: %1\n").arg(exitCode), NgLogger::DebugLevel::Debug);
     else
         _log("", NgLogger::DebugLevel::None);
 
@@ -1324,8 +1334,8 @@ QString PostingJob::_createArchiveFolder(QString const &tmpFolder, QString const
 
 void PostingJob::onExtProcReadyReadStandardOutput()
 {
-    if (NgLogger::isDebugMode())
-        _log(_extProc->readAllStandardOutput(), NgLogger::DebugLevel::Debug, false);
+    if (NgLogger::isFullDebug())
+        _log(_extProc->readAllStandardOutput(), NgLogger::DebugLevel::FullDebug, false);
     else if (_isActiveJob)
     {
         if (!_limitProcDisplay || ++_nbProcDisp % 42 == 0)

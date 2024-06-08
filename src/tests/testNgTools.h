@@ -10,10 +10,9 @@ public:
     TestNgTools(QString const &testName, int argc = 0, char *argv[] = nullptr);
 
 private slots:
-    //    void init();    // called before each test case
-    void cleanup() override; // called after each test case
-
+#ifdef __Launch_TestLocalConfig__
     void onTestLoadDefautConfig();
+#endif
     void onTestLoadOldConfig();
 
     void onSubstituteExistingFile();

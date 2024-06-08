@@ -48,7 +48,7 @@ class MainWindow;
 class PostingJob;
 class FoldersMonitorForNewFiles;
 class NzbCheck;
-class Database;
+class NgHistoryDatabase;
 
 #include "NgConf.h"
 #include "NgError.h"
@@ -82,6 +82,11 @@ class NgPost : public QObject, public CmdOrGuiApp
     friend class PostingWidget;
     friend class AutoPostWidget;
     friend class AboutNgPost;
+#endif
+
+#ifdef __test_ngPost__
+    friend class MacroTest;
+    void resetConfig();
 #endif
 
 private:
@@ -125,7 +130,7 @@ private:
     QNetworkProxy _proxySocks5;
     QString       _proxyUrl;
 
-    Database *_dbHistory;
+    NgHistoryDatabase *_dbHistory;
 
 #ifdef __USE_HMI__
     bool _isNightMode = false;
@@ -228,10 +233,11 @@ public:
     inline bool nzbCheck() const;
     uint        nbMissingArticles() const; //!< output of the program when doing nzbCheck
 
-    inline QString const &postHistoryFile() const;
-    inline QString const &historyFieldSeparator() const;
-    bool                  initHistoryDatabase() const;
-    inline Database      *historyDatabase() const;
+    inline QString const     &postHistoryFile() const;
+    inline QString const     &historyFieldSeparator() const;
+    bool                      initHistoryDatabase() const;
+    int                       storeJobInDB(PostingJob const &job);
+    inline NgHistoryDatabase *historyDatabase() const { return _dbHistory; }
 
     void           startLogInFile() const;
     void           setProxy(QString const &url);
@@ -374,8 +380,6 @@ QStringList NgPost::parseCombinedArgString(QString const &program)
 
 inline QString const &NgPost::postHistoryFile() const { return _postHistoryFile; }
 inline QString const &NgPost::historyFieldSeparator() const { return _historyFieldSeparator; }
-
-inline Database *NgPost::historyDatabase() const { return _dbHistory; }
 
 QString NgPost::optionName(NgConf::Opt key) { return NgConf::kOptionNames.value(key, ""); }
 

@@ -41,7 +41,7 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
         return { tr("The config file '%1' could not be opened...").arg(configPath) };
 
     QStringList         errors;
-    NNTP::ServerParams *serverParams = nullptr;                     // hold servers found (one by one)
+    NNTP::ServerParams *serverParams = nullptr;                  // hold servers found (one by one)
     auto               &_nntpServers = mainParams->_nntpServers; // to fill the SharedParams servers
 
     QTextStream stream(&file);
@@ -186,8 +186,8 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
                     ushort nb = val.toUShort(&ok);
                     if (ok && nb > 1 && nb <= 120)
                     {
-                        mainParams->_monitorSecDelayScan = nb;
-                        FoldersMonitorForNewFiles::sMSleep  = nb * 1000;
+                        mainParams->_monitorSecDelayScan   = nb;
+                        FoldersMonitorForNewFiles::sMSleep = nb * 1000;
                     }
                 }
                 else if (opt == kOptionNames[Opt::NZB_RM_ACCENTS])
@@ -253,7 +253,7 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
                     if (!regex.match(email).hasMatch())
                         email += "@ngPost.com";
 
-                    email                    = NgTools::escapeXML(email);
+                    email                 = NgTools::escapeXML(email);
                     mainParams->_from     = email.toStdString();
                     mainParams->_saveFrom = true;
                 }
@@ -276,10 +276,7 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
                     ngPost.setProxy(val);
 
                 else if (opt == kOptionNames[Opt::NZB_POST_CMD])
-                {
                     mainParams->_nzbPostCmd << args.join("=").trimmed();
-                    qDebug() << "[MB_TODO] why pushing args.join(\"=\") ?? " << mainParams->_nzbPostCmd;
-                }
 
                 else if (opt == kOptionNames[Opt::INPUT_DIR])
                 {

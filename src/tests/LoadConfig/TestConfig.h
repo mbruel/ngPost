@@ -11,7 +11,9 @@ public:
 
 private slots:
 
+#ifdef __Launch_TestLocalConfig__
     void onTestLoadDefautConfig();
+#endif
     void onTestLoadOldConfig();
     void onTestLoadXSNewsPartnerConfig();
     void onTestLoadXSNewsPartnerConfAndCheckConnection();

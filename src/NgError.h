@@ -50,7 +50,9 @@ public:
         ERR_SERVER_REGEX,
         ERR_SERVER_PORT,
         ERR_SERVER_CONS,
-        ERR_INPUT_READ
+        ERR_INPUT_READ,
+
+        DB_ERR_SELECT_UNFINISHED
     };
 
     static ERR_CODE errCode() { return sErrCode; }
@@ -67,28 +69,29 @@ private:
     inline static QString  sUnknown = QStringLiteral("UNKNOWN");
 
     inline static QMap<ERR_CODE, QString> const kErrorNames = {
-        {ERR_CODE::NONE,                     QStringLiteral("NONE")                   },
-        { ERR_CODE::COMPLETED_WITH_ERRORS,   QStringLiteral("COMPLETED_WITH_ERRORS")  },
-        { ERR_CODE::ERR_CONF_FILE,           QStringLiteral("ERR_CONF_FILE")          },
-        { ERR_CODE::ERR_WRONG_ARG,           QStringLiteral("ERR_WRONG_ARG")          },
-        { ERR_CODE::ERR_NO_INPUT,            QStringLiteral("ERR_NO_INPUT")           },
-        { ERR_CODE::ERR_FILE_NOT_EXIST,      QStringLiteral("ERR_FILE_NOT_EXIST")     },
-        { ERR_CODE::ERR_XML_PARSING,         QStringLiteral("ERR_XML_PARSING")        },
-        { ERR_CODE::ERR_DEL_AUTO,            QStringLiteral("ERR_DEL_AUTO")           },
-        { ERR_CODE::ERR_AUTO_NO_COMPRESS,    QStringLiteral("ERR_AUTO_NO_COMPRESS")   },
-        { ERR_CODE::ERR_AUTO_INPUT,          QStringLiteral("ERR_AUTO_INPUT")         },
-        { ERR_CODE::ERR_MONITOR_NO_COMPRESS, QStringLiteral("ERR_MONITOR_NO_COMPRESS")},
-        { ERR_CODE::ERR_MONITOR_INPUT,       QStringLiteral("ERR_MONITOR_INPUT")      },
-        { ERR_CODE::ERR_NB_THREAD,           QStringLiteral("ERR_NB_THREAD")          },
-        { ERR_CODE::ERR_ARTICLE_SIZE,        QStringLiteral("ERR_ARTICLE_SIZE")       },
-        { ERR_CODE::ERR_NB_RETRY,            QStringLiteral("ERR_NB_RETRY")           },
-        { ERR_CODE::ERR_PAR2_PATH,           QStringLiteral("ERR_PAR2_PATH")          },
-        { ERR_CODE::ERR_PAR2_ARGS,           QStringLiteral("ERR_PAR2_ARGS")          },
-        { ERR_CODE::ERR_NO_SERVER,           QStringLiteral("ERR_NO_SERVER")          },
-        { ERR_CODE::ERR_SERVER_REGEX,        QStringLiteral("ERR_SERVER_REGEX")       },
-        { ERR_CODE::ERR_SERVER_PORT,         QStringLiteral("ERR_SERVER_PORT")        },
-        { ERR_CODE::ERR_SERVER_CONS,         QStringLiteral("ERR_SERVER_CONS")        },
-        { ERR_CODE::ERR_INPUT_READ,          QStringLiteral("ERR_INPUT_READ")         },
+        {ERR_CODE::NONE,                      QStringLiteral("NONE")                    },
+        { ERR_CODE::COMPLETED_WITH_ERRORS,    QStringLiteral("COMPLETED_WITH_ERRORS")   },
+        { ERR_CODE::ERR_CONF_FILE,            QStringLiteral("ERR_CONF_FILE")           },
+        { ERR_CODE::ERR_WRONG_ARG,            QStringLiteral("ERR_WRONG_ARG")           },
+        { ERR_CODE::ERR_NO_INPUT,             QStringLiteral("ERR_NO_INPUT")            },
+        { ERR_CODE::ERR_FILE_NOT_EXIST,       QStringLiteral("ERR_FILE_NOT_EXIST")      },
+        { ERR_CODE::ERR_XML_PARSING,          QStringLiteral("ERR_XML_PARSING")         },
+        { ERR_CODE::ERR_DEL_AUTO,             QStringLiteral("ERR_DEL_AUTO")            },
+        { ERR_CODE::ERR_AUTO_NO_COMPRESS,     QStringLiteral("ERR_AUTO_NO_COMPRESS")    },
+        { ERR_CODE::ERR_AUTO_INPUT,           QStringLiteral("ERR_AUTO_INPUT")          },
+        { ERR_CODE::ERR_MONITOR_NO_COMPRESS,  QStringLiteral("ERR_MONITOR_NO_COMPRESS") },
+        { ERR_CODE::ERR_MONITOR_INPUT,        QStringLiteral("ERR_MONITOR_INPUT")       },
+        { ERR_CODE::ERR_NB_THREAD,            QStringLiteral("ERR_NB_THREAD")           },
+        { ERR_CODE::ERR_ARTICLE_SIZE,         QStringLiteral("ERR_ARTICLE_SIZE")        },
+        { ERR_CODE::ERR_NB_RETRY,             QStringLiteral("ERR_NB_RETRY")            },
+        { ERR_CODE::ERR_PAR2_PATH,            QStringLiteral("ERR_PAR2_PATH")           },
+        { ERR_CODE::ERR_PAR2_ARGS,            QStringLiteral("ERR_PAR2_ARGS")           },
+        { ERR_CODE::ERR_NO_SERVER,            QStringLiteral("ERR_NO_SERVER")           },
+        { ERR_CODE::ERR_SERVER_REGEX,         QStringLiteral("ERR_SERVER_REGEX")        },
+        { ERR_CODE::ERR_SERVER_PORT,          QStringLiteral("ERR_SERVER_PORT")         },
+        { ERR_CODE::ERR_SERVER_CONS,          QStringLiteral("ERR_SERVER_CONS")         },
+        { ERR_CODE::ERR_INPUT_READ,           QStringLiteral("ERR_INPUT_READ")          },
+        { ERR_CODE::DB_ERR_SELECT_UNFINISHED, QStringLiteral("DB_ERR_SELECT_UNFINISHED")}
     };
 };
 

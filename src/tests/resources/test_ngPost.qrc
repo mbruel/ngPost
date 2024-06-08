@@ -9,5 +9,14 @@
         <file>nzb/ngPost_v4.16_libssl3-x86_64.nzb</file>
         <file>config/ngPost.xsnews.partner</file>
         <file>nzb/ngPost_v4.16_libssl3-x86_64_10missing.nzb</file>
+        <file>db/resume_test/input/file1.bin</file>
+        <file>db/resume_test/input/file2.bin</file>
+        <file>db/resume_test/file1.nzb/file1.vol01+01.par2</file>
+        <file>db/resume_test/file1.nzb/file1.vol00+01.par2</file>
+        <file>db/resume_test/file1.nzb/file1.par2</file>
+        <file>db/resume_test/file1.nzb/file1.part3.rar</file>
+        <file>db/resume_test/file1.nzb/file1.part2.rar</file>
+        <file>db/resume_test/file1.nzb/file1.part1.rar</file>
+        <file>db/resume_test/db_inserts.sql</file>
     </qresource>
 </RCC>
