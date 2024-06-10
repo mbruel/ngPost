@@ -35,7 +35,7 @@ void TestNgHistoryDatabase::onTestInitDB()
 // MB_TODO: MOVE IN Database switch on type. code here for sqlite only
 void TestNgHistoryDatabase::onListTablesAndRows() { MB_VERIFY(_db->dumpTablesNamesAndRows(), this); }
 
-void TestNgHistoryDatabase::onTestUnpostedBasicCase()
+void TestNgHistoryDatabase::onTestUnfinishedBasicCase()
 {
     _doInsertsIfProvided("://db/resume_test/db_inserts.sql");
     UnfinishedJobs jobsToPost = _db->unfinishedJobs();

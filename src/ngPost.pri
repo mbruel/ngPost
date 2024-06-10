@@ -1,6 +1,6 @@
 QT += core network sql
 
-DEFINES += "APP_VERSION=\"4.0\""
+DEFINES += "APP_VERSION=\"5.0\""
 
 INCLUDEPATH += $$PWD
 TARGET = ngPost
@@ -82,7 +82,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         $$PWD/NgHistoryDatabase.cpp \
         $$PWD/PostingParams.cpp \
-        $$PWD/ResumeJobQueue.cpp \
+        $$PWD/ResumeJobsService.cpp \
         $$PWD/utils/Database.cpp \
         $$PWD/utils/NgCmdLineLoader.cpp \
         $$PWD/utils/NgConfigLoader.cpp \
@@ -116,7 +116,7 @@ HEADERS += \
     $$PWD/NgError.h \
     $$PWD/NgHistoryDatabase.h \
     $$PWD/PostingParams.h \
-    $$PWD/ResumeJobQueue.h \
+    $$PWD/ResumeJobsService.h \
     $$PWD/nntp/ServerParams.h \
     $$PWD/nntp/rfc.h \
     $$PWD/utils/Database.h \

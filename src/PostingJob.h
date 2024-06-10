@@ -90,8 +90,8 @@ private:
     PostingParamsPtr     _params;     //!< all posting parameters including the list of files
     PostingWidget *const _postWidget; //!< attached Windows
 
-    QString _tmpPath;          //!< can be _params->tmpPath() or _params->ramPath()
-    QString _archiveTmpFolder; //!< _tmpPath + name of folder
+    QString _tmpPath;        //!< can be _params->tmpPath() or _params->ramPath()
+    QString _packingTmpPath; //!< _tmpPath + name of folder
 
     /*!
      * \brief _files that will be posted by _postFiles()
@@ -171,8 +171,9 @@ private:
         PACKING_DONE,
         POSTED
     };
-    JOB_STATE _state       = NOT_STARTED;
-    bool      _isResumeJob = false;
+    JOB_STATE _state = NOT_STARTED;
+    bool      _isResumeJob;
+    qint64    _dbJobId;
 
     bool hasPosted() const { return _state == JOB_STATE::POSTED; }
 
@@ -254,6 +255,11 @@ public:
     inline bool hasPostStarted() const { return _postStarted; }
     inline bool hasPostFinished() const { return _postFinished; }
     inline bool hasPostFinishedSuccessfully() const { return _postFinished && !_nbArticlesFailed; }
+    inline bool hasPostFinishedWithAllFiles() const
+    {
+        int nbPendingFiles = _filesToUpload.size() + _filesInProgress.size() + _filesFailed.size();
+        return _postFinished && nbPendingFiles == 0;
+    }
 
     inline PostingWidget *widget() const { return _postWidget; }
 
@@ -285,7 +291,13 @@ public:
     } //!< useless connection, we delete it
 
     void storeInDatabase(Database &db);
-    void setParamForResume(int nbTotalFiles, int nbMissing);
+    void setParamForResume(qint64 jobIdDB, int nbTotalFiles, int nbMissing);
+
+    bool isResumeJob() const { return _isResumeJob; }
+    bool areAllNntpFilesPosted() const { return _filesFailed.isEmpty(); }
+
+    qint64         dbJobId() const { return _dbJobId; }
+    QString const &packingTmpPath() const { return _packingTmpPath; }
 
 public slots:
     void onStopPosting(); //!< for HMI
@@ -369,7 +381,7 @@ private:
      */
     QStringList _updateFilesListFromCompressDir();
 
-    QString _createArchiveFolder(QString const &tmpFolder, QString const &archiveName);
+    void _createArchiveFolder(QString const &tmpFolder, QString const &archiveName);
 
     inline QString timestamp() const { return QTime::currentTime().toString("hh:mm:ss.zzz"); }
 };

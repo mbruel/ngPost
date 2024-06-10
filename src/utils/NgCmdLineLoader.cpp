@@ -12,6 +12,7 @@ using namespace NgConf;
 #include "nntp/NntpArticle.h"
 #include "nntp/ServerParams.h"
 #include "PostingParams.h"
+#include "ResumeJobsService.h"
 #include "utils/Macros.h"
 #include "utils/NgConfigLoader.h"
 #include "utils/NgTools.h"
@@ -28,6 +29,8 @@ QList<QCommandLineOption> const NgCmdLineLoader::kCmdOptions = {
     { { "d", kOptionNames[Opt::DEBUG] }, tr("display extra information") },
     { kOptionNames[Opt::DEBUG_FULL], tr("display full debug information") },
     { { "l", kOptionNames[Opt::LANG] }, tr("application language"), kOptionNames[Opt::LANG] },
+
+    { kOptionNames[Opt::RESUME], tr("resume mode (try to post unfinished jobs") },
 
     { kOptionNames[Opt::CHECK],
      tr("check nzb file (if articles are available on Usenet) cf https://github.com/mbruel/nzbCheck"),
@@ -258,14 +261,24 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost &ngPost, SharedParams &m
         return ngPost.doNzbCheck(parser.value(kOptionNames[Opt::CHECK]).trimmed());
     }
 
+    // v5.0: try resuming old jobs
+    if (parser.isSet(kOptionNames[Opt::RESUME]))
+    {
+        uint nbJobs = ResumeJobsService::resumeUnfinihedJobs(ngPost); // ngPost.resumeUnfinihedJobs();
+        NgLogger::log(tr("Resume mode: number of unfinished jobs: %1").arg(nbJobs), true);
+        return nbJobs != 0;
+    }
+    else if (!mainParams->quietMode())
+        ResumeJobsService::checkForUnfinihedJobs(ngPost);
+
     // 9.: check if we've inputs (either files, auto directory or monitoring one
     if (!parser.isSet(kOptionNames[Opt::INPUT]) && !parser.isSet(kOptionNames[Opt::AUTO_DIR])
         && !parser.isSet(kOptionNames[Opt::MONITOR_DIR]))
     {
-        NgLogger::criticalError(
-                tr("Error syntax: you should provide at least one input file or directory using the option -i, "
-                   "--auto or --monitor"),
-                NgError::ERR_CODE::ERR_NO_INPUT);
+        NgLogger::criticalError(tr("Error syntax: you should provide at least one input file or directory "
+                                   "using the option -i, "
+                                   "--auto or --monitor"),
+                                NgError::ERR_CODE::ERR_NO_INPUT);
         return false; // end of game :(
     }
 
@@ -298,7 +311,7 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost &ngPost, SharedParams &m
     QString rarPass;
     if (parser.isSet(kOptionNames[Opt::RAR_PASS]))
     {
-        rarPass                      = parser.value(kOptionNames[Opt::RAR_PASS]);
+        rarPass                   = parser.value(kOptionNames[Opt::RAR_PASS]);
         mainParams->_rarPassFixed = rarPass;
     }
     // 12.3: we could also get a fixed poster email (from)

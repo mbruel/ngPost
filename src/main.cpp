@@ -27,7 +27,6 @@
 #endif
 
 #include "NgPost.h"
-#include "ResumeJobQueue.h"
 #include "utils/NgLogger.h"
 #include "utils/NgTools.h"
 
@@ -50,8 +49,9 @@ void dispFolderSize(QFileInfo const &folderPath)
 #include "utils/Macros.h"
 int main(int argc, char *argv[])
 {
+#ifdef __DEBUG__
     std::cout << "C++ compiler version: " << TOSTRING(__cplusplus) << std::endl;
-
+#endif
     // disable SSL warnings
     QLoggingCategory::setFilterRules("qt.network.ssl.warning=false");
 
@@ -63,6 +63,7 @@ int main(int argc, char *argv[])
 
     // Initialigze the logger!
     NgLogger::createInstance();
+    NgLogger::setDebug(NgLogger::DebugLevel::None);
 
     //    qDebug() << "argc: " << argc;
     app = new NgPost(argc, argv);
@@ -88,7 +89,6 @@ int main(int argc, char *argv[])
         {
             if (app->initHistoryDatabase())
             {
-                ResumeJobQueue::resumeUnfinihedJobs(*app);
                 exitCode = app->startEventLoop();
                 if (app->nzbCheck())
                 {

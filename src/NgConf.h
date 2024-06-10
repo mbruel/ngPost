@@ -201,7 +201,8 @@ enum class Opt
     PASS,
     CONNECTION,
     ENABLED,
-    NZBCHECK
+    NZBCHECK,
+    RESUME
 };
 
 inline QMap<Opt, QString> const kOptionNames = {
@@ -211,6 +212,7 @@ inline QMap<Opt, QString> const kOptionNames = {
     { Opt::VERSION,                "version"               },
     { Opt::CONF,                   "conf"                  },
     { Opt::CONF_VERSION,           "conf_version"          },
+    { Opt::RESUME,                 "resume"                },
     { Opt::SHUTDOWN_CMD,           "shutdown_cmd"          },
     { Opt::DISP_PROGRESS,          "disp_progress"         },
     { Opt::DEBUG,                  "debug"                 },

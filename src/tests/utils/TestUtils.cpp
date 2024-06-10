@@ -21,6 +21,19 @@ void TestUtils::clearConnectionHandler()
     sConnectionHandler = nullptr;
 }
 
+void TestUtils::loadDefaultConf(NgPost &ngPost)
+{
+    QStringList errors = ngPost.loadConfig("/home/mb/.ngPost");
+    // QVERIFY2(errors.size() != 0, "Wrong number of servers... ");
+    if (errors.size())
+    {
+        qDebug() << "[MB_TRACE][TestUtils::loadDefaultConf] error loading conf... " << kXSNewsConfig << " : "
+                 << errors;
+        qApp->processEvents();
+        return; // we got issues...
+    }
+}
+
 void TestUtils::loadXSNewsPartnerConf(NgPost &ngPost, bool dispFirstSrv)
 {
     QStringList errors = ngPost.loadConfig(kXSNewsConfig);

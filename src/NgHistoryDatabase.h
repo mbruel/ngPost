@@ -8,7 +8,7 @@ class PostingJob;
 class NgHistoryDatabase : public Database
 {
     friend class NgMigration;
-    friend class ResumeJobQueue;
+    friend class ResumeJobsService;
 #ifdef __test_ngPost__
     friend class MacroTest;
     friend class TestNgHistoryDatabase;
@@ -30,18 +30,19 @@ public:
     static qint64 megaSize(QString const &humanSize);
 
 private:
-    int _insertPost(QString const &date,
-                    QString const &nzbName,
-                    QString const &size,
-                    QString const &avgSpeed,
-                    QString const &archiveName,
-                    QString const &archivePass,
-                    QString const &groups,
-                    QString const &from,
-                    QString const &tmpPath,
-                    QString const &nzbFilePath,
-                    int            nbFiles,
-                    int            done);
+    bool _markUnfinishedJobDone(int const dbJobId, bool success);
+    int  _insertPost(QString const &date,
+                     QString const &nzbName,
+                     QString const &size,
+                     QString const &avgSpeed,
+                     QString const &archiveName,
+                     QString const &archivePass,
+                     QString const &groups,
+                     QString const &from,
+                     QString const &packingPath,
+                     QString const &nzbFilePath,
+                     int            nbFiles,
+                     int            done);
 
     QSqlQuery _postingJobQuery(PostingJob const &job) const;
 

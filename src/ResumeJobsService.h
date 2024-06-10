@@ -16,8 +16,8 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>
 //
 //========================================================================
-#ifndef RESUMEJOBQUEUE_H
-#define RESUMEJOBQUEUE_H
+#ifndef RESUMEJOBSSERVICE_H
+#define RESUMEJOBSSERVICE_H
 
 #include "utils/PureStaticClass.h"
 #include <QCoreApplication>
@@ -30,13 +30,14 @@ class NgPost;
 class PostingJob;
 class UnfinishedJob;
 
-class ResumeJobQueue : public PureStaticClass
+class ResumeJobsService : public PureStaticClass
 {
 
-    Q_DECLARE_TR_FUNCTIONS(ResumeJobQueue); // tr() without QObject using QCoreApplication::translate
+    Q_DECLARE_TR_FUNCTIONS(ResumeJobsService); // tr() without QObject using QCoreApplication::translate
 
 public:
     static uint resumeUnfinihedJobs(NgPost &ngPost);
+    static void checkForUnfinihedJobs(NgPost &ngPost);
 
 #ifdef __test_ngPost__
     static PostingJob *getPostingJobFirstUnfinishedJob(NgPost &ngPost, QString const &nzbWritableFilePath);
@@ -54,6 +55,8 @@ private:
                                QStringList const   &missingFilesInDB,
                                QStringList const   &postedFiles,
                                QFileInfoList       &filesInPackingDir);
+
+    static void _logNbUnfinshedJobs(int nbUnfinishedJobs);
 };
 
-#endif // RESUMEJOBQUEUE_H
+#endif // RESUMEJOBSSERVICE_H

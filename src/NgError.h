@@ -52,7 +52,8 @@ public:
         ERR_SERVER_CONS,
         ERR_INPUT_READ,
 
-        DB_ERR_SELECT_UNFINISHED
+        DB_ERR_SELECT_UNFINISHED,
+        DB_ERR_UPDATE_UNFINISHED
     };
 
     static ERR_CODE errCode() { return sErrCode; }
@@ -91,7 +92,8 @@ private:
         { ERR_CODE::ERR_SERVER_PORT,          QStringLiteral("ERR_SERVER_PORT")         },
         { ERR_CODE::ERR_SERVER_CONS,          QStringLiteral("ERR_SERVER_CONS")         },
         { ERR_CODE::ERR_INPUT_READ,           QStringLiteral("ERR_INPUT_READ")          },
-        { ERR_CODE::DB_ERR_SELECT_UNFINISHED, QStringLiteral("DB_ERR_SELECT_UNFINISHED")}
+        { ERR_CODE::DB_ERR_SELECT_UNFINISHED, QStringLiteral("DB_ERR_SELECT_UNFINISHED")},
+        { ERR_CODE::DB_ERR_UPDATE_UNFINISHED, QStringLiteral("DB_ERR_UPDATE_UNFINISHED")}
     };
 };
 

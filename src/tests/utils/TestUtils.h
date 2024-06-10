@@ -17,9 +17,10 @@ class TestUtils : public PureStaticClass
     static ConnectionHandler *sConnectionHandler;
 
 public:
-    static void           clearConnectionHandler();
-    static QString const &partnerConfig() { return kXSNewsConfig; }
+    static void clearConnectionHandler();
+    static void loadDefaultConf(NgPost &ngPost);
 
+    static QString const     &partnerConfig() { return kXSNewsConfig; }
     static void               loadXSNewsPartnerConf(NgPost &ngPost, bool dispFirstSrv = true);
     static ConnectionHandler *loadXSNewsPartnerConfAndCheckConnection(NgPost &ngPost, bool testPosting = false);
 };

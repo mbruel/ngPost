@@ -32,12 +32,7 @@ NgLogger::NgLogger()
     , _cerr(stderr)
     , _logFile(nullptr)
     , _logStream(nullptr)
-    , _debugLevel(DebugLevel::Debug)
-    // #ifdef __DEBUG__
-    //     , _debugLevel(DebugLevel::FullDebug)
-    // #else
-    //     , _debugLevel(DebugLevel::None)
-    // #endif
+    , _debugLevel(DebugLevel::None)
     , _progressBar(nullptr)
     , _progressCallback(nullptr)
     , _lastLogByProgressBar(false)
@@ -163,7 +158,7 @@ void NgLogger::onLog(QString msg, bool newline, DebugLevel debugLvl)
     }
 
     if (_logStream && newline)
-        *_logStream << msg << Qt::endl << MB_FLUSH; // force flush in case of crash
+        *_logStream << Qt::endl << MB_FLUSH; // force flush in case of crash
 }
 
 void NgLogger::onError(QString error)

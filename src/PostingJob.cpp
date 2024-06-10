@@ -107,6 +107,9 @@ PostingJob::PostingJob(NgPost                 &ngPost,
     , _immediateSpeed("0 B/s")
     , _useHMI(_ngPost.useHMI())
 #endif
+    , _isResumeJob(false)
+    , _dbJobId(0)
+
 {
     _init();
 }
@@ -175,6 +178,9 @@ PostingJob::PostingJob(NgPost                       &ngPost,
     , _immediateSpeed("0 B/s")
     , _useHMI(_ngPost.useHMI())
 #endif
+    , _isResumeJob(false)
+    , _dbJobId(0)
+
 {
     _init();
 }
@@ -196,6 +202,7 @@ PostingJob::PostingJob(NgPost              &ngPost,
                                 ngPost.postingParams()))
     , _postWidget(nullptr)
     , _tmpPath(ngPost.postingParams()->tmpPath())
+    , _packingTmpPath(unfinshedJob.packingPath)
     , _files(missingFiles)
     , _delFilesAfterPost(_params->delFilesAfterPost() ? 0x1 : 0x0)
 
@@ -244,6 +251,9 @@ PostingJob::PostingJob(NgPost              &ngPost,
     , _immediateSpeed("0 B/s")
     , _useHMI(_ngPost.useHMI())
 #endif
+    , _isResumeJob(true)
+    , _dbJobId(0)
+
 {
     _init();
 }
@@ -273,6 +283,14 @@ PostingJob::~PostingJob()
             _cleanCompressDir();
         delete _packingTmpDir;
         _packingTmpDir = nullptr;
+    }
+    else if (_isResumeJob && hasPostFinishedWithAllFiles())
+    {
+        // _packingTmpDir only created in PostingJob::_createArchiveFolder
+        // for resume job that has finished we need to clean it
+        _packingTmpDir = new QDir(_packingTmpPath);
+        _cleanCompressDir();
+        delete _packingTmpDir;
     }
 
     if (_extProc)
@@ -416,8 +434,8 @@ bool PostingJob::startCompressFiles()
         return false;
 
     // 1.: create archive temporary folder
-    _archiveTmpFolder = _createArchiveFolder(_tmpPath, nzbName());
-    if (_archiveTmpFolder.isEmpty())
+    _createArchiveFolder(_tmpPath, nzbName());
+    if (_packingTmpPath.isEmpty())
         return false;
 
     _extProc = new QProcess(this);
@@ -440,10 +458,10 @@ bool PostingJob::startCompressFiles()
     QStringList args = _params->buildCompressionCommandArgumentsList();
 
 #if defined(Q_OS_WIN)
-    if (_archiveTmpFolder.startsWith("//"))
-        _archiveTmpFolder.replace(QRegularExpression("^//"), "\\\\");
+    if (_packingTmpPath.startsWith("//"))
+        _packingTmpPath.replace(QRegularExpression("^//"), "\\\\");
 #endif
-    args << QString("%1/%2.%3").arg(_archiveTmpFolder, _params->rarName(), _params->use7z() ? "7z" : "rar");
+    args << QString("%1/%2.%3").arg(_packingTmpPath, _params->rarName(), _params->use7z() ? "7z" : "rar");
 
     // With the option obfuscateFileName users want to rename the files
     // before puting them in the archive
@@ -611,16 +629,16 @@ bool PostingJob::startGenPar2()
     {
         if (useParPar && args.last().trimmed() != "-o")
             args << "-o";
-        args << QString("%1/%2.par2").arg(_archiveTmpFolder, _params->rarName());
+        args << QString("%1/%2.par2").arg(_packingTmpPath, _params->rarName());
         if (useParPar)
-            args << "-R" << _archiveTmpFolder;
+            args << "-R" << _packingTmpPath;
         else
         {
             if (_params->use7z())
                 args << QString("%1/%2.7z%3")
-                                .arg(_archiveTmpFolder, _params->rarName(), _params->splitArchive() ? "*" : "");
+                                .arg(_packingTmpPath, _params->rarName(), _params->splitArchive() ? "*" : "");
             else
-                args << QString("%1/%2*rar").arg(_archiveTmpFolder, _params->rarName());
+                args << QString("%1/%2*rar").arg(_packingTmpPath, _params->rarName());
 
             if (_params->par2Args().isEmpty() && (NgLogger::isDebugMode() || !_postWidget))
                 args << "-q"; // remove the progressbar bar
@@ -635,7 +653,7 @@ bool PostingJob::startGenPar2()
                  << "basename";
             if (args.last().trimmed() != "-o")
                 args << "-o";
-            args << QString("%1/%2.par2").arg(_archiveTmpFolder, _params->rarName());
+            args << QString("%1/%2.par2").arg(_packingTmpPath, _params->rarName());
         }
         else
         {
@@ -646,12 +664,12 @@ bool PostingJob::startGenPar2()
                 args << QString("/d%1").arg(basePathWin);
             else
                 args << "-B" << basePathWin;
-            QString par2File = QString("%1/%2.par2").arg(_archiveTmpFolder, _params->rarName());
+            QString par2File = QString("%1/%2.par2").arg(_packingTmpPath, _params->rarName());
             par2File.replace("/", "\\");
             args << par2File;
 #else
             args << "-B" << basePath;
-            args << QString("%1/%2.par2").arg(_archiveTmpFolder, _params->rarName());
+            args << QString("%1/%2.par2").arg(_packingTmpPath, _params->rarName());
 #endif
         }
 
@@ -679,7 +697,7 @@ bool PostingJob::startGenPar2()
         }
 
         //        QString archiveTmpFolder = _createArchiveFolder(_tmpPath, _params->rarName());
-        if (_archiveTmpFolder.isEmpty())
+        if (_packingTmpPath.isEmpty())
             return false;
 
         _extProc = new QProcess(this);
@@ -788,7 +806,7 @@ void PostingJob::_postFiles()
         if (_isResumeJob)
         {
             // go to the end of file minus last line "</nzb>"
-            _nzb->seek(_nzb->size() - QString("</nzb>").size());
+            _nzb->seek(_nzb->size() - QString("</nzb>\n").size());
             _nzbStream.setDevice(_nzb);
         }
         else
@@ -1164,7 +1182,7 @@ void PostingJob::_initPosting()
              << ", overwriteNzb: " << _params->overwriteNzb();
 
     // initialize buffer and nzb file
-    if (!_isResumeJob || !_params->overwriteNzb()) // MB_TODO: for now never overwrite!
+    if (!_isResumeJob && !_params->overwriteNzb()) // MB_TODO: for now never overwrite!
         _params->setNzbFilePath(NgTools::substituteExistingFile(_params->nzbFilePath()));
     _nzb = new QFile(_params->nzbFilePath());
     qDebug() << tr("[MB_TRACE ]Creating QFile(%1)").arg(_params->nzbFilePath());
@@ -1181,7 +1199,7 @@ void PostingJob::_initPosting()
     }
 
     // initialize the NntpFiles (active objects)
-    _filesToUpload.reserve(static_cast<int>(_nbFiles));
+    _filesToUpload.reserve(_isResumeJob ? _files.size() : static_cast<int>(_nbFiles));
     uint fileNum = _isResumeJob ? _nbPosted : 0;
     for (QFileInfo const &file : _files)
     {
@@ -1286,7 +1304,7 @@ void PostingJob::_finishPosting()
                 msg += QString(" (fFailed%1)").arg(file->missingArticles());
             NgLogger::error(msg);
         }
-        NgLogger::error(tr("you can try to repost only those and concatenate the nzb with the current one ;)"));
+        NgLogger::error(tr("you can try to repost only those using ngPost --resume"));
     }
     else if (_postFinished && MB_LoadAtomic(_delFilesAfterPost))
         _delOriginalFiles();
@@ -1318,6 +1336,9 @@ void PostingJob::_printStats() const
     QString msgEnd("\n"), ts = QString("[%1] ").arg(timestamp());
     if (!_ngPost.useHMI())
         msgEnd += ts;
+    msgEnd += tr("%1NZB file: %2\n").arg(_isResumeJob ? "Resumed " : "").arg(_params->nzbFilePath());
+    if (!_ngPost.useHMI())
+        msgEnd += ts;
     msgEnd += tr("Upload size: %1 in %2 (%3 sec) \
                  => average speed: %4 (%5 connections on %6 threads)\n")
                       .arg(size)
@@ -1335,9 +1356,6 @@ void PostingJob::_printStats() const
 
     if (_nzb)
     {
-        if (!_ngPost.useHMI())
-            msgEnd += ts;
-        msgEnd += tr("nzb file: %1\n").arg(_params->nzbFilePath());
         if (_params->doCompress())
         {
             if (!_ngPost.useHMI())
@@ -1364,8 +1382,7 @@ void PostingJob::_cleanCompressDir()
 {
     if (!_params->keepRar())
         _packingTmpDir->removeRecursively();
-    if (NgLogger::isDebugMode())
-        _log(tr("Compressed files deleted."), NgLogger::DebugLevel::Debug);
+    _log(tr("Compressed files deleted."), NgLogger::DebugLevel::Debug);
 }
 
 QStringList PostingJob::_updateFilesListFromCompressDir()
@@ -1382,24 +1399,29 @@ QStringList PostingJob::_updateFilesListFromCompressDir()
     return archiveNames;
 }
 
-QString PostingJob::_createArchiveFolder(QString const &tmpFolder, QString const &archiveName)
+void PostingJob::_createArchiveFolder(QString const &tmpFolder, QString const &archiveName)
 {
-    QString archiveTmpFolder = QString("%1/%2").arg(tmpFolder).arg(archiveName);
-    _packingTmpDir           = new QDir(archiveTmpFolder);
+    if (!_isResumeJob)
+        _packingTmpPath = QString("%1/%2").arg(tmpFolder).arg(archiveName);
+
+    _packingTmpDir = new QDir(_packingTmpPath);
+    if (_isResumeJob)
+        return;
+
     if (_packingTmpDir->exists())
     {
-        NgLogger::log(tr("The temporary directory '%1' already exists...").arg(archiveTmpFolder), true);
-        archiveTmpFolder = NgTools::substituteExistingFile(archiveTmpFolder, false, false);
+        NgLogger::log(tr("The temporary directory '%1' already exists...").arg(_packingTmpPath), true);
+        _packingTmpPath = NgTools::substituteExistingFile(_packingTmpPath, false, false);
         delete _packingTmpDir;
-        _packingTmpDir = new QDir(archiveTmpFolder);
+        _packingTmpDir = new QDir(_packingTmpPath);
         if (_packingTmpDir->exists())
         {
             delete _packingTmpDir;
             _packingTmpDir = nullptr;
-            return QString();
+            return;
         }
         else
-            NgLogger::error(tr("We're using another temporary folder : %1").arg(archiveTmpFolder));
+            NgLogger::error(tr("We're using another temporary folder : %1").arg(_packingTmpPath));
     }
 
     if (!_packingTmpDir->mkpath("."))
@@ -1407,10 +1429,10 @@ QString PostingJob::_createArchiveFolder(QString const &tmpFolder, QString const
         NgLogger::error(tr("Couldn't create the temporary folder: '%1'...").arg(_packingTmpDir->absolutePath()));
         delete _packingTmpDir;
         _packingTmpDir = nullptr;
-        return QString();
+        return;
     }
 
-    return archiveTmpFolder;
+    return;
 }
 
 void PostingJob::onExtProcReadyReadStandardOutput()
@@ -1456,12 +1478,13 @@ QString PostingJob::sslSupportInfo() { return NntpConnection::sslSupportInfo(); 
 
 bool PostingJob::supportsSsl() { return NntpConnection::supportsSsl(); }
 
-void PostingJob::setParamForResume(int nbTotalFiles, int nbMissing)
+void PostingJob::setParamForResume(qint64 jobIdDB, int nbTotalFiles, int nbMissing)
 {
     _nbFiles     = nbTotalFiles;
-    _nbPosted    = nbTotalFiles - nbMissing + 1;
+    _nbPosted    = nbTotalFiles - nbMissing;
     _isResumeJob = true;
     _params->setParamForResume(); // will detach
+    _dbJobId = jobIdDB;
 }
 
 void PostingJob::onResumeTriggered()

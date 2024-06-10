@@ -50,6 +50,7 @@
 #include "NgHistoryDatabase.h"
 #include "NzbCheck.h"
 #include "PostingJob.h"
+#include "ResumeJobsService.h"
 
 #ifdef __USE_HMI__
 #  include "hmi/AutoPostWidget.h"

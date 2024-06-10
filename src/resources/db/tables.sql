@@ -13,14 +13,14 @@ CREATE TABLE IF NOT EXISTS tHistory (
         archivePass  TEXT,
         groups       TEXT NOT NULL,
         poster       TEXT NOT NULL,
-        tmpPath      TEXT NOT NULL,
+        packingPath  TEXT,
         nzbFilePath  TEXT NOT NULL,
         nbFiles      INTEGER NOT NULL,
         done         INTEGER DEFAULT 0
 );
 CREATE INDEX index_done ON tHistory(done);
 
-CREATE TABLE IF NOT EXISTS tUnpostedFiles (
+CREATE TABLE IF NOT EXISTS tUnfinishedFiles (
         job_id           INTEGER NOT NULL,
         filePath         TEXT NOT NULL,
         FOREIGN KEY (job_id) REFERENCES tHistory(id)

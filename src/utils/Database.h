@@ -71,6 +71,9 @@ public:
     bool isOpen() const { return _db.isOpen(); }
     void closeDB();
     uint dumpTablesNamesAndRows(); //!< return the number of tables
+    bool commit() { return _db.commit(); }
+    bool rollback() { return _db.rollback(); }
+    bool transaction() { return _db.transaction(); }
 
     QSqlDatabase const &qSqlDatabase() { return _db; }
 

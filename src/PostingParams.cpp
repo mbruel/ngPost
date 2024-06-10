@@ -18,7 +18,8 @@ using namespace NgConf;
 MainParams::~MainParams()
 {
 #ifdef __DEBUG__
-    qDebug() << "[MB_TRACE][MainParams] destroyed... is it on purpose? (QSharedData)";
+    qDebug() << "[MB_TRACE][MainParams] destroyed... is it on purpose? (QSharedData: "
+             << NgTools::ptrAddrInHex(this);
 #endif
 #ifdef __USE_TMP_RAM__
     if (_storage)
@@ -92,6 +93,9 @@ MainParams::MainParams()
     , _delAuto(false)
 
 {
+#ifdef __DEBUG__
+    qDebug() << "[MB_TRACE][MainParams] CREATE is it on purpose? (QSharedData: " << NgTools::ptrAddrInHex(this);
+#endif
 }
 
 void MainParams::setDisplayProgress(QString const &txtValue)
@@ -185,7 +189,12 @@ PostingParams::PostingParams(NgPost                       &ngPost,
 
 void PostingParams::setParamForResume()
 {
-    _params.detach();
+    qDebug() << "[MB_TRACE][PostingParams::setParamForResume] _params.data : "
+             << NgTools::ptrAddrInHex(_params.data()) << " ref: " << _params->ref.loadRelaxed();
+    // if (_params->ref.loadRelaxed() > 1)
+    //     _params.detach();
+    qDebug() << "[MB_TRACE][PostingParams::setParamForResume] _params.data after detach: "
+             << NgTools::ptrAddrInHex(_params.data()) << " ref: " << _params->ref.loadRelaxed();
     _params->setParamForResume();
 }
 

@@ -1,5 +1,7 @@
 #include "testresumejobs.h"
 #include "utils/Macros.h"
+#include "utils/PostingJobHandler.h"
+#include "utils/TestUtils.h"
 #include <QtTest/QtTest>
 
 #include <QDebug>
@@ -9,7 +11,7 @@
 #include "NgDBConf.h"
 #include "NgHistoryDatabase.h"
 #include "NgPost.h"
-#include "ResumeJobQueue.h"
+#include "ResumeJobsService.h"
 
 TestResumeJobs::TestResumeJobs(QString const &testName, int argc, char *argv[]) : MacroTest(testName)
 {
@@ -26,8 +28,10 @@ void TestResumeJobs::init()
 
 void TestResumeJobs::cleanup() { delete _db; }
 
-void TestResumeJobs::onTestUnpostedBasicCase()
+void TestResumeJobs::onTestUnfinishedBasicCase()
 {
+    TestUtils::loadDefaultConf(*_ngPost);
+
     _doInsertsIfProvided("://db/resume_test/db_inserts.sql");
     UnfinishedJobs jobsToPost = _db->unfinishedJobs();
     MB_VERIFY(jobsToPost.size() == 1, this);
@@ -50,10 +54,16 @@ void TestResumeJobs::onTestUnpostedBasicCase()
     bool isNzbCopied = _copyResourceFile(kNzbResourcePath, kNzbWritablePath);
     MB_VERIFY(isNzbCopied, this);
 
-    PostingJob *resumeJob = ResumeJobQueue::getPostingJobFirstUnfinishedJob(*_ngPost, kNzbWritablePath);
+    PostingJob *resumeJob = ResumeJobsService::getPostingJobFirstUnfinishedJob(*_ngPost, kNzbWritablePath);
     MB_VERIFY(resumeJob != nullptr, this);
 
-    // MB_TODO: needs to run in an handler with a thread...
-    // with a wait condition
-    // PostingJobHandler like ConnectionHandler!
+    PostingJobHandler *jobHandler = new PostingJobHandler(resumeJob);
+    jobHandler->start();
+    bool jobOK = QTest::qWaitFor([&jobHandler]() { return jobHandler->isTestDone(); }, 120000); // 2min sec
+    MB_VERIFY(jobOK == true, this);
+    if (!jobOK)
+    {
+        qCritical() << "onTestUnfinishedBasicCase FAILED...";
+        return;
+    }
 }

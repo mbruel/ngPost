@@ -11,15 +11,13 @@ class UnfinishedJob // seems struct can't use Q_DECLARE_TR_FUNCTIONS...
 public:
     qint64    jobIdDB;
     QDateTime date;
-    QString   tmpPath;
+    QString   packingPath;
     QString   nzbFilePath;
     QString   nzbName;
     qint64    size;
     QString   groups;
-    QFileInfo _packingPath;
 
-    bool             couldBeResumed() const;
-    QFileInfo const &filesDir() const { return _packingPath; }
+    bool couldBeResumed() const;
 
     bool hasEmptyPackingPath() const;
 
@@ -46,17 +44,23 @@ inline const QStringList kPragmas = { "PRAGMA journal_mode = WAL",
 
 inline const QString kSelectSizes = "SELECT size FROM tHistory";
 inline const QString kMissingFilesForJob =
-        "SELECT job_id, filePath FROM tUnpostedFiles WHERE (job_id = :job_id)";
+        "SELECT job_id, filePath FROM tUnfinishedFiles WHERE (job_id = :job_id)";
 inline const QString kInsertJob = QString("\
 insert into tHistory\
-    (date, nzbName, size, avgSpeed, archiveName, archivePass, groups, poster, tmpPath, nzbFilePath, nbFiles, done)\
+    (date, nzbName, size, avgSpeed, archiveName, archivePass, groups, poster, packingPath, nzbFilePath, nbFiles, done)\
 values\
-    (:date, :nzbName, :size, :avgSpeed, :archiveName, :archivePass, :groups, :from, :tmpPath, :nzbFilePath, :nbFiles, :done);\
+    (:date, :nzbName, :size, :avgSpeed, :archiveName, :archivePass, :groups, :from, :packingPath, :nzbFilePath, :nbFiles, :done);\
 ");
-inline const QString kInsertUnpostedStatement =
-        "insert into tUnpostedFiles (job_id, filePath) values (:job_id, :filePath); ";
-inline const QString kSqlSelectUnpostedStatement =
-        "SELECT id, date, tmpPath, nzbFilePath, nzbName, size, groups FROM tHistory WHERE done = 0;";
+inline const QString kInsertUnfinishedStatement =
+        "insert into tUnfinishedFiles (job_id, filePath) values (:job_id, :filePath); ";
+inline const QString kSqlSelectUnfinishedStatement =
+        "SELECT id, date, packingPath, nzbFilePath, nzbName, size, groups FROM tHistory WHERE done = 0;";
+
+inline const QString kSqlNumberUnfinishedStatement = "SELECT count(*) FROM tHistory WHERE done = 0;";
+
+inline const QString kSqlUpdateHistoryDoneUnfinishedStatement =
+        "UPDATE tHistory SET done = :value WHERE id = :job_id";
+inline const QString kSqlDeleteUnfinisheFilesdStatement = "DELETE FROM tUnfinishedFiles WHERE job_id = :job_id";
 
 inline const QString kYearCondition  = "strftime('%Y',date) = strftime('%Y',date('now'))";
 inline const QString kMonthCondition = "strftime('%Y',date) = strftime('%Y',date('now')) \

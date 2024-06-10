@@ -40,6 +40,7 @@ DEFINES -= __MB_TRACE_CACHE__
 SOURCES += \
     tests/utils/MacroTest.cpp \
     tests/LoadConfig/TestConfig.cpp \
+    tests/utils/PostingJobHandler.cpp \
     tests/utils/TestUtils.cpp \
     tests/utils/ConnectionHandler.cpp \
     tests/main.cpp \
@@ -52,6 +53,7 @@ HEADERS += \
     tests/LoadConfig/TestConfig.h \
     tests/utils/MacroTest.h \
     tests/utils/Macros.h \
+    tests/utils/PostingJobHandler.h \
     tests/utils/TestUtils.h \
     tests/utils/ConnectionHandler.h \
     tests/testNgTools.h \

@@ -20,7 +20,7 @@ public:
 public slots:
 
 private slots:
-    void onTestUnpostedBasicCase();
+    void onTestUnfinishedBasicCase();
 };
 
 #endif // TESTRESUMEJOBS_H

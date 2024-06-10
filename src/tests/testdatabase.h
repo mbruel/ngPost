@@ -23,7 +23,7 @@ private slots:
     void onTestInitDB();
 
     void onListTablesAndRows();
-    void onTestUnpostedBasicCase();
+    void onTestUnfinishedBasicCase();
 };
 
 #endif // TESTDATABASE_H
