@@ -53,7 +53,7 @@ PostingJob *ResumeJobsService::getPostingJobFirstUnfinishedJob(NgPost        &ng
     }
     QStringList   missingFilesInDB  = missingFilesPerJobs.values(unfinishedJob.jobIdDB);
     QStringList   postedFiles       = _postedFilesFromNzb(unfinishedJob.nzbFilePath);
-    QFileInfoList filesInPackingDir = _filesInPackingPath(unfinishedJob._packingPath.absoluteFilePath());
+    QFileInfoList filesInPackingDir = _filesInPackingPath(unfinishedJob.packingPath);
     int           nbTotalFiles      = filesInPackingDir.size();
 
     if (!_doFilesChecks(unfinishedJob, missingFilesInDB, postedFiles, filesInPackingDir))

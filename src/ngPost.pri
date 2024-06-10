@@ -1,6 +1,6 @@
 QT += core network sql
 
-DEFINES += "APP_VERSION=\"5.0\""
+DEFINES += "APP_VERSION=\"4.16\""
 
 INCLUDEPATH += $$PWD
 TARGET = ngPost

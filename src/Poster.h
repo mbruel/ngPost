@@ -64,9 +64,10 @@ private:
 
     QString _logPrefix; //!< log prefix: Poster[<_id>]
 
+#ifndef __test_ngPost__
     QThread _builderThread;     //!< thread that runs _articleBuilder
     QThread _connectionsThread; //!< thread that runs the _nntpConnections
-
+#endif
     ArticleBuilder           *_articleBuilder;  //!< build NntpArticles. deleteLater when stopThreads()
     QVector<NntpConnection *> _nntpConnections; //!< post NntpArticles. deleteLater when stopThreads()
 
@@ -93,7 +94,7 @@ public:
     inline void lockQueue();
     inline void unlockQueue();
 
-    inline QString name() const;
+    inline QString const &name() const;
 
     inline void startThreads();
     void        stopThreads();
@@ -101,6 +102,19 @@ public:
     bool prepareArticlesInAdvance();
 
     bool isPosting() const;
+
+    QString builderThreadName() const
+    {
+#ifndef __test_ngPost__
+        return _builderThread.objectName();
+#else
+        return _logPrefix;
+#endif
+    }
+
+#ifdef __test_ngPost__
+    void startNntpConnections();
+#endif
 
 public slots:
     void onPostingNotAllowed(NntpConnection *nntpCon);
@@ -117,12 +131,14 @@ private:
 void Poster::lockQueue() { _secureArticles.lock(); }
 void Poster::unlockQueue() { _secureArticles.unlock(); }
 
-QString Poster::name() const { return _connectionsThread.objectName(); }
+QString const &Poster::name() const { return _logPrefix; }
 
 void Poster::startThreads()
 {
+#ifndef __test_ngPost__
     _builderThread.start();
     _connectionsThread.start();
+#endif
 }
 
 #endif // POSTER_H

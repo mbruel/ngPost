@@ -26,12 +26,14 @@ PostingJobHandler::PostingJobHandler(PostingJob *job, QObject *parent)
                 this,
                 &PostingJobHandler::onPostingFinished,
                 Qt::QueuedConnection);
+
+        _job->setTestThread(&_thread);
         _job->moveToThread(&_thread);
     }
     else
         qCritical() << "PostingJobHandler couldn't create a connection...";
 
-    // this->moveToThread(&_thread);
+    this->moveToThread(&_thread);
 }
 
 PostingJobHandler::~PostingJobHandler()
@@ -43,6 +45,7 @@ PostingJobHandler::~PostingJobHandler()
 void PostingJobHandler::start()
 {
     // no need cause  to _nntpCon->sigStartConnection() as it's connected to &QThread::started
+    emit _job->sigStartPosting(true);
     _thread.start();
 }
 

@@ -35,13 +35,14 @@ class ResumeJobsService : public PureStaticClass
 
     Q_DECLARE_TR_FUNCTIONS(ResumeJobsService); // tr() without QObject using QCoreApplication::translate
 
+#ifdef __test_ngPost__
+    friend class TestResumeJobs;
+    static PostingJob *getPostingJobFirstUnfinishedJob(NgPost &ngPost, QString const &nzbWritableFilePath);
+#endif
+
 public:
     static uint resumeUnfinihedJobs(NgPost &ngPost);
     static void checkForUnfinihedJobs(NgPost &ngPost);
-
-#ifdef __test_ngPost__
-    static PostingJob *getPostingJobFirstUnfinishedJob(NgPost &ngPost, QString const &nzbWritableFilePath);
-#endif
 
 private:
     static QStringList   _postedFilesFromNzb(QString const &nzbFile);

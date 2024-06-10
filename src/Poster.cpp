@@ -27,14 +27,17 @@ Poster::Poster(PostingJob *job, ushort id)
     : _id(id)
     , _job(job)
     , _logPrefix(QString("Poster #%1").arg(_id))
+#ifndef __test_ngPost__
     , _builderThread()
     , _connectionsThread()
+#endif
     , _articleBuilder(new ArticleBuilder(this))
     , _nntpConnections()
     , _articles()
     , _secureArticles()
     , _hasBeenStopped(0x0)
 {
+#ifndef __test_ngPost__
     _builderThread.setObjectName(QString(NgConf::kThreadNameBuilder).arg(id));
     _connectionsThread.setObjectName(QString(NgConf::kThreadNameNntp).arg(id));
     _articleBuilder->setObjectName(QString("ArtBuilder #%1").arg(_id));
@@ -44,12 +47,23 @@ Poster::Poster(PostingJob *job, ushort id)
     // cf https://doc.qt.io/qt-6/qthread.html#finished
     QObject::connect(&_builderThread, &QThread::finished, _articleBuilder, &QObject::deleteLater);
     _articleBuilder->moveToThread(&_builderThread);
-
-#if (defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)) || defined(__MOVETOTHREAD_TRACKING__)
+#  if (defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)) || defined(__MOVETOTHREAD_TRACKING__)
     qDebug() << QString("[THREAD] %1 owned by Poster #%2 has moved to its thread %3")
                         .arg(_articleBuilder->objectName())
                         .arg(_id)
                         .arg(_builderThread.objectName());
+#  endif
+#else
+    QThread *testThread = _job->testThread();
+    if (testThread)
+    {
+        _articleBuilder->moveToThread(testThread);
+    }
+    else
+        qCritical() << _logPrefix << " test Thread not set...";
+#  if (defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)) || defined(__MOVETOTHREAD_TRACKING__)
+    qDebug() << QString("[THREAD] %1 created!").arg(_logPrefix);
+#  endif
 #endif
 }
 
@@ -59,8 +73,15 @@ Poster::~Poster()
     qDebug() << "Destruction Poster #" << _id;
 #endif
 
+#ifndef __test_ngPost__
     if (!MB_LoadAtomic(_hasBeenStopped))
         stopThreads();
+#else
+    if (_articleBuilder)
+        delete _articleBuilder;
+    for (auto *con : _nntpConnections)
+        con->deleteLater();
+#endif
 
     // we down own anything:
     //   - _nntpConnections will be deleteLater when _connectionsThread.quit()
@@ -79,23 +100,44 @@ void Poster::addConnection(NntpConnection *connection)
             &Poster::onPostingNotAllowed,
             Qt::QueuedConnection);
 
+#ifdef __test_ngPost__
+    QThread *testThread = _job->testThread();
+    if (testThread)
+    {
+        connect(testThread, &QThread::finished, connection, &QObject::deleteLater);
+        connection->moveToThread(testThread);
+    }
+    else
+        qCritical() << _logPrefix << " test Thread not set...";
+#else
     // as the connection is moved, it has no more "owner" (no parent of course)
     // it should be destoyed in the thread where it is living
     // cf https://doc.qt.io/qt-6/qthread.html#finished
     connect(&_connectionsThread, &QThread::finished, connection, &QObject::deleteLater);
 
     connection->moveToThread(&_connectionsThread);
-
     // start the connection (in _connectionsThread)
     emit connection->sigStartConnection();
+#endif
 
 #ifdef __MOVETOTHREAD_TRACKING__
+#  ifndef __test_ngPost__
+
     qDebug() << QString("[THREAD] NntpCon #%1 has been started, affected to Poster #%2, moved to its thread %3")
                         .arg(connection->getId())
                         .arg(_id)
                         .arg(_connectionsThread.objectName());
+#  endif
 #endif
 }
+
+#ifdef __test_ngPost__
+void Poster::startNntpConnections()
+{
+    for (auto *nntpCon : _nntpConnections)
+        emit nntpCon->sigStartConnection();
+}
+#endif
 
 NNTP::Article *Poster::getNextArticle(QString const &conPrefix)
 {
@@ -170,11 +212,11 @@ bool Poster::prepareArticlesInAdvance()
     int  nbArticlesToPrepare = _nntpConnections.size();
     for (int i = 0; i < nbArticlesToPrepare; ++i)
     {
-        if (!_prepareNextArticle(_builderThread.objectName()))
+        if (!_prepareNextArticle(builderThreadName()))
         {
 #ifdef __DEBUG__
             _log(QString("[%1] prepareArticlesInAdvance : no more Articles to produce after i = %2")
-                         .arg(_builderThread.objectName())
+                         .arg(builderThreadName())
                          .arg(i),
                  NgLogger::DebugLevel::Debug);
 #endif
@@ -184,7 +226,7 @@ bool Poster::prepareArticlesInAdvance()
     }
 #ifdef __DEBUG__
     _log(QString("[%1] prepareArticlesInAdvance: Article queue size:  %2")
-                 .arg(_builderThread.objectName())
+                 .arg(builderThreadName())
                  .arg(_articles.size()),
          NgLogger::DebugLevel::Debug);
 #endif
@@ -195,6 +237,13 @@ bool Poster::prepareArticlesInAdvance()
 NNTP::Article *Poster::_prepareNextArticle(QString const &threadName, bool fillQueue)
 {
     NNTP::Article *article = _articleBuilder->getNextArticle(threadName);
+#ifdef __test_ngPost__
+    QThread *testThread = _job->testThread();
+    if (testThread)
+        article->moveToThread(testThread);
+    else
+        qCritical() << _logPrefix << " test Thread not set...";
+#endif
     if (article && fillQueue)
         _articles.enqueue(article);
     return article;
@@ -224,6 +273,7 @@ void Poster::onPostingNotAllowed(NntpConnection *nntpCon)
 
 void Poster::stopThreads()
 {
+#ifndef __test_ngPost__
     _builderThread.quit();
     _connectionsThread.quit();
     _log(tr("threads: %1, %2 are stopped (no more event queue)")
@@ -236,6 +286,6 @@ void Poster::stopThreads()
     threadDone = _builderThread.wait();
 
     _log(tr("all threads done: %2").arg(threadDone), NgLogger::DebugLevel::Debug);
-
+#endif
     _hasBeenStopped = 0x1;
 }

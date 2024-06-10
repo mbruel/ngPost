@@ -64,6 +64,14 @@ class PostingJob : public QObject
     friend class ArticleBuilder;
     friend class NgPost;
 
+#ifdef __test_ngPost__
+    friend class PostingJobHandler;
+
+    QThread *_testThread = nullptr;
+    void     setTestThread(QThread *testThread) { _testThread = testThread; }
+    QThread *testThread() const { return _testThread; }
+#endif
+
 signals:
     //! connected to onStartPosting (to be able to run on a different Thread)
     void sigStartPosting(bool isActiveJob);

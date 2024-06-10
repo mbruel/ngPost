@@ -41,7 +41,7 @@ public slots:
     virtual void cleanup();
 
 protected:
-    bool _doInsertsIfProvided(QString const &sqlScript);
+    void _doInsertsIfProvided(QString const &sqlScript);
     void _deletekDBTestFile();
     bool _copyResourceFile(QString const &resoucePath, QString const &dstWritable);
 

@@ -6,6 +6,37 @@
 .hiddenElement {
 	display:none;
 }
+code {
+    background-color: #f5f5f5;
+    border-radius: 3px;
+    padding: 2px 5px;
+    font-size: 14px;
+    font-family: monospace;
+}
+className {
+    color: #8a2be2;
+    font-weight: bold;
+}
+classMethod {
+    color: #00008b;
+    font-weight: bold;
+}
+classMember{
+    color: #8b0000;
+    font-weight: bold;
+}
+        .class-name {
+            color: #8a2be2;
+            font-weight: bold;
+        }
+        .class-method {
+            color: #00008b;
+            font-weight: bold;
+        }
+        .class-member {
+            color: #8b0000;
+            font-weight: bold;
+        }
 		</style>
 		<script type="text/javascript">
 function show_hide_topic(divName){
@@ -74,7 +105,15 @@ some explanation of the diagram will arrive asap...
 <h3><a href="javascript:show_hide_topic('NNTP_POSTING');">NntpConnections and PostingJobs</a></h3>
 <div id="NNTP_POSTING" class="hiddenElement">
 <p>
-some explanation of the diagram will arrive asap...
+<className>PostingJob</className> are created and goes into the main thread event loop using mainly
+<classMethod>NgPost::startPostingJob</classMethod><br />
+They will go either in <classMember>NgPost::_activeJob</classMember> or in the queue <classMember>NgPost::_pendingJobs</classMember><br />
+They are started (in main Thread, where they live) by emitting this signal:
+  <classMethod>void sigStartPosting(bool isActiveJob);</classMethod> <br/>
+
+  
+
+
 </p>
 <br />
 <img src="./archi_NNTP_and_PostingJob.svg" />

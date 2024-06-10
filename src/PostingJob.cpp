@@ -888,6 +888,11 @@ void PostingJob::_postFiles()
     for (Poster *poster : _posters)
         poster->unlockQueue();
 
+#ifdef __test_ngPost__
+    for (Poster *poster : _posters)
+        poster->startNntpConnections();
+#endif
+
     emit sigPostingStarted();
 }
 
@@ -1224,6 +1229,11 @@ void PostingJob::_initPosting()
 
         _filesToUpload.enqueue(nntpFile);
         _nbArticlesTotal += nntpFile->nbArticles();
+
+#ifdef __test_ngPost__
+        if (_testThread)
+            nntpFile->moveToThread(_testThread);
+#endif
     }
     emit sigArticlesNumber(_nbArticlesTotal);
 }

@@ -70,7 +70,7 @@ void ArticleBuilder::onPrepareNextArticle()
 {
     _poster->lockQueue(); // thread safety (coming from _builderThread)
 
-    NNTP::Article *article = getNextArticle(_poster->_builderThread.objectName());
+    NNTP::Article *article = getNextArticle(_poster->builderThreadName());
     if (article)
         _poster->_articles.enqueue(article);
 

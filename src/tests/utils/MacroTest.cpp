@@ -9,12 +9,11 @@ void MacroTest::cleanup()
     _ngPost->resetConfig();
 }
 
-bool MacroTest::_doInsertsIfProvided(QString const &sqlScript)
+void MacroTest::_doInsertsIfProvided(QString const &sqlScript)
 {
     qDebug() << "_doInsertsIfProvided" << sqlScript;
-    if (_db->_execSqlFile(sqlScript) != 0)
-        return false;
-    return true;
+    int res = _db->_execSqlFile(sqlScript);
+    MB_VERIFY(res == 0, this);
 }
 
 void MacroTest::_deletekDBTestFile()
