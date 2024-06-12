@@ -157,7 +157,7 @@ int NgHistoryDatabase::_insertPost(QString const &date,
                                    QString const &packingPath,
                                    QString const &nzbFilePath,
                                    int            nbFiles,
-                                   int            done)
+                                   int            state)
 {
     if (!isDbInitialized())
     {
@@ -177,12 +177,12 @@ int NgHistoryDatabase::_insertPost(QString const &date,
     query.bindValue(":packingPath", packingPath);
     query.bindValue(":nzbFilePath", nzbFilePath);
     query.bindValue(":nbFiles", nbFiles);
-    query.bindValue(":done", done);
+    query.bindValue(":state", state);
 
     qDebug() << tr("[MB_TRACE][insertPost] %1")
                         .arg(QString("<:date : %1><:nzbName : %2><:size: %3><:avgSpeed : %4><:archiveName: "
                                      "%5><:archivePass %6><:groups "
-                                     "%7><:from : %8><:packingPath %9><:nzbFilePath %10><:done %11>")
+                                     "%7><:from : %8><:packingPath %9><:nzbFilePath %10><:state %11>")
                                      .arg(date)
                                      .arg(nzbName)
                                      .arg(size)
@@ -193,7 +193,7 @@ int NgHistoryDatabase::_insertPost(QString const &date,
                                      .arg(from)
                                      .arg(packingPath)
                                      .arg(nzbFilePath)
-                                     .arg(done ? "yes" : "no"));
+                                     .arg(state ? "yes" : "no"));
     if (!query.exec())
     {
         NgLogger::error(tr("Error inserting post to history DB: %1  (query: %2) args: %3")
@@ -201,7 +201,7 @@ int NgHistoryDatabase::_insertPost(QString const &date,
                                 .arg(query.lastQuery())
                                 .arg(QString("<:date : %1><:nzbName : %2><:size: %3><:avgSpeed : "
                                              "%4><:archiveName: %5><:archivePass %6><:groups "
-                                             "%7><:from : %8><:packingPath %9><:nzbFilePath %10><:done %11>")
+                                             "%7><:from : %8><:packingPath %9><:nzbFilePath %10><:state %11>")
                                              .arg(date)
                                              .arg(nzbName)
                                              .arg(size)
@@ -211,7 +211,7 @@ int NgHistoryDatabase::_insertPost(QString const &date,
                                              .arg(groups)
                                              .arg(from)
                                              .arg(packingPath)
-                                             .arg(done ? "yes" : "no")));
+                                             .arg(state ? "yes" : "no")));
         qApp->processEvents(); // As it happens at PostingJob destruction, make sure the log event is
                                // processed
         return 0;
@@ -238,7 +238,7 @@ QSqlQuery NgHistoryDatabase::_postingJobQuery(PostingJob const &job) const
     query.bindValue(":packingPath", job.packingTmpPath());
     query.bindValue(":nzbFilePath", job.nzbFilePath());
     query.bindValue(":nbFiles", job.nbFiles());
-    query.bindValue(":done", job.hasPostFinished());
+    query.bindValue(":state", job.state());
     return query;
 }
 
@@ -291,7 +291,7 @@ bool NgHistoryDatabase::_markUnfinishedJobDone(int const dbJobId, bool success)
 
     QSqlQuery query;
     query.prepare(DB::SQL::kSqlUpdateHistoryDoneUnfinishedStatement);
-    query.bindValue(":value", success ? 1 : -2);
+    query.bindValue(":value", success ? PostingJob::JOB_STATE::POSTED : PostingJob::JOB_STATE::ERROR_RESUMING);
     query.bindValue(":job_id", dbJobId);
     if (!query.exec())
     {
@@ -327,7 +327,9 @@ UnfinishedJobs NgHistoryDatabase::unfinishedJobs()
     qDebug() << "[MB_TRACE][Database::unfinishedJobs] >>>>>>>>>>>>";
     UnfinishedJobs jobs;
     QSqlQuery      query;
-    if (!query.exec(DB::SQL::kSqlSelectUnfinishedStatement))
+    query.prepare(DB::SQL::kSqlSelectUnfinishedStatement);
+    query.bindValue(":posted_sate", PostingJob::JOB_STATE::POSTED);
+    if (!query.exec())
     {
         NgLogger::criticalError(
                 tr("Error DB trying to get the unfinished post... (%1)").arg(query.lastError().text()),
@@ -342,7 +344,7 @@ UnfinishedJobs NgHistoryDatabase::unfinishedJobs()
         UnfinishedJob uJob = { query.value(0).toInt(),    query.value(1).toDateTime(),
                                query.value(2).toString(), query.value(3).toString(),
                                query.value(4).toString(), query.value(5).toLongLong(),
-                               query.value(6).toString() };
+                               query.value(6).toString(), query.value(7).toInt() };
         jobs.push_back(uJob);
     }
 

@@ -187,7 +187,7 @@ PostingParams::PostingParams(NgPost                       &ngPost,
 {
 }
 
-void PostingParams::setParamForResume()
+void PostingParams::setPackingDoneParamsForResume()
 {
     qDebug() << "[MB_TRACE][PostingParams::setParamForResume] _params.data : "
              << NgTools::ptrAddrInHex(_params.data()) << " ref: " << _params->ref.loadRelaxed();
@@ -195,7 +195,7 @@ void PostingParams::setParamForResume()
     //     _params.detach();
     qDebug() << "[MB_TRACE][PostingParams::setParamForResume] _params.data after detach: "
              << NgTools::ptrAddrInHex(_params.data()) << " ref: " << _params->ref.loadRelaxed();
-    _params->setParamForResume();
+    _params->setPackingDoneParamsForResume();
 }
 
 bool PostingParams::quietMode() const { return _params->quietMode(); }
@@ -899,7 +899,7 @@ void MainParams::dumpParams() const
     qDebug() << "\n[MainParams::_dumpParams]<<<<<<<<<<<<<<<<<<\n";
 }
 
-void MainParams::setParamForResume()
+void MainParams::setPackingDoneParamsForResume()
 {
     _doCompress = false;
     _doPar2     = false;

@@ -42,7 +42,7 @@ private:
                      QString const &packingPath,
                      QString const &nzbFilePath,
                      int            nbFiles,
-                     int            done);
+                     int            state);
 
     QSqlQuery _postingJobQuery(PostingJob const &job) const;
 

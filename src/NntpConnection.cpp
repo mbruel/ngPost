@@ -594,9 +594,8 @@ void NntpConnection::onReadyRead()
 
 #ifdef __test_ngPost__
                 emit sigAuthenticated();
-#  ifdef __Launch_TestResumeJobs__
-                _sendNextArticle();
-#  endif
+                if (sTestShouldSendFirstArticle)
+                    _sendNextArticle();
 #else
                 _sendNextArticle();
 #endif

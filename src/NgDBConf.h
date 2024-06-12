@@ -16,10 +16,14 @@ public:
     QString   nzbName;
     qint64    size;
     QString   groups;
+    ushort    state;
 
     bool couldBeResumed() const;
 
     bool hasEmptyPackingPath() const;
+
+    bool packingDone() const;
+    bool nzbStarted() const;
 
     // Constructor
     UnfinishedJob(qint64           jobId,
@@ -28,7 +32,8 @@ public:
                   QString const   &nzbFile,
                   QString const   &nzbName,
                   qint64           s,
-                  QString const   &grps);
+                  QString const   &grps,
+                  ushort           state_);
 };
 using UnfinishedJobs = QList<UnfinishedJob>; // we don't have the number in advance
 
@@ -47,19 +52,21 @@ inline const QString kMissingFilesForJob =
         "SELECT job_id, filePath FROM tUnfinishedFiles WHERE (job_id = :job_id)";
 inline const QString kInsertJob = QString("\
 insert into tHistory\
-    (date, nzbName, size, avgSpeed, archiveName, archivePass, groups, poster, packingPath, nzbFilePath, nbFiles, done)\
+    (date, nzbName, size, avgSpeed, archiveName, archivePass, groups, poster, packingPath, nzbFilePath, nbFiles, state)\
 values\
-    (:date, :nzbName, :size, :avgSpeed, :archiveName, :archivePass, :groups, :from, :packingPath, :nzbFilePath, :nbFiles, :done);\
+    (:date, :nzbName, :size, :avgSpeed, :archiveName, :archivePass, :groups, :from, :packingPath, :nzbFilePath, :nbFiles, :state);\
 ");
 inline const QString kInsertUnfinishedStatement =
         "insert into tUnfinishedFiles (job_id, filePath) values (:job_id, :filePath); ";
-inline const QString kSqlSelectUnfinishedStatement =
-        "SELECT id, date, packingPath, nzbFilePath, nzbName, size, groups FROM tHistory WHERE done = 0;";
 
-inline const QString kSqlNumberUnfinishedStatement = "SELECT count(*) FROM tHistory WHERE done = 0;";
+inline const QString kSqlSelectUnfinishedStatement =
+        "SELECT id, date, packingPath, nzbFilePath, nzbName, size, groups, state "
+        "FROM tHistory WHERE state < :posted_sate;";
+inline const QString kSqlNumberUnfinishedStatement =
+        "SELECT count(*) FROM tHistory WHERE state < :posted_sate ;";
 
 inline const QString kSqlUpdateHistoryDoneUnfinishedStatement =
-        "UPDATE tHistory SET done = :value WHERE id = :job_id";
+        "UPDATE tHistory SET state = :value WHERE id = :job_id";
 inline const QString kSqlDeleteUnfinisheFilesdStatement = "DELETE FROM tUnfinishedFiles WHERE job_id = :job_id";
 
 inline const QString kYearCondition  = "strftime('%Y',date) = strftime('%Y',date('now'))";

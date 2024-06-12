@@ -24,11 +24,11 @@ CONFIG(debug, debug|release): DEFINES += __TEST_DEBUG__
 # Macro Tests to activate/desactivate
 #-------------------------------------------------
 
-# DEFINES += __Launch_TestNgTools__
-# DEFINES += __Launch_TestConfig__
-# DEFINES -= __Launch_TestLocalConfig__
-# DEFINES += __Launch_TestNzbCheck__
-# DEFINES += __Launch_TestDatabase__
+DEFINES += __Launch_TestNgTools__
+DEFINES += __Launch_TestConfig__
+DEFINES -= __Launch_TestLocalConfig__
+DEFINES += __Launch_TestNzbCheck__
+DEFINES += __Launch_TestDatabase__
 DEFINES += __Launch_TestResumeJobs__
 
 #-------------------------------------------------

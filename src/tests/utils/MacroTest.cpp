@@ -3,6 +3,18 @@
 #include "NgHistoryDatabase.h"
 #include "NgPost.h"
 
+void MacroTest::cleanupTestCase() // Called once after all test cases
+{
+    if (_ngPost)
+    {
+        delete _ngPost;
+        _ngPost = nullptr;
+    }
+    NgLogger::destroy();
+    if (_sleepAfterEachTestCase)
+        QTest::qSleep(1000); // wait 1 sec
+}
+
 void MacroTest::cleanup()
 {
     qDebug() << "Reset config ngPost...";

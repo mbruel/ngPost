@@ -19,31 +19,7 @@ protected:
     NgPost                     *_ngPost;
     NgHistoryDatabase          *_db;
     inline static const QString kDBTestFilePath = "/tmp/ngPost_tstDB.sqlite";
-
-public slots:
-
-    //!< Called once before the test cases
-    virtual void initTestCase() { NgLogger::createInstance(); }
-
-    //!< Called once at the end of all test cases
-    virtual void cleanupTestCase() // Called once after all test cases
-    {
-        if (_ngPost)
-        {
-            delete _ngPost;
-            _ngPost = nullptr;
-        }
-        NgLogger::destroy();
-    }
-
-    // called after each test case
-    virtual void init() { }
-    virtual void cleanup();
-
-protected:
-    void _doInsertsIfProvided(QString const &sqlScript);
-    void _deletekDBTestFile();
-    bool _copyResourceFile(QString const &resoucePath, QString const &dstWritable);
+    bool                        _sleepAfterEachTestCase;
 
 private:
     inline static uint sNbMacroTestsRun  = 0;
@@ -56,12 +32,28 @@ private:
     ushort _nbVerifications = 0;
     ushort _nbFailure       = 0;
 
-    const QString _testName;        //!< test name
-    const uint    _projectId = 666; //!< unused yet
+    const QString _testName; //!< test name
+
+public slots:
+
+    //!< Called once before the test cases
+    virtual void initTestCase() { NgLogger::createInstance(); }
+
+    //!< Called once at the end of all test cases
+    virtual void cleanupTestCase();
+
+    // called after each test case
+    virtual void init() { }
+    virtual void cleanup();
 
 public:
     explicit MacroTest(QString const &testName)
-        : _ngPost(nullptr), _nbUseCases(0), _nbVerifications(0), _nbFailure(0), _testName(testName)
+        : _ngPost(nullptr)
+        , _sleepAfterEachTestCase(false)
+        , _nbUseCases(0)
+        , _nbVerifications(0)
+        , _nbFailure(0)
+        , _testName(testName)
     {
         ++sNbMacroTestsRun;
     }
@@ -101,6 +93,11 @@ public:
 
     static ushort numberOfUnitTestsRun() { return sNbUnitTestsRun; }
     static ushort numberOfUnitTestsFAIL() { return sNbUnitTestsFAIL; }
+
+protected:
+    void _doInsertsIfProvided(QString const &sqlScript);
+    void _deletekDBTestFile();
+    bool _copyResourceFile(QString const &resoucePath, QString const &dstWritable);
 };
 
 #endif // MACROTEST_H

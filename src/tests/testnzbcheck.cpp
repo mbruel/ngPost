@@ -13,7 +13,8 @@
 TestNzbGet::TestNzbGet(QString const &testName, int argc, char *argv[]) : MacroTest(testName)
 {
     qDebug() << "Construction TestNzbGet => _ngPost...";
-    _ngPost = new NgPost(argc, argv);
+    _ngPost                 = new NgPost(argc, argv);
+    _sleepAfterEachTestCase = true;
 }
 
 void TestNzbGet::onTestNzbCheckOK()

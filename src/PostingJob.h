@@ -117,19 +117,27 @@ private:
     QVector<NntpConnection *> _nntpConnections;   //!< the NNTP connections (owning the TCP sockets)
     QVector<NntpConnection *> _closedConnections; //!< the NNTP connections (owning the TCP sockets)
 
-    //    QString            _nzbName;         //!< name of nzb that we'll write (without the extension)
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    // NNTP::File section
+    // all created at the beginning in _initPosting() that fills _filesToUpload based on _files
+    //(bare in mind that packing has been done and _files updated)
+    // Then the dequeue is all done by _readNextArticleIntoBufferPtr by _posters.
+    //      - move NNTP::File from _filesToUpload to _filesInProgress and on _nntpFile
+    //      - update _file according to _nntpFile
+    //      - create NNTP::Article reading on _file
     QQueue<NNTP::File *> _filesToUpload;   //!< list of files to upload (that we didn't start)
     QSet<NNTP::File *>   _filesInProgress; //!< files in queue to be uploaded (Articles have been produced)
     QSet<NNTP::File *>   _filesFailed;     //!< files that couldn't be read
     uint                 _nbFiles;         //!< number of files to post in this iteration
     uint                 _nbPosted;        //!< number of files posted
-
-    QFile      *_nzb;       //!< nzb file that will be filled on the fly when a file is fully posted
-    QTextStream _nzbStream; //!< txt stream for the nzb file
+    QMutex _secureDiskAccess; //!< Posters will have their ArticleBuilder (dedicated thread using _readNextArticleIntoBufferPtr)
 
     NNTP::File *_nntpFile; //!< current file that is getting processed
     QFile      *_file;     //!< file handler on the file getting processed
     uint        _part;     //!< part number (Article) on the current file
+
+    QFile      *_nzb;       //!< nzb file that will be filled on the fly when a file is fully posted
+    QTextStream _nzbStream; //!< txt stream for the nzb file
 
     QElapsedTimer _timeStart;     //!< to get some stats (upload time and avg speed)
     quint64       _totalSize;     //!< total size (in Bytes) to be uploaded
@@ -150,8 +158,6 @@ private:
     bool _packed;
     bool _postFinished;
 
-    QMutex _secureDiskAccess;
-
     QVector<Poster *> _posters;
 
     QMap<QString, QString> _obfuscatedFileNames;
@@ -171,21 +177,30 @@ private:
 
 #ifdef __test_ngPost__ // MB_TODO : start
 #endif
-    // For Resuming a Job
-    enum JOB_STATE
+
+public:
+    enum JOB_STATE : ushort
     {
-        NOT_STARTED = 0,
-        COMPRESSION_DONE,
-        PACKING_DONE,
-        POSTED
+        NOT_STARTED      = 0,
+        COMPRESSION_DONE = 1,
+        PACKING_DONE     = 2,
+        NZB_CREATED      = 3,
+        POSTED           = 4,
+        ERROR_RESUMING   = 5
     };
-    JOB_STATE _state = NOT_STARTED;
+
+private:
+    // For Resuming a Job
+
+    JOB_STATE _state = JOB_STATE::NOT_STARTED;
     bool      _isResumeJob;
     qint64    _dbJobId;
 
+public:
+    int state() const { return _state; }
+
     bool hasPosted() const { return _state == JOB_STATE::POSTED; }
 
-public:
     QSet<NNTP::File *> nntpFilesNotPosted() const;
 #ifdef __test_ngPost__ // MB_TODO : move down
 #endif
@@ -299,7 +314,7 @@ public:
     } //!< useless connection, we delete it
 
     void storeInDatabase(Database &db);
-    void setParamForResume(qint64 jobIdDB, int nbTotalFiles, int nbMissing);
+    void setParamForResume(qint64 jobIdDB, ushort state, int nbTotalFiles, int nbMissing);
 
     bool isResumeJob() const { return _isResumeJob; }
     bool areAllNntpFilesPosted() const { return _filesFailed.isEmpty(); }
@@ -366,6 +381,15 @@ private:
     int  _createNntpConnections();
     void _preparePostersArticles();
 
+    /*!
+     * \brief actual method that does the access disk management
+     * reading on _file to create NNTP::Article and affect it to its owner NNTP::File
+     * now it's done by ArticleBuilders of _posters in their own thread
+     * /!\ as it can be recursive, the lock on _secureDiskAccess must be done by the caller /!\
+     * \param threadName that is asking to read the next NNTP::Article
+     * \param bufferPtr destination of the unencoded NNTP::Article
+     * \return
+     */
     NNTP::Article *_readNextArticleIntoBufferPtr(QString const &threadName, char **bufferPtr);
 
     void _delOriginalFiles();

@@ -16,9 +16,9 @@ CREATE TABLE IF NOT EXISTS tHistory (
         packingPath  TEXT,
         nzbFilePath  TEXT NOT NULL,
         nbFiles      INTEGER NOT NULL,
-        done         INTEGER DEFAULT 0
+        state         INTEGER DEFAULT 0
 );
-CREATE INDEX index_done ON tHistory(done);
+CREATE INDEX index_state ON tHistory(state);
 
 CREATE TABLE IF NOT EXISTS tUnfinishedFiles (
         job_id           INTEGER NOT NULL,

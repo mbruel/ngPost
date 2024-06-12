@@ -17,10 +17,8 @@ public:
     // called after each test case
     virtual void cleanup() override;
 
-public slots:
-
 private slots:
-    void onTestUnfinishedBasicCase();
+    void onTestResumeWhenJobStateNZB_CREATED();
 };
 
 #endif // TESTRESUMEJOBS_H

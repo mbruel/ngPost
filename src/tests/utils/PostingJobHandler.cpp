@@ -6,6 +6,7 @@
 PostingJobHandler::PostingJobHandler(PostingJob *job, QObject *parent)
     : QObject(parent), _job(job), _testDone(false), _isAutenticated(false), _testPosting(false)
 {
+    _thread.setObjectName("testThread");
     if (_job)
     {
         // starting _thread (using PostingJobHandler::start) starts the _nntpCon
@@ -44,18 +45,17 @@ PostingJobHandler::~PostingJobHandler()
 
 void PostingJobHandler::start()
 {
-    // no need cause  to _nntpCon->sigStartConnection() as it's connected to &QThread::started
-    emit _job->sigStartPosting(true);
+    // no need cause  to _job->sigStartPosting() as it's connected to &QThread::started
     _thread.start();
 }
 
 void PostingJobHandler::onPostingStarted() { NgLogger::log("onPostingStarted...", true); }
 void PostingJobHandler::onPostingFinished()
 {
-    NgLogger::log("onPostingFinished!", true);
     qDebug() << "[ConnectionHandler::onStopTest] Stopping the Test!!!...";
-    if (_job)
-        _job->deleteLater();
+    qWarning() << "LEAKING POSTINGJOB... due to thread issue?";
+    // if (_job)
+    //     _job->deleteLater(); // MB_TODO: crash destroying PostingJob :'(
     _thread.quit();
     _testDone = true;
 }

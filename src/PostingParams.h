@@ -253,7 +253,7 @@ public:
     bool removeAccentsOnNzbFileName() const { return _removeAccentsOnNzbFileName; }
 
     void dumpParams() const;
-    void setParamForResume();
+    void setPackingDoneParamsForResume();
 
 private:
     inline bool removeNntpServer(NNTP::ServerParams *server)
@@ -321,7 +321,7 @@ public:
     PostingParams(PostingParams &&)                 = default;
     PostingParams &operator=(PostingParams &&)      = delete;
 
-    void setParamForResume(); // detach!
+    void setPackingDoneParamsForResume(); // detach!
 
     bool quietMode() const;
     bool dispProgressBar() const;

@@ -22,6 +22,7 @@
 #include "nntp/NntpArticle.h"
 #include "NntpConnection.h"
 #include "PostingJob.h"
+#include "utils/NgTools.h"
 
 Poster::Poster(PostingJob *job, ushort id)
     : _id(id)
@@ -78,9 +79,7 @@ Poster::~Poster()
         stopThreads();
 #else
     if (_articleBuilder)
-        delete _articleBuilder;
-    for (auto *con : _nntpConnections)
-        con->deleteLater();
+        _articleBuilder->deleteLater();
 #endif
 
     // we down own anything:
@@ -91,6 +90,11 @@ Poster::~Poster()
 void Poster::addConnection(NntpConnection *connection)
 {
     _nntpConnections.append(connection);
+    _log(QString("[MB_TRACE] Poster::addConnection _articles.size() = %1 (this: %2)")
+                 .arg(_articles.size())
+                 .arg(NgTools::ptrAddrInHex(this)),
+         NgLogger::DebugLevel::FullDebug);
+
     connection->setPoster(this); // to release Articles, set their _prefix...
 
     // Not on same thread. For now Poster is still in MainThread
@@ -147,12 +151,18 @@ NNTP::Article *Poster::getNextArticle(QString const &conPrefix)
     if (MB_LoadAtomic(_job->_stopPosting))
         return nullptr;
 
-    _log(QString("[%1] getNextArticle _articles.size() = %2").arg(conPrefix).arg(_articles.size()),
+    _log(QString("[MB_TRACE][%1] getNextArticle _articles.size() = %2 (this: %3)")
+                 .arg(conPrefix)
+                 .arg(_articles.size())
+                 .arg(NgTools::ptrAddrInHex(this)),
          NgLogger::DebugLevel::FullDebug);
-
     NNTP::Article *article = nullptr;
     if (_articles.size())
+    {
+        _log(QString("[MB_TRACE][%1] getNextArticle dequeue ! _articles.size() = %2").arg(conPrefix).arg(_articles.size()),
+             NgLogger::DebugLevel::FullDebug);
         article = _articles.dequeue();
+    }
     else
     {
         if (!MB_LoadAtomic(_job->_noMoreFiles))
@@ -212,6 +222,12 @@ bool Poster::prepareArticlesInAdvance()
     int  nbArticlesToPrepare = _nntpConnections.size();
     for (int i = 0; i < nbArticlesToPrepare; ++i)
     {
+        _log(QString("[MB_TRACE] prepareArticlesInAdvance #%1 _articles.size() = %2 (this: %3)")
+                     .arg(i)
+                     .arg(_articles.size())
+                     .arg(NgTools::ptrAddrInHex(this)),
+             NgLogger::DebugLevel::FullDebug);
+
         if (!_prepareNextArticle(builderThreadName()))
         {
 #ifdef __DEBUG__
@@ -239,13 +255,14 @@ NNTP::Article *Poster::_prepareNextArticle(QString const &threadName, bool fillQ
     NNTP::Article *article = _articleBuilder->getNextArticle(threadName);
 #ifdef __test_ngPost__
     QThread *testThread = _job->testThread();
-    if (testThread)
+    if (testThread && article)
         article->moveToThread(testThread);
     else
         qCritical() << _logPrefix << " test Thread not set...";
 #endif
     if (article && fillQueue)
         _articles.enqueue(article);
+
     return article;
 }
 

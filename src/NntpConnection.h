@@ -101,6 +101,13 @@ private:
     QTimer *_timeout;
 #endif
 
+#ifdef __test_ngPost__
+    inline static bool sTestShouldSendFirstArticle = true;
+
+public:
+    static void setTestShouldSendFirstArticle(bool shallIt) { sTestShouldSendFirstArticle = shallIt; }
+#endif
+
 public:
     //! mainly for testing purpose (ConnectionHandler for TestUtils)
     static NntpConnection *createNntpConnection(NgPost const &ngPost, ushort const id);

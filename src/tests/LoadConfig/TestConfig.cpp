@@ -16,7 +16,8 @@
 TestConfig::TestConfig(QString const &testName, int argc, char *argv[]) : MacroTest(testName)
 {
     qDebug() << "Construction TestConfig => _ngPost...";
-    _ngPost = new NgPost(argc, argv);
+    _ngPost                 = new NgPost(argc, argv);
+    _sleepAfterEachTestCase = true;
 }
 
 #ifdef __Launch_TestLocalConfig__

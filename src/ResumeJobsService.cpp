@@ -78,6 +78,15 @@ uint ResumeJobsService::resumeUnfinihedJobs(NgPost &ngPost)
 
     for (auto const &unfinishedJob : jobsToPost)
     {
+        if (!unfinishedJob.packingDone())
+        {
+            NgLogger::error(tr("NOT IMPLEMENTED YET resume unfinished job: %1 with state: %2 (!= PACKING_DONE)")
+                                    .arg(unfinishedJob.nzbName)
+                                    .arg(unfinishedJob.state));
+            // MB_TODO:
+            continue;
+        }
+
         // 1.: can it be resumed ?
         if (!unfinishedJob.couldBeResumed())
         {
@@ -89,7 +98,8 @@ uint ResumeJobsService::resumeUnfinihedJobs(NgPost &ngPost)
         QFileInfoList filesInPackingDir = _filesInPackingPath(unfinishedJob.packingPath);
         int           nbTotalFiles      = filesInPackingDir.size();
 
-        if (!_doFilesChecks(unfinishedJob, missingFilesInDB, postedFiles, filesInPackingDir))
+        if (unfinishedJob.packingDone()
+            && !_doFilesChecks(unfinishedJob, missingFilesInDB, postedFiles, filesInPackingDir))
             continue;
 
         PostingJob *pendingJob = _jobsToResume(ngPost, unfinishedJob, filesInPackingDir, nbTotalFiles);
@@ -112,7 +122,9 @@ void ResumeJobsService::checkForUnfinihedJobs(NgPost &ngPost)
         return;
 
     QSqlQuery query;
-    if (!query.exec(DB::SQL::kSqlNumberUnfinishedStatement))
+    query.prepare(DB::SQL::kSqlNumberUnfinishedStatement);
+    query.bindValue(":posted_sate", PostingJob::JOB_STATE::POSTED);
+    if (!query.exec())
     {
         NgLogger::criticalError(
                 tr("Error DB trying to get the number unfinished post... (%1)").arg(query.lastError().text()),
@@ -190,7 +202,7 @@ PostingJob *ResumeJobsService::_jobsToResume(NgPost              &ngPost,
         return nullptr; // tested before normally...
 
     PostingJob *job = new PostingJob(ngPost, unfinshedJob, missingFiles);
-    job->setParamForResume(unfinshedJob.jobIdDB, nbTotalFiles, missingFiles.size());
+    job->setParamForResume(unfinshedJob.jobIdDB, unfinshedJob.state, nbTotalFiles, missingFiles.size());
     return job;
 }
 
@@ -211,12 +223,15 @@ bool ResumeJobsService::_doFilesChecks(UnfinishedJob const &unfinishedJob,
              << ", postedFiles: " << postedFiles;
 
     // 1.: check the good numbers of missing files
-    if (filesInPackingDir.size() != postedFiles.size() + missingFilesInDB.size())
+    if (unfinishedJob.nzbStarted() && filesInPackingDir.size() != postedFiles.size() + missingFilesInDB.size())
     {
         NgLogger::error(tr("couldn't resume unfinished job: %1 (issue with numbers of files to post)")
                                 .arg(unfinishedJob.nzbName));
         return false;
     }
+
+    if (missingFilesInDB.isEmpty()) // list coming from DB once
+        return true;
 
     // 2.: iterate the files in packing pack and remove the posted once
     // (also checked it is in DB (robustness))
@@ -251,11 +266,14 @@ bool ResumeJobsService::_doFilesChecks(UnfinishedJob const &unfinishedJob,
 
 bool UnfinishedJob::couldBeResumed() const
 {
+    if (!nzbStarted())
+        return true; // we can't be sure of anything, even the existance of the nzb
+
     // first check if we can read/write the nzb
     QFileInfo fiNzb(nzbFilePath);
     if (!fiNzb.exists() || !fiNzb.isFile() || !fiNzb.isReadable() || !fiNzb.isWritable())
     {
-        NgLogger::error(tr("can't use nzb file: %1").arg(nzbFilePath));
+        NgLogger::error(tr("can't open nzb file for resume: %1").arg(nzbFilePath));
         return false;
     }
 
@@ -281,8 +299,16 @@ UnfinishedJob::UnfinishedJob(qint64           jobId,
                              QString const   &nzbFile,
                              QString const   &nzbName,
                              qint64           s,
-                             QString const   &grps)
-    : jobIdDB(jobId), date(dt), packingPath(tmp), nzbFilePath(nzbFile), nzbName(nzbName), size(s), groups(grps)
+                             QString const   &grps,
+                             ushort           state_)
+    : jobIdDB(jobId)
+    , date(dt)
+    , packingPath(tmp)
+    , nzbFilePath(nzbFile)
+    , nzbName(nzbName)
+    , size(s)
+    , groups(grps)
+    , state(state_)
 {
 }
 
@@ -293,3 +319,7 @@ bool UnfinishedJob::hasEmptyPackingPath() const
         return false;
     return true;
 }
+
+bool UnfinishedJob::packingDone() const { return state >= PostingJob::JOB_STATE::PACKING_DONE; }
+
+bool UnfinishedJob::nzbStarted() const { return state >= PostingJob::JOB_STATE::NZB_CREATED; }

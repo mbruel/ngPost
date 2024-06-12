@@ -259,58 +259,58 @@ PostingJob::PostingJob(NgPost              &ngPost,
 }
 
 PostingJob::~PostingJob()
-{
-#if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
-    _log(QString("Destructing PostingJob %1").arg(NgTools::ptrAddrInHex(this)), NgLogger::DebugLevel::Debug);
-    qDebug() << "[PostingJob] <<<< Destruction " << NgTools::ptrAddrInHex(this)
-             << " in thread : " << QThread::currentThread()->objectName();
-#endif
+{ 
+ #if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
+     _log(QString("Destructing PostingJob %1").arg(NgTools::ptrAddrInHex(this)), NgLogger::DebugLevel::Debug);
+     qDebug() << "[PostingJob] <<<< Destruction " << NgTools::ptrAddrInHex(this)
+              << " in thread : " << QThread::currentThread()->objectName();
+ #endif
 
-    _log("Deleting PostingJob", NgLogger::DebugLevel::Debug);
+     _log("Deleting PostingJob", NgLogger::DebugLevel::Debug);
 
-    _ngPost.storeJobInDB(*this);
-    qApp->processEvents(); //!< makeing sure we display the logs
+     _ngPost.storeJobInDB(*this);
+     qApp->processEvents(); //!< makeing sure we display the logs
 
-    // stopThreads so it quits and waits _builderThread and _connectionsThread
-    // threads will emit void QThread::finished()
-    // that will run QObject::deleteLater for NntpConnections and
-    for (Poster *poster : _posters)
-        poster->stopThreads();
+     // stopThreads so it quits and waits _builderThread and _connectionsThread
+     // threads will emit void QThread::finished()
+     // that will run QObject::deleteLater for NntpConnections and
+     for (Poster *poster : _posters)
+         poster->stopThreads();
 
-    if (_packingTmpDir)
-    {
-        if (hasPostFinishedSuccessfully())
-            _cleanCompressDir();
-        delete _packingTmpDir;
-        _packingTmpDir = nullptr;
-    }
-    else if (_isResumeJob && hasPostFinishedWithAllFiles())
-    {
-        // _packingTmpDir only created in PostingJob::_createArchiveFolder
-        // for resume job that has finished we need to clean it
-        _packingTmpDir = new QDir(_packingTmpPath);
-        _cleanCompressDir();
-        delete _packingTmpDir;
-    }
+     if (_packingTmpDir)
+     {
+         if (hasPostFinishedSuccessfully())
+             _cleanCompressDir();
+         delete _packingTmpDir;
+         _packingTmpDir = nullptr;
+     }
+     else if (_isResumeJob && hasPostFinishedWithAllFiles())
+     {
+         // _packingTmpDir only created in PostingJob::_createArchiveFolder
+         // for resume job that has finished we need to clean it
+         _packingTmpDir = new QDir(_packingTmpPath);
+         _cleanCompressDir();
+         delete _packingTmpDir;
+     }
 
-    if (_extProc)
-        _cleanExtProc();
+     if (_extProc)
+         _cleanExtProc();
 
-    qDeleteAll(_filesFailed);
-    qDeleteAll(_filesInProgress);
-    qDeleteAll(_filesToUpload);
+     qDeleteAll(_filesFailed);
+     qDeleteAll(_filesInProgress);
+     qDeleteAll(_filesToUpload);
 
-    qDeleteAll(_posters);
+     qDeleteAll(_posters);
 
-    // no need to delete the NntpConnections as they deleteLater themselves
-    // in the Poster::_builderThread where they have been moved
+     // no need to delete the NntpConnections as they deleteLater themselves
+     // in the Poster::_builderThread where they have been moved
 
-    if (_nzb)
-        delete _nzb;
-    if (_file)
-        delete _file;
+     if (_nzb)
+         delete _nzb;
+     if (_file)
+         delete _file;
 
-    _ngPost.doNzbPostCMD(this);
+     _ngPost.doNzbPostCMD(this);
 }
 
 void PostingJob::_log(QString const &aMsg, NgLogger::DebugLevel debugLvl, bool newLine) const
@@ -335,6 +335,11 @@ void PostingJob::_init()
             &PostingJob::sigPostingFinished,
             &_ngPost,
             &NgPost::onPostingJobFinished,
+            Qt::QueuedConnection);
+    connect(this,
+            &PostingJob::sigNoMorePostingConnection,
+            &_ngPost,
+            &NgPost::onNoMorePostingConnection,
             Qt::QueuedConnection);
 
     //    connect(this, &PostingJob::sigScheduleNextArticle, this, &PostingJob::onPrepareNextArticle,
@@ -376,7 +381,6 @@ void PostingJob::_init()
                 Qt::QueuedConnection);
 #endif
 
-    connect(this, &PostingJob::sigNoMorePostingConnection, &_ngPost, &NgPost::onNoMorePostingConnection);
     _log(NntpConnection::sslSupportInfo(), NgLogger::DebugLevel::Debug);
 }
 
@@ -567,7 +571,9 @@ void PostingJob::onCompressionFinished(int exitCode)
     }
 
     // if the compression process failed we stop here...
-    if (exitCode != 0)
+    if (exitCode == 0)
+        _state = JOB_STATE::COMPRESSION_DONE;
+    else
     {
         NgLogger::error(tr("Error during compression: %1").arg(exitCode));
         _cleanCompressDir();
@@ -601,6 +607,7 @@ void PostingJob::onCompressionFinished(int exitCode)
     // we wait it finishes to not handling sharing NntpConnection
     // that would not benefit in any way...
     // Rq 2024.05: seems the _isActiveJob is useless no?
+    _state  = JOB_STATE::PACKING_DONE;
     _packed = true;
     _cleanExtProc();
     if (this == _ngPost._activeJob)
@@ -746,7 +753,9 @@ void PostingJob::onGenPar2Finished(int exitCode)
 
     _cleanExtProc();
 
-    if (exitCode != 0)
+    if (exitCode == 0)
+        _state = JOB_STATE::PACKING_DONE;
+    else
     {
         NgLogger::error(tr("Error during par2 generation: %1").arg(exitCode));
         _cleanCompressDir();
@@ -803,7 +812,7 @@ void PostingJob::_postFiles()
     }
     else
     {
-        if (_isResumeJob)
+        if (_isResumeJob && _nzb->size() != 0)
         {
             // go to the end of file minus last line "</nzb>"
             _nzb->seek(_nzb->size() - QString("</nzb>\n").size());
@@ -837,6 +846,8 @@ void PostingJob::_postFiles()
 #endif
             }
             _nzbStream << kSpace << "</head>\n\n" << MB_FLUSH;
+
+            _state = JOB_STATE::NZB_CREATED;
         }
     }
 
@@ -1488,12 +1499,17 @@ QString PostingJob::sslSupportInfo() { return NntpConnection::sslSupportInfo(); 
 
 bool PostingJob::supportsSsl() { return NntpConnection::supportsSsl(); }
 
-void PostingJob::setParamForResume(qint64 jobIdDB, int nbTotalFiles, int nbMissing)
+void PostingJob::setParamForResume(qint64 jobIdDB, ushort state, int nbTotalFiles, int nbMissing)
 {
-    _nbFiles     = nbTotalFiles;
-    _nbPosted    = nbTotalFiles - nbMissing;
+    if (nbTotalFiles != 0)
+    {
+        _nbFiles  = nbTotalFiles;
+        _nbPosted = nbTotalFiles - nbMissing;
+    }
     _isResumeJob = true;
-    _params->setParamForResume(); // will detach
+    _state       = static_cast<JOB_STATE>(state);
+    if (state == JOB_STATE::PACKING_DONE)
+        _params->setPackingDoneParamsForResume(); // will detach
     _dbJobId = jobIdDB;
 }
 

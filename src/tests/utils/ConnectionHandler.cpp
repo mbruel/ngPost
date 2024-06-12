@@ -10,6 +10,7 @@ ConnectionHandler::ConnectionHandler(NgPost const &ngPost, bool testPosting, QOb
     , _isAutenticated(false)
     , _testPosting(false)
 {
+    _thread.setObjectName("testThread");
     connect(this,
             &ConnectionHandler::sendTestArticleInGoodThread,
             this,

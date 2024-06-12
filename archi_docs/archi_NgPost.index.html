@@ -110,7 +110,42 @@ some explanation of the diagram will arrive asap...
 They will go either in <classMember>NgPost::_activeJob</classMember> or in the queue <classMember>NgPost::_pendingJobs</classMember><br />
 They are started (in main Thread, where they live) by emitting this signal:
   <classMethod>void sigStartPosting(bool isActiveJob);</classMethod> <br/>
+Here are its <className>QueuedConnection</className> connections:
+<pre>
+<code>
+    connect(this, &PostingJob::sigStartPosting,     this,     &PostingJob::onStartPosting);
+    connect(this, &PostingJob::sigStopPosting,      this,     &PostingJob::onStopPosting);
+    connect(this, &PostingJob::sigPostingStarted,   &_ngPost, &NgPost::onPostingJobStarted);
+    connect(this, &PostingJob::sigPackingDone,      &_ngPost, &NgPost::onPackingDone);
+    connect(this, &PostingJob::sigPostingFinished,  &_ngPost, &NgPost::onPostingJobFinished);
+    connect(this, &PostingJob::sigNoMorePostingConnection, &_ngPost, &NgPost::onNoMorePostingConnection);
+</code>
+</pre>
 
+It is holding mainly:
+<ul>
+    <li><className>PostingParamsPtr</className>::<classMember>_params</classMember>
+         : all posting parameters including the list of files</li>
+    <li><className>QFileInfoList</className>::<classMember>_files</classMember>
+         : files that will be posted by <classMethod>_postFiles()</classMethod> <br />
+          they can be directly <code>_params->files()</code> if no packing (compression and/or par2)<br />
+          most likely they will be replaced by the created archives located in <classMember>_packingTmpDir</classMember>
+    </li>
+    <li><className>QVector&lt;NntpConnection *&gt;</className>::<classMember>_nntpConnections</classMember>
+         : </li>
+     <li><className>QQueue&lt;NNTP::File *&gt;</className>::<classMember>_filesToUpload</classMember>
+         : </li>
+    <li><className>QMutex</className>::<classMember>_secureDiskAccess</classMember>
+         : </li>
+    <li><className>QVector&lt;Poster *&gt;</className>::<classMember>_posters</classMember>
+         : </li>
+</ul>
+<pre>
+...
+
+
+...
+</pre>
   
 
 

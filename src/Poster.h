@@ -80,6 +80,12 @@ public:
     Poster(PostingJob *job, ushort id);
     ~Poster();
 
+    Poster(Poster const &)            = delete;
+    Poster &operator=(Poster const &) = delete;
+
+    Poster(Poster &&)            = delete;
+    Poster &operator=(Poster &&) = delete;
+
     void addConnection(NntpConnection *connection);
 
     NNTP::Article *getNextArticle(QString const &conPrefix);

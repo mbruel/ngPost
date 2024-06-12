@@ -7,6 +7,7 @@
 
 #include "LoadConfig/TestConfig.h"
 #include "NgPost.h"
+#include "NntpConnection.h"
 #include "testdatabase.h"
 #include "testNgTools.h"
 #include "testnzbcheck.h"
@@ -57,6 +58,7 @@ int main(int argc, char *argv[])
     signal(SIGINT, &handleShutdown);  // shut down on ctrl-c
     signal(SIGTERM, &handleShutdown); // shut down on killall
 
+    NntpConnection::setTestShouldSendFirstArticle(false);
 #ifdef __Launch_TestNgTools__
     {
         TestNgTools test("TestNgTools");
@@ -85,6 +87,7 @@ int main(int argc, char *argv[])
     }
 #endif
 
+    NntpConnection::setTestShouldSendFirstArticle(true);
 #ifdef __Launch_TestResumeJobs__
     {
         TestResumeJobs test("TestResumeJobs");
