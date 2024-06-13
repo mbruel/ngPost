@@ -132,6 +132,8 @@ private:
 
     NgHistoryDatabase *_dbHistory;
 
+    bool _jobsDeleted; //!< set true only by stopNgPost() when stopping unexpectedly
+
 #ifdef __USE_HMI__
     bool _isNightMode = false;
 #endif
@@ -254,6 +256,8 @@ public:
 
     void startFolderMonitoring(QString const &folderPath);
     void post(QFileInfo const &fileInfo, QString const &monitorFolder = "");
+
+    void stopNgPost();
 
 public slots:
     void onCheckForNewVersion();

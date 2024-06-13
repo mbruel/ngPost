@@ -120,7 +120,7 @@ private:
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // NNTP::File section
     // all created at the beginning in _initPosting() that fills _filesToUpload based on _files
-    //(bare in mind that packing has been done and _files updated)
+    //(bare in mind that packing may have been done and _files updated)
     // Then the dequeue is all done by _readNextArticleIntoBufferPtr by _posters.
     //      - move NNTP::File from _filesToUpload to _filesInProgress and on _nntpFile
     //      - update _file according to _nntpFile
@@ -175,9 +175,6 @@ private:
     bool const _useHMI;
 #endif
 
-#ifdef __test_ngPost__ // MB_TODO : start
-#endif
-
 public:
     enum JOB_STATE : ushort
     {
@@ -195,15 +192,6 @@ private:
     JOB_STATE _state = JOB_STATE::NOT_STARTED;
     bool      _isResumeJob;
     qint64    _dbJobId;
-
-public:
-    int state() const { return _state; }
-
-    bool hasPosted() const { return _state == JOB_STATE::POSTED; }
-
-    QSet<NNTP::File *> nntpFilesNotPosted() const;
-#ifdef __test_ngPost__ // MB_TODO : move down
-#endif
 
 public:
     /*!
@@ -321,6 +309,11 @@ public:
 
     qint64         dbJobId() const { return _dbJobId; }
     QString const &packingTmpPath() const { return _packingTmpPath; }
+
+    int  state() const { return _state; }
+    bool hasPosted() const { return _state == JOB_STATE::POSTED; }
+
+    QSet<NNTP::File *> nntpFilesNotPosted() const;
 
 public slots:
     void onStopPosting(); //!< for HMI

@@ -13,15 +13,15 @@ code {
     font-size: 14px;
     font-family: monospace;
 }
-className {
+cName {
     color: #8a2be2;
     font-weight: bold;
 }
-classMethod {
+cMethod {
     color: #00008b;
     font-weight: bold;
 }
-classMember{
+cMember{
     color: #8b0000;
     font-weight: bold;
 }
@@ -92,10 +92,11 @@ NgPost is fully opensource, <a href="https://github.com/mbruel/ngPost">available
 <br />
 <h3><a href="javascript:show_hide_topic('MAIN_ARCHI');">Main architecture</a></h3>
 <div id="MAIN_ARCHI" class="hiddenElement">
-some explanation of the diagram will arrive asap...
 <br />
 <img src="./archi_NgPost_Main.Architecture.svg" />
 <br />
+some explanation of the diagram will arrive asap...
+
 	<br />
 	<hr />
 	<br />
@@ -104,13 +105,16 @@ some explanation of the diagram will arrive asap...
 
 <h3><a href="javascript:show_hide_topic('NNTP_POSTING');">NntpConnections and PostingJobs</a></h3>
 <div id="NNTP_POSTING" class="hiddenElement">
+<br />
+<img src="./archi_NNTP_and_PostingJob.svg" />
+<br />
 <p>
-<className>PostingJob</className> are created and goes into the main thread event loop using mainly
-<classMethod>NgPost::startPostingJob</classMethod><br />
-They will go either in <classMember>NgPost::_activeJob</classMember> or in the queue <classMember>NgPost::_pendingJobs</classMember><br />
+<cName>PostingJob</cName> are created and goes into the main thread event loop using mainly
+<cMethod>NgPost::startPostingJob</cMethod><br />
+They will go either in <cMember>NgPost::_activeJob</cMember> or in the queue <cMember>NgPost::_pendingJobs</cMember> (or <cMember>NgPost::_packingJob</cMember> cf dedicated section)<br />
 They are started (in main Thread, where they live) by emitting this signal:
-  <classMethod>void sigStartPosting(bool isActiveJob);</classMethod> <br/>
-Here are its <className>QueuedConnection</className> connections:
+  <cMethod>void sigStartPosting(bool isActiveJob);</cMethod> <br/>
+Here are its <cName>QueuedConnection</cName> connections:
 <pre>
 <code>
     connect(this, &PostingJob::sigStartPosting,     this,     &PostingJob::onStartPosting);
@@ -121,38 +125,66 @@ Here are its <className>QueuedConnection</className> connections:
     connect(this, &PostingJob::sigNoMorePostingConnection, &_ngPost, &NgPost::onNoMorePostingConnection);
 </code>
 </pre>
-
-It is holding mainly:
+<cName>PostingJob</cName> do its job by himself and signal <cMember>_ngPost</cMember> when done. <br/>
+It is using/holding mainly:
 <ul>
-    <li><className>PostingParamsPtr</className>::<classMember>_params</classMember>
-         : all posting parameters including the list of files</li>
-    <li><className>QFileInfoList</className>::<classMember>_files</classMember>
-         : files that will be posted by <classMethod>_postFiles()</classMethod> <br />
-          they can be directly <code>_params->files()</code> if no packing (compression and/or par2)<br />
-          most likely they will be replaced by the created archives located in <classMember>_packingTmpDir</classMember>
+    <li><cName>PostingParamsPtr</cName>::<cMember>_params</cMember>
+         : all posting parameters including the list of files
     </li>
-    <li><className>QVector&lt;NntpConnection *&gt;</className>::<classMember>_nntpConnections</classMember>
-         : </li>
-     <li><className>QQueue&lt;NNTP::File *&gt;</className>::<classMember>_filesToUpload</classMember>
-         : </li>
-    <li><className>QMutex</className>::<classMember>_secureDiskAccess</classMember>
-         : </li>
-    <li><className>QVector&lt;Poster *&gt;</className>::<classMember>_posters</classMember>
-         : </li>
+    <li><cName>QFileInfoList</cName>::<cMember>_files</cMember>
+         : files that will be posted by <cMethod>_postFiles()</cMethod> <br />
+          they can be directly <code>_params->files()</code> if no packing (compression and/or par2)<br />
+          most likely they will be replaced by the created archives located in <cMember>_packingTmpDir</cMember>
+    </li>
+    <li><cName>QVector&lt;NntpConnection *&gt;</cName>::<cMember>_nntpConnections</cMember> and <cMember>_closedConnections</cMember>
+         : the independant NNTP connections (owning the TCP sockets)
+     </li>
+     <li><cName>QQueue&lt;NNTP::File *&gt;</cName>::<cMember>_filesToUpload</cMember> 
+     + other <cName>QSet</cName> and current handle <br />
+         : all <cName>NNTP::File</cName> are created at the beginning in <cMethod>_initPosting()</cMethod> 
+         that fills <cMember>_filesToUpload</cMember> based on <cMember>_files</cMember> <br />
+         (bare in mind that packing may have been done and _files updated)<br />
+         Then the dequeue is all done by <cMethod>_readNextArticleIntoBufferPtr</cMethod> by <cMember>_posters</cMember>
+         (cf later...)
+    </li>
+    <li><cName>QMutex</cName>::<cMember>_secureDiskAccess</cMember>
+         : reading from disk <cName>NNTP::Article</cName> needs to be Thread safe.
+         Idem for moving the <cName>NNTP::File</cName> from a Queue to another or the current handle. <br />
+    </li>
+    <li><cName>QVector&lt;Poster *&gt;</cName>::<cMember>_posters</cMember>
+         : Each poster will run 2 Threads: <br />
+         - <cMember>_builderThread</cMember> for the <cName>ArticleBuilder</cName> (<code>moveToThread</code>) where the <cName>NNTP::Article</cName> are prepared (yEnc encoded) <br />
+         - <cMember>_connectionsThread</cMember> where its affected <cName>NntpConnection</cName>(s) live. <br />
+         <cName>Poster</cName>(s) live in MainThread. They're aim is to have one independant Articles' builder 
+         for a set of <cName>NntpConnection</cName>(s). One worker in its own thread with several consumers in another. <br />
+         <code>deleteLater</code> is used for both of them in order to destroy active objects in the thread where they live
+         (connection to <cName>QThread</cName>::<cMethod>finished()</cMethod>)
+    </li> 
 </ul>
-<pre>
-...
-
-
-...
-</pre>
-  
-
-
+<h4> Number of Threads, who lives where? external Process?</h4>
+1.: MainThread where live: <cMember>NgPost</cMember>, the <cMember>PostingJob</cMember>(s) and their <cMember>Poster</cMember>(s) <br /> 
+but also all <cName>NNTP::File</cName>(s) and their <cName>NNTP::Article</cName>(s)<br /> 
+<br /> 
+2.: BuilderThread(s) and NntpThread(s) owned by <cName>Poster</cName>(s) where <cName>ArticleBuilder</cName> live in the first one 
+and the <cName>NntpConnection</cName>(s) in the second. <br /> 
+<br /> 
+3.: an extenal process is used asynchronously by <cName>PostingJob</cName>(s) when required for packing. <br />
+<br />
+Everything is happening in a non blocking architecture (sockets, processes, producers/consumers...)<br />
+Disk access is ¿safely? multithreaded if there are several <cName>Poster</cName>s. <br />
+Most Objects are independant:
+<ul>
+    <li><cName>NntpConnection</cName> will handle the connection to the provider and then automatically post (consume)
+     <cName>NNTP::Article</cName>(s) until there are no more at which point it disconnects and signal it is IDLE.
+    </li>
+    <li><cName>NNTP::Article</cName>s are owned (deleted) by their <cName>NNTP::File</cName>
+     who they send a signal when they are posted. <br />
+    This way <cName>NNTP::File</cName>(s) knows when they are fully posted. 
+    At this point they can flushed themselves in the nzb file and signal the <cName>PostingJob</cName> 
+    who knows when all <cName>NNTP::File</cName>(s) are posted and thus when the job is done. 
+    </li>
+</ul>
 </p>
-<br />
-<img src="./archi_NNTP_and_PostingJob.svg" />
-<br />
 	<br />
 	<hr />
 	<br />

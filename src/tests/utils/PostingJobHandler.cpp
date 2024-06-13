@@ -35,6 +35,7 @@ PostingJobHandler::PostingJobHandler(PostingJob *job, QObject *parent)
         qCritical() << "PostingJobHandler couldn't create a connection...";
 
     this->moveToThread(&_thread);
+    //NgLogger::moveLoggerToThread(&_thread);
 }
 
 PostingJobHandler::~PostingJobHandler()
@@ -52,7 +53,7 @@ void PostingJobHandler::start()
 void PostingJobHandler::onPostingStarted() { NgLogger::log("onPostingStarted...", true); }
 void PostingJobHandler::onPostingFinished()
 {
-    qDebug() << "[ConnectionHandler::onStopTest] Stopping the Test!!!...";
+    qDebug() << "[PostingJobHandler::onPostingFinished] Stopping the Test!!!...";
     qWarning() << "LEAKING POSTINGJOB... due to thread issue?";
     // if (_job)
     //     _job->deleteLater(); // MB_TODO: crash destroying PostingJob :'(

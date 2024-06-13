@@ -25,6 +25,7 @@ public:
     bool isAutenticated() const { return _isAutenticated; } //!< functor for QTest::qWaitFor to stop the test
 
     PostingJob *postingJob() const { return _job; }
+    QThread    *thread() { return &_thread; }
 
 public slots:
     void onPostingStarted();  //!< we stop the test

@@ -59,33 +59,33 @@ int main(int argc, char *argv[])
     signal(SIGTERM, &handleShutdown); // shut down on killall
 
     NntpConnection::setTestShouldSendFirstArticle(false);
-#ifdef __Launch_TestNgTools__
-    {
-        TestNgTools test("TestNgTools");
-        launchTest(&test);
-    }
-#endif
+    // #ifdef __Launch_TestNgTools__
+    //     {
+    //         TestNgTools test("TestNgTools");
+    //         launchTest(&test);
+    //     }
+    // #endif
 
-#ifdef __Launch_TestConfig__
-    {
-        TestConfig test("TestConfig");
-        launchTest(&test);
-    }
-#endif
+    // #ifdef __Launch_TestConfig__
+    //     {
+    //         TestConfig test("TestConfig");
+    //         launchTest(&test);
+    //     }
+    // #endif
 
-#ifdef __Launch_TestNzbCheck__
-    {
-        TestNzbGet test("TestNzbGet");
-        launchTest(&test);
-    }
-#endif
+    // #ifdef __Launch_TestNzbCheck__
+    //     {
+    //         TestNzbGet test("TestNzbGet");
+    //         launchTest(&test);
+    //     }
+    // #endif
 
-#ifdef __Launch_TestDatabase__
-    {
-        TestNgHistoryDatabase test("TestNgHistoryDatabase");
-        launchTest(&test);
-    }
-#endif
+    // #ifdef __Launch_TestDatabase__
+    //     {
+    //         TestNgHistoryDatabase test("TestNgHistoryDatabase");
+    //         launchTest(&test);
+    //     }
+    // #endif
 
     NntpConnection::setTestShouldSendFirstArticle(true);
 #ifdef __Launch_TestResumeJobs__

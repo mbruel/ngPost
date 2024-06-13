@@ -35,7 +35,7 @@ void handleSigUsr(int signal);
 #endif
 void handleShutdown(int signal);
 
-static NgPost *app = nullptr;
+static NgPost *ngPost = nullptr;
 
 #if defined(__USE_TMP_RAM__) && defined(__DEBUG__)
 void dispFolderSize(QFileInfo const &folderPath)
@@ -66,33 +66,33 @@ int main(int argc, char *argv[])
     NgLogger::setDebug(NgLogger::DebugLevel::None);
 
     //    qDebug() << "argc: " << argc;
-    app = new NgPost(argc, argv);
-    app->checkForNewVersion();
+    ngPost = new NgPost(argc, argv);
+    ngPost->checkForNewVersion();
 
     int exitCode = 0;
 #ifdef __USE_HMI__
-    if (app->useHMI())
+    if (ngPost->useHMI())
     {
 #  if defined(Q_OS_WIN)
         ::ShowWindow(::GetConsoleWindow(), SW_HIDE); // hide console window
 #  endif
-        app->checkSupportSSL();
-        exitCode = app->startHMI();
+        ngPost->checkSupportSSL();
+        exitCode = ngPost->startHMI();
     }
-    else if (app->parseCommandLine(argc, argv))
+    else if (ngPost->parseCommandLine(argc, argv))
 #else
-    if (app->parseCommandLine(argc, argv))
+    if (ngPost->parseCommandLine(argc, argv))
 #endif
     {
-        //        app->checkForMigration();
-        if (app->checkSupportSSL())
+        //        ngPost->checkForMigration();
+        if (ngPost->checkSupportSSL())
         {
-            if (app->initHistoryDatabase())
+            if (ngPost->initHistoryDatabase())
             {
-                exitCode = app->startEventLoop();
-                if (app->nzbCheck())
+                exitCode = ngPost->startEventLoop();
+                if (ngPost->nzbCheck())
                 {
-                    exitCode = app->nbMissingArticles();
+                    exitCode = ngPost->nbMissingArticles();
                     qApp->processEvents(); // to see the last summary log (in queue...)
                 }
             }
@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
             }
         }
 #ifdef __DEBUG__
-        std::cout << app->appName() << " closed properly!\n";
+        std::cout << ngPost->appName() << " closed properly!\n";
         std::cout.flush();
 #endif
     }
@@ -122,7 +122,9 @@ int main(int argc, char *argv[])
     if (NgError::errCode() != NgError::ERR_CODE::NONE)
         exitCode = static_cast<int>(NgError::errCode());
 
-    delete app;
+    delete ngPost;
+    if (NgLogger::isDebugMode())
+        std::cout << "exit code: " << exitCode << std::endl << std::flush;
     return exitCode;
 }
 
@@ -131,6 +133,7 @@ void handleShutdown(int signal)
     Q_UNUSED(signal)
     std::cout << "Closing the application...\n";
     std::cout.flush();
+    ngPost->stopNgPost();
     qApp->quit();
 }
 
@@ -141,7 +144,7 @@ void handleSigUsr(int signal)
     std::cout << "intercept SIGUSR1 :)\n";
     std::cout.flush();
 #  ifdef __USE_HMI__
-    app->hideOrShowGUI();
+    ngPost->hideOrShowGUI();
 #  endif
 }
 #endif

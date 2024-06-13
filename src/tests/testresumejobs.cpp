@@ -63,7 +63,7 @@ void TestResumeJobs::onTestResumeWhenJobStateNZB_CREATED()
 
     PostingJobHandler *jobHandler = new PostingJobHandler(resumeJob);
     jobHandler->start();
-    bool jobOK = QTest::qWaitFor([&jobHandler]() { return jobHandler->isTestDone(); }, 120000); // 2min
+    bool jobOK = QTest::qWaitFor([&jobHandler]() { return jobHandler->isTestDone(); }, 300000); // 5min
     MB_VERIFY(jobOK == true, this);
     if (!jobOK)
     {

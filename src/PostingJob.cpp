@@ -259,58 +259,57 @@ PostingJob::PostingJob(NgPost              &ngPost,
 }
 
 PostingJob::~PostingJob()
-{ 
- #if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
-     _log(QString("Destructing PostingJob %1").arg(NgTools::ptrAddrInHex(this)), NgLogger::DebugLevel::Debug);
-     qDebug() << "[PostingJob] <<<< Destruction " << NgTools::ptrAddrInHex(this)
-              << " in thread : " << QThread::currentThread()->objectName();
- #endif
+{
+#if defined(__DEBUG__) && defined(LOG_CONSTRUCTORS)
+    _log(QString("Destructing PostingJob %1").arg(NgTools::ptrAddrInHex(this)), NgLogger::DebugLevel::Debug);
+    qDebug() << "[PostingJob] <<<< Destruction " << NgTools::ptrAddrInHex(this)
+             << " in thread : " << QThread::currentThread()->objectName();
+#endif
+    _log("Deleting PostingJob", NgLogger::DebugLevel::Debug);
 
-     _log("Deleting PostingJob", NgLogger::DebugLevel::Debug);
+    _ngPost.storeJobInDB(*this);
+    qApp->processEvents(); //!< makeing sure we display the logs
 
-     _ngPost.storeJobInDB(*this);
-     qApp->processEvents(); //!< makeing sure we display the logs
+    // stopThreads so it quits and waits _builderThread and _connectionsThread
+    // threads will emit void QThread::finished()
+    // that will run QObject::deleteLater for NntpConnections and
+    for (Poster *poster : _posters)
+        poster->stopThreads();
 
-     // stopThreads so it quits and waits _builderThread and _connectionsThread
-     // threads will emit void QThread::finished()
-     // that will run QObject::deleteLater for NntpConnections and
-     for (Poster *poster : _posters)
-         poster->stopThreads();
+    if (_packingTmpDir)
+    {
+        if (hasPostFinishedSuccessfully())
+            _cleanCompressDir();
+        delete _packingTmpDir;
+        _packingTmpDir = nullptr;
+    }
+    else if (_isResumeJob && hasPostFinishedWithAllFiles())
+    {
+        // _packingTmpDir only created in PostingJob::_createArchiveFolder
+        // for resume job that has finished we need to clean it
+        _packingTmpDir = new QDir(_packingTmpPath);
+        _cleanCompressDir();
+        delete _packingTmpDir;
+    }
 
-     if (_packingTmpDir)
-     {
-         if (hasPostFinishedSuccessfully())
-             _cleanCompressDir();
-         delete _packingTmpDir;
-         _packingTmpDir = nullptr;
-     }
-     else if (_isResumeJob && hasPostFinishedWithAllFiles())
-     {
-         // _packingTmpDir only created in PostingJob::_createArchiveFolder
-         // for resume job that has finished we need to clean it
-         _packingTmpDir = new QDir(_packingTmpPath);
-         _cleanCompressDir();
-         delete _packingTmpDir;
-     }
+    if (_extProc)
+        _cleanExtProc();
 
-     if (_extProc)
-         _cleanExtProc();
+    qDeleteAll(_filesFailed);
+    qDeleteAll(_filesInProgress);
+    qDeleteAll(_filesToUpload);
 
-     qDeleteAll(_filesFailed);
-     qDeleteAll(_filesInProgress);
-     qDeleteAll(_filesToUpload);
+    qDeleteAll(_posters);
 
-     qDeleteAll(_posters);
+    // no need to delete the NntpConnections as they deleteLater themselves
+    // in the Poster::_builderThread where they have been moved
 
-     // no need to delete the NntpConnections as they deleteLater themselves
-     // in the Poster::_builderThread where they have been moved
+    if (_nzb)
+        delete _nzb;
+    if (_file)
+        delete _file;
 
-     if (_nzb)
-         delete _nzb;
-     if (_file)
-         delete _file;
-
-     _ngPost.doNzbPostCMD(this);
+    _ngPost.doNzbPostCMD(this);
 }
 
 void PostingJob::_log(QString const &aMsg, NgLogger::DebugLevel debugLvl, bool newLine) const
@@ -934,11 +933,8 @@ void PostingJob::onStopPosting()
         _extProc->terminate();
         _extProc->waitForFinished();
     }
-    else
-    {
-        _finishPosting();
-        emit sigPostingFinished();
-    }
+    _finishPosting();
+    emit sigPostingFinished();
 }
 
 void PostingJob::onDisconnectedConnection(NntpConnection *con)

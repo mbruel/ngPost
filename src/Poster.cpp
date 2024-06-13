@@ -159,7 +159,9 @@ NNTP::Article *Poster::getNextArticle(QString const &conPrefix)
     NNTP::Article *article = nullptr;
     if (_articles.size())
     {
-        _log(QString("[MB_TRACE][%1] getNextArticle dequeue ! _articles.size() = %2").arg(conPrefix).arg(_articles.size()),
+        _log(QString("[MB_TRACE][%1] getNextArticle dequeue ! _articles.size() = %2")
+                     .arg(conPrefix)
+                     .arg(_articles.size()),
              NgLogger::DebugLevel::FullDebug);
         article = _articles.dequeue();
     }
@@ -297,11 +299,10 @@ void Poster::stopThreads()
                  .arg(_builderThread.objectName(), _connectionsThread.objectName()),
          NgLogger::DebugLevel::Debug);
 
+    // waiting can be needed especially when coming from NgPost::stopNgPost
     bool threadDone = _connectionsThread.wait();
     _log(tr("Connection thread is done: %2").arg(threadDone), NgLogger::DebugLevel::Debug);
-
     threadDone = _builderThread.wait();
-
     _log(tr("all threads done: %2").arg(threadDone), NgLogger::DebugLevel::Debug);
 #endif
     _hasBeenStopped = 0x1;

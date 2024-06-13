@@ -157,6 +157,16 @@ public:
 
     static void destroy() { reset(); }
 
+    static bool moveLoggerToThread(QThread *th)
+    {
+        if (sInstance)
+        {
+            sInstance->moveToThread(th);
+            return true;
+        }
+        return false;
+    }
+
 private slots:
     void onLog(QString msg, bool newline, DebugLevel debugLvl);
     void onError(QString error);

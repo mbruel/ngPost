@@ -113,6 +113,7 @@ NgPost::NgPost(int &argc, char *argv[])
     , _proxySocks5(QNetworkProxy::NoProxy)
     , _proxyUrl()
     , _dbHistory(new NgHistoryDatabase)
+    , _jobsDeleted(false)
 {
     QThread::currentThread()->setObjectName(kThreadNameMain);
 
@@ -210,16 +211,20 @@ NgPost::~NgPost()
 #ifdef __DEBUG__
     NgLogger::log("Destuction NgPost...", true);
 #endif
-
+#ifndef __test_ngPost__
     if (_nzbCheck)
         delete _nzbCheck;
 
     _stopMonitoring();
 
-    closeAllPostingJobs();
+    if (!_jobsDeleted)
+    {
+        closeAllPostingJobs();
 
-    if (_activeJob)
-        delete _activeJob;
+        if (_activeJob)
+            delete _activeJob;
+    }
+#endif
 }
 
 #ifdef __test_ngPost__
@@ -602,6 +607,26 @@ void NgPost::post(QFileInfo const &fileInfo, QString const &monitorFolder)
                                    _mainParams->getPostingGroups(),
                                    _mainParams->getFrom(),
                                    _mainParams));
+}
+
+void NgPost::stopNgPost()
+{
+    _jobsDeleted = true;
+    if (_packingJob)
+    {
+        NgLogger::log("[NgPost::stopNgPost] Stopping _packingJob", true);
+        _packingJob->onStopPosting();
+        _packingJob->deleteLater();
+    }
+
+    if (_activeJob)
+    {
+        NgLogger::log("[NgPost::stopNgPost] Stopping _activeJob", true);
+        _activeJob->onStopPosting();
+        _activeJob->deleteLater();
+    }
+    for (PostingJob *job : _pendingJobs)
+        job->deleteLater();
 }
 
 void NgPost::onCheckForNewVersion()

@@ -344,7 +344,7 @@ UnfinishedJobs NgHistoryDatabase::unfinishedJobs()
         UnfinishedJob uJob = { query.value(0).toInt(),    query.value(1).toDateTime(),
                                query.value(2).toString(), query.value(3).toString(),
                                query.value(4).toString(), query.value(5).toLongLong(),
-                               query.value(6).toString(), query.value(7).toInt() };
+                               query.value(6).toString(), static_cast<ushort>(query.value(7).toInt()) };
         jobs.push_back(uJob);
     }
 
