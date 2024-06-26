@@ -114,6 +114,8 @@ NgPost::NgPost(int &argc, char *argv[])
     , _proxyUrl()
     , _dbHistory(new NgHistoryDatabase)
     , _jobsDeleted(false)
+
+    , _resumeMode(false)
 {
     QThread::currentThread()->setObjectName(kThreadNameMain);
 
@@ -629,6 +631,12 @@ void NgPost::stopNgPost()
         job->deleteLater();
 }
 
+void NgPost::showNgPostStatistics()
+{
+    if (initHistoryDatabase())
+        _dbHistory->dumpStatistics();
+}
+
 void NgPost::onCheckForNewVersion()
 {
     QNetworkReply *reply = static_cast<QNetworkReply *>(sender());
@@ -748,7 +756,7 @@ void NgPost::_prepareNextPacking()
     if (_pendingJobs.size())
     {
         _packingJob = _pendingJobs.first();
-        if (_packingJob->hasPacking())
+        if (_packingJob->hasPacking() && !_packingJob->isPacked()) // for resumed jobs ;)
             emit _packingJob->sigStartPosting(false);
         NgLogger::log(tr("no packing needed for next pending job %1").arg(_packingJob->nzbName()),
                       true,

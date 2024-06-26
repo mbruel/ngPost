@@ -63,7 +63,7 @@ class NgLogger : public QObject, private Singleton<NgLogger>
 public:
     enum class DebugLevel
     {
-        None = 0,
+        Info = 0,
         Debug,
         DebugBold,
         FullDebug,
@@ -107,7 +107,7 @@ private:
 public:
     ~NgLogger() override;
 
-    static bool isDebugMode() { return sInstance->_debugLevel != DebugLevel::None; }
+    static bool isDebugMode() { return sInstance->_debugLevel != DebugLevel::Info; }
     static bool isFullDebug() { return sInstance->_debugLevel == DebugLevel::FullDebug; }
     static void setDebug(DebugLevel level) { sInstance->_debugLevel = level; }
 
@@ -119,7 +119,7 @@ public:
     static bool loggingInFile() { return instance()._logStream != nullptr; }
 
     // static thred safe methods to hide the use of signals/slots
-    static void log(QString msg, bool newline, DebugLevel debugLvl = DebugLevel::None)
+    static void log(QString msg, bool newline, DebugLevel debugLvl = DebugLevel::Info)
     {
         if (sQuietMode)
             return;
@@ -181,7 +181,7 @@ private:
     {
         switch (debugLvl)
         {
-        case DebugLevel::None:
+        case DebugLevel::Info:
             return kColorInfo;
         case DebugLevel::Debug:
             return kColorDebug;

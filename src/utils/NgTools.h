@@ -70,6 +70,7 @@ public:
     static ushort isConfigurationVesionObsolete();
 
     static QString currentDateTime();
+    static QString timestamp();
 
 // MB_TODO: be ready for C++20 and the usage of concepts
 #ifdef __cplusplus
@@ -134,8 +135,11 @@ public:
 
     static qint64 recursivePathSize(QFileInfo const &fi);
 
-    inline static QString humanSize(double size);
+    inline static QString humanSize(double size); //!< from Bytes
     inline static QString humanSize(qint64 size) { return humanSize(static_cast<double>(size)); }
+
+    inline static QString humanSizeFromMB(double sizeMB);
+    inline static QString humanSpeedFromKbps(double avgSpeedKbps);
 
     inline static std::string randomStdFrom(ushort length = 13);
 
@@ -177,6 +181,33 @@ QString NgTools::humanSize(double size)
         unit = "GB";
     }
     return QString("%1 %2").arg(size, 0, 'f', 2).arg(unit);
+}
+
+inline QString NgTools::humanSizeFromMB(double sizeMB)
+{
+    QString unit = "MB";
+    if (sizeMB > 1024)
+    {
+        sizeMB /= 1024;
+        unit = "GB";
+    }
+    if (sizeMB > 1024)
+    {
+        sizeMB /= 1024;
+        unit = "TB";
+    }
+    return QString("%1 %2").arg(sizeMB, 0, 'f', 2).arg(unit);
+}
+
+inline QString NgTools::humanSpeedFromKbps(double avgSpeedKbps)
+{
+    QString unit = "kB";
+    if (avgSpeedKbps > 1024)
+    {
+        avgSpeedKbps /= 1024;
+        unit = "MB";
+    }
+    return QString("%1 %2/s").arg(avgSpeedKbps, 6, 'f', 2).arg(unit);
 }
 
 std::string NgTools::randomStdFrom(ushort length)

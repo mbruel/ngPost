@@ -45,7 +45,7 @@ public:
     };
     enum class DATE_CONDITION : char
     {
-        ALL,
+        ALL = 0,
         YEAR,
         MONTH,
         WEEK,
@@ -53,6 +53,14 @@ public:
     };
 
 private:
+    inline static QMap<DATE_CONDITION, QString> const kDateConditionStr = {
+        {DATE_CONDITION::ALL,    "total"     },
+        { DATE_CONDITION::YEAR,  "this year" },
+        { DATE_CONDITION::MONTH, "this month"},
+        { DATE_CONDITION::WEEK,  "this week" },
+        { DATE_CONDITION::DAY,   "today"     },
+    };
+
     TYPE         _type;
     QSqlDatabase _db;
     QString      _dbFilePath;
@@ -76,6 +84,8 @@ public:
     bool transaction() { return _db.transaction(); }
 
     QSqlDatabase const &qSqlDatabase() { return _db; }
+
+    static QString dateCondition(DATE_CONDITION c) { return kDateConditionStr.value(c); }
 
 protected:
     int  _execSqlFile(QString const &fileName, QString const &separator = ";");

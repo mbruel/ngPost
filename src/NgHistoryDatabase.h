@@ -1,7 +1,8 @@
 #ifndef NGHISTORYDATABASE_H
 #define NGHISTORYDATABASE_H
-#include "NgDBConf.h"
+
 #include "utils/Database.h"
+#include "utils/UnfinishedJob.h"
 
 class PostingJob;
 
@@ -14,27 +15,39 @@ class NgHistoryDatabase : public Database
     friend class TestNgHistoryDatabase;
     friend class TestResumeJobs;
 #endif
-    static const QRegularExpression kByteSizeRegExp;
 
 public:
+    struct Stats
+    {
+        Stats(DATE_CONDITION c, QString const &d, uint n, double s, double aSize, double aSpeed)
+            : since(c), firstDate(d), nbPosts(n), sumSizeMB(s), avgSizeMB(aSize), avgSpeedKbps(aSpeed)
+        {
+        }
+        DATE_CONDITION since;
+        QString        firstDate;
+        uint           nbPosts;
+        double         sumSizeMB;
+        double         avgSizeMB;
+        double         avgSpeedKbps;
+
+        QString str() const;
+    };
     NgHistoryDatabase();
 
     int insertPostingJob(PostingJob const &job);
 
     bool initSQLite(QString const &dbPath);
 
-    qint64  postedSizeInMB(DATE_CONDITION since) const;
-    QString postedSize(DATE_CONDITION since) const;
+    Stats statistics(DATE_CONDITION since) const;
 
-    static qint64 byteSize(QString const &humanSize);
-    static qint64 megaSize(QString const &humanSize);
+    void dumpStatistics() const;
 
 private:
     bool _markUnfinishedJobDone(int const dbJobId, bool success);
     int  _insertPost(QString const &date,
                      QString const &nzbName,
-                     QString const &size,
-                     QString const &avgSpeed,
+                     double         sizeMB,
+                     double         avgSpeedKbps,
                      QString const &archiveName,
                      QString const &archivePass,
                      QString const &groups,

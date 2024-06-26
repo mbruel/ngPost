@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 
     // Initialigze the logger!
     NgLogger::createInstance();
-    NgLogger::setDebug(NgLogger::DebugLevel::None);
+    NgLogger::setDebug(NgLogger::DebugLevel::Info);
 
     //    qDebug() << "argc: " << argc;
     ngPost = new NgPost(argc, argv);
@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
     if (ngPost->parseCommandLine(argc, argv))
 #endif
     {
-        //        ngPost->checkForMigration();
+        ngPost->checkForMigration();
         if (ngPost->checkSupportSSL())
         {
             if (ngPost->initHistoryDatabase())

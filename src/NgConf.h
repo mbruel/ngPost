@@ -123,6 +123,9 @@ inline const QStringList kDefaultGroups = { "alt.binaries.test", "alt.binaries.m
 inline quint64       kArticleSize = kDefaultArticleSize;
 inline const QString kSpace       = kDefaultSpace;
 
+inline const QString kNzbFileEndTag     = "</nzb>\n";
+inline int const     kSizeNzbFileEndTag = kNzbFileEndTag.size();
+
 enum class Opt
 {
     HELP = 0,
@@ -202,12 +205,14 @@ enum class Opt
     CONNECTION,
     ENABLED,
     NZBCHECK,
-    RESUME
+    RESUME,
+    STAT
 };
 
 inline QMap<Opt, QString> const kOptionNames = {
     {Opt::PROXY_SOCKS5,            "proxy_socks5"          },
     { Opt::HELP,                   "help"                  },
+    { Opt::STAT,                   "stat"                  },
     { Opt::LANG,                   "lang"                  },
     { Opt::VERSION,                "version"               },
     { Opt::CONF,                   "conf"                  },

@@ -20,6 +20,7 @@ using namespace NgConf;
 QList<QCommandLineOption> const NgCmdLineLoader::kCmdOptions = {
     { kOptionNames[Opt::HELP], tr("Help: display syntax") },
     { { "v", kOptionNames[Opt::VERSION] }, tr("app version") },
+    { kOptionNames[Opt::STAT], tr("display NgPost posting statistics") },
     { { "c", kOptionNames[Opt::CONF] },
      tr("use configuration file (if not provided, we try to load $HOME/.ngPost)"),
      kOptionNames[Opt::CONF] },
@@ -158,7 +159,7 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost &ngPost, SharedParams &m
     // 0.: Set the quiet mode if needed ;)
     if (parser.isSet(kOptionNames[Opt::QUIET]))
     {
-        NgLogger::setDebug(NgLogger::DebugLevel::None);
+        NgLogger::setDebug(NgLogger::DebugLevel::Info);
         mainParams->_quiet            = true;
         mainParams->_dispProgressBar  = false;
         mainParams->_dispFilesPosting = false;
@@ -177,6 +178,14 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost &ngPost, SharedParams &m
         QString lang = parser.value(kOptionNames[Opt::LANG]).toLower();
         qDebug() << "Lang: " << lang << "\n";
         ngPost.changeLanguage(lang);
+    }
+
+    // 1.: show version ?
+    if (parser.isSet(kOptionNames[Opt::STAT]))
+    {
+        ngPost.showNgPostStatistics();
+        qApp->processEvents();
+        return false; // end of game :)
     }
 
     // 3.: show help ?
@@ -264,7 +273,8 @@ bool NgCmdLineLoader::loadCmdLine(char *appName, NgPost &ngPost, SharedParams &m
     // v5.0: try resuming old jobs
     if (parser.isSet(kOptionNames[Opt::RESUME]))
     {
-        uint nbJobs = ResumeJobsService::resumeUnfinihedJobs(ngPost); // ngPost.resumeUnfinihedJobs();
+        ngPost.setResumeMode(true);
+        uint nbJobs = ResumeJobsService::resumeUnfinihedJobs(ngPost);
         NgLogger::log(tr("Resume mode: number of unfinished jobs: %1").arg(nbJobs), true);
         return nbJobs != 0;
     }

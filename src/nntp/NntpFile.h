@@ -69,6 +69,7 @@ public:
     ~File();
 
     QFileInfo const &fileInfo() const { return _file; }
+    QString          fileAbsolutePath() const { return _file.absoluteFilePath(); }
 
     inline void addArticle(NNTP::Article *article);
 

@@ -18,10 +18,14 @@
 //========================================================================
 #ifndef NgMigration_H
 #define NgMigration_H
+#include <QCoreApplication>
+#include <QString>
 class NgPost;
 
 class NgMigration
 {
+    Q_DECLARE_TR_FUNCTIONS(NgMigration); // tr() without QObject using QCoreApplication::translate
+
     NgPost &_ngPost;
     bool    _migrationDone;
 
@@ -35,6 +39,9 @@ private:
     void _doNgMigration(unsigned short const confBuild = 1);
 
     bool _migrateTo500();
+
+    double _sizeInMbFromStr(QString const &sizeStr) const;
+    double _avgSpeedInKbpsFromStr(QString const &avgSpeedStr);
 };
 
 #endif // NgMigration_H

@@ -1,6 +1,6 @@
 QT += core network sql
 
-DEFINES += "APP_VERSION=\"4.16\""
+DEFINES += "APP_VERSION=\"5.0\""
 
 INCLUDEPATH += $$PWD
 TARGET = ngPost
@@ -86,9 +86,11 @@ SOURCES += \
         $$PWD/utils/Database.cpp \
         $$PWD/utils/NgCmdLineLoader.cpp \
         $$PWD/utils/NgConfigLoader.cpp \
+        $$PWD/utils/NgFilePacker.cpp \
         $$PWD/utils/NgLogger.cpp \
         $$PWD/utils/NgTools.cpp \
         $$PWD/utils/ProgressBarShell.cpp \
+        $$PWD/utils/UnfinishedJob.cpp \
         ArticleBuilder.cpp \
         FileUploader.cpp \
         FoldersMonitorForNewFiles.cpp \
@@ -122,10 +124,12 @@ HEADERS += \
     $$PWD/utils/Database.h \
     $$PWD/utils/NgCmdLineLoader.h \
     $$PWD/utils/NgConfigLoader.h \
+    $$PWD/utils/NgFilePacker.h \
     $$PWD/utils/NgLogger.h \
     $$PWD/utils/NgTools.h \
     $$PWD/utils/ProgressBarShell.h \
     $$PWD/utils/Singleton.h \
+    $$PWD/utils/UnfinishedJob.h \
     ArticleBuilder.h \
     FileUploader.h \
     FoldersMonitorForNewFiles.h \

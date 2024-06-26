@@ -287,8 +287,8 @@ private:
     NgPost      &_ngPost;
     SharedParams _params;
 
-    const QString       _rarName;
-    const QString       _rarPass;
+    QString             _rarName;     //!< not const for resumeJobs
+    QString             _rarPass;     //!< not const for resumeJobs
     QString             _nzbFilePath; //!< can be changed for no overwritting existing nzb
     const QFileInfoList _files;
 
@@ -416,6 +416,9 @@ public:
     void dumpParams() const;
 
     QString getFilesPaths() const;
+
+    void genRarName();
+    void genRarPass();
 
 private:
     bool _checkTmpFolder() const;

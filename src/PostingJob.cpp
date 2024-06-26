@@ -28,7 +28,6 @@
 #include <QRegularExpression>
 #include <QThread>
 
-#include "NgDBConf.h"
 #include "NgPost.h"
 #include "nntp/NntpArticle.h"
 #include "nntp/NntpFile.h"
@@ -36,7 +35,9 @@
 #include "NntpConnection.h"
 #include "Poster.h"
 #include "utils/Macros.h" // MB_FLUSH
+#include "utils/NgFilePacker.h"
 #include "utils/NgTools.h"
+#include "utils/UnfinishedJob.h"
 #ifdef __USE_HMI__
 #  include "hmi/PostingWidget.h"
 #endif
@@ -50,6 +51,29 @@ QSet<NNTP::File *> PostingJob::nntpFilesNotPosted() const
     return missingFiles;
 }
 
+QStringList PostingJob::unpostedFilesPath() const
+{
+    QStringList unpostedFiles;
+    if (isNzbCreated())
+    {
+        // it means that the NntpFiles have been created
+        // either the post was started or not
+        for (auto *nntpFile : _filesToUpload)
+            unpostedFiles << nntpFile->fileAbsolutePath();
+        for (auto *nntpFile : _filesInProgress)
+            unpostedFiles << nntpFile->fileAbsolutePath();
+        for (auto *nntpFile : _filesFailed)
+            unpostedFiles << nntpFile->fileAbsolutePath();
+        return unpostedFiles;
+    }
+
+    // we use directly _files
+    for (auto const &fi : _files)
+        unpostedFiles << fi.absoluteFilePath();
+
+    return unpostedFiles;
+}
+
 PostingJob::PostingJob(NgPost                 &ngPost,
                        PostingWidget          *postWidget,
                        PostingParamsPtr const &params,
@@ -59,31 +83,20 @@ PostingJob::PostingJob(NgPost                 &ngPost,
     , _params(params)
     , _postWidget(postWidget)
     , _tmpPath(params->tmpPath())
+    , _packer(nullptr)
     , _files(_params->files())
     , _delFilesAfterPost(_params->delFilesAfterPost() ? 0x1 : 0x0)
 
-    , _extProc(nullptr)
-    , _packingTmpDir(nullptr)
-    , _limitProcDisplay(false)
-    , _nbProcDisp(42)
-
-    , _nntpConnections()
-    , _closedConnections()
-
-    , _filesToUpload()
-    , _filesInProgress()
     , _filesFailed()
     , _nbFiles(0)
     , _nbPosted(0)
 
-    , _nzb(nullptr)
-    , _nzbStream()
     , _nntpFile(nullptr)
     , _file(nullptr)
     , _part(0)
-    , _timeStart()
+    , _nzb(nullptr)
+
     , _totalSize(0)
-    , _pauseTimer()
     , _pauseDuration(0)
 
     , _nbConnections(0)
@@ -93,20 +106,14 @@ PostingJob::PostingJob(NgPost                 &ngPost,
     , _nbArticlesTotal(0)
     , _stopPosting(0x0)
     , _noMoreFiles(0x0)
-    , _postStarted(false)
-    , _packed(false)
-    , _postFinished(false)
-    , _secureDiskAccess()
-    , _posters()
     , _isPaused(false)
-    , _resumeTimer()
     , _isActiveJob(false)
 #ifdef __COMPUTE_IMMEDIATE_SPEED__
     , _immediateSize(0)
-    , _immediateSpeedTimer()
     , _immediateSpeed("0 B/s")
     , _useHMI(_ngPost.useHMI())
 #endif
+    , _state(JOB_STATE::NOT_STARTED)
     , _isResumeJob(false)
     , _dbJobId(0)
 
@@ -130,29 +137,19 @@ PostingJob::PostingJob(NgPost                       &ngPost,
               ngPost, rarName, rarPass, nzbFilePath, files, nullptr, grpList, from, sharedParams, meta))
     , _postWidget(nullptr)
     , _tmpPath(sharedParams->tmpPath())
+    , _packer(nullptr)
+
     , _files(files)
     , _delFilesAfterPost(_params->delFilesAfterPost() ? 0x1 : 0x0)
 
-    , _extProc(nullptr)
-    , _packingTmpDir(nullptr)
-    , _limitProcDisplay(false)
-    , _nbProcDisp(42)
-
-    , _nntpConnections()
-    , _closedConnections()
-
-    , _filesToUpload()
-    , _filesInProgress()
-    , _filesFailed()
     , _nbFiles(0)
     , _nbPosted(0)
 
-    , _nzb(nullptr)
-    , _nzbStream()
     , _nntpFile(nullptr)
     , _file(nullptr)
     , _part(0)
-    , _timeStart()
+    , _nzb(nullptr)
+
     , _totalSize(0)
     , _pauseTimer()
     , _pauseDuration(0)
@@ -164,23 +161,16 @@ PostingJob::PostingJob(NgPost                       &ngPost,
     , _nbArticlesTotal(0)
     , _stopPosting(0x0)
     , _noMoreFiles(0x0)
-    , _postStarted(false)
-    , _packed(false)
-    , _postFinished(false)
-    , _secureDiskAccess()
-    , _posters()
     , _isPaused(false)
-    , _resumeTimer()
     , _isActiveJob(false)
 #ifdef __COMPUTE_IMMEDIATE_SPEED__
     , _immediateSize(0)
-    , _immediateSpeedTimer()
     , _immediateSpeed("0 B/s")
     , _useHMI(_ngPost.useHMI())
 #endif
+    , _state(JOB_STATE::NOT_STARTED)
     , _isResumeJob(false)
     , _dbJobId(0)
-
 {
     _init();
 }
@@ -188,6 +178,7 @@ PostingJob::PostingJob(NgPost                       &ngPost,
 PostingJob::PostingJob(NgPost              &ngPost,
                        UnfinishedJob const &unfinshedJob,
                        QFileInfoList const &missingFiles,
+                       int                  nbTotalFiles,
                        QObject             *parent)
     : QObject(parent)
     , _ngPost(ngPost)
@@ -203,31 +194,20 @@ PostingJob::PostingJob(NgPost              &ngPost,
     , _postWidget(nullptr)
     , _tmpPath(ngPost.postingParams()->tmpPath())
     , _packingTmpPath(unfinshedJob.packingPath)
+    , _packer(nullptr)
+
     , _files(missingFiles)
     , _delFilesAfterPost(_params->delFilesAfterPost() ? 0x1 : 0x0)
 
-    , _extProc(nullptr)
-    , _packingTmpDir(nullptr)
-    , _limitProcDisplay(false)
-    , _nbProcDisp(42)
+    , _nbFiles(nbTotalFiles)
+    , _nbPosted(nbTotalFiles == 0 ? 0 : nbTotalFiles - missingFiles.size())
 
-    , _nntpConnections()
-    , _closedConnections()
-
-    , _filesToUpload()
-    , _filesInProgress()
-    , _filesFailed()
-    , _nbFiles(0)
-    , _nbPosted(0)
-
-    , _nzb(nullptr)
-    , _nzbStream()
     , _nntpFile(nullptr)
     , _file(nullptr)
     , _part(0)
-    , _timeStart()
+    , _nzb(nullptr)
+
     , _totalSize(0)
-    , _pauseTimer()
     , _pauseDuration(0)
 
     , _nbConnections(0)
@@ -237,25 +217,20 @@ PostingJob::PostingJob(NgPost              &ngPost,
     , _nbArticlesTotal(0)
     , _stopPosting(0x0)
     , _noMoreFiles(0x0)
-    , _postStarted(false)
-    , _packed(false)
-    , _postFinished(false)
-    , _secureDiskAccess()
-    , _posters()
     , _isPaused(false)
-    , _resumeTimer()
     , _isActiveJob(false)
 #ifdef __COMPUTE_IMMEDIATE_SPEED__
     , _immediateSize(0)
-    , _immediateSpeedTimer()
     , _immediateSpeed("0 B/s")
     , _useHMI(_ngPost.useHMI())
 #endif
+    , _state(static_cast<JOB_STATE>(unfinshedJob.state))
     , _isResumeJob(true)
-    , _dbJobId(0)
-
+    , _dbJobId(unfinshedJob.jobIdDB)
 {
     _init();
+    if (isPacked())
+        _params->setPackingDoneParamsForResume(); // will detach
 }
 
 PostingJob::~PostingJob()
@@ -276,24 +251,8 @@ PostingJob::~PostingJob()
     for (Poster *poster : _posters)
         poster->stopThreads();
 
-    if (_packingTmpDir)
-    {
-        if (hasPostFinishedSuccessfully())
-            _cleanCompressDir();
-        delete _packingTmpDir;
-        _packingTmpDir = nullptr;
-    }
-    else if (_isResumeJob && hasPostFinishedWithAllFiles())
-    {
-        // _packingTmpDir only created in PostingJob::_createArchiveFolder
-        // for resume job that has finished we need to clean it
-        _packingTmpDir = new QDir(_packingTmpPath);
-        _cleanCompressDir();
-        delete _packingTmpDir;
-    }
-
-    if (_extProc)
-        _cleanExtProc();
+    if (_packer)
+        delete _packer;
 
     qDeleteAll(_filesFailed);
     qDeleteAll(_filesInProgress);
@@ -314,8 +273,6 @@ PostingJob::~PostingJob()
 
 void PostingJob::_log(QString const &aMsg, NgLogger::DebugLevel debugLvl, bool newLine) const
 {
-    //    NgLogger::log(QString("aMsg = %1, quiestMode: %2").arg(aMsg).arg(_params->quietMode()), newLine,
-    //    debugLvl);
     if (_params->quietMode())
         return;
     NgLogger::log(aMsg, newLine, debugLvl);
@@ -395,386 +352,70 @@ void PostingJob::onStartPosting(bool isActiveJob)
         _log(tr("<h3>Start Post #%1: %2</h3>").arg(_postWidget->jobNumber()).arg(nzbName()));
     else
 #endif
-        _log(QString("[%1] %2: %3").arg(timestamp()).arg(tr("Start posting")).arg(nzbName()),
-             NgLogger::DebugLevel::None);
+        _log(QString("[%1] %2: %3").arg(NgTools::timestamp()).arg(tr("Start posting")).arg(nzbName()),
+             NgLogger::DebugLevel::Info);
 
     // 1.: If we need compression we jump in startCompressFiles
     // and when the _extProcess is done we should arrive in onCompressionFinished
-    if (_params->doCompress())
+    if (_params->doCompress() && !isCompressed()) // for _resumeJob
     {
+        if (_isResumeJob)
+        {
+            bool generate = false;
+            if (_params->rarName().isEmpty())
+            {
+                _params->genRarName();
+                generate = true;
+            }
+            if (_params->rarPass().isEmpty())
+            {
+                _params->genRarPass();
+                generate = true;
+            }
+            if (generate)
+                _log(tr("Resume Job: generating random archive name/pass : %1 / %2")
+                             .arg(_params->rarName())
+                             .arg(_params->rarPass()),
+                     NgLogger::DebugLevel::Info);
+        }
 #ifdef __USE_TMP_RAM__
         shallWeUseTmpRam(); // we might modify _tmpPath
 #endif
 #ifdef __DEBUG__
         _log("[PostingJob::onStartPosting] Starting compression...", NgLogger::DebugLevel::Debug);
 #endif
-        if (!startCompressFiles())
+        if (!_isResumeJob)
+            _packingTmpPath = QString("%1/%2").arg(_tmpPath).arg(nzbName());
+        _packer = new NgFilePacker(*this, _packingTmpPath);
+        if (!_packer->startCompressFiles())
             emit sigPostingFinished();
         return;
     }
 
     // 2.: If we need par2 generation without compression we jump in startGenPar2
     // and when the _extProcess is done we should arrive in onGenPar2Finished
-    if (_params->doPar2())
+    if (_params->doPar2() && !isPacked()) // for _resumeJob
     {
 #ifdef __USE_TMP_RAM__
         shallWeUseTmpRam(); // we might modify _tmpPath
 #endif
-        if (!startGenPar2())
+        if (!_isResumeJob)
+            _packingTmpPath = QString("%1/%2").arg(_tmpPath).arg(nzbName());
+        _packer = new NgFilePacker(*this, _packingTmpPath);
+        if (!_packer->startGenPar2())
             emit sigPostingFinished();
         return;
     }
 
     // Otherwise no packing at all, we will post the original files
-    _packed = false;
-    _files  = _params->files();
+    _state = JOB_STATE::PACKING_DONE;
+    _files = _params->files();
     _postFiles();
-}
-
-bool PostingJob::startCompressFiles()
-{
-    if (!_params->canCompress())
-        return false;
-
-    // 1.: create archive temporary folder
-    _createArchiveFolder(_tmpPath, nzbName());
-    if (_packingTmpPath.isEmpty())
-        return false;
-
-    _extProc = new QProcess(this);
-    connect(_extProc,
-            &QProcess::readyReadStandardOutput,
-            this,
-            &PostingJob::onExtProcReadyReadStandardOutput,
-            Qt::DirectConnection);
-    connect(_extProc,
-            &QProcess::readyReadStandardError,
-            this,
-            &PostingJob::onExtProcReadyReadStandardError,
-            Qt::DirectConnection);
-    connect(_extProc,
-            static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
-            this,
-            &PostingJob::onCompressionFinished,
-            Qt::QueuedConnection);
-
-    QStringList args = _params->buildCompressionCommandArgumentsList();
-
-#if defined(Q_OS_WIN)
-    if (_packingTmpPath.startsWith("//"))
-        _packingTmpPath.replace(QRegularExpression("^//"), "\\\\");
-#endif
-    args << QString("%1/%2.%3").arg(_packingTmpPath, _params->rarName(), _params->use7z() ? "7z" : "rar");
-
-    // With the option obfuscateFileName users want to rename the files
-    // before puting them in the archive
-    // so we keep the map _obfuscatedFileNames to reverse the renaming later
-    // and populate _files with the new random names...
-    if (_params->obfuscateFileName())
-    {
-        _files.clear();
-        for (QFileInfo const &fileInfo : _params->files())
-        {
-            QString obfuscatedName = QString("%1/%2").arg(fileInfo.absolutePath(),
-                                                          NgTools::randomFileName(_params->lengthName())),
-                    fileName       = fileInfo.absoluteFilePath();
-
-            if (QFile::rename(fileName, obfuscatedName))
-            {
-                _obfuscatedFileNames.insert(obfuscatedName, fileName);
-                _files << QFileInfo(obfuscatedName);
-            }
-            else
-            {
-                _files << fileInfo;
-                NgLogger::error(tr("Couldn't rename file %1").arg(fileName));
-            }
-        }
-    }
-
-    // Trick with RAR_NO_ROOT_FOLDER if only one dir file to not double it when extracting...
-    // + Windows shitty path replacement.. should switch to C++17 std::filesystem... one day?!?
-    bool hasDir = false;
-    if (_params->files().size() == 1)
-    { // Only remove rar root folder if there is only ONE folder AND RAR_NO_ROOT_FOLDER is set
-        QFileInfo const &fileInfo = _files.first();
-        QString          path     = fileInfo.absoluteFilePath();
-#if defined(Q_OS_WIN)
-        if (path.startsWith("//"))
-            path.replace(QRegularExpression("^//"), "\\\\");
-#endif
-        if (fileInfo.isDir())
-        {
-            hasDir = true;
-            if (_params->removeRarRootFolder())
-                path += "/";
-        }
-        args << path;
-    }
-    else
-    {
-        for (QFileInfo const &fileInfo : _files)
-        {
-            QString path = fileInfo.absoluteFilePath();
-#if defined(Q_OS_WIN)
-            if (path.startsWith("//"))
-                path.replace(QRegularExpression("^//"), "\\\\");
-#endif
-            if (fileInfo.isDir())
-                hasDir = true;
-            args << path;
-        }
-    }
-
-    // if we've a folder, add the recursive option!
-    if (hasDir && !args.contains("-r"))
-        args << "-r";
-
-    // launch the compression! and ends up just under in onCompressionFinished if all ok...
-    if (NgLogger::isDebugMode())
-        _log(QString("[%1] %2: %3 %4\n")
-                     .arg(timestamp())
-                     .arg(tr("Compressing files"))
-                     .arg(_params->rarPath())
-                     .arg(args.join(" ")),
-             NgLogger::DebugLevel::None);
-    else
-        _log(QString("%1...").arg(tr("Compressing files")), NgLogger::DebugLevel::None);
-    _limitProcDisplay = false;
-    _extProc->start(_params->rarPath(), args);
-
-#ifdef __DEBUG__
-    _log("[PostingJob::_compressFiles] compression started...", NgLogger::DebugLevel::Debug);
-#endif
-
-    return true;
-}
-
-void PostingJob::onCompressionFinished(int exitCode)
-{
-    if (NgLogger::isDebugMode())
-        _log(tr(" Done with exit code: %1\n").arg(exitCode), NgLogger::DebugLevel::Debug);
-    else
-        _log("", NgLogger::DebugLevel::None);
-
-#ifdef __DEBUG__
-    _log("[PostingJob::_compressFiles] compression finished...", NgLogger::DebugLevel::Debug);
-#endif
-
-    // if we've done the obfuscateFileName, we can revert the renaming
-    // except if we will delete the files when the posting is done ;
-    if (_params->obfuscateFileName() && !MB_LoadAtomic(_delFilesAfterPost))
-    {
-        for (auto it = _obfuscatedFileNames.cbegin(), itEnd = _obfuscatedFileNames.cend(); it != itEnd; ++it)
-            QFile::rename(it.key(), it.value());
-    }
-
-    // if the compression process failed we stop here...
-    if (exitCode == 0)
-        _state = JOB_STATE::COMPRESSION_DONE;
-    else
-    {
-        NgLogger::error(tr("Error during compression: %1").arg(exitCode));
-        _cleanCompressDir();
-        emit sigPostingFinished();
-        return;
-    }
-
-    // we need to update _files with the generated archives
-    _updateFilesListFromCompressDir();
-
-    // Shall we continue with par2? quite straight forward...
-    // we jump under in startGenPar2 then in onGenPar2Finished
-    if (_params->doPar2())
-    {
-        disconnect(_extProc,
-                   static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
-                   this,
-                   &PostingJob::onCompressionFinished);
-        if (!startGenPar2())
-        {
-            _cleanCompressDir();
-            // MB_TODO 2024.05 shall we _cleanExtProc() ?
-            emit sigPostingFinished();
-        }
-        return;
-    }
-
-    // No par2 to be done so yeah we clean the extProc
-    // and only start posting if we're the active job
-    // as we may have starting packing as soon as the previous one started posting
-    // we wait it finishes to not handling sharing NntpConnection
-    // that would not benefit in any way...
-    // Rq 2024.05: seems the _isActiveJob is useless no?
-    _state  = JOB_STATE::PACKING_DONE;
-    _packed = true;
-    _cleanExtProc();
-    if (this == _ngPost._activeJob)
-        _postFiles();
-
-    emit sigPackingDone(); //!< no par2 generation so next job can start packing ;)
-}
-
-bool PostingJob::startGenPar2()
-{
-    if (!_params->canGenPar2())
-        return false;
-
-    QStringList args;
-    if (_params->par2Args().isEmpty())
-        args << "c"
-             << "-l"
-             << "-m1024" << QString("-r%1").arg(_params->par2Pct());
-    else
-        args << _params->par2Args().split(kCmdArgsSeparator);
-
-    bool useParPar = _params->useParPar();
-
-    // we've already compressed => we gen par2 for the files in the archive folder
-    if (_extProc)
-    {
-        if (useParPar && args.last().trimmed() != "-o")
-            args << "-o";
-        args << QString("%1/%2.par2").arg(_packingTmpPath, _params->rarName());
-        if (useParPar)
-            args << "-R" << _packingTmpPath;
-        else
-        {
-            if (_params->use7z())
-                args << QString("%1/%2.7z%3")
-                                .arg(_packingTmpPath, _params->rarName(), _params->splitArchive() ? "*" : "");
-            else
-                args << QString("%1/%2*rar").arg(_packingTmpPath, _params->rarName());
-
-            if (_params->par2Args().isEmpty() && (NgLogger::isDebugMode() || !_postWidget))
-                args << "-q"; // remove the progressbar bar
-        }
-    }
-    else
-    { // par2 generation only => can't use folders or files from different drive (Windows)
-        QString basePath = _files.first().absolutePath();
-        if (useParPar)
-        {
-            args << "-f"
-                 << "basename";
-            if (args.last().trimmed() != "-o")
-                args << "-o";
-            args << QString("%1/%2.par2").arg(_packingTmpPath, _params->rarName());
-        }
-        else
-        {
-#if defined(Q_OS_WIN)
-            QString basePathWin(basePath);
-            basePathWin.replace("/", "\\");
-            if (_params->useMultiPar())
-                args << QString("/d%1").arg(basePathWin);
-            else
-                args << "-B" << basePathWin;
-            QString par2File = QString("%1/%2.par2").arg(_packingTmpPath, _params->rarName());
-            par2File.replace("/", "\\");
-            args << par2File;
-#else
-            args << "-B" << basePath;
-            args << QString("%1/%2.par2").arg(_packingTmpPath, _params->rarName());
-#endif
-        }
-
-        for (QFileInfo const &fileInfo : _files)
-        {
-            if (fileInfo.isDir())
-            {
-                NgLogger::error(tr("you can't post folders without compression..."));
-                return false;
-            }
-            QString path = fileInfo.absoluteFilePath();
-#if defined(Q_OS_WIN)
-            if (!useParPar && basePath != fileInfo.absolutePath())
-            {
-                //                NgLogger::error(tr("Due to par2 software limitation and to avoid unnecessary
-                //                copies, all files must be in the same folder..."));
-                NgLogger::error(
-                        tr("only ParPar allows to generate par2 for files from different folders... you should "
-                           "consider using it ;)"));
-                return false;
-            }
-            path.replace("/", "\\");
-#endif
-            args << path;
-        }
-
-        //        QString archiveTmpFolder = _createArchiveFolder(_tmpPath, _params->rarName());
-        if (_packingTmpPath.isEmpty())
-            return false;
-
-        _extProc = new QProcess(this);
-        connect(_extProc,
-                &QProcess::readyReadStandardOutput,
-                this,
-                &PostingJob::onExtProcReadyReadStandardOutput,
-                Qt::DirectConnection);
-        connect(_extProc,
-                &QProcess::readyReadStandardError,
-                this,
-                &PostingJob::onExtProcReadyReadStandardError,
-                Qt::DirectConnection);
-    }
-
-    connect(_extProc,
-            static_cast<void (QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
-            this,
-            &PostingJob::onGenPar2Finished,
-            Qt::QueuedConnection);
-
-    if (NgLogger::isDebugMode())
-        _log(QString("[%1] %2: %3 %4")
-                     .arg(timestamp())
-                     .arg(tr("Generating par2"))
-                     .arg(_params->par2Path())
-                     .arg(args.join(" ")),
-             NgLogger::DebugLevel::None);
-    else
-        _log(QString("%1...").arg(tr("Generating par2")), NgLogger::DebugLevel::None);
-
-    if (!_params->useParPar())
-        _limitProcDisplay = true;
-    _nbProcDisp = 0;
-    _extProc->start(_params->par2Path(), args);
-
-    return true;
-}
-
-void PostingJob::onGenPar2Finished(int exitCode)
-{
-    if (NgLogger::isDebugMode())
-        _log(tr("Done with exit code: %1\n").arg(exitCode), NgLogger::DebugLevel::Debug);
-    else
-        _log("", NgLogger::DebugLevel::None);
-
-    _cleanExtProc();
-
-    if (exitCode == 0)
-        _state = JOB_STATE::PACKING_DONE;
-    else
-    {
-        NgLogger::error(tr("Error during par2 generation: %1").arg(exitCode));
-        _cleanCompressDir();
-        emit sigPostingFinished();
-        return;
-    }
-
-    // we need to update _files with the generated par2 files
-    _updateFilesListFromCompressDir();
-
-    _packed = true;
-    if (this == _ngPost._activeJob)
-        _postFiles();
-
-    emit sigPackingDone(); //!< no par2 generation so next job can start packing ;)
 }
 
 void PostingJob::_postFiles()
 {
-    _postStarted = true;
+    _state = JOB_STATE::POST_STARTED;
 
 #ifdef __USE_HMI__
     if (_postWidget) // in case we were in Pending mode
@@ -814,7 +455,16 @@ void PostingJob::_postFiles()
         if (_isResumeJob && _nzb->size() != 0)
         {
             // go to the end of file minus last line "</nzb>"
-            _nzb->seek(_nzb->size() - QString("</nzb>\n").size());
+            int nzbSize = _nzb->size();
+            if (nzbSize > kSizeNzbFileEndTag)
+            {
+                _nzb->seek(nzbSize - kSizeNzbFileEndTag);
+                QString lastWords = _nzb->read(kSizeNzbFileEndTag);
+                if (lastWords == "</nzb>\n")
+                    _nzb->seek(_nzb->size() - kSizeNzbFileEndTag);
+            }
+            else
+                _nzb->seek(nzbSize);
             _nzbStream.setDevice(_nzb);
         }
         else
@@ -927,12 +577,9 @@ void PostingJob::onStopPosting()
                         .arg(NgTools::ptrAddrInHex(this));
 #endif
 
-    if (_extProc)
-    {
-        _log(tr("killing external process..."), NgLogger::DebugLevel::None);
-        _extProc->terminate();
-        _extProc->waitForFinished();
-    }
+    if (_packer)
+        _packer->terminateAndWaitExternalProc();
+
     _finishPosting();
     emit sigPostingFinished();
 }
@@ -961,7 +608,7 @@ void PostingJob::onDisconnectedConnection(NntpConnection *con)
                 {
                     int sleepDurationInSec = _params->waitDurationBeforeAutoResume();
                     _log(tr("Sleep for %1 sec before trying to reconnect").arg(sleepDurationInSec),
-                         NgLogger::DebugLevel::None);
+                         NgLogger::DebugLevel::Info);
                     _ngPost.pause();
                     _resumeTimer.start(sleepDurationInSec * 1000);
                 }
@@ -977,11 +624,11 @@ void PostingJob::onNntpFileStartPosting()
     NNTP::File *nntpFile = static_cast<NNTP::File *>(sender());
     if (!_ngPost.useHMI())
         _log(QString("[%1][%2: %3] >>>>> %4")
-                     .arg(timestamp())
+                     .arg(NgTools::timestamp())
                      .arg(tr("avg. speed"))
                      .arg(avgSpeed())
                      .arg(nntpFile->name()),
-             NgLogger::DebugLevel::None);
+             NgLogger::DebugLevel::Info);
 }
 
 void PostingJob::onNntpFilePosted()
@@ -994,11 +641,11 @@ void PostingJob::onNntpFilePosted()
 
     if (_params->dispFilesPosting() && !_ngPost.useHMI())
         _log(QString("[%1][%2: %3] <<<<< %4")
-                     .arg(timestamp())
+                     .arg(NgTools::timestamp())
                      .arg(tr("avg. speed"))
                      .arg(avgSpeed())
                      .arg(nntpFile->name()),
-             NgLogger::DebugLevel::None);
+             NgLogger::DebugLevel::Info);
 
     nntpFile->writeToNZB(_nzbStream,
                          _params->from(false)); // we don't want empty value if _obfuscateArticles
@@ -1013,7 +660,7 @@ void PostingJob::onNntpFilePosted()
              NgLogger::DebugLevel::Debug);
 #endif
 
-        _postFinished = true;
+        _state = JOB_STATE::POSTED;
         _finishPosting();
     }
 }
@@ -1026,7 +673,7 @@ void PostingJob::onNntpErrorReading()
         emit sigFilePosted(nntpFile->path(), nntpFile->nbArticles(), nntpFile->nbArticles());
 
     if (_params->dispFilesPosting() && !_ngPost.useHMI())
-        _log(tr("[avg. speed: %1] <<<<< %2").arg(avgSpeed()).arg(nntpFile->name()), NgLogger::DebugLevel::None);
+        _log(tr("[avg. speed: %1] <<<<< %2").arg(avgSpeed()).arg(nntpFile->name()), NgLogger::DebugLevel::Info);
 
     _filesInProgress.remove(nntpFile);
     _filesFailed.insert(nntpFile);
@@ -1039,7 +686,7 @@ void PostingJob::onNntpErrorReading()
              NgLogger::DebugLevel::Debug);
 #endif
 
-        _postFinished = true;
+        _state = JOB_STATE::POSTED;
         _finishPosting();
     }
 }
@@ -1067,13 +714,13 @@ int PostingJob::_createNntpConnections()
     }
 
     if (_ngPost.useHMI())
-        _log(tr("Number of available Nntp Connections: %1").arg(_nbConnections), NgLogger::DebugLevel::None);
+        _log(tr("Number of available Nntp Connections: %1").arg(_nbConnections), NgLogger::DebugLevel::Info);
     else
         _log(QString("[%1] %2: %3")
-                     .arg(timestamp())
+                     .arg(NgTools::timestamp())
                      .arg(tr("Number of available Nntp Connections"))
                      .arg(_nbConnections),
-             NgLogger::DebugLevel::None);
+             NgLogger::DebugLevel::Info);
 
     return _nbConnections;
 }
@@ -1100,7 +747,7 @@ void PostingJob::_delOriginalFiles()
     {
         QString path = fi.absoluteFilePath();
         _log(tr("Deleting posted %1: %2").arg(fi.isDir() ? tr("folder") : tr("file")).arg(path),
-             NgLogger::DebugLevel::None);
+             NgLogger::DebugLevel::Info);
         if (fi.isDir())
         {
             QDir dir(path);
@@ -1255,7 +902,7 @@ void PostingJob::_finishPosting()
 
     _stopPosting = 0x1;
 
-    if (_timeStart.isValid() && _postFinished)
+    if (_timeStart.isValid() && hasPostFinished())
     {
         _nbArticlesUploaded = _nbArticlesTotal; // we might not have processed the last onArticlePosted
         _uploadedSize       = _totalSize;
@@ -1323,7 +970,7 @@ void PostingJob::_finishPosting()
         }
         NgLogger::error(tr("you can try to repost only those using ngPost --resume"));
     }
-    else if (_postFinished && MB_LoadAtomic(_delFilesAfterPost))
+    else if (hasPostFinished() && MB_LoadAtomic(_delFilesAfterPost))
         _delOriginalFiles();
 
     emit sigPostingFinished();
@@ -1335,7 +982,7 @@ void PostingJob::_closeNzb()
     {
         if (_nzb->isOpen())
         {
-            _nzbStream << "</nzb>\n";
+            _nzbStream << kNzbFileEndTag;
             _nzb->close();
         }
         delete _nzb;
@@ -1350,7 +997,7 @@ void PostingJob::_printStats() const
     int    duration = static_cast<int>(_timeStart.elapsed() - _pauseDuration);
     double sec      = duration / 1000;
 
-    QString msgEnd("\n"), ts = QString("[%1] ").arg(timestamp());
+    QString msgEnd("\n"), ts = QString("[%1] ").arg(NgTools::timestamp());
     if (!_ngPost.useHMI())
         msgEnd += ts;
     msgEnd += tr("%1NZB file: %2\n").arg(_isResumeJob ? "Resumed " : "").arg(_params->nzbFilePath());
@@ -1385,85 +1032,8 @@ void PostingJob::_printStats() const
             msgEnd += "\n";
     }
 
-    _log(msgEnd, NgLogger::DebugLevel::None);
+    _log(msgEnd, NgLogger::DebugLevel::Info);
 }
-
-void PostingJob::_cleanExtProc()
-{
-    delete _extProc;
-    _extProc = nullptr;
-    _log(tr("External process deleted."), NgLogger::DebugLevel::FullDebug);
-}
-
-void PostingJob::_cleanCompressDir()
-{
-    if (!_params->keepRar())
-        _packingTmpDir->removeRecursively();
-    _log(tr("Compressed files deleted."), NgLogger::DebugLevel::Debug);
-}
-
-QStringList PostingJob::_updateFilesListFromCompressDir()
-{
-    _files.clear();
-    QStringList archiveNames;
-    for (QFileInfo const &file : _packingTmpDir->entryInfoList(QDir::Files, QDir::Name))
-    {
-        _files << file;
-        archiveNames << file.absoluteFilePath();
-        NgLogger::log(QString("  - %1").arg(file.fileName()), true, NgLogger::DebugLevel::Debug);
-    }
-    emit sigArchiveFileNames(archiveNames); // to update the content of _postWidget
-    return archiveNames;
-}
-
-void PostingJob::_createArchiveFolder(QString const &tmpFolder, QString const &archiveName)
-{
-    if (!_isResumeJob)
-        _packingTmpPath = QString("%1/%2").arg(tmpFolder).arg(archiveName);
-
-    _packingTmpDir = new QDir(_packingTmpPath);
-    if (_isResumeJob)
-        return;
-
-    if (_packingTmpDir->exists())
-    {
-        NgLogger::log(tr("The temporary directory '%1' already exists...").arg(_packingTmpPath), true);
-        _packingTmpPath = NgTools::substituteExistingFile(_packingTmpPath, false, false);
-        delete _packingTmpDir;
-        _packingTmpDir = new QDir(_packingTmpPath);
-        if (_packingTmpDir->exists())
-        {
-            delete _packingTmpDir;
-            _packingTmpDir = nullptr;
-            return;
-        }
-        else
-            NgLogger::error(tr("We're using another temporary folder : %1").arg(_packingTmpPath));
-    }
-
-    if (!_packingTmpDir->mkpath("."))
-    {
-        NgLogger::error(tr("Couldn't create the temporary folder: '%1'...").arg(_packingTmpDir->absolutePath()));
-        delete _packingTmpDir;
-        _packingTmpDir = nullptr;
-        return;
-    }
-
-    return;
-}
-
-void PostingJob::onExtProcReadyReadStandardOutput()
-{
-    if (NgLogger::isFullDebug())
-        _log(_extProc->readAllStandardOutput(), NgLogger::DebugLevel::FullDebug, false);
-    else if (_isActiveJob)
-    {
-        if (!_limitProcDisplay || ++_nbProcDisp % 42 == 0)
-            _log("*", NgLogger::DebugLevel::None, false);
-    }
-}
-
-void PostingJob::onExtProcReadyReadStandardError() { NgLogger::error(_extProc->readAllStandardError()); }
 
 QString PostingJob::nzbName() const { return _ngPost.getNzbName(QFileInfo(_params->nzbFilePath())); }
 
@@ -1471,7 +1041,7 @@ QString PostingJob::postSize() const { return NgTools::humanSize(static_cast<dou
 
 void PostingJob::pause()
 {
-    _log("Pause posting...", NgLogger::DebugLevel::None);
+    _log("Pause posting...", NgLogger::DebugLevel::Info);
     for (NntpConnection *con : _nntpConnections)
         emit con->sigKillConnection();
 
@@ -1481,7 +1051,7 @@ void PostingJob::pause()
 
 void PostingJob::resume()
 {
-    _log("Resume posting...", NgLogger::DebugLevel::None);
+    _log("Resume posting...", NgLogger::DebugLevel::Info);
     for (NntpConnection *con : _nntpConnections)
         emit con->sigStartConnection();
 
@@ -1495,25 +1065,11 @@ QString PostingJob::sslSupportInfo() { return NntpConnection::sslSupportInfo(); 
 
 bool PostingJob::supportsSsl() { return NntpConnection::supportsSsl(); }
 
-void PostingJob::setParamForResume(qint64 jobIdDB, ushort state, int nbTotalFiles, int nbMissing)
-{
-    if (nbTotalFiles != 0)
-    {
-        _nbFiles  = nbTotalFiles;
-        _nbPosted = nbTotalFiles - nbMissing;
-    }
-    _isResumeJob = true;
-    _state       = static_cast<JOB_STATE>(state);
-    if (state == JOB_STATE::PACKING_DONE)
-        _params->setPackingDoneParamsForResume(); // will detach
-    _dbJobId = jobIdDB;
-}
-
 void PostingJob::onResumeTriggered()
 {
     if (_isPaused)
     {
-        _log(tr("Try to resume posting"), NgLogger::DebugLevel::None);
+        _log(tr("Try to resume posting"), NgLogger::DebugLevel::Info);
         _nntpConnections.swap(_closedConnections);
         _ngPost.resume();
     }
@@ -1561,7 +1117,7 @@ void PostingJob::shallWeUseTmpRam()
             _tmpPath = _params->ramPath();
             _log(tr("Using TMP_RAM path as temporary folder. Post size: %1")
                          .arg(NgTools::humanSize(static_cast<double>(sourceSize))),
-                 NgLogger::DebugLevel::None);
+                 NgLogger::DebugLevel::Info);
         }
         else
         {

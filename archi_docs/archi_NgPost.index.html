@@ -6,6 +6,9 @@
 .hiddenElement {
 	display:none;
 }
+p {
+    line-height: 1.5;
+}
 code {
     background-color: #f5f5f5;
     border-radius: 3px;
@@ -110,8 +113,8 @@ some explanation of the diagram will arrive asap...
 <br />
 <p>
 <cName>PostingJob</cName> are created and goes into the main thread event loop using mainly
-<cMethod>NgPost::startPostingJob</cMethod><br />
-They will go either in <cMember>NgPost::_activeJob</cMember> or in the queue <cMember>NgPost::_pendingJobs</cMember> (or <cMember>NgPost::_packingJob</cMember> cf dedicated section)<br />
+<cName>NgPost</cName>::<cMethod>startPostingJob</cMethod><br />
+They will go either in <cName>NgPost</cName>::<cMember>_activeJob</cMember> or in the queue <cName>NgPost</cName>::<cMember>_pendingJobs</cMember> (or <cName>NgPost</cName>::<cMember>_packingJob</cMember> cf dedicated section)<br />
 They are started (in main Thread, where they live) by emitting this signal:
   <cMethod>void sigStartPosting(bool isActiveJob);</cMethod> <br/>
 Here are its <cName>QueuedConnection</cName> connections:
@@ -162,7 +165,7 @@ It is using/holding mainly:
     </li> 
 </ul>
 <h4> Number of Threads, who lives where? external Process?</h4>
-1.: MainThread where live: <cMember>NgPost</cMember>, the <cMember>PostingJob</cMember>(s) and their <cMember>Poster</cMember>(s) <br /> 
+1.: MainThread where live: <cName>NgPost</cName>, the <cName>PostingJob</cName>(s) and their <cName>Poster</cName>(s) <br /> 
 but also all <cName>NNTP::File</cName>(s) and their <cName>NNTP::Article</cName>(s)<br /> 
 <br /> 
 2.: BuilderThread(s) and NntpThread(s) owned by <cName>Poster</cName>(s) where <cName>ArticleBuilder</cName> live in the first one 

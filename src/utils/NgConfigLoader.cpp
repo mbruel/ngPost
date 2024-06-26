@@ -288,31 +288,18 @@ QStringList NgConfigLoader::loadConfig(NgPost &ngPost, QString const &configPath
                 }
 
                 // MB_TODO the post history that is now migrating in SQLite :)
+                else if (opt == kOptionNames[Opt::POST_HISTORY])
+                {
+                    QFileInfo fi(val);
+                    if (fi.exists() && !fi.isDir() && fi.isReadable())
+                        ngPost.setPostHistoryFile(val);
+                    else
+                        NgLogger::log(tr("Ignoring deprecated post history file: %1").arg(val), true);
+                }
+                else if (opt == kOptionNames[Opt::FIELD_SEPARATOR])
+                    ngPost.setHistoryFieldSeparator(val);
 
-                //                else if (opt == kOptionNames[Opt::POST_HISTORY])
-                //                {
-                //                    _postHistoryFile = val;
-                //                    QFileInfo fi(val);
-                //                    if (fi.isDir())
-                //                        err += tr("the post history '%1' can't be a directory...\n").arg(val);
-                //                    else
-                //                    {
-                //                        if (fi.exists())
-                //                        {
-                //                            if (!fi.isWritable())
-                //                                err += tr("the post history file '%1' is not
-                //                                writable...\n").arg(val);
-                //                        }
-                //                        else if (!QFileInfo(fi.absolutePath()).isWritable())
-                //                            err += tr("the post history file '%1' is not
-                //                            writable...\n").arg(val);
-                //                    }
-                //                }
-
-                //                else if (opt == kOptionNames[Opt::FIELD_SEPARATOR])
-                //                    _historyFieldSeparator = val;
-
-                // compression section
+                    // compression section
 
 #ifdef __USE_TMP_RAM__
                 else if (opt == kOptionNames[Opt::TMP_RAM])

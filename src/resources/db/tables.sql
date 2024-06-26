@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS tHistory (
         id           INTEGER PRIMARY KEY AUTOINCREMENT,
         date         TEXT NOT NULL,
         nzbName      TEXT NOT NULL,
-        size         TEXT NOT NULL,
-        avgSpeed     TEXT NOT NULL,
+        sizeMB       REAL NOT NULL,
+        avgSpeedKbps REAL NOT NULL,
         archiveName  TEXT,
         archivePass  TEXT,
         groups       TEXT NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS tHistory (
         packingPath  TEXT,
         nzbFilePath  TEXT NOT NULL,
         nbFiles      INTEGER NOT NULL,
-        state         INTEGER DEFAULT 0
+        state        INTEGER DEFAULT 0
 );
 CREATE INDEX index_state ON tHistory(state);
 

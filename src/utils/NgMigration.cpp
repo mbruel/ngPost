@@ -24,6 +24,7 @@
 #include "utils/NgTools.h"
 
 #include "NgHistoryDatabase.h"
+#include "PostingJob.h"
 
 NgMigration::NgMigration(NgPost &ngPost) : _ngPost(ngPost) { }
 
@@ -61,7 +62,7 @@ void NgMigration::_doNgMigration(unsigned short const confBuild)
 
 bool NgMigration::_migrateTo500()
 {
-    qDebug() << "Migrate config to build 417";
+    NgLogger::log(tr("Migrate config to build v5.0"), true);
     QString const &postHistoryFile = _ngPost.postHistoryFile();
     if (postHistoryFile.isEmpty())
         return false;
@@ -83,25 +84,61 @@ bool NgMigration::_migrateTo500()
             }
             else
             {
-                QString dateStr = v.at(0);                 // sizeStr = v.at(2), speedStr = v.at(3);
-                db->_insertPost(dateStr.replace("/", "-"), // date
-                                v.at(1),                   // nzbName
-                                v.at(2),                   // size (human readable string)
-                                v.at(3),                   // avgSpeed (human readable)
-                                v.at(4),                   // archiveName
-                                v.at(5),                   // archivePass
-                                v.at(6),                   // groups
-                                v.at(7),                   // poster
-                                "",                        // tmpPath not saved in csv
-                                "",                        // nzbFilePath not saved in csv
-                                0,                         // nbFiles (we don't know?)
-                                1);                        // upload finished (done)
+                QString dateStr = v.at(0);
+                db->_insertPost(dateStr.replace("/", "-"),       // date
+                                v.at(1),                         // nzbName
+                                _sizeInMbFromStr(v.at(2)),       // sizeMB (from human readable string)
+                                _avgSpeedInKbpsFromStr(v.at(3)), // avgSpeedKbps (from human readable)
+                                v.at(4),                         // archiveName
+                                v.at(5),                         // archivePass
+                                v.at(6),                         // groups
+                                v.at(7),                         // poster
+                                "",                              // tmpPath not saved in csv
+                                "",                              // nzbFilePath not saved in csv
+                                0,                               // nbFiles (we don't know?)
+                                PostingJob::JOB_STATE::POSTED);  // upload finished (done)
             }
         }
-        qDebug() << postHistoryFile << " has been migrated to Sqlite DB!\n"
-                 << "Posted size: " << db->postedSize(Database::DATE_CONDITION::ALL)
-                 << " (this year: " << db->postedSize(Database::DATE_CONDITION::YEAR)
-                 << ", this month: " << db->postedSize(Database::DATE_CONDITION::MONTH) << ")";
+        NgLogger::log(tr("NgPost has been migrated to use an Sqlite Database!"), true);
+        db->dumpStatistics();
     }
     return true;
+}
+
+double NgMigration::_sizeInMbFromStr(QString const &sizeStr) const
+{
+    static const QRegularExpression kByteSizeRegExp("(\\d+\\.\\d{2}) ([kMG]?B)");
+
+    QRegularExpressionMatch match = kByteSizeRegExp.match(sizeStr);
+    if (!match.hasMatch())
+        return 0.;
+
+    QString unit = match.captured(2);
+    if (unit == "B")
+        return 0.;
+    double size = match.captured(1).toDouble();
+    if (unit == "GB")
+        size *= 1024;
+    else if (unit == "kB")
+        size /= 1024;
+
+    return size;
+}
+
+double NgMigration::_avgSpeedInKbpsFromStr(QString const &avgSpeedStr)
+{
+    static const QRegularExpression kAvgSpeedRegExp("(\\d+\\.\\d{2}) ([ kM]B)/s");
+
+    QRegularExpressionMatch match = kAvgSpeedRegExp.match(avgSpeedStr);
+    if (!match.hasMatch())
+        return 0.;
+
+    double  avgSpeed = match.captured(1).toDouble();
+    QString unit     = match.captured(2);
+    if (unit == " B")
+        avgSpeed /= 1024.;
+    else if (unit == "MB")
+        avgSpeed *= 1024;
+
+    return avgSpeed;
 }

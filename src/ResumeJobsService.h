@@ -53,11 +53,13 @@ private:
     static QFileInfoList _filesInPackingPath(QString const &packingDirPath);
 
     static bool _doFilesChecks(UnfinishedJob const &unfinishedJob,
-                               QStringList const   &missingFilesInDB,
                                QStringList const   &postedFiles,
                                QFileInfoList       &filesInPackingDir);
 
     static void _logNbUnfinshedJobs(int nbUnfinishedJobs);
+
+    static ushort _deleteExistingPar2(QString const &packingPath);
+    static bool   _deletePackingDirectory(QString const &packingPath);
 };
 
 #endif // RESUMEJOBSSERVICE_H

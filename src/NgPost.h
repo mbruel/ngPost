@@ -133,6 +133,7 @@ private:
     NgHistoryDatabase *_dbHistory;
 
     bool _jobsDeleted; //!< set true only by stopNgPost() when stopping unexpectedly
+    bool _resumeMode;
 
 #ifdef __USE_HMI__
     bool _isNightMode = false;
@@ -235,9 +236,12 @@ public:
     inline bool nzbCheck() const;
     uint        nbMissingArticles() const; //!< output of the program when doing nzbCheck
 
-    inline QString const     &postHistoryFile() const;
-    inline QString const     &historyFieldSeparator() const;
-    bool                      initHistoryDatabase() const;
+    inline QString const &postHistoryFile() const;
+    inline QString const &historyFieldSeparator() const;
+
+    inline void setPostHistoryFile(QString const &f);
+    inline void setHistoryFieldSeparator(QString const &s);
+
     int                       storeJobInDB(PostingJob const &job);
     inline NgHistoryDatabase *historyDatabase() const { return _dbHistory; }
 
@@ -258,6 +262,11 @@ public:
     void post(QFileInfo const &fileInfo, QString const &monitorFolder = "");
 
     void stopNgPost();
+
+    bool resumeMode() const { return _resumeMode; }
+    void setResumeMode(bool resumeMode) { _resumeMode = resumeMode; }
+
+    void showNgPostStatistics();
 
 public slots:
     void onCheckForNewVersion();
@@ -382,8 +391,11 @@ QStringList NgPost::parseCombinedArgString(QString const &program)
 }
 #endif
 
-inline QString const &NgPost::postHistoryFile() const { return _postHistoryFile; }
-inline QString const &NgPost::historyFieldSeparator() const { return _historyFieldSeparator; }
+QString const &NgPost::postHistoryFile() const { return _postHistoryFile; }
+QString const &NgPost::historyFieldSeparator() const { return _historyFieldSeparator; }
+
+void NgPost::setPostHistoryFile(QString const &f) { _postHistoryFile = f; }
+void NgPost::setHistoryFieldSeparator(QString const &s) { _historyFieldSeparator = s; }
 
 QString NgPost::optionName(NgConf::Opt key) { return NgConf::kOptionNames.value(key, ""); }
 

@@ -920,6 +920,9 @@ QString PostingParams::getFilesPaths() const
     return filesPaths.join(kInputFileSeparator);
 }
 
+void PostingParams::genRarName() { _rarName = NgTools::randomFileName(); }
+void PostingParams::genRarPass() { _rarPass = NgTools::randomPass(); }
+
 void PostingParams::dumpParams() const
 {
     qDebug() << "[PostingParams::_dumpParams]>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n";

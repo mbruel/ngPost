@@ -5,7 +5,7 @@
 #include <QSqlError>
 #include <QSqlQuery>
 
-#include "nntp/NntpFile.h"
+#include "NgDBConf.h"
 #include "utils/NgLogger.h"
 #include "utils/NgTools.h"
 
@@ -14,10 +14,9 @@
 using namespace NgConf;
 NgHistoryDatabase::NgHistoryDatabase() { }
 
-qint64 NgHistoryDatabase::postedSizeInMB(DATE_CONDITION since) const
+NgHistoryDatabase::Stats NgHistoryDatabase::statistics(DATE_CONDITION since) const
 {
-    qint64  megas = 0;
-    QString req(DB::SQL::kSelectSizes);
+    QString req(DB::SQL::kSelectStatistics);
     if (since != DATE_CONDITION::ALL)
     {
         req.append(" WHERE ");
@@ -40,35 +39,40 @@ qint64 NgHistoryDatabase::postedSizeInMB(DATE_CONDITION since) const
         }
     }
     QSqlQuery query;
-    if (!query.exec(req))
+    if (!query.exec(req) || !query.next())
     {
-        NgLogger::error(tr("Error executing postedSize query : %1  (query: %2)")
+        NgLogger::error(tr("Error executing statistics query : %1  (query: %2)")
                                 .arg(query.lastError().text())
                                 .arg(query.lastQuery()));
-        return 0;
+        return Stats(since, "", 0, 0., 0., 0.);
     }
-    while (query.next())
-        megas += megaSize(query.value(0).toString());
-
-    query.finish();
-    return megas;
+    return Stats(since,
+                 query.value(0).toString(),
+                 query.value(1).toUInt(),
+                 query.value(2).toDouble(),
+                 query.value(3).toDouble(),
+                 query.value(4).toDouble());
 }
 
-QString NgHistoryDatabase::postedSize(DATE_CONDITION since) const
+void NgHistoryDatabase::dumpStatistics() const
 {
-    double  size = static_cast<double>(postedSizeInMB(since));
-    QString unit = "MB";
-    if (size > 1024)
-    {
-        size /= 1024;
-        unit = "GB";
-    }
-    if (size > 1024)
-    {
-        size /= 1024;
-        unit = "TB";
-    }
-    return QString("%1 %2").arg(size, 0, 'f', 2).arg(unit);
+    NgLogger::log(tr("NgPost posting statistics:"), true);
+    NgLogger::log(tr("\t- %1").arg(statistics(DATE_CONDITION::ALL).str()), true);
+    NgLogger::log(tr("\t- %1").arg(statistics(DATE_CONDITION::YEAR).str()), true);
+    NgLogger::log(tr("\t- %1").arg(statistics(DATE_CONDITION::MONTH).str()), true);
+    NgLogger::log(tr("\t- %1").arg(statistics(DATE_CONDITION::WEEK).str()), true);
+    NgLogger::log(tr("\t- %1").arg(statistics(DATE_CONDITION::DAY).str()), true);
+}
+
+QString NgHistoryDatabase::Stats::str() const
+{
+    return tr("%1: number of posts: %2, total size: %3, avg size: %4, avg speed: %5")
+            .arg((since == DATE_CONDITION::ALL) ? tr("total from the %1").arg(firstDate)
+                                                : Database::dateCondition(since))
+            .arg(nbPosts)
+            .arg(NgTools::humanSizeFromMB(sumSizeMB))
+            .arg(NgTools::humanSizeFromMB(avgSizeMB))
+            .arg(NgTools::humanSpeedFromKbps(avgSpeedKbps));
 }
 
 int NgHistoryDatabase::insertPostingJob(PostingJob const &job)
@@ -95,46 +99,33 @@ int NgHistoryDatabase::insertPostingJob(PostingJob const &job)
         qDebug() << QString("[MB_TRACE][Database::insertPostingJob][%1] <<<<<<<<<<< s1").arg(job.nzbName());
         return 0;
     }
-
-    if (job.hasPostFinished())
-    {
-        qDebug() << QString("[MB_TRACE][Database::insertPostingJob][%1] <<<<<<<<<<< s2").arg(job.nzbName());
-
-        return jobQuery.lastInsertId().toInt();
-    }
-
-    // so post is not finished!
     int dbJobId = jobQuery.lastInsertId().toInt();
-    qDebug() << QString("[MB_TRACE][Database::insertPostingJob][%1] dbJobId = %2")
-                        .arg(job.nzbName())
-                        .arg(dbJobId);
-
-    auto const missingFiles = job.nntpFilesNotPosted();
-    if (missingFiles.isEmpty())
-    {
-        NgLogger::error(tr("we've %1 missing file(s) although the job is supposed to be complete...")
-                                .arg(missingFiles.size()));
-        return dbJobId;
-    }
-
     jobQuery.finish();
-    for (auto *nntpFile : missingFiles)
+
+    auto const missingFiles = job.unpostedFilesPath();
+    qDebug() << QString("[MB_TRACE][Database::insertPostingJob][%1] dbJobId = %2 has %3 missing files")
+                        .arg(job.nzbName())
+                        .arg(dbJobId)
+                        .arg(missingFiles.size());
+    if (missingFiles.isEmpty())
+        return dbJobId; // No missing files
+
+    NgLogger::log(tr("%1 has %2 unposted file(s)").arg(job.nzbName()).arg(missingFiles.size()), true);
+    for (QString const &filePath : missingFiles)
     {
         QSqlQuery fileQuery;
         fileQuery.prepare(DB::SQL::kInsertUnfinishedStatement);
         fileQuery.bindValue(":job_id", dbJobId);
-        fileQuery.bindValue(":filePath", nntpFile->fileInfo().absoluteFilePath());
+        fileQuery.bindValue(":filePath", filePath);
         if (!fileQuery.exec())
         {
             NgLogger::error(tr("Error saving path of unposted file '%1' for post %2 : %3  (query: %4) with "
-                               "values: %5, %6")
-                                    .arg(nntpFile->fileInfo().absoluteFilePath())
+                               "dbJobId: %5")
+                                    .arg(filePath)
                                     .arg(job.nzbName())
                                     .arg(fileQuery.lastError().text())
                                     .arg(fileQuery.lastQuery())
-                                    .arg(dbJobId)
-                                    .arg(nntpFile->fileInfo().absoluteFilePath()));
-
+                                    .arg(dbJobId));
             qDebug() << QString("[MB_TRACE][Database::insertPostingJob][%1] <<<<<<<<<<< s3").arg(job.nzbName());
 
             return dbJobId;
@@ -148,8 +139,8 @@ int NgHistoryDatabase::insertPostingJob(PostingJob const &job)
 
 int NgHistoryDatabase::_insertPost(QString const &date,
                                    QString const &nzbName,
-                                   QString const &size,
-                                   QString const &avgSpeed,
+                                   double         sizeMB,
+                                   double         avgSpeedKbps,
                                    QString const &archiveName,
                                    QString const &archivePass,
                                    QString const &groups,
@@ -168,8 +159,8 @@ int NgHistoryDatabase::_insertPost(QString const &date,
     query.prepare(DB::SQL::kInsertJob);
     query.bindValue(":date", date);
     query.bindValue(":nzbName", nzbName);
-    query.bindValue(":size", size);
-    query.bindValue(":avgSpeed", avgSpeed);
+    query.bindValue(":sizeMB", sizeMB);
+    query.bindValue(":avgSpeedKbps", avgSpeedKbps);
     query.bindValue(":archiveName", archiveName);
     query.bindValue(":archivePass", archivePass);
     query.bindValue(":groups", groups);
@@ -180,38 +171,39 @@ int NgHistoryDatabase::_insertPost(QString const &date,
     query.bindValue(":state", state);
 
     qDebug() << tr("[MB_TRACE][insertPost] %1")
-                        .arg(QString("<:date : %1><:nzbName : %2><:size: %3><:avgSpeed : %4><:archiveName: "
+                        .arg(QString("<:date : %1><:nzbName : %2><:sizeMB : %3><:avgSpeedKbps : "
+                                     "%4><:archiveName: "
                                      "%5><:archivePass %6><:groups "
                                      "%7><:from : %8><:packingPath %9><:nzbFilePath %10><:state %11>")
                                      .arg(date)
                                      .arg(nzbName)
-                                     .arg(size)
-                                     .arg(avgSpeed)
+                                     .arg(sizeMB)
+                                     .arg(avgSpeedKbps)
                                      .arg(archiveName)
                                      .arg(archivePass)
                                      .arg(groups)
                                      .arg(from)
                                      .arg(packingPath)
                                      .arg(nzbFilePath)
-                                     .arg(state ? "yes" : "no"));
+                                     .arg(PostingJob::state(state)));
     if (!query.exec())
     {
         NgLogger::error(tr("Error inserting post to history DB: %1  (query: %2) args: %3")
                                 .arg(query.lastError().text())
                                 .arg(query.lastQuery())
-                                .arg(QString("<:date : %1><:nzbName : %2><:size: %3><:avgSpeed : "
+                                .arg(QString("<:date : %1><:nzbName : %2><:sizeMB: %3><:avgSpeedKbps : "
                                              "%4><:archiveName: %5><:archivePass %6><:groups "
                                              "%7><:from : %8><:packingPath %9><:nzbFilePath %10><:state %11>")
                                              .arg(date)
                                              .arg(nzbName)
-                                             .arg(size)
-                                             .arg(avgSpeed)
+                                             .arg(sizeMB)
+                                             .arg(avgSpeedKbps)
                                              .arg(archiveName)
                                              .arg(archivePass)
                                              .arg(groups)
                                              .arg(from)
                                              .arg(packingPath)
-                                             .arg(state ? "yes" : "no")));
+                                             .arg(PostingJob::state(state))));
         qApp->processEvents(); // As it happens at PostingJob destruction, make sure the log event is
                                // processed
         return 0;
@@ -228,8 +220,8 @@ QSqlQuery NgHistoryDatabase::_postingJobQuery(PostingJob const &job) const
     query.prepare(DB::SQL::kInsertJob);
     query.bindValue(":date", NgTools::currentDateTime());
     query.bindValue(":nzbName", job.nzbName());
-    query.bindValue(":size", job.postSize());
-    query.bindValue(":avgSpeed", job.avgSpeed());
+    query.bindValue(":sizeMB", job.postSizeInMB());
+    query.bindValue(":avgSpeedKbps", job.avgSpeedKbps());
     query.bindValue(":files", "files1|foiles2");
     query.bindValue(":archiveName", job.hasCompressed() ? job.rarName() : QString());
     query.bindValue(":archivePass", job.hasCompressed() ? job.rarPass() : QString());
@@ -240,43 +232,6 @@ QSqlQuery NgHistoryDatabase::_postingJobQuery(PostingJob const &job) const
     query.bindValue(":nbFiles", job.nbFiles());
     query.bindValue(":state", job.state());
     return query;
-}
-
-const QRegularExpression NgHistoryDatabase::kByteSizeRegExp = QRegularExpression("(\\d+\\.\\d{2}) ([kMG]?B)");
-qint64                   NgHistoryDatabase::byteSize(QString const &humanSize)
-{
-    qint64                  bytes = 0;
-    QRegularExpressionMatch match = kByteSizeRegExp.match(humanSize);
-    if (match.hasMatch())
-    {
-        double  size = match.captured(1).toDouble();
-        QString unit = match.captured(2);
-        if (unit == "GB")
-            size *= 1024 * 1024 * 1024;
-        else if (unit == "MB")
-            size *= 1024 * 1024;
-        else if (unit == "kB")
-            size *= 1024;
-        bytes = static_cast<long>(size);
-    }
-    return bytes;
-}
-
-qint64 NgHistoryDatabase::megaSize(QString const &humanSize)
-{
-    qint64                  megas = 0;
-    QRegularExpressionMatch match = kByteSizeRegExp.match(humanSize);
-    if (match.hasMatch())
-    {
-        double  size = match.captured(1).toDouble();
-        QString unit = match.captured(2);
-        if (unit == "GB")
-            size *= 1024;
-        else if (unit.isEmpty() || unit == "kB")
-            size = 0; // ignore bytes and kB
-        megas = static_cast<long>(size);
-    }
-    return megas;
 }
 
 bool NgHistoryDatabase::_markUnfinishedJobDone(int const dbJobId, bool success)
@@ -344,7 +299,8 @@ UnfinishedJobs NgHistoryDatabase::unfinishedJobs()
         UnfinishedJob uJob = { query.value(0).toInt(),    query.value(1).toDateTime(),
                                query.value(2).toString(), query.value(3).toString(),
                                query.value(4).toString(), query.value(5).toLongLong(),
-                               query.value(6).toString(), static_cast<ushort>(query.value(7).toInt()) };
+                               query.value(6).toString(), static_cast<ushort>(query.value(7).toInt()),
+                               query.value(8).toString(), query.value(9).toString() };
         jobs.push_back(uJob);
     }
 

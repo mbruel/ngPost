@@ -46,6 +46,7 @@ class PostingWidget;
 class Poster;
 class Database;
 class UnfinishedJob;
+class NgFilePacker;
 
 using AtomicBool = QAtomicInteger<unsigned short>; // 16 bit only (faster than using 8 bit variable...)
 
@@ -63,6 +64,10 @@ class PostingJob : public QObject
     friend class Poster;
     friend class ArticleBuilder;
     friend class NgPost;
+
+    // souldn't need but for now it is "a part" out of PostingJob (can update _state...)
+    // not really generic... could be done if used for another project
+    friend class NgFilePacker;
 
 #ifdef __test_ngPost__
     friend class PostingJobHandler;
@@ -101,6 +106,8 @@ private:
     QString _tmpPath;        //!< can be _params->tmpPath() or _params->ramPath()
     QString _packingTmpPath; //!< _tmpPath + name of folder
 
+    NgFilePacker *_packer;
+
     /*!
      * \brief _files that will be posted by _postFiles()
      * they can be directly _params->files() if no packing (compression and/or par2)
@@ -108,11 +115,6 @@ private:
      */
     QFileInfoList _files;
     AtomicBool    _delFilesAfterPost; //!< we're talking about the original files _params->files()
-
-    QProcess *_extProc;          //!< process to launch compression and/or par2 asynchronously
-    QDir     *_packingTmpDir;    //!< directory containing the archives
-    bool      _limitProcDisplay; //!< limit external process output
-    ushort    _nbProcDisp;       //!< hacky way to limit external process output
 
     QVector<NntpConnection *> _nntpConnections;   //!< the NNTP connections (owning the TCP sockets)
     QVector<NntpConnection *> _closedConnections; //!< the NNTP connections (owning the TCP sockets)
@@ -154,13 +156,7 @@ private:
     AtomicBool _stopPosting;
     AtomicBool _noMoreFiles;
 
-    bool _postStarted;
-    bool _packed;
-    bool _postFinished;
-
     QVector<Poster *> _posters;
-
-    QMap<QString, QString> _obfuscatedFileNames;
 
     bool _isPaused;
 
@@ -181,17 +177,31 @@ public:
         NOT_STARTED      = 0,
         COMPRESSION_DONE = 1,
         PACKING_DONE     = 2,
-        NZB_CREATED      = 3,
-        POSTED           = 4,
-        ERROR_RESUMING   = 5
+        POST_STARTED     = 3,
+        NZB_CREATED      = 4,
+        POSTED           = 5,
+        ERROR_RESUMING   = 6
     };
+
+    inline static QString state(ushort state) { return sJobStatesNames.value(static_cast<JOB_STATE>(state)); }
+    inline static QString state(JOB_STATE state) { return sJobStatesNames.value(state); }
 
 private:
     // For Resuming a Job
+    JOB_STATE _state;
 
-    JOB_STATE _state = JOB_STATE::NOT_STARTED;
-    bool      _isResumeJob;
-    qint64    _dbJobId;
+    bool   _isResumeJob;
+    qint64 _dbJobId;
+
+    inline static QMap<JOB_STATE, QString> const sJobStatesNames = {
+        {NOT_STARTED,       "NOT_STARTED"     },
+        { COMPRESSION_DONE, "COMPRESSION_DONE"},
+        { PACKING_DONE,     "PACKING_DONE"    },
+        { POST_STARTED,     "POST_STARTED"    },
+        { NZB_CREATED,      "NZB_CREATED"     },
+        { POSTED,           "POSTED"          },
+        { ERROR_RESUMING,   "ERROR_RESUMING"  }
+    };
 
 public:
     /*!
@@ -227,6 +237,7 @@ public:
     PostingJob(NgPost              &ngPost,
                UnfinishedJob const &unfinshedJob,
                QFileInfoList const &missingFiles,
+               int                  nbTotalFiles,
                QObject             *parent = nullptr);
 
     ~PostingJob();
@@ -243,6 +254,7 @@ public:
 
     inline uint    nbFiles() const { return _nbFiles; }
     inline QString avgSpeed() const;
+    inline double  avgSpeedKbps() const;
 
     inline void articlePosted(quint64 size);
     inline void articleFailed(quint64 size);
@@ -259,17 +271,24 @@ public:
     inline QString const &rarName() const { return _params->rarName(); }
     inline QString const &rarPass() const { return _params->rarPass(); }
     QString               postSize() const;
+    inline double         postSizeInMB() const
+    {
+        static constexpr uint kMegaByte = 1024 * 1024;
+        return static_cast<double>(_totalSize) / kMegaByte;
+    }
 
     inline bool hasCompressed() const { return _params->hasCompressed(); }
     inline bool hasPacking() const { return _params->hasPacking(); }
-    inline bool isPacked() const { return _packed; }
-    inline bool hasPostStarted() const { return _postStarted; }
-    inline bool hasPostFinished() const { return _postFinished; }
-    inline bool hasPostFinishedSuccessfully() const { return _postFinished && !_nbArticlesFailed; }
+    inline bool isCompressed() const { return _state >= JOB_STATE::COMPRESSION_DONE; }
+    inline bool isPacked() const { return _state >= JOB_STATE::PACKING_DONE; }
+    inline bool isNzbCreated() const { return _state >= JOB_STATE::NZB_CREATED; }
+    inline bool hasPostStarted() const { return _state >= JOB_STATE::POST_STARTED; }
+    inline bool hasPostFinished() const { return _state == JOB_STATE::POSTED; }
+    inline bool hasPostFinishedSuccessfully() const { return hasPostFinished() && !_nbArticlesFailed; }
     inline bool hasPostFinishedWithAllFiles() const
     {
         int nbPendingFiles = _filesToUpload.size() + _filesInProgress.size() + _filesFailed.size();
-        return _postFinished && nbPendingFiles == 0;
+        return hasPostFinished() && nbPendingFiles == 0;
     }
 
     inline PostingWidget *widget() const { return _postWidget; }
@@ -302,7 +321,6 @@ public:
     } //!< useless connection, we delete it
 
     void storeInDatabase(Database &db);
-    void setParamForResume(qint64 jobIdDB, ushort state, int nbTotalFiles, int nbMissing);
 
     bool isResumeJob() const { return _isResumeJob; }
     bool areAllNntpFilesPosted() const { return _filesFailed.isEmpty(); }
@@ -314,6 +332,8 @@ public:
     bool hasPosted() const { return _state == JOB_STATE::POSTED; }
 
     QSet<NNTP::File *> nntpFilesNotPosted() const;
+
+    QStringList unpostedFilesPath() const;
 
 public slots:
     void onStopPosting(); //!< for HMI
@@ -330,22 +350,11 @@ private slots:
      */
     void onStartPosting(bool isActiveJob);
 
-    /*!
-     * \brief end of compression process _extProc
-     * \param exitCode
-     */
-    void onCompressionFinished(int exitCode);
-
-    void onGenPar2Finished(int exitCode);
-
     void onDisconnectedConnection(NntpConnection *con);
 
     void onNntpFileStartPosting();
     void onNntpFilePosted();
     void onNntpErrorReading();
-
-    void onExtProcReadyReadStandardOutput();
-    void onExtProcReadyReadStandardError();
 
     void onResumeTriggered();
 
@@ -391,24 +400,6 @@ private:
 
     void _closeNzb();
     void _printStats() const;
-
-    bool startCompressFiles();
-    bool startGenPar2();
-
-    void _cleanExtProc();
-    void _cleanCompressDir();
-
-    /*!
-     * \brief if we do some packing, the _files to be posted needs to be update
-     * by thoses created in _packingTmpDir
-     * return the list of the archiveNames
-     * can be used twice if we both compress and generate the par2
-     */
-    QStringList _updateFilesListFromCompressDir();
-
-    void _createArchiveFolder(QString const &tmpFolder, QString const &archiveName);
-
-    inline QString timestamp() const { return QTime::currentTime().toString("hh:mm:ss.zzz"); }
 };
 
 QString PostingJob::avgSpeed() const
@@ -434,6 +425,18 @@ QString PostingJob::avgSpeed() const
     }
 
     return QString("%1 %2B/s").arg(bandwidth, 6, 'f', 2).arg(power);
+}
+
+inline double PostingJob::avgSpeedKbps() const
+{
+    double bandwidth = 0.;
+    if (_timeStart.isValid())
+    {
+        double sec = (_timeStart.elapsed() - _pauseDuration) / 1000.;
+        bandwidth  = _uploadedSize / sec;
+        bandwidth /= 1024.; // kbps
+    }
+    return bandwidth;
 }
 
 NNTP::File *PostingJob::_getNextFile()

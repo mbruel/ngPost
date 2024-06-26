@@ -77,6 +77,8 @@ ushort NgTools::isConfigurationVesionObsolete()
 
 QString NgTools::currentDateTime() { return QDateTime::currentDateTime().toString(kDateTimeFormat); }
 
+QString NgTools::timestamp() { return QTime::currentTime().toString("hh:mm:ss.zzz"); }
+
 void NgTools::removeAccentsFromString(QString &str)
 {
     static const QRegularExpression regEx_A("[ÀÁÂÃÄÅ]");

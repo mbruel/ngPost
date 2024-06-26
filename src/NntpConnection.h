@@ -163,19 +163,19 @@ public slots:
 
 private:
     //! log function for QString
-    inline void _log(QString const &aMsg, NgLogger::DebugLevel debugLvl = NgLogger::DebugLevel::None) const
+    inline void _log(QString const &aMsg, NgLogger::DebugLevel debugLvl = NgLogger::DebugLevel::Info) const
     {
         emit sigLog(QString("[%1] %2").arg(_logPrefix).arg(aMsg), true, debugLvl);
     }
 
     //! overload for log function for char *
-    inline void _log(char const *aMsg, NgLogger::DebugLevel debugLvl = NgLogger::DebugLevel::None) const
+    inline void _log(char const *aMsg, NgLogger::DebugLevel debugLvl = NgLogger::DebugLevel::Info) const
     {
         emit sigLog(QString("[%1] %2").arg(_logPrefix).arg(aMsg), true, debugLvl);
     }
 
     //! overload log function for std::string
-    inline void _log(std::string const &aMsg, NgLogger::DebugLevel debugLvl = NgLogger::DebugLevel::None) const
+    inline void _log(std::string const &aMsg, NgLogger::DebugLevel debugLvl = NgLogger::DebugLevel::Info) const
     {
         emit sigLog(QString("[%1] %2").arg(_logPrefix).arg(QString::fromStdString(aMsg)), true, debugLvl);
     }
