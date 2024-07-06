@@ -13,7 +13,7 @@
 - always use **const*** when the pointer can't be changed. but if that's case prefer using a reference.
 - `*const*` should be replaced by `const&` when it can
 - use RAII ([Resource Acquisition Is Initialization](https://en.cppreference.com/w/cpp/language/raii)) as often as possible
-- always use ++i or ++it rather than i++ or it++ except if good reason
+- always use `++i` or `++it` rather than `i++` or `it++` except if good reason
 - carefull when choosing a containor. Often prefer a Hash to a Map (except if ordering really  matters). only use Vectors if a max size is know to avoid realloc. so use the `reserve` method asap
 - for Services or Tools use pure static class could inherit from
 
