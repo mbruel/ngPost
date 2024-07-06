@@ -34,7 +34,7 @@ class PureStaticClass
 the initialiazation could be done in main in the expected order. The reset method is for macro tests purposes. the instance could a reference or const& instead of a pointer.
 
 ```
-template &lt;typename T&gt;
+template <typename T>
 class Singleton
 {
 protected:
@@ -75,8 +75,8 @@ public:
     }
 };
 
-template &lt;typename T&gt;
-T *Singleton&lt;T&gt;::sInstance = nullptr;
+template <typename T>
+T *Singleton<T>::sInstance = nullptr;
 ```
 
 <br/>
@@ -110,9 +110,9 @@ If possible short doxygen comment on same line using `//!< short description`
 8. **public slots**: prefix: **on** then capital. explicit name.
 9. protected and private slots.
 10. protected and private methods. private methods that does specific implementation could start with an underscore.
+<br/>
 
-
-** static const class member** should either be **constexpr** or **`inline** with their definition in the header => we don't have to jump in the cpp to see the values.
+**static const class member** should either be **constexpr** or **`inline** with their definition in the header => we don't have to jump in the cpp to see the values.
 
 Avoid pointers for heap members that we don't own and prefer reference.
 
