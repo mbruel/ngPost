@@ -1,6 +1,8 @@
 ## NgPost C++/Qt Coding rules
 <br/>
+
 ### I General class formatting
+
 - Use CamelCase everywhere like C++ standard
 - Classes always starts with a capital. Methods with a lower case
 - No more `#define`for constants, use `constexpr` instead
@@ -14,6 +16,7 @@
 - always use ++i or ++it rather than i++ or it++ except if good reason
 - carefull when choosing a containor. Often prefer a Hash to a Map (except if ordering really  matters). only use Vectors if a max size is know to avoid realloc. so use the `reserve` method asap
 - for Services or Tools use pure static class could inherit from
+
 ```
 class PureStaticClass
 {
@@ -26,10 +29,12 @@ class PureStaticClass
     PureStaticClass &operator=(PureStaticClass const &&) = delete;
 };
 ```
+
 - Singleton could derives from:  
 the initialiazation could be done in main in the expected order. The reset method is for macro tests purposes. the instance could a reference or const& instead of a pointer.
+
 ```
-template <typename T>
+template &lt;typename T&gt;
 class Singleton
 {
 protected:
@@ -70,9 +75,10 @@ public:
     }
 };
 
-template <typename T>
-T *Singleton<T>::sInstance = nullptr;
+template &lt;typename T&gt;
+T *Singleton&lt;T&gt;::sInstance = nullptr;
 ```
+
 <br/>
 
 ### II Header
