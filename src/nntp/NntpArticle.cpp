@@ -5,7 +5,7 @@
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, version 3..
+// the Free Software Foundation, version 3.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -50,7 +50,7 @@ NntpArticle::NntpArticle(NntpFile *file, uint part, qint64 pos, qint64 bytes,
 
         std::string subject = ss.str();
         _subject = new char[subject.length()+1];
-        std::strcpy(_subject, subject.c_str());
+        strcpy(_subject, subject.c_str());
     }
 }
 
@@ -74,7 +74,7 @@ void NntpArticle::yEncBody(const char data[])
 
     std::string body = ss.str();
     _body = new char[body.length()+1];
-    std::strcpy(_body, body.c_str());
+    strcpy(_body, body.c_str());
 }
 
 NntpArticle::~NntpArticle()
