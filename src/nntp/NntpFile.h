@@ -43,6 +43,7 @@ public:
     ~NntpFile();
 
     inline void addArticle(NntpArticle *article);
+    inline void removeArticle(NntpArticle *article);
 
     void writeToNZB(QTextStream &stream, const QString &from);
 
@@ -86,6 +87,7 @@ private:
 };
 
 void NntpFile::addArticle(NntpArticle *article) { _articles.push_back(article); }
+void NntpFile::removeArticle(NntpArticle *article) { _articles.removeOne(article); }
 
 QString NntpFile::stats() const
 {

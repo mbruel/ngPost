@@ -8,7 +8,7 @@ FROM debian:10
 
 RUN sed -i 's/main$/main non-free/' /etc/apt/sources.list
 RUN apt-get update && apt-get install --no-install-recommends -y \
-    git build-essential qt5-qmake qt5-default par2 rar ca-certificates \
+    git build-essential qt5-qmake qt5-default libargon2-dev libsodium-dev libssl-dev par2 rar ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 COPY . /usr/src/ngPost

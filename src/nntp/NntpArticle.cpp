@@ -29,12 +29,14 @@
 ushort NntpArticle::sNbMaxTrySending = 5;
 
 NntpArticle::NntpArticle(NntpFile *file, uint part, qint64 pos, qint64 bytes,
-                         const std::string *from, bool obfuscation):
-    _nntpFile(file), _part(part),
+                         const std::string *from, bool obfuscation, quint32 segmentIndex):
+    _nntpFile(file), _part(part), _segmentIndex(segmentIndex),
+    _encrypted(false),
     _id(QUuid::createUuid()),
     _from(from),
     _subject(nullptr),
     _body(nullptr),
+    _bodySize(0),
     _filePos(pos), _fileBytes(bytes),
     _nbTrySending(0),
     _msgId()
@@ -54,27 +56,45 @@ NntpArticle::NntpArticle(NntpFile *file, uint part, qint64 pos, qint64 bytes,
     }
 }
 
-void NntpArticle::yEncBody(const char data[])
+bool NntpArticle::yEncBody(const char data[], const YencEncryptionContext *encryption, QString *error)
 {
-    // do the yEnc encoding
-    quint32 crc32    = 0xFFFFFFFF;
-    uchar  *yencBody = new uchar[_fileBytes*2];
-    Yenc::encode(data, _fileBytes, yencBody, crc32);
+    if(!encryption)
+    {
+        // Upstream unencrypted body builder (byte-for-byte identical to 97a84347f1)
+        quint32 crc32    = 0xFFFFFFFF;
+        uchar  *yencBody = new uchar[_fileBytes*2];
+        Yenc::encode(data, _fileBytes, yencBody, crc32);
 
-    // format the body
-    std::stringstream ss;
-    ss << "=ybegin part=" << _part << " total=" << _nntpFile->nbArticles() << " line=128"
-       << " size=" << _nntpFile->fileSize() << " name=" << _nntpFile->fileName() << Nntp::ENDLINE
-       << "=ypart begin=" << _filePos + 1 << " end=" << _filePos + _fileBytes << Nntp::ENDLINE
-       << yencBody << Nntp::ENDLINE
-       << "=yend size=" << _fileBytes << " pcrc32=" << std::hex << crc32 << Nntp::ENDLINE
-       << "." << Nntp::ENDLINE;
+        std::stringstream ss;
+        ss << "=ybegin part=" << _part << " total=" << _nntpFile->nbArticles() << " line=128"
+           << " size=" << _nntpFile->fileSize() << " name=" << _nntpFile->fileName() << Nntp::ENDLINE
+           << "=ypart begin=" << _filePos + 1 << " end=" << _filePos + _fileBytes << Nntp::ENDLINE
+           << yencBody << Nntp::ENDLINE
+           << "=yend size=" << _fileBytes << " pcrc32=" << std::hex << crc32 << Nntp::ENDLINE
+           << "." << Nntp::ENDLINE;
 
-    delete[] yencBody;
+        delete[] yencBody;
 
-    std::string body = ss.str();
-    _body = new char[body.length()+1];
-    std::strcpy(_body, body.c_str());
+        std::string body = ss.str();
+        _body = new char[body.length()+1];
+        std::strcpy(_body, body.c_str());
+        return true;
+    }
+
+    QByteArray block;
+    quint32 crc32 = 0;
+    if(!Yenc::encodeArticle(QByteArray(data, static_cast<int>(_fileBytes)), _part,
+                            _nntpFile->nbArticles(), _nntpFile->fileSize(), _filePos,
+                            QByteArray::fromStdString(_nntpFile->fileName()), *encryption,
+                            block, crc32, error))
+        return false;
+    _encrypted = true;
+    block += QByteArrayLiteral(".\r\n");
+    _bodySize = block.size();
+    _body = new char[block.size() + 1];
+    std::memcpy(_body, block.constData(), static_cast<size_t>(block.size()));
+    _body[block.size()] = '\0';
+    return true;
 }
 
 NntpArticle::~NntpArticle()
@@ -129,8 +149,17 @@ bool NntpArticle::tryResend()
 void NntpArticle::write(NntpConnection *con, const std::string &idSignature)
 {
     ++_nbTrySending;
-    con->write(header(idSignature).c_str());
-    con->write(_body);
+    if(!_encrypted)
+    {
+        con->write(header(idSignature).c_str());
+        con->write(_body);
+    }
+    else
+    {
+        const std::string h = header(idSignature);
+        con->write(h.data(), static_cast<qint64>(h.size()));
+        con->write(_body, _bodySize);
+    }
 }
 
 std::string NntpArticle::header(const std::string &idSignature) const
@@ -160,7 +189,16 @@ void NntpArticle::dumpToFile(const QString &path, const std::string &articleIdSi
         return;
     }
 
-    file.write(header(articleIdSignature).c_str());
-    file.write(_body);
+    if(!_encrypted)
+    {
+        file.write(header(articleIdSignature).c_str());
+        file.write(_body);
+    }
+    else
+    {
+        const std::string h = header(articleIdSignature);
+        file.write(h.data(), static_cast<qint64>(h.size()));
+        file.write(_body, _bodySize);
+    }
     file.close();
 }

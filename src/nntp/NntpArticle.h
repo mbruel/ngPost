@@ -24,6 +24,7 @@
 #include <QObject>
 class NntpFile;
 class NntpConnection;
+struct YencEncryptionContext;
 
 
 /*!
@@ -45,11 +46,14 @@ class NntpArticle : public QObject
 private:
     NntpFile  *_nntpFile; //!< original file
     const uint _part;     //!< part of the original file
+    const quint32 _segmentIndex;
+    bool _encrypted; //!< body was built by the encrypted encodeArticle path
     QUuid      _id;       //!< to generate a unique Message-ID for the Header
 
     const std::string *_from;    //!< NNTP header From (owned by PostingJob)
     char *_subject;              //!< NNTP header Subject (if defined it won't be obfuscated)
     char *_body;                 //!< full body of the Article with the yEnc header
+    qint64 _bodySize;            //!< byte length of _body
 
     const qint64 _filePos;   //!< position in the File (for yEnc header)
     const qint64 _fileBytes; //!< bytes of the original file that are encoded
@@ -64,9 +68,10 @@ signals:
 
 public:
     NntpArticle(NntpFile *file, uint part, qint64 pos, qint64 bytes,
-                const std::string *from, bool obfuscation);
+                const std::string *from, bool obfuscation, quint32 segmentIndex = 0);
 
-    void yEncBody(const char data[]);
+    bool yEncBody(const char data[], const YencEncryptionContext *encryption = nullptr,
+                  QString *error = nullptr);
 
 //    NntpArticle(const std::string &from, const std::string &groups, const std::string &subject,
 //                const std::string &body);
@@ -89,6 +94,7 @@ public:
     inline std::string body() const;
     inline QString id() const;
     inline uint part() const;
+    inline quint32 segmentIndex() const;
     inline NntpFile *nntpFile() const;
 
     inline bool isFirstArticle() const;
@@ -120,12 +126,21 @@ void NntpArticle::freeMemory()
         delete[] _body;
         _body = nullptr;
     }
+    _bodySize = 0;
 }
 
-std::string NntpArticle::body() const { return _body; }
+std::string NntpArticle::body() const
+{
+    if (!_body)
+        return std::string();
+    if (_encrypted)
+        return std::string(_body, static_cast<size_t>(_bodySize));
+    return std::string(_body);
+}
 
 QString NntpArticle::id() const { return _msgId; }
 uint NntpArticle::part() const{ return _part; }
+quint32 NntpArticle::segmentIndex() const { return _segmentIndex; }
 NntpFile *NntpArticle::nntpFile() const { return _nntpFile; }
 
 bool NntpArticle::isFirstArticle() const { return _part == 1; }

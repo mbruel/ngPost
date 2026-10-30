@@ -52,6 +52,8 @@ Here are the main features and advantages of ngPost:
 - qt5-default (Qt5 libraries and headers)
 - qt5-qmake (to generate the moc files and create the Makefile)
 - libssl (v1.0.2 or v1.1) but it should be already installed on your system
+- libargon2 (Argon2id key derivation)
+- libsodium (XChaCha20-Poly1305 AEAD)
 
 #### Build:
 - go to the src folder
@@ -90,6 +92,8 @@ Syntax: ngPost (options)* (-i <file or folder> | --auto <folder> | --monitor <fo
 	-x or --obfuscate  : obfuscate the subjects of the articles (CAREFUL you won't find your post if you lose the nzb file)
 	-g or --groups     : newsgroups where to post the files (coma separated without space)
 	-m or --meta       : extra meta data in header (typically "password=qwerty42")
+	--encrypt          : encrypt yEnc bodies and control lines
+	--encrypt-password : password for yEnc encryption (required with --encrypt)
 	-f or --from       : poster email (random one if not provided)
 	-a or --article_size: article size (default one: 716800)
 	-z or --msg_id     : msg id signature, after the @ (default one: ngPost)
@@ -129,11 +133,42 @@ Examples:
   - with auto post: ngPost_v4.16_cmd-x86_64.AppImage --auto /data/folder1 --auto /data/folder2 --compress --gen_par2 --gen_name --gen_pass --rar_size 42 --disp_progress files
   - with compression, filename obfuscation, random password and par2: ngPost_v4.16_cmd-x86_64.AppImage -i /tmp/file1 -i /tmp/folder1 -o /nzb/myPost.nzb --compress --gen_name --gen_pass --gen_par2
   - with config file: ngPost_v4.16_cmd-x86_64.AppImage -c ~/.ngPost -m "password=qwerty42" -f ngPost@nowhere.com -i /tmp/file1 -i /tmp/file2 -i /tmp/folderToPost1 -i /tmp/folderToPost2
+  - with yEnc encryption: ngPost_v4.16_cmd-x86_64.AppImage -h news.example.com -P 563 -s -u user -p pass -g alt.binaries.test -o /nzb/out.nzb --encrypt --encrypt-password "MySecretPass" -i /tmp/file1
   - with all params:  ngPost_v4.16_cmd-x86_64.AppImage -t 1 -m "password=qwerty42" -m "metaKey=someValue" -h news.newshosting.com -P 443 -s -u user -p pass -n 30 -f ngPost@nowhere.com  -g "alt.binaries.test,alt.binaries.test2" -a 64000 -i /tmp/folderToPost -o /tmp/folderToPost.nzb
 
 If you don't provide the output file (nzb file), we will create it in the nzbPath with the name of the first file or folder given in the command line.
 so in the second example above, the nzb would be: /tmp/file1.nzb
 </pre>
+
+### yEnc Body and Control Lines Encryption
+
+ngPost supports opt-in yEnc body and control-line encryption according to the experimental
+v1.2 "yEnc Body and Control Lines Encryption Standards":
+XChaCha20-Poly1305 for bodies, FF1 (NIST SP 800-38G) for control lines. See the standards
+for the wire format (bootstrap prefix, `=yencryption` header, NZB metadata).
+
+*Heads up:* Encrypted posts need a downloader that supports this encryption too. With an ordinary downloader, people won't be able to download or decrypt them properly.
+
+#### Command-line usage
+
+Enable encryption with `--encrypt` and provide a non-empty password via `--encrypt-password`
+(the password can also come from the config file):
+
+```bash
+ngPost -h news.example.com -P 563 -s -u user -p pass -g alt.binaries.test -o out.nzb \
+    --encrypt --encrypt-password "MySecretPass" -i movie.mkv
+```
+
+#### Configuration file usage
+
+In `ngPost.conf` or `~/.ngPost`:
+
+```ini
+ENCRYPT = true
+ENCRYPT-PASSWORD = yourPassword
+```
+
+*Note:* Saving in the desktop GUI preserves `ENCRYPT = true` when enabled and never writes passwords. Set `ENCRYPT-PASSWORD` manually after saving.
 
 ### Configuration file and keywords that are only in config
 The default configuration file for Linux and Mac environment is: **~/.ngPost** (no conf extension)<br/>

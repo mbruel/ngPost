@@ -8,6 +8,9 @@ TEMPLATE = app
 CONFIG += c++14
 CONFIG -= app_bundle
 
+unix: LIBS += -largon2 -lsodium -lcrypto
+win32: LIBS += -largon2 -lsodium -llibcrypto
+
 DEFINES += __USE_CONNECTION_TIMEOUT__
 DEFINES += __COMPUTE_IMMEDIATE_SPEED__
 
@@ -70,6 +73,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         ArticleBuilder.cpp \
+        crypto/CryptoEngine.cpp \
+        crypto/FF1Cipher.cpp \
         FileUploader.cpp \
         FoldersMonitorForNewFiles.cpp \
         NgPost.cpp \
@@ -93,6 +98,9 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     ArticleBuilder.h \
+    crypto/CryptoEngine.h \
+    crypto/FF1Cipher.h \
+    EncryptionSettings.h \
     FileUploader.h \
     FoldersMonitorForNewFiles.h \
     NgPost.h \
@@ -101,6 +109,7 @@ HEADERS += \
     NzbCheck.h \
     Poster.h \
     PostingJob.h \
+    SegmentIndexAllocator.h \
     nntp/Nntp.h \
     nntp/NntpArticle.h \
     nntp/NntpFile.h \

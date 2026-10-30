@@ -21,6 +21,7 @@
 #define NGPOST_H
 #include "utils/CmdOrGuiApp.h"
 #include "utils/Macros.h"
+#include "EncryptionSettings.h"
 
 #include <QSet>
 #include <QVector>
@@ -82,7 +83,8 @@ public:
                     RESUME_WAIT, NO_RESUME_AUTO, SOCK_TIMEOUT, PREPARE_PACKING,
                     INPUT, OUTPUT, NZB_PATH, THREAD, NZB_UPLOAD_URL, NZB_POST_CMD,
                     MONITOR_FOLDERS, MONITOR_EXT, MONITOR_IGNORE_DIR, MONITOR_SEC_DELAY_SCAN,
-                    MSG_ID, META, ARTICLE_SIZE, FROM, GROUPS, NB_RETRY, GEN_FROM,
+                    MSG_ID, META, ENCRYPT, ENCRYPT_PASSWORD,
+                    ARTICLE_SIZE, FROM, GROUPS, NB_RETRY, GEN_FROM,
                     OBFUSCATE, INPUT_DIR, AUTO_DIR, MONITOR_DIR, DEL_AUTO,
                     TMP_DIR, RAR_PATH, RAR_EXTRA, RAR_SIZE, RAR_MAX, KEEP_RAR,
             #ifdef __USE_TMP_RAM__
@@ -140,6 +142,7 @@ private:
     std::string          _from;               //!< email of poster (if empty, random one will be used for each file)
 
     QMap<QString, QString> _meta;    //!< list of meta to add in the nzb header (typically a password)
+    EncryptionSettings     _encryption;
     QList<QString>         _grpList; //!< Newsgroup where we're posting in a list format to write in the nzb file
     int                    _nbGroups;
 

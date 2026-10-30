@@ -20,6 +20,9 @@
 #ifndef POSTINGJOB_H
 #define POSTINGJOB_H
 #include "utils/Macros.h"
+#include "utils/CmdOrGuiApp.h"
+#include "EncryptionSettings.h"
+#include "SegmentIndexAllocator.h"
 
 #include <QFileInfoList>
 #include <QVector>
@@ -128,7 +131,12 @@ private:
 
     const bool _obfuscateArticles;
     const bool _obfuscateFileName;
-
+    const bool _encryptionEnabled;
+    QString _encryptionPassword;
+    QByteArray _encryptionSalt;
+    QByteArray _encryptionKey;
+    SegmentIndexAllocator _segmentIndices;
+    QString _encryptionError;
 
     AtomicBool  _delFilesAfterPost;
     const QFileInfoList _originalFiles;
@@ -229,6 +237,59 @@ public:
 
     inline static QString humanSize(double size);
 
+    // Body Encryption Standard v1.2 §4: raw CR (0x0D) is XML 1.0 content, but an XML parser normalizes a raw CR to LF (0x0A) on parse,
+    // which would silently corrupt the encryption password on decryption. When writing the transport
+    // password into the NZB meta, encode every CR as the numeric character reference &#xD;.
+    static QString escapeEncryptionPasswordXml(const QString &password)
+    {
+        return CmdOrGuiApp::escapeXML(password).replace(QLatin1Char('\r'), QStringLiteral("&#xD;"));
+    }
+
+    static bool writeNzbHead(QTextStream &stream, const QString &tab,
+                             const QMap<QString, QString> &meta,
+                             const QString &rarPass,
+                             bool encryptionEnabled,
+                             const QString &encryptionPassword,
+                             QString *error = nullptr)
+    {
+        if (encryptionEnabled)
+        {
+            EncryptionSettings settings;
+            settings.enabled = true;
+            settings.password = encryptionPassword;
+            if (!settings.validate(error))
+                return false;
+
+            stream << tab << "<head>\n";
+            for (auto itMeta = meta.cbegin(); itMeta != meta.cend(); ++itMeta)
+            {
+                const QString metaKey = itMeta.key().toLower();
+                if (metaKey == QStringLiteral("password") || metaKey == QStringLiteral("yenc_encrypted")
+                        || metaKey == QStringLiteral("yenc_version") || metaKey == QStringLiteral("yenc_cipher"))
+                    continue; // Emitted authoritatively below, or omitted (optional fields whose user values could contradict actual v1.2 content)
+                stream << tab << tab << "<meta type=\"" << itMeta.key() << "\">" << itMeta.value() << "</meta>\n";
+            }
+
+            stream << tab << tab << "<meta type=\"yenc_encrypted\">true</meta>\n"
+                   << tab << tab << "<meta type=\"password\">"
+                   << escapeEncryptionPasswordXml(encryptionPassword) << "</meta>\n";
+            stream << tab << "</head>\n\n";
+            return true;
+        }
+
+        // Upstream unencrypted head writer (byte-for-byte identical to 97a84347f1)
+        if (!rarPass.isEmpty() || !meta.isEmpty())
+        {
+            stream << tab << "<head>\n";
+            for (auto itMeta = meta.cbegin(); itMeta != meta.cend(); ++itMeta)
+                stream << tab << tab << "<meta type=\"" << itMeta.key() << "\">" << itMeta.value() << "</meta>\n";
+            if (!rarPass.isEmpty())
+                stream << tab << tab << "<meta type=\"password\">" << rarPass << "</meta>\n";
+            stream << tab << "</head>\n\n";
+        }
+        return true;
+    }
+
 
 #ifdef __COMPUTE_IMMEDIATE_SPEED__
     inline const QString &immediateSpeed() const;
@@ -280,6 +341,11 @@ private slots:
 private:
     void _log(const QString &aMsg, bool newline = true) const; //!< log function for QString
     void _error(const QString &error) const;
+
+    // The 64 MiB Argon2id KDF must not run in the PostingJob constructor
+    // (GUI-thread stall). It is derived synchronously in onStartPosting via
+    // _ensureEncryptionKeys(), before the first article is encoded.
+    bool _ensureEncryptionKeys();
 
     int  _createNntpConnections();
     void _preparePostersArticles();

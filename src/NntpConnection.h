@@ -87,6 +87,7 @@ public:
 
     inline void write(const QByteArray & aBuffer); //!< write on the socket
     inline void write(const char *aBuffer); //!< write on the socket
+    inline void write(const char *aBuffer, qint64 aSize); //!< write on the socket
 
     inline void resetErrorCount();
     inline bool isConnected() const;
@@ -149,6 +150,7 @@ int NntpConnection::getId() const { return _id;}
 
 void NntpConnection::write(const QByteArray &aBuffer){_socket->write(aBuffer);}
 void NntpConnection::write(const char *aBuffer){_socket->write(aBuffer);}
+void NntpConnection::write(const char *aBuffer, qint64 aSize){_socket->write(aBuffer, aSize);}
 
 void NntpConnection::resetErrorCount() { _nbDisconnected = 0; }
 bool NntpConnection::isConnected() const { return _isConnected; }

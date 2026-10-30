@@ -19,14 +19,31 @@
 
 #ifndef YENC_H
 #define YENC_H
-#include <QtGlobal>
 #include "PureStaticClass.h"
-
 #include <string>
+#include <QByteArray>
+#include <QString>
+#include <QtGlobal>
+
+struct YencEncryptionContext
+{
+    const QByteArray &masterKey;
+    const QByteArray &salt;
+    quint32 segmentIndex;
+
+    YencEncryptionContext(const QByteArray &master,
+                          const QByteArray &s, quint32 segment) :
+        masterKey(master), salt(s), segmentIndex(segment) {}
+};
+
 class Yenc : public PureStaticClass
 {
 public:
     static qint64 encode(const char data[], qint64 dataSize, uchar encbuffer[], quint32 &crc32);
+    static bool encodeArticle(const QByteArray &plaintext, quint32 part, quint32 totalParts,
+                              qint64 fileSize, qint64 filePosition, const QByteArray &fileName,
+                              const YencEncryptionContext &encryption, QByteArray &article,
+                              quint32 &wireCrc32, QString *error = nullptr);
 
 private:
     static quint32 crc32_tab[];

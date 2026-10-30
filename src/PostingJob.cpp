@@ -18,6 +18,7 @@
 //========================================================================
 
 #include "PostingJob.h"
+#include "crypto/CryptoEngine.h"
 #include "NgPost.h"
 #include "NntpConnection.h"
 #include "nntp/NntpServerParams.h"
@@ -82,6 +83,10 @@ PostingJob::PostingJob(NgPost *ngPost,
     _stopPosting(0x0), _noMoreFiles(0x0),
     _postStarted(false), _packed(false), _postFinished(false),
     _obfuscateArticles(obfuscateArticles), _obfuscateFileName(obfuscateFileName),
+    _encryptionEnabled(ngPost && ngPost->_encryption.enabled),
+    _encryptionPassword(ngPost ? ngPost->_encryption.password : QString()),
+    _encryptionSalt(), _encryptionKey(),
+    _segmentIndices(), _encryptionError(),
     _delFilesAfterPost(delFilesAfterPost ? 0x1 : 0x0),
     _originalFiles(!postWidget || delFilesAfterPost  || obfuscateFileName ? files : QFileInfoList()),
     _secureDiskAccess(), _posters(),
@@ -121,6 +126,11 @@ PostingJob::PostingJob(NgPost *ngPost,
         connect(&_immediateSpeedTimer, &QTimer::timeout, this, &PostingJob::onImmediateSpeedComputation, Qt::QueuedConnection);
 #endif
 
+    // The salt is generated eagerly (cheap); the Argon2id key derivation runs
+    // synchronously in onStartPosting, before any article is encoded.
+    if(_encryptionEnabled)
+        _encryptionSalt = CryptoEngine::generateControlSalt();
+
     if (ngPost->debugMode())
         _log(NntpConnection::sslSupportInfo());
 }
@@ -158,6 +168,14 @@ PostingJob::~PostingJob()
         delete _nzb;
     if (_file)
         delete _file;
+    _encryptionPassword.detach();
+    _encryptionPassword.fill(QChar(0));
+    _encryptionPassword.clear();
+    if(!_encryptionKey.isEmpty())
+    {
+        sodium_memzero(_encryptionKey.data(), static_cast<size_t>(_encryptionKey.size()));
+        _encryptionKey.clear();
+    }
 }
 
 void PostingJob::pause()
@@ -223,9 +241,36 @@ void PostingJob::onImmediateSpeedComputation()
 }
 #endif
 
+bool PostingJob::_ensureEncryptionKeys()
+{
+    if(!_encryptionEnabled)
+        return true;
+    if(!_encryptionKey.isEmpty())
+        return true;
+    QString error;
+    if(_encryptionSalt.size() == 16 && CryptoEngine::deriveKey(_encryptionPassword, _encryptionSalt, _encryptionKey, &error))
+        return true;
+    _encryptionError = QStringLiteral("Unable to initialize upload encryption: %1").arg(
+                error.isEmpty() ? QStringLiteral("Salt must be exactly 16 bytes") : error);
+    return false;
+}
+
 void PostingJob::onStartPosting(bool isActiveJob)
 {
     _isActiveJob = isActiveJob;
+    QString validationError;
+    if(_ngPost && !_ngPost->_encryption.validate(&validationError))
+    {
+        _error(validationError);
+        emit postingFinished();
+        return;
+    }
+    if(_encryptionEnabled && !_ensureEncryptionKeys())
+    {
+        _error(_encryptionError);
+        emit postingFinished();
+        return;
+    }
 #ifdef __DEBUG__
 qDebug() << "[MB_TRACE][Issue#82][PostingJob::onStartPosting] job: " << this
          << ", file: " << nzbName() << " (isActive: " << isActiveJob << ")";
@@ -343,6 +388,20 @@ void PostingJob::_postFiles()
         }
         emit archiveFileNames(archiveNames);
     }
+    // Body Encryption Standard v1.2 §2.1: reject the whole plan before posting.
+    if (_encryptionEnabled)
+    {
+        for (const QFileInfo &file : _files)
+        {
+            if (!EncryptionSettings::acceptsFileSize(file.size()))
+            {
+                _error(QStringLiteral("Encrypted file size must be less than 2^32 bytes"));
+                emit postingFinished();
+                return;
+            }
+        }
+    }
+
     _initPosting();
 
     if (_nbThreads > QThread::idealThreadCount())
@@ -372,14 +431,12 @@ void PostingJob::_postFiles()
                    << "<!DOCTYPE nzb PUBLIC \"-//newzBin//DTD NZB 1.1//EN\" \"http://www.newzbin.com/DTD/nzb/nzb-1.1.dtd\">\n"
                    << "<nzb xmlns=\"http://www.newzbin.com/DTD/2003/nzb\">\n";
 
-        if (!_rarPass.isEmpty() || _ngPost->_meta.size())
+        QString nzbHeadError;
+        if (!writeNzbHead(_nzbStream, tab, _ngPost->_meta, _rarPass, _encryptionEnabled, _encryptionPassword, &nzbHeadError))
         {
-            _nzbStream << tab << "<head>\n";
-            for (auto itMeta = _ngPost->_meta.cbegin(); itMeta != _ngPost->_meta.cend() ; ++itMeta)
-                _nzbStream << tab << tab << "<meta type=\"" << itMeta.key() << "\">" << itMeta.value() << "</meta>\n";
-            if (!_rarPass.isEmpty())
-                _nzbStream << tab << tab << "<meta type=\"password\">" << _rarPass << "</meta>\n";
-            _nzbStream << tab << "</head>\n\n";
+            _error(nzbHeadError);
+            emit postingFinished();
+            return;
         }
         _nzbStream << MB_FLUSH;
     }
@@ -687,9 +744,23 @@ NntpArticle *PostingJob::_readNextArticleIntoBufferPtr(const QString &threadName
             if (_ngPost->debugFull())
                 _log(tr("[%1] we've read %2 bytes from %3 (=> new pos: %4)").arg(threadName).arg(bytesRead).arg(pos).arg(_file->pos()));
             ++_part;
+            quint32 segmentIndex = 0;
+            if(_encryptionEnabled && !_segmentIndices.next(segmentIndex))
+            {
+                // worker-thread write, protected by the held _secureDiskAccess
+                _encryptionError = QStringLiteral("Encrypted release exceeds segmentIndex range");
+                _error(_encryptionError);
+                _stopPosting = 0x1;
+                _noMoreFiles = 0x1;
+                // This runs on a worker thread holding _secureDiskAccess;
+                // queue the teardown to the PostingJob's own thread via onStopPosting
+                // (never join threads or pump the event loop from a worker).
+                emit stopPosting();
+                return nullptr;
+            }
             NntpArticle *article = new NntpArticle(_nntpFile, _part, pos, bytesRead,
                                                    _obfuscateArticles ? nullptr : &_from,
-                                                   _obfuscateArticles);
+                                                   _obfuscateArticles, segmentIndex);
             return article;
         }
         else
