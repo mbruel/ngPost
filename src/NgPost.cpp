@@ -710,11 +710,14 @@ void NgPost::doNzbPostCMD(PostingJob *job)
             const QString fullCmd = args.join(" ");
             QString     cmd  = args.takeFirst();
             qDebug() << "cmd: " << cmd << ", args: " << args;
-            int res = QProcess::execute(cmd, args);
+            // start it in background: QProcess::execute would freeze ngPost until the command is finished
+            bool started = QProcess::startDetached(cmd, args);
             if (debugMode())
-                _log(tr("NZB Post cmd: %1 exitcode: %2").arg(fullCmd).arg(res));
+                _log(tr("NZB Post cmd: %1 started: %2").arg(fullCmd).arg(started ? "yes" : "no"));
             else
                 _log(fullCmd);
+            if (!started)
+                _error(tr("Couldn't start the NZB Post cmd: %1").arg(fullCmd));
         }
     }
 
