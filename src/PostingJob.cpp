@@ -920,7 +920,9 @@ bool PostingJob::startCompressFiles(const QString &cmdRar,
             this, &PostingJob::onCompressionFinished, Qt::QueuedConnection);
 
     _use7z = false;
-    if (_rarPath.contains("7z"))
+    // check the program name (7z, 7za, 7zz, 7zr, 7z.exe...) and not the whole path:
+    // a folder like "/opt/7zip/" must not turn rar into 7z
+    if (QFileInfo(_rarPath).completeBaseName().toLower().startsWith("7z"))
     {
         _use7z = true;
         if (_rarArgs.isEmpty())
