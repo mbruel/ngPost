@@ -58,7 +58,10 @@ void NntpArticle::yEncBody(const char data[])
 {
     // do the yEnc encoding
     quint32 crc32    = 0xFFFFFFFF;
-    uchar  *yencBody = new uchar[_fileBytes*2];
+    // Worst case for the yEnc output: every byte is escaped (2 chars each) and, as the
+    // escape chars count in the 128 columns, a line break (2 chars) every 64 source bytes,
+    // plus the final '\0'. So 2*N + N/32 + margin is always enough (2*N alone can overflow).
+    uchar  *yencBody = new uchar[_fileBytes*2 + _fileBytes/32 + 16];
     Yenc::encode(data, _fileBytes, yencBody, crc32);
 
     // format the body
