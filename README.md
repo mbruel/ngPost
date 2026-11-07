@@ -30,7 +30,7 @@ Here are the main features and advantages of ngPost:
 -   **Post automation**: scan a folder and post each file/folder after compression. (cf **--auto option in CMD** and the "Auto Posting" tab on the GUI)
 -   **compress using RAR or 7zip** (external command) with random **name obfuscation** and password and **generate par2** before posting
 -   **write history of posts in a csv file**: so you can get the date, **file name**, size, upload speed but most important the **archive name and password** in simple excel spreadsheet ;)
--   **par2cmdline is included in the package** but you can use another tool (like Multipar) if you wish using the PAR2_CMD and PAR2_ARGS keywords in the config file. **ParPar** (much faster) is used automatically if `parpar.exe` is in the ngPost folder (the Windows 64bit version is in `release/libs`)
+-   **ParPar** (much faster than par2cmdline) is used automatically on Windows 64bit if `parpar.exe` is in the ngPost folder (the Windows 64bit version is in `release/libs`). **par2cmdline** is still included for Windows 32bit, and you can use another tool (like Multipar) if you wish using the PAR2_CMD and PAR2_ARGS keywords in the config file
 -   support **multiple files** and **multiple folders**
 -   support **several servers** (using config file or the HMI) with each **several connections** (supporting ssl)
 -   spread those connection on **several threads**. By default the number of cores of the station but you can set the number if you fancy.
