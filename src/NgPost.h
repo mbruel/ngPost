@@ -494,6 +494,9 @@ public:
 
     inline static std::string randomStdFrom(ushort length = 13);
 
+    //! split a command line in arguments (double quotes protect the spaces)
+    static QStringList splitArgs(const QString &args);
+
 #if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
     inline static QStringList parseCombinedArgString(const QString &program);
 #endif
