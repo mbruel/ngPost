@@ -38,6 +38,9 @@
   #include <QCoreApplication>
 #endif
 #include <QThread>
+#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
+  #include <QRandomGenerator>
+#endif
 #include <QTextStream>
 #include <QCommandLineParser>
 #include <QDebug>
@@ -1171,7 +1174,14 @@ QString NgPost::randomPass(uint length) const
     QString pass, alphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
     int nbLetters = alphabet.length();
     for (uint i = 0 ; i < length ; ++i)
+    {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
+        // OS cryptographic source (unbiased, no modulo): passwords protect the archives
+        pass.append(alphabet.at(static_cast<int>(QRandomGenerator::system()->bounded(nbLetters))));
+#else
         pass.append(alphabet.at(std::rand()%nbLetters));
+#endif
+    }
 
     return pass;
 }
