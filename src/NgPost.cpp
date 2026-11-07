@@ -656,6 +656,15 @@ bool NgPost::checkSupportSSL()
     return true;
 }
 
+QStringList NgPost::splitArgs(const QString &args)
+{
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
+    return parseCombinedArgString(args);
+#else
+    return QProcess::splitCommand(args);
+#endif
+}
+
 void NgPost::doNzbPostCMD(PostingJob *job)
 {
     // first NZB_UPLOAD_URL
@@ -673,35 +682,42 @@ void NgPost::doNzbPostCMD(PostingJob *job)
     {
         for (const QString &nzbPostCmd : _nzbPostCmd)
         {
-            QString fullCmd(nzbPostCmd);
-            fullCmd.replace("%1",                   job->nzbFilePath()); // for backwards compatibility
-            fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::nzbPath],
+            // Split the command template first and substitute the placeholders afterwards in each argument:
+            // a value with spaces or quotes (nzb path, rar name/pass...) must stay ONE argument
+            QStringList args = splitArgs(nzbPostCmd);
+            if (args.isEmpty())
+                continue;
+
+            for (QString &arg : args)
+            {
+                arg.replace("%1",                   job->nzbFilePath()); // for backwards compatibility
+                arg.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::nzbPath],
         #if defined( Q_OS_WIN )
-                    QString(job->nzbFilePath()).replace("/", "\\")
+                        QString(job->nzbFilePath()).replace("/", "\\")
         #else
-                    job->nzbFilePath()
+                        job->nzbFilePath()
         #endif
-                    );
-            fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::nzbName],          QFileInfo(job->nzbFilePath()).completeBaseName());
-            fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::rarName],          job->rarName());
-            fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::rarPass],          job->rarPass());
-            fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::nbArticles],       QString::number(job->nbArticlesTotal()));
-            fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::nbArticlesFailed], QString::number(job->nbArticlesFailed()));
-            fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::sizeInByte],       QString::number(job->_totalSize));
-            fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::nbFiles],          QString::number(job->_nbFiles));
-            fullCmd.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::groups],           job->groups());
-#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-            QStringList args = parseCombinedArgString(fullCmd);
-#else
-            QStringList args = QProcess::splitCommand(fullCmd);
-#endif
+                        );
+                arg.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::nzbName],          QFileInfo(job->nzbFilePath()).completeBaseName());
+                arg.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::rarName],          job->rarName());
+                arg.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::rarPass],          job->rarPass());
+                arg.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::nbArticles],       QString::number(job->nbArticlesTotal()));
+                arg.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::nbArticlesFailed], QString::number(job->nbArticlesFailed()));
+                arg.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::sizeInByte],       QString::number(job->_totalSize));
+                arg.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::nbFiles],          QString::number(job->_nbFiles));
+                arg.replace(sPostCmdPlaceHolders[PostCmdPlaceHolders::groups],           job->groups());
+            }
+            const QString fullCmd = args.join(" ");
             QString     cmd  = args.takeFirst();
             qDebug() << "cmd: " << cmd << ", args: " << args;
-            int res = QProcess::execute(cmd, args);
+            // start it in background: QProcess::execute would freeze ngPost until the command is finished
+            bool started = QProcess::startDetached(cmd, args);
             if (debugMode())
-                _log(tr("NZB Post cmd: %1 exitcode: %2").arg(fullCmd).arg(res));
+                _log(tr("NZB Post cmd: %1 started: %2").arg(fullCmd).arg(started ? "yes" : "no"));
             else
                 _log(fullCmd);
+            if (!started)
+                _error(tr("Couldn't start the NZB Post cmd: %1").arg(fullCmd));
         }
     }
 
