@@ -934,7 +934,7 @@ bool PostingJob::startCompressFiles(const QString &cmdRar,
 
     // 2.: create rar args (rar a -v50m -ed -ep1 -m0 -hp"$PASS" "$TMP_FOLDER/$RAR_NAME.rar" "${FILES[@]}")
 //    QStringList args = {"a", "-idp", "-ep1", compressLevel, QString("%1/%2.rar").arg(archiveTmpFolder).arg(archiveName)};
-    QStringList args = _rarArgs.split(" ");
+    QStringList args = NgPost::splitArgs(_rarArgs); // respects the double quotes (and ignores multiple spaces)
     if (!args.contains("a"))
         args.prepend("a");
     if (!_use7z && !args.contains("-idp"))
@@ -1121,7 +1121,7 @@ bool PostingJob::startGenPar2(const QString &tmpFolder,
     if (_ngPost->_par2Args.isEmpty())
         args << "c" << "-l" << "-m1024" << QString("-r%1").arg(redundancy);
     else
-        args << _ngPost->_par2Args.split(" ");
+        args << NgPost::splitArgs(_ngPost->_par2Args);
 
     bool useParPar = _ngPost->useParPar();
     QString archiveTmpFolder = QString("%1/%2").arg(tmpFolder, archiveName);
