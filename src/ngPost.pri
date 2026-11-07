@@ -21,7 +21,7 @@ DEFINES += __RELEASE_ARTICLES_WHEN_CON_FAILS__
 
 
 TRANSLATIONS = lang/ngPost_en.ts lang/ngPost_fr.ts lang/ngPost_es.ts lang/ngPost_de.ts\
-               lang/ngPost_nl.ts lang/ngPost_pt.ts lang/ngPost_zh.ts
+               lang/ngPost_nl.ts lang/ngPost_pt.ts lang/ngPost_zh.ts lang/ngPost_it.ts
 
 win32: {
     RC_ICONS += ngPost.ico
