@@ -1,10 +1,20 @@
-<img align="left" width="80" height="80" src="https://raw.githubusercontent.com/mbruel/ngPost/master/src/resources/icons/ngPost.png" alt="ngPost">
+<img align="left" width="80" height="80" src="src/resources/icons/ngPost.png" alt="ngPost">
 
-# ngPost v4.16
+# ngPost-2026
 
-[Pour la version Française cliquez ici ;)](https://github.com/mbruel/ngPost/blob/master/README_FR.md)<br/>
-<br/>
-[Here is an invite for the brand new discord server](https://discord.gg/TwYRDy9), feel free to join if you've questions or if interested in beta testing the new features before they're released ;)<br/>
+**English** | [Français](README_FR.md) | [Deutsch](README_DE.md) | [Italiano](README_IT.md) | [Español](README_ES.md)
+
+**ngPost-2026** is a revisited and redesigned version of the famous Usenet uploader **ngPost**.<br/>
+It is a fork of [mbruel/ngPost](https://github.com/mbruel/ngPost) (v4.16, licence GPL v3). All the credit for the original program goes to its author, Matthieu Bruel.<br/>
+
+### What is different in this fork
+-   **Security fix**: possible heap overflow in the yEnc encoding buffer (the output could be bigger than the buffer with specific data)
+-   **Safer passwords**: the generated archive passwords and names use the cryptographic random generator of the OS (Qt >= 5.10) instead of `std::rand()`
+-   **NZB_POST_CMD**: the placeholders can contain spaces (a path like `C:\My folder\file.nzb` stays ONE argument) and the command is started in background (ngPost doesn't wait for it anymore, so its exit code is no longer logged)
+-   **RAR_EXTRA and PAR2_ARGS**: parsed respecting the double quotes. 7-Zip is detected from the program name and not from the whole path
+-   **ParPar** (a much faster par2 generator) is shipped for Windows 64bit (v0.4.6, public domain) and used automatically when `parpar.exe` is in the ngPost folder. The 64bit par2cmdline has been removed from the package, the 32bit one is kept for Windows 32bit
+
+This fork doesn't publish binaries yet: build it from the sources (cf below). The download links of the installation sections are the ones of the original ngPost v4.16, they don't contain the changes above.<br/>
 <br/>
 
 **Command Line and sexy GUI Usenet poster** for binaries developped in **C++11/Qt5**</br>
@@ -20,9 +30,9 @@ it can **switch off the computer** when all the posts are finished<br/>
 it is **translated in Chinese, Dutch, English, French, German, Portuguese and Spanish**.
 
 
-![ngPost_v4.3](https://raw.githubusercontent.com/mbruel/ngPost/master/pics/ngPost_v4.3.png)
+![ngPost_v4.3](pics/ngPost_v4.3.png)
 
-[Releases are availables](https://github.com/mbruel/ngPost/releases/tag/v4.16) for: Linux 64bit, Windows (both 32bit and 64bit), MacOS and Raspbian (RPI 4). Soon for Android then iOS...
+[Releases of the original ngPost are availables](https://github.com/mbruel/ngPost/releases/tag/v4.16) for: Linux 64bit, Windows (both 32bit and 64bit), MacOS and Raspbian (RPI 4). Soon for Android then iOS...
 
 Here are the main features and advantages of ngPost:
 -   **full obfuscation of the Article Header** : the Subject will be a UUID (as the msg-id) and a random Poster will be used. **Be Careful**, using this, you won't be able to find your post on Usenet (or any Indexers) if you lose the NZB file. But using this method is **completely safe**, **no need to obfuscate your files or even tp use a password**.
@@ -242,19 +252,17 @@ A list of Usenet posters from Nyuu github [can be found here](https://github.com
 
 
 ### Questions / Issues / Requests
-- if you've any troubles to build or run ngPost, feel free to drop me an email
-- if you've some comments on the code, any questions on the implementation or any proposal for improvements, I'll be happy to discuss it with you so idem, feel free to drop me an email
-- if you'd like some other features, same same (but different), drop me an email ;)
-
-Here is my email: Matthieu.Bruel@gmail.com
+- for questions about this fork, you can contact its maintainer on GitHub: [thenormal](https://github.com/thenormal)
+- for the original program, please refer to the [original project](https://github.com/mbruel/ngPost) and its author Matthieu Bruel
 
 
 ### Supported Languages
-For now, ngPost is translated in Chinese, English, French, German, Portuguese and Spanish.<br/>
-If you'd like to translate ngPost in your language, it's easy to do (there is a nice GUI for that: QtLinguist), please get in touch with me (Matthieu.Bruel@gmail.com)
+For now, ngPost is translated in Chinese, Dutch, English, French, German, Portuguese and Spanish. An Italian translation is planned for this fork.<br/>
+If you'd like to translate ngPost in your language, it's easy to do (there is a nice GUI for that: QtLinguist), the translation files are in the **src/lang** folder.
 
 
 ### Thanks
+- Matthieu Bruel (mbruel) for having created ngPost and published it under GPL v3
 - Uukrull for his intensive testing and feedbacks and for building all the MacOS packages.
 - awsms for his testing on proper server with a 10Gb/s connection that helped to improve ngPost's upload speed and the multi-threading support
 - animetosho for having developped ParPar, the fasted par2 generator ever!
@@ -266,31 +274,5 @@ If you'd like to translate ngPost in your language, it's easy to do (there is a 
 - all ngPost users ;)
 
 
-### Donations
-I'm Freelance nowadays, working on several personal projects, so if you use the app and would like to contribute to the effort, feel free to donate what you can.<br/>
-<br/>
-<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=W2C236U6JNTUA&item_name=ngPost&currency_code=EUR"><img align="left" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" alt="ex0days"></a>
- or in Bitcoin at this address: **3BGbnvnnBCCqrGuq1ytRqUMciAyMXjXAv6**
-<img align="right" align="bottom" width="120" height="120" src="https://raw.githubusercontent.com/mbruel/ngPost/master/pics/btc_qr.gif" alt="ngPost_QR">
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
-<br/>
+### Support the original author
+ngPost has been created by Matthieu Bruel. If you use the app and would like to contribute to the effort, please do it on the [original project](https://github.com/mbruel/ngPost).
