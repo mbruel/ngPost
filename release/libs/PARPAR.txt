@@ -1,0 +1,12 @@
+ParPar v0.4.6 (Windows 64bit) - much faster par2 generator than par2cmdline
+Source: https://github.com/animetosho/ParPar/releases/tag/v0.4.6
+License: Public Domain / CC0 (https://github.com/animetosho/ParPar)
+
+File: parpar-v0.4.6-win64.7z  (sha256: 9a7d9f50b8a519e0a49263d80b62ce9c4312eecf6723311211824b5facf73c6d)
+It contains parpar.exe (sha256: d2143cbd1ce0404ab82c2729256c91051cc1248adf099b25b1451b9f560cc431)
+
+How to use it:
+  1. extract parpar.exe (with 7-Zip) in the same folder than ngPost.exe
+     (or in a "parpar" sub-folder)
+  2. restart ngPost: it uses parpar.exe automatically instead of par2.exe
+     (PAR2_PATH / PAR2_ARGS in ngPost.conf still take precedence)
