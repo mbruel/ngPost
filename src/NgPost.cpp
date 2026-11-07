@@ -38,6 +38,7 @@
   #include <QCoreApplication>
 #endif
 #include <QThread>
+#include <QSysInfo>
 #if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
   #include <QRandomGenerator>
 #endif
@@ -321,18 +322,17 @@ NgPost::NgPost(int &argc, char *argv[]):
     // ParPar (much faster) is preferred if it is shipped next to ngPost: parpar(.exe) or parpar/parpar(.exe)
     // PAR2_PATH (config file) or --par2_path still take precedence (cf below)
     const QString appDir = qApp->applicationDirPath();
+    QStringList par2Candidates;
 #if defined(WIN32) || defined(__MINGW64__)
-    const QStringList par2Candidates = {
-        QString("%1/parpar.exe").arg(appDir),
-        QString("%1/parpar/parpar.exe").arg(appDir),
-        QString("%1/par2.exe").arg(appDir)
-    };
+    // the shipped ParPar is a 64bit build: use it only on a 64bit Windows (even for a 32bit ngPost)
+    if (QSysInfo::currentCpuArchitecture().contains("64"))
+        par2Candidates << QString("%1/parpar.exe").arg(appDir)
+                       << QString("%1/parpar/parpar.exe").arg(appDir);
+    par2Candidates << QString("%1/par2.exe").arg(appDir);
 #else
-    const QStringList par2Candidates = {
-        QString("%1/parpar").arg(appDir),
-        QString("%1/parpar/parpar").arg(appDir),
-        QString("%1/par2").arg(appDir)
-    };
+    par2Candidates << QString("%1/parpar").arg(appDir)
+                   << QString("%1/parpar/parpar").arg(appDir)
+                   << QString("%1/par2").arg(appDir);
 #endif
     for (const QString &par2Embedded : par2Candidates)
     {
