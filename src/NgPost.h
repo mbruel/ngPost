@@ -404,6 +404,7 @@ public:
     inline bool nzbCheck() const;
     int nbMissingArticles() const;
 
+    inline QString par2ProgramName() const;
     inline bool useParPar() const;
     inline bool useMultiPar() const;
 
@@ -546,8 +547,13 @@ double NgPost::ramRatio() const { return _ramRatio; }
 
 bool NgPost::nzbCheck() const { return _nzbCheck != nullptr; }
 
-inline bool NgPost::useParPar() const { return _par2Path.toLower().contains("parpar"); }
-inline bool NgPost::useMultiPar() const { return _par2Path.toLower().contains("par2j"); }
+// check the program name only (not the folders): "C:/parpar-tools/par2.exe" is not ParPar
+inline QString NgPost::par2ProgramName() const
+{
+    return _par2Path.mid(qMax(_par2Path.lastIndexOf('/'), _par2Path.lastIndexOf('\\')) + 1).toLower();
+}
+inline bool NgPost::useParPar() const { return par2ProgramName().contains("parpar"); }
+inline bool NgPost::useMultiPar() const { return par2ProgramName().contains("par2j"); }
 
 
 const std::string &NgPost::aticleSignature() { return sArticleIdSignature; }

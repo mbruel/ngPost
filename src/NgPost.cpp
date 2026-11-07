@@ -317,17 +317,32 @@ NgPost::NgPost(int &argc, char *argv[]):
 //    std::srand(static_cast<uint>(QDateTime::currentMSecsSinceEpoch()));
     std::srand(QUuid::createUuid().data1); // use more random seed
 
-    // check if the embedded par2 is available (windows or appImage)
-    QString par2Embedded;
+    // check if the embedded par2 generator is available (windows or appImage)
+    // ParPar (much faster) is preferred if it is shipped next to ngPost: parpar(.exe) or parpar/parpar(.exe)
+    // PAR2_PATH (config file) or --par2_path still take precedence (cf below)
+    const QString appDir = qApp->applicationDirPath();
 #if defined(WIN32) || defined(__MINGW64__)
-    par2Embedded = QString("%1/par2.exe").arg(qApp->applicationDirPath());
+    const QStringList par2Candidates = {
+        QString("%1/parpar.exe").arg(appDir),
+        QString("%1/parpar/parpar.exe").arg(appDir),
+        QString("%1/par2.exe").arg(appDir)
+    };
 #else
-    par2Embedded = QString("%1/par2").arg(qApp->applicationDirPath());
+    const QStringList par2Candidates = {
+        QString("%1/parpar").arg(appDir),
+        QString("%1/parpar/parpar").arg(appDir),
+        QString("%1/par2").arg(appDir)
+    };
 #endif
-
-    QFileInfo fi(par2Embedded);
-    if (fi.exists() && fi.isFile() && fi.isExecutable())
-        _par2Path = par2Embedded;
+    for (const QString &par2Embedded : par2Candidates)
+    {
+        QFileInfo fi(par2Embedded);
+        if (fi.exists() && fi.isFile() && fi.isExecutable())
+        {
+            _par2Path = par2Embedded;
+            break;
+        }
+    }
 
     connect(this, &NgPost::log,   this, &NgPost::onLog,   Qt::QueuedConnection);
     connect(this, &NgPost::error, this, &NgPost::onError, Qt::QueuedConnection);
